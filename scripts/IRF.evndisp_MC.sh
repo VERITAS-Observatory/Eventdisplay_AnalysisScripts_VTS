@@ -174,7 +174,7 @@ if [ -e $OPDIR ]; then
             if [ ! -e $rootfile ]; then
                 toexec=1
             else
-                sh $EVNDISPSYS/scripts/VTS/UTILITY.check_root_file_closed.sh $rootfile
+                sh $EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.check_root_file_closed.sh $rootfile
                 if [ "$?" == "1" ]; then
                     toexec=1
                 fi
