@@ -3,7 +3,6 @@
 #
 
 # qsub parameters
-#h_cpu=47:59:00; h_vmem=6000M; tmpdir_size=250G
 h_cpu=47:59:00; h_vmem=6000M; tmpdir_size=550G
 
 if [ $# -lt 7 ]; then
@@ -31,11 +30,10 @@ required parameters:
     <NSB level>             NSB level of simulations [MHz]
     
     <sim type>              file simulation type (e.g. GRISU-SW6, CARE_June1425)
-                            (recognized are also types like GRISU_d201404, or CARE_V1)
 
     <runparameter file>     file with integration window size and reconstruction cuts/methods, expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
+                            expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
-                            Default: EVNDISP.reconstruction.runparameter (DISP disabled )
 
 optional parameters:
     
@@ -80,16 +78,16 @@ PARTICLE_TYPE=${PARTICLE_NAMES[$PARTICLE]}
 # directory for run scripts
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANAMCVBF"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # output directory for evndisp products (will be manipulated more later in the script)
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 # output dir
-OPDIR=$ODIR"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
-mkdir -p $OPDIR
-chmod -R g+w $OPDIR
+OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
+mkdir -p "$OPDIR"
+chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
 
 echo "Using runparameter file $ACUTS"

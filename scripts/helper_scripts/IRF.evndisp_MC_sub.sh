@@ -2,8 +2,9 @@
 # script to run evndisp for simulations on one of the cluster nodes (VBF)
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+source "$EVNDISPSYS"/setObservatory.sh VTS
 
+########################################################
 # parameters replaced by parent script using sed
 RUNNUM=RUNNUMBER
 SIMDIR=DATADIR
@@ -13,7 +14,7 @@ WOG=INTEGERWOBBLE
 NOISE=NOISELEVEL
 EPOCH=ARRAYEPOCH
 ATM=ATMOSPHERE
-ACUTS=RECONSTRUCTIONRUNPARAMETERFILE
+ACUTS="RECONSTRUCTIONRUNPARAMETERFILE"
 SIMTYPE=SIMULATIONTYPE
 ODIR=OUTPUTDIR
 NEVENTS=NENEVENT
@@ -30,8 +31,6 @@ if [[ $NEVENTS -gt 0 ]]; then
     FIRSTEVENT=$(($ITER * $NEVENTS))
     # increase run number
     RUNNUM=$((RUNNUM + $ITER))
-    # Output file name
-    #ONAME="${RUNNUM}_$ITER"
     echo -e "ITER $ITER NEVENTS $NEVENTS FIRSTEVENT $FIRSTEVENT"
 fi
 
@@ -44,6 +43,9 @@ echo "Runnumber $RUNNUM"
 echo "Using run parameter file $ACUTS"
 
 DEAD="EVNDISP.validchannels.dat"
+# default pedestal level
+# (same for GRISU and CARE,
+#  adjustments possibly needed)
 PEDLEV="16."
 # LOWPEDLEV="8."
 LOWPEDLEV="16."
@@ -64,7 +66,6 @@ fi
 [[ ${EPOCH:0:2} == "V4" ]] && CFG="EVN_V4_Oct2012_oldArrayConfig_20130428_v420.txt"
 [[ ${EPOCH:0:2} == "V5" ]] && CFG="EVN_V5_Oct2012_newArrayConfig_20121027_v420.txt"
 [[ ${EPOCH:0:2} == "V6" ]] && CFG="EVN_V6_Upgrade_20121127_v420.txt"
-    
 
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then 
@@ -72,7 +73,7 @@ if [[ -n "$TMPDIR" ]]; then
 else
     DDIR="/tmp/evn_${ZA}_${NOISE}_${WOG}"
 fi
-mkdir -p $DDIR
+mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 
 ##################3
@@ -100,15 +101,23 @@ if [[ -f "${SIMDIR}/$VBFNAME" ]]; then
        echo "Unknown file extension $ZTYPE ,exiting"
        exit
     fi
-fi          
+fi
+ls -lh $DDIR/
 
 # check that the uncompressed vbf file exists
 if [[ ! -f "$DDIR/$VBF_FILE" ]]; then
     echo "No source file found: $DDIR/$VBF_FILE"
-    echo "Simulation file was: $SIMDIR/$VBFNAME"
+    echo "Simulation file: $SIMDIR/$VBFNAME"
     exit 1
 fi
 VBF_FILE="$DDIR/$VBF_FILE"
+
+#######################################
+# option for all steps of the analysis
+MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG" 
+MCOPT="$MCOPT -reconstructionparameter $ACUTS -sourcefile $VBF_FILE"
+MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory $ODIR"
+MCOPT="$MCOPT $AMPCORR"
 
 # Low gain calibration
 mkdir -p $ODIR/Calibration
@@ -126,7 +135,8 @@ fi
 if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
     echo "Calculating pedestals for run $RUNNUM"
     rm -f $ODIR/$RUNNUM.ped.log
-    $EVNDISPSYS/bin/evndisp -runmode=1 -sourcetype=2 -epoch $EPOCH -sourcefile $VBF_FILE -runnumber=$RUNNUM -calibrationsumfirst=0 -calibrationsumwindow=20 -donotusedbinfo $AMPCORR -calibrationnevents=${PEDNEVENTS} -calibrationdirectory $ODIR &> $ODIR/$RUNNUM.ped.log
+    PEDOPT="-runmode=1 -calibrationsumfirst=0 -calibrationsumwindow=20 ${PEDNEVENTS}"
+    $EVNDISPSYS/bin/evndisp $MCOPT $PEDOPT &> $ODIR/$RUNNUM.ped.log
     if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.ped.log;
     then
         echo "   successful pedestal analysis"
@@ -139,16 +149,16 @@ fi
 ###############################################
 # calculate tzeros
 echo "Calculating average tzeros for run $RUNNUM"
-MCOPT="-runmode=7 -sourcetype=2 -epoch $EPOCH -camera=$CFG -sourcefile $VBF_FILE -runnumber=$RUNNUM -calibrationsumfirst=0 -calibrationsumwindow=20 -donotusedbinfo -calibrationnevents=${TZERONEVENTS} -calibrationdirectory $ODIR -reconstructionparameter $ACUTS -pedestalnoiselevel=$NOISE "
+TZEROPT="-runmode=7 -calibrationsumfirst=0 -calibrationsumwindow=20 -calibrationnevents=${TZERONEVENTS} -pedestalnoiselevel=$NOISE "
 rm -f $ODIR/$RUNNUM.tzero.log
 ### eventdisplay GRISU run options
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-    MCOPT="$MCOPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV -lowgaincalibrationfile NOFILE -lowgainpedestallevel=$PEDLEV"
+   TZEROPT="$TZEROPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV -lowgaincalibrationfile NOFILE -lowgainpedestallevel=$PEDLEV"
 else
-   MCOPT="$MCOPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile calibrationlist.LowGainForCare.dat"
+   TZEROPT="$TZEROPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile calibrationlist.LowGainForCare.dat"
 fi
-echo "$EVNDISPSYS/bin/evndisp $MCOPT" &> $ODIR/$RUNNUM.tzero.log
-$EVNDISPSYS/bin/evndisp $MCOPT $AMPCORR &>> $ODIR/$RUNNUM.tzero.log
+echo "$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT" &> $ODIR/$RUNNUM.tzero.log
+$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT &>> $ODIR/$RUNNUM.tzero.log
 if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.tzero.log;
 then
     echo "   successful tzero analysis"
@@ -160,32 +170,39 @@ fi
 ###############################################
 # run eventdisplay
 ###############################################
-# run options
-MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG -reconstructionparameter $ACUTS -sourcefile $VBF_FILE  -writenomctree -deadchannelfile $DEAD -outputfile $DDIR/$ONAME.root -donotusedbinfo -calibrationdirectory $ODIR"
-# special options for GRISU
-if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    MCOPT="$MCOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV -lowgaincalibrationfile NOFILE -lowgainpedestallevel=$PEDLEV"
-else
-    MCOPT="$MCOPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile calibrationlist.LowGainForCare.dat"
-fi
-# throughput correction after trace integration
-# do not combine with corretion of FADC values (!)
-# MCOPT="$MCOPT -throughputcorrection MSCW.sizecal.runparameter"
-if [[ $NEVENTS -gt 0 ]]; then
-	 MCOPT="-nevents=$NEVENTS -firstevent=$FIRSTEVENT $MCOPT"
-fi
-echo "Analysing MC file for run $RUNNUM"
-echo "$EVNDISPSYS/bin/evndisp $MCOPT" &> $ODIR/$ONAME.log
-$EVNDISPSYS/bin/evndisp $MCOPT $AMPCORR &>> $ODIR/$ONAME.log
 
+#####################
+# general analysis options
+ANAOPT=" -writenomctree -outputfile $DDIR/$ONAME.root"
+
+#####################
+# options for GRISU (handling of low-gain values)
+if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
+    ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV -lowgaincalibrationfile NOFILE -lowgainpedestallevel=$PEDLEV"
+else
+#####################
+# options for CARE (handling of low-gain values)
+    ANAOPT="$ANAOPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile calibrationlist.LowGainForCare.dat"
+fi
+if [[ $NEVENTS -gt 0 ]]; then
+	 ANAOPT="-nevents=$NEVENTS -firstevent=$FIRSTEVENT $ANAOPT"
+fi
+#################################################################################
+# run evndisp
+echo "Analysing MC file for run $RUNNUM"
+echo "$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT" &> $ODIR/$ONAME.log
+$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
+
+#################################################################################
 # remove temporary files
-cp -f -v $DDIR/$ONAME.root $ODIR/$ONAME.root
-chmod g+w $ODIR/$ONAME.root
-chmod g+w $ODIR/$ONAME.log
-chmod g+w $ODIR/$ONAME.tzero.log
+ls -lh "$DDIR"
+cp -f -v "$DDIR/$ONAME.root" "$ODIR/$ONAME.root"
+chmod g+w "$ODIR/$ONAME.root"
+chmod g+w "$ODIR/$ONAME.log"
+chmod g+w "$ODIR/$ONAME.tzero.log"
 chmod -R g+w $ODIR/Calibration
-rm -f -v $DDIR/$ONAME.root
-rm -f -v $VBF_FILE
+rm -f -v "$DDIR/$ONAME.root"
+rm -f -v "$VBF_FILE"
 
 echo "EVNDISP output root file written to $ODIR/$ONAME.root"
 echo "EVNDISP log file written to $ODIR/$ONAME.log"

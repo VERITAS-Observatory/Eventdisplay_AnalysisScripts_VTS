@@ -11,11 +11,11 @@ if [ $# -lt 2 ]; then
 echo "
 IRF generation: produce a full set of instrument response functions (IRFs)
 
-IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [BDT cuts] [cuts list file] [sim directory]
+IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list file] [sim directory]
 
 required parameters:
 
-    <sim type>              original VBF file simulation type (e.g. GRISU-SW6, CARE_June1425)
+    <sim type>              original VBF file simulation type (e.g. GRISU-SW6, CARE_June1702)
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -33,13 +33,12 @@ optional parameters:
     [Rec ID]                reconstruction ID(s) (default: \"0 2 3 4 5\")
                             (see EVNDISP.reconstruction.runparameter)
 
-    [BDT cuts]              using cuts list for BDT cuts (e.g. 0=not used, 1=used)
-                            (default: \"2\")
-    
     [cuts list file]        file containing one gamma/hadron cuts file per line
                             (default: hard-coded standard EventDisplay cuts)
 
     [sim directory]         directory containing simulation VBF files
+
+    example:     ./IRF.production.sh CARE_June1702 ANALYSETABLES V6 61 0
 
 --------------------------------------------------------------------------------
 "
@@ -59,12 +58,11 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 # Parse command line arguments
 SIMTYPE=$1
 IRFTYPE=$2
-[[ "$3" ]] && EPOCH=$3 || EPOCH="V4 V5 V6"
+[[ "$3" ]] && EPOCH=$3 || EPOCH="V6 V5 V4"
 [[ "$4" ]] && ATMOS=$4 || ATMOS="21 22"
 [[ "$5" ]] && RECID=$5 || RECID="0 2 3 4 5"
-[[ "$6" ]] && BDTCUTS=$6 || BDTCUTS="1"
-[[ "$7" ]] && CUTSLISTFILE=$7 || CUTSLISTFILE=""
-[[ "$8" ]] && SIMDIR=$8 || SIMDIR=""
+[[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
+[[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
 
@@ -95,6 +93,8 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
         ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
     fi
     NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
+    ZENITH_ANGLES=( 20 )
+    NSB_LEVELS=( 200 )
     WOBBLE_OFFSETS=( 0.5 )
     NEVENTS="15000000"
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
@@ -128,36 +128,28 @@ echo "Wobble offsets: $WOBBLE_OFFSETS"
 # Set gamma/hadron cuts
 if [[ $CUTSLISTFILE != "" ]]; then
     if [ ! -f $CUTSLISTFILE ]; then
-        echo "Error, cuts list file $CUTSLISTFILE not found, exiting..."
+        echo "Error, cuts list file not found, exiting..."
+        echo $CUTSLISTFILE
         exit 1
     fi
     # read file containing list of cuts
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
+    CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 else
-    if [[ $BDTCUTS == "0"  ]]; then
-    # default list of cuts
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat 
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard.dat"
-    else
-    #BDT TMVA list of cuts
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat 
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
-    fi
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat 
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
 fi
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
+CUTLIST=${CUTLIST//$'\n'/}
 
 ############################################################
 # loop over complete parameter space and submit production
 for VX in $EPOCH; do
     for ATM in $ATMOS; do
        ######################
-       # set lookup table files
-       # (METHOD "DISP" or "GEO" is set later)
+       # set lookup table file name
        TABLECOM="table-${IRFVERSION}-${AUX}-${SIMTYPE}-ATM${ATM}-${VX}-"
        ######################
        # combine lookup tables
@@ -165,12 +157,8 @@ for VX in $EPOCH; do
             TFIL="${TABLECOM}"
             for ID in $RECID; do
                 echo "combine lookup tables"
-                if [[ $ID == "0" ]] || [[ $ID == "2" ]] || [[ $ID == "3" ]] || [[ $ID == "4" ]] || [[ $ID == "5" ]] || [[ $ID == "6" ]]; then
-		            METH="GEO"
-                elif [[ $ID == "1" ]] || [[ $ID == "7" ]] || [[ $ID == "8" ]] || [[ $ID == "9" ]] || [[ $ID == "10" ]]; then 
-		            METH="DISP"
-	        fi
-                ./IRF.combine_lookup_table_parts.sh "${TFIL}${METH}" $VX $ATM $ID $SIMTYPE 
+                METH="GEO"
+                $(dirname "$0")/IRF.combine_lookup_table_parts.sh "${TFIL}${METH}" "$VX" "$ATM" "$ID" "$SIMTYPE" 
             done
             continue
        fi
@@ -180,7 +168,7 @@ for VX in $EPOCH; do
             for ID in $RECID; do
                 for CUTS in ${CUTLIST[@]}; do
                     echo "combine effective areas $CUTS"
-                   ./IRF.combine_effective_area_parts.sh $CUTS $VX $ATM $ID $SIMTYPE $AUX
+                   $(dirname "$0")/IRF.combine_effective_area_parts.sh "$CUTS" "$VX" "$ATM" "$ID" "$SIMTYPE" "$AUX"
                 done # cuts
             done
             continue
@@ -190,9 +178,9 @@ for VX in $EPOCH; do
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                   ./IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 200 $SIMTYPE
+                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 200 $SIMTYPE
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                   ./IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 170 $SIMTYPE
+                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 170 $SIMTYPE
                fi
                continue
             fi
@@ -213,12 +201,12 @@ for VX in $EPOCH; do
                        elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
                           SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/${SIMTYPE}
                        fi
-                       ./IRF.evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $ACUTS 1 $NEVENTS
+                       $(dirname "$0")/IRF.evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $ACUTS 1 $NEVENTS
                     ######################
                     # make tables
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
                         for ID in $RECID; do
-                           ./IRF.generate_lookup_table_parts.sh $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
+                           $(dirname "$0")/IRF.generate_lookup_table_parts.sh $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
                         done #recid
                     ######################
                     # analyse table files
@@ -226,32 +214,16 @@ for VX in $EPOCH; do
                         TFIL="${TABLECOM}"
                         # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                         # warning: do not mix disp and geo
-                        METH="NOTSET"
-                        for ID in $RECID; do
-                            if [[ $ID == "0" ]] || [[ $ID == "2" ]] || [[ $ID == "3" ]] || [[ $ID == "4" ]] || [[ $ID == "5" ]] || [[ $ID == "6" ]]; then
-                               if [[ $METH != "NOTSET" ]] && [[ $METH != "GEO" ]]; then
-                                   echo "invalid RECID combination, do not mix GEO and DISP"
-                                   exit
-                               fi
-                               METH="GEO"
-			    elif [[ $ID == "1" ]] || [[ $ID == "7" ]] || [[ $ID == "8" ]] || [[ $ID == "9" ]] || [[ $ID == "10" ]]; then 
-                               if [[ $METH != "NOTSET" ]] || [[ $METH != "DISP" ]]; then
-                                   echo "invalid RECID combination, do not mix GEO and DISP"
-                                   exit
-                               fi
-			       METH="DISP"
-			    fi
-                        done
+                        METH="GEO"
                         TFILID=$TFIL$METH
-			./IRF.mscw_energy_MC.sh $TFILID $VX $ATM $ZA $WOBBLE $NOISE "$RECID" $SIMTYPE
+			$(dirname "$0")/IRF.mscw_energy_MC.sh $TFILID $VX $ATM $ZA $WOBBLE $NOISE "$RECID" $SIMTYPE
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]]; then
                         for ID in $RECID; do
-                            #./IRF.generate_effective_area_parts.sh "$CUTLIST" $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
                             for CUTS in ${CUTLIST[@]}; do
                                 echo "combine effective areas $CUTS"
-                               ./IRF.generate_effective_area_parts.sh $CUTS $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
+                               $(dirname "$0")/IRF.generate_effective_area_parts.sh $CUTS $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
                             done # cuts
                         done #recID
                     fi
@@ -264,4 +236,3 @@ done  #VX
 # Go back to the original user directory.
 cd $olddir
 exit
-
