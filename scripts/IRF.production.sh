@@ -121,6 +121,9 @@ else
     echo "Invalid simulation type. Exiting..."
     exit 1
 fi
+echo "Zenith Angles: ${ZENITH_ANGLES}"
+echo "NSB levels: ${NSB_LEVELS}"
+echo "Wobble offsets: $WOBBLE_OFFSETS"
 
 # Set gamma/hadron cuts
 if [[ $CUTSLISTFILE != "" ]]; then
@@ -195,7 +198,7 @@ for VX in $EPOCH; do
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
                 for WOBBLE in ${WOBBLE_OFFSETS[@]}; do
-                    echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
+                    echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE, NEVENTS $NEVENTS"
                     ######################
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]]; then
