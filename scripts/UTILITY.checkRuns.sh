@@ -1,15 +1,9 @@
 #!/bin/bash
 #
 # UTILITY.checkRuns.sh
-# Small script that quickly check the ED and mscw log files for errors and warnings.
+# check the ED and mscw log files for errors and warnings.
 # Also prints out the ped values - quick check for missing flasher info.
 #
-# Gareth
-#
-# NOTE: THIS SCRIPT DOESN'T REALLY WORK YET (SG)
-# 140528: 	I made it working with some adaptions to the ANALYSIS.mscw_energy.sh
-#			input style. Moritz
-
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
     echo "UTILITY.checkRuns.sh <runlist> [ED version] [RecID] [MSCW output directory]"
@@ -23,8 +17,6 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 # Parse command line arguments
 RUNLIST=$1
 [[ "$2" ]] && EDVERSION=$2 || EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
-
-
 
 OUTPUTDIR=${VERITAS_USER_DATA_DIR}/analysis/Results/EVD-${EDVERSION}
 
