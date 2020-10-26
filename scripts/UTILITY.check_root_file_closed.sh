@@ -8,7 +8,7 @@ fi
 
 filename_to_check=$(readlink -f $1)
 #echo $filename_to_check
-root -b -l -q -e "$EVNDISPSYS/Macros/checkCorrupted.C(\"$filename_to_check\")" >/dev/null 2>&1
+root -b -l -q -e "$EVNDISPSYS/macros/VTS/checkCorrupted.C(\"$filename_to_check\")" >/dev/null 2>&1
 if [ $? -ne 0 ]; then
     exit 1
 fi
