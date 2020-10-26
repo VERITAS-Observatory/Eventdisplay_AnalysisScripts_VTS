@@ -17,8 +17,9 @@ optional parameters:
 exit
 fi
 
+CDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Set submission commands file to arg or default
-[[ "$1" ]] && CMDFILE=$1 || CMDFILE="$EVNDISPSYS/scripts/VTS/submissionCommands.dat"
+[[ "$1" ]] && CMDFILE=$1 || CMDFILE="$CDIR/../submissionCommands.dat"
 
 # Check to make sure submission commands file exists
 if [[ ! -f "$CMDFILE" ]]; then
