@@ -34,6 +34,7 @@ fi
 # Run init script
 bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
+CDIR=$(dirname "$0")
 
 # Parse command line arguments
 RLIST=$1
@@ -79,6 +80,7 @@ for RUN in $RUNNUMS; do
 
         sed -e "s|RUNFILE|$RUN|" \
             -e "s|TELTOANACOMB|$TELTOANA|" \
+            -e "s|CURRENTDIR|$CDIR|" \
             -e "s|LOGDIRECTORY|$LOGDIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
         chmod u+x $FSCRIPT.sh

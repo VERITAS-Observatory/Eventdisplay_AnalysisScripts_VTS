@@ -265,7 +265,7 @@ for RUN in ${RUNS[@]}; do
 done
 
 # submit the job
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/ANALYSIS.anasum_parallel"
+SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"
 $SUBSCRIPT.sh $ANARUNLIST $INDIR $ODIR $RUNP
 
 exit

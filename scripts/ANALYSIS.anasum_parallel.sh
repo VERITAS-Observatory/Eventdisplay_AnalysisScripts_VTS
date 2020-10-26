@@ -84,7 +84,7 @@ NRUNS=`cat $TEMPLIST | grep -v "VERSION" | wc -l`
 echo "Total number of runs to analyse: $NRUNS"
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/ANALYSIS.anasum_sub"
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_sub"
 
 TIMETAG=`date +"%s"`
 
@@ -122,7 +122,7 @@ for ((i=1; i <= $NLINES; i++)); do
         chmod u+x $FSCRIPT.sh
         
         # run locally or on cluster
-        SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+        SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
         SUBC=`eval "echo \"$SUBC\""`
         if [[ $SUBC == *qsub* ]]; then
             JOBID=`$SUBC $FSCRIPT.sh`
@@ -158,7 +158,7 @@ echo ""
 echo "============================================================================================"
 
 echo "After all runs have been analysed, please combine the results, eg by calling"
-echo "$EVNDISPSYS/scripts/VTS/ANALYSIS.anasum_combine.sh \\"
+echo $( dirname "$0" )"ANALYSIS.anasum_combine.sh \\"
 echo "	$FLIST \\"
 echo "	$ODIR \\"
 echo "	anasumCombined.root \\"

@@ -73,7 +73,7 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p $ODIR
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/ANALYSIS.anasum_sub"
+SUBSCRIPT=$(dirname "$0")"/helper_scripts/ANALYSIS.anasum_sub"
 
 TIMETAG=`date +"%s"`
 
@@ -88,7 +88,7 @@ chmod u+x $FSCRIPT.sh
 echo $FSCRIPT.sh
 
 # run locally or on cluster
-SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`$(dirname "$0")/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
