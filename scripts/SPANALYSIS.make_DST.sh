@@ -9,7 +9,7 @@ if [[ $# < 2 ]]; then
 echo "
 EVNDISP DST maker: submit jobs from a simple run list
 
-UTILITY.make_DST.sh <runlist> <summation window> [pedestal calculation] [LMULT] [output dir] [run parameter file]
+SPANALYSIS.make_DST.sh <runlist> <summation window> [pedestal calculation] [LMULT] [output dir] [run parameter file]
 
 required parameters:
 
@@ -78,7 +78,7 @@ fi
 
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.make_DST_sub"
+SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/SPANALYSIS.make_DST_sub"
 
 #########################################
 # loop over all files in files loop
