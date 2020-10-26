@@ -174,7 +174,7 @@ if [ -e $OPDIR ]; then
             if [ ! -e $rootfile ]; then
                 toexec=1
             else
-                sh $EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.check_root_file_closed.sh $rootfile
+                sh $( dirname "$0" )/helper_scripts/UTILITY.check_root_file_closed.sh $rootfile
                 if [ "$?" == "1" ]; then
                     toexec=1
                 fi
@@ -226,7 +226,7 @@ do
     echo "Number of events per job: $NEVENTS"
 
     # Job submission script
-    SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/IRF.evndisp_MC_sub"
+    SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.evndisp_MC_sub"
 
     # make run script
     FSCRIPT="$LOGDIR/evn-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM-${RUNNUM}"
@@ -251,8 +251,9 @@ do
     let "RUNNUM = ${RUNNUM} + 100"
 
     # run locally or on cluster
-    SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
     SUBC=`eval "echo \"$SUBC\""`
+    echo "$SUBC"
     if [[ $SUBC == *qsub* ]]; then
         if [[ $NEVENTS -gt 0 ]]; then
             JOBID=`$SUBC -t 1-10 $FSCRIPT.sh`
