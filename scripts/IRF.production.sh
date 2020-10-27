@@ -96,8 +96,8 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
         ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
     fi
     NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
-    ZENITH_ANGLES=( 20 )
-    NSB_LEVELS=( 200 )
+    ZENITH_ANGLES=( 20 30 )
+    NSB_LEVELS=( 160 200 )
     WOBBLE_OFFSETS=( 0.5 )
     NEVENTS="15000000"
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then

@@ -253,7 +253,6 @@ do
     SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
     SUBC=`eval "echo \"$SUBC\""`
     echo "$SUBC"
-    continue
     if [[ $SUBC == *qsub* ]]; then
         if [[ $NEVENTS -gt 0 ]]; then
             JOBID=`$SUBC -t 1-10 $FSCRIPT.sh`
