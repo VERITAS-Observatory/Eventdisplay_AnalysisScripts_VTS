@@ -241,7 +241,7 @@ do
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|SIMULATIONTYPE|$SIMTYPE|" \
         -e "s|VBFFFILE|$V|" \
-        -e "s|VERSION|$EDVERSION|" \
+        -e "s|VVERSION|$EDVERSION|" \
         -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh
