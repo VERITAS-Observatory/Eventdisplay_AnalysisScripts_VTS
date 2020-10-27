@@ -99,7 +99,7 @@ mkdir -p $LOGDIR
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/ANALYSIS.mscw_energy_sub"
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.mscw_energy_sub"
 
 TIMETAG=`date +"%s"`
 
@@ -169,7 +169,7 @@ do
     echo $FSCRIPT.sh
 
     # run locally or on cluster
-    SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
     SUBC=`eval "echo \"$SUBC\""`
     echo "Submission command: $SUBC"
     if [[ $SUBC == *qsub* ]]; then

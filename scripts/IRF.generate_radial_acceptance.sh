@@ -85,7 +85,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/IRF.radial_acceptance_sub.sh"
+SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.radial_acceptance_sub.sh"
 
 # loop over all files/cases
 for CUTS in ${CUTLIST[@]}; do
@@ -154,7 +154,7 @@ for CUTS in ${CUTLIST[@]}; do
             echo "Script submitted to cluster: $FSCRIPT.sh"
             
             # run locally or on cluster
-            SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+            SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
             echo $LOGDIR
             SUBC=`eval "echo \"$SUBC\""`
             if [[ $SUBC == *qsub* ]]; then

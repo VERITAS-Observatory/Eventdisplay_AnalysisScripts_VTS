@@ -116,7 +116,7 @@ LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANADATA"
 mkdir -p $LOGDIR
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/ANALYSIS.evndisp_sub"
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
 
 TIMETAG=`date +"%s"`
 
@@ -169,7 +169,7 @@ do
 	fi 
 
     # run locally or on cluster
-    SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
     SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`

@@ -107,7 +107,7 @@ LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCW.MAKETABLES/$(date +%s | cut -c -8)/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
 
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/IRF.lookup_table_parallel_sub"
+SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_parallel_sub"
 
 # loop over all zenith angles, wobble offsets, and noise bins
 echo "Processing Zenith = $ZA, Wobble = $WOBBLE, Noise = $NOISE"
@@ -130,7 +130,7 @@ chmod u+x $FSCRIPT.sh
 echo $FSCRIPT.sh
 
 # run locally or on cluster
-SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *qsub* ]]; then
     $SUBC $FSCRIPT.sh

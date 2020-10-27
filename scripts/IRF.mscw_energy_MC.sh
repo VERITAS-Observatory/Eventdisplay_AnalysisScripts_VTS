@@ -128,7 +128,7 @@ fi
 echo -e "Output files will be written to:\n $ODIR"
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/IRF.mscw_energy_MC_sub"
+SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
 
 echo "Now processing zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
 
@@ -147,7 +147,7 @@ chmod u+x $FSCRIPT.sh
 echo "Run script written to: $FSCRIPT"
 
 # run locally or on cluster
-SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`

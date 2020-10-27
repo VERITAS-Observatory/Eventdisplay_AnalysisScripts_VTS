@@ -61,7 +61,7 @@ OPT="-runmode=$RUNMODE -runnumber=$RUNNUM -lasermin=$LASERMIN -calibrationsumwin
 # calculate pedestals (for high gain only)
 if [[ $RUNMODE == 2 ]]; then
     echo "Calculating pedestals for run $RUNNUM"
-    $EVNDISPSYS/scripts/VTS/SPANALYSIS.evndisp_pedestal_events.sh $RUNNUM
+    $(dirname "$0")/SPANALYSIS.evndisp_pedestal_events.sh $RUNNUM
 fi
 
 # calculate gains, looping over all telescopes

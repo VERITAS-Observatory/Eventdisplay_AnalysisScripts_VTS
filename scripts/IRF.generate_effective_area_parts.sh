@@ -102,7 +102,7 @@ fi
 EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/IRF.effective_area_parallel_sub"
+SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_parallel_sub"
 
 echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
             
@@ -118,7 +118,7 @@ chmod u+x $FSCRIPT.sh
 echo $FSCRIPT.sh
 
 # run locally or on cluster
-SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`

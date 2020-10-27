@@ -123,7 +123,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
 
 # Job submission script
-SUBSCRIPT="$EVNDISPSYS/scripts/VTS/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_sub"
+SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_sub"
 
 ###############################################################
 # loop over all energy bins and submit a job for each bin
@@ -249,7 +249,7 @@ do
       echo $FSCRIPT.sh
 
       # run locally or on cluster
-      SUBC=`$EVNDISPSYS/scripts/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
+      SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
       SUBC=`eval "echo \"$SUBC\""`
       if [[ $SUBC == *qsub* ]]; then
          JOBID=`$SUBC $FSCRIPT.sh`

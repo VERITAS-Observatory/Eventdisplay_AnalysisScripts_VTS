@@ -38,7 +38,7 @@ do
     DFILE=`find -L $DDIR -name "$RUN.cvbf"`
 
     if [[ -f $DFILE ]]; then
-        $EVNDISPSYS/scripts/VTS/SPANALYSIS.evndisp_laser_run.sh $DTEL $DFILE
+        $(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh $DTEL $DFILE
     else
 	    echo "Missing laser/flasher file $DFILE, please download it"
     fi
