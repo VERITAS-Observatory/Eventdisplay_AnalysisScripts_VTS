@@ -60,8 +60,8 @@ if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/Tables/"
 fi
 echo -e "Output files will be written to:\n$ODIR"
-mkdir -p $ODIR
-chmod g+w $ODIR
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
 
 if [[ -f $OFILE ]]; then
     echo "ERROR: table file $ODIR/$OFILE exists; move it or delete it"
@@ -72,17 +72,18 @@ fi
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCW.MAKETABLES/$(date +%s | cut -c -8)/"
 echo -e "Log files will be written to:\n$LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # Create list of partial table files
 FLIST=$OFILE.list
-rm -f $ODIR/$FLIST
-ls -1 $INDIR/*ID${RECID}.root > $ODIR/$FLIST
-NFIL=`cat $ODIR/$FLIST | wc -l`
+rm -f "$ODIR/$FLIST"
+ls -1 $INDIR/*ID${RECID}.root > "$ODIR/$FLIST"
+NFIL=`cat "$ODIR/$FLIST" | wc -l`
 if [[ $NFIL = "0" ]]; then
+   echo "No lookup table root files found"
    exit
 fi
-echo $FLIST
+echo "$FLIST"
 echo "LOOKUPTABLE $OFILE" 
 
 
@@ -95,7 +96,7 @@ sed -e "s|TABLELIST|$FLIST|" \
     -e "s|OUTPUTFILE|$OFILE|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
-chmod u+x $FSCRIPT.sh
+chmod u+x "$FSCRIPT.sh"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
