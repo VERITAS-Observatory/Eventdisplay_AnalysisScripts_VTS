@@ -74,6 +74,9 @@ NEVENTS="-1"
 
 # Default run parameter file for evndisp analysis
 ACUTS="EVNDISP.reconstruction.runparameter"
+if [[ $IRFVERSION = "v4"* ]]; then
+  ACUTS="EVNDISP.reconstruction.runparameter.v48x"
+fi
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
