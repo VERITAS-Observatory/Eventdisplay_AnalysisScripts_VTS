@@ -21,6 +21,7 @@ NEVENTS=NENEVENT
 TELTOANA="1234"
 VBFNAME=VBFFFILE
 NOISEFILE=NOISEFFILE
+EDVERSION=VERSION
 
 #TMPTMP
 PEDNEVENTS="200000"
@@ -48,7 +49,11 @@ DEAD="EVNDISP.validchannels.dat"
 #  adjustments possibly needed)
 PEDLEV="16."
 # LOWPEDLEV="8."
-LOWPEDLEV="16."
+if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+    LOWPEDLEV="${PEDLEV}"
+else
+    LOWPEDLEV="16."
+fi
 
 # Amplitude correction factor options
 AMPCORR="-traceamplitudecorrection MSCW.sizecal.runparameter -pedestalDefaultPedestal=$PEDLEV"
@@ -121,12 +126,17 @@ MCOPT="$MCOPT $AMPCORR"
 
 # Low gain calibration
 mkdir -p $ODIR/Calibration
-if [[ ! -f $ODIR/Calibration/calibrationlist.LowGain.dat ]]; then 
-    if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-        cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat $ODIR/Calibration/calibrationlist.LowGain.dat
-    elif [ ${SIMTYPE:0:4} = "CARE" ]; then
-        cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.dat $ODIR/Calibration/calibrationlist.LowGainForCare.dat
-    fi
+LOWGAINCALIBRATIONFILE=NOFILE
+if [[ ${SIMTYPE:0:4} = "CARE" ]]; then
+   if [[ $EDVERSION = "v4"* ]]; then
+       if [[ ! -f $ODIR/Calibration/calibrationlist.LowGainForCare.dat ]]; then
+          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.dat $ODIR/Calibration/calibrationlist.LowGainForCare.dat
+          LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.dat
+       elif [[ ! -f $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ]]; then
+          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
+          LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
+       fi
+   fi
 fi
 
 ###############################################
@@ -135,7 +145,7 @@ fi
 if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
     echo "Calculating pedestals for run $RUNNUM"
     rm -f $ODIR/$RUNNUM.ped.log
-    PEDOPT="-runmode=1 -calibrationsumfirst=0 -calibrationsumwindow=20 ${PEDNEVENTS}"
+    PEDOPT="-runmode=1 -calibrationnevents=${PEDNEVENTS}"
     $EVNDISPSYS/bin/evndisp $MCOPT $PEDOPT &> $ODIR/$RUNNUM.ped.log
     if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.ped.log;
     then
@@ -149,13 +159,12 @@ fi
 ###############################################
 # calculate tzeros
 echo "Calculating average tzeros for run $RUNNUM"
-TZEROPT="-runmode=7 -calibrationsumfirst=0 -calibrationsumwindow=20 -calibrationnevents=${TZERONEVENTS} -pedestalnoiselevel=$NOISE "
+TZEROPT="-runmode=7 -calibrationnevents=${TZERONEVENTS} -pedestalnoiselevel=$NOISE "
+TZEROPT="$TZEROPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE}"
 rm -f $ODIR/$RUNNUM.tzero.log
 ### eventdisplay GRISU run options
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-   TZEROPT="$TZEROPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV -lowgaincalibrationfile NOFILE -lowgainpedestallevel=$PEDLEV"
-else
-   TZEROPT="$TZEROPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile calibrationlist.LowGainForCare.dat"
+   TZEROPT="$TZEROPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV" 
 fi
 echo "$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT" &> $ODIR/$RUNNUM.tzero.log
 $EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT &>> $ODIR/$RUNNUM.tzero.log
@@ -174,15 +183,16 @@ fi
 #####################
 # general analysis options
 ANAOPT=" -writenomctree -outputfile $DDIR/$ONAME.root"
+ANAOPT="$ANAOPT -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE} -lowgainpedestallevel=$PEDLEV"
 
 #####################
 # options for GRISU (handling of low-gain values)
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV -lowgaincalibrationfile NOFILE -lowgainpedestallevel=$PEDLEV"
+    ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
 else
 #####################
 # options for CARE (handling of low-gain values)
-    ANAOPT="$ANAOPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile calibrationlist.LowGainForCare.dat"
+    ANAOPT="$ANAOPT -lowgainpedestallevel=$LOWPEDLEV"
 fi
 if [[ $NEVENTS -gt 0 ]]; then
 	 ANAOPT="-nevents=$NEVENTS -firstevent=$FIRSTEVENT $ANAOPT"
