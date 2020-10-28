@@ -131,11 +131,13 @@ if [[ ${SIMTYPE:0:4} = "CARE" ]]; then
    if [[ $EDVERSION = "v4"* ]]; then
        if [[ ! -f $ODIR/Calibration/calibrationlist.LowGainForCare.dat ]]; then
           cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.dat $ODIR/Calibration/calibrationlist.LowGainForCare.dat
-          LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.dat
-       elif [[ ! -f $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ]]; then
-          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
-          LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
        fi
+       LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.dat
+   else
+       if [[ ! -f $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ]]; then
+          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
+       fi
+       LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
    fi
 fi
 
@@ -190,10 +192,7 @@ ANAOPT="$ANAOPT -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE} -lowgainpedest
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
 else
-#####################
-# options for CARE (handling of low-gain values)
-    ANAOPT="$ANAOPT -lowgainpedestallevel=$LOWPEDLEV"
-fi
+# first event for analysis
 if [[ $NEVENTS -gt 0 ]]; then
 	 ANAOPT="-nevents=$NEVENTS -firstevent=$FIRSTEVENT $ANAOPT"
 fi
