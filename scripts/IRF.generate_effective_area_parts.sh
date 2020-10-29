@@ -81,14 +81,14 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p $ODIR
-chmod g+w $ODIR
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/$(date +%s | cut -c -8)/${ZA}deg_${WOBBLE}wob_NOISE${NOISE}_${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}_${RECID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 #################################
 # template string containing the name of processed simulation root file
@@ -106,7 +106,10 @@ SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_parallel_sub"
 
 echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
             
-echo $CUTSFILE
+echo "CUTSFILE: $CUTSFILE"
+echo "ODIR: $ODIR"
+echo "DATAFILE $MCFILE"
+echo "EFFFILE $EFFAREAFILE"
 # set parameters in run script
 FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s)"
 sed -e "s|OUTPUTDIR|$ODIR|" \
@@ -114,17 +117,23 @@ sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|DATAFILE|$MCFILE|" \
     -e "s|GAMMACUTS|${CUTSFILE}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
-chmod u+x $FSCRIPT.sh
-echo $FSCRIPT.sh
+chmod u+x "$FSCRIPT.sh"
+echo "$FSCRIPT.sh"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo "$SUBC"
+    exit
+fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+elif [[ "$SUBC" == *simple* ]]; then
+    "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
 
 exit
