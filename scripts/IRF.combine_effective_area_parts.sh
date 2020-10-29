@@ -82,14 +82,14 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p $ODIR
-chmod g+w $ODIR
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
 
 # Run scripts and log files are written into this directory
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA"
 echo "Writing run scripts and log files to $LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_combine_sub"
@@ -111,14 +111,7 @@ SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_combine_sub"
 echo "Processing epoch $EPOCH, atmosphere ATM$ATMOS, RecID $RECID (telescope combination T${T})"
 
 # output effective area name
-#OFILE="effArea-${IRFVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-ID${RECID}-${EPOCH}-ATM${ATMOS}-T${T}"
-for ID in $RECID;do
-    if [[ $ID == "0" ]] || [[ $ID == "2" ]] || [[ $ID == "3" ]] || [[ $ID == "4" ]] || [[ $ID == "5" ]] || [[ $ID == "6" ]]; then
-        METH="GEO" 
-    elif [[ $ID == "1" ]] || [[ $ID == "7" ]] || [[ $ID == "8" ]] || [[ $ID == "9" ]] || [[ $ID == "10" ]]; then 
-        METH="DISP"
-    fi
-done
+METH="GEO" 
 OFILE="effArea-${IRFVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM${ATMOS}-T${T}"
 
 FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}"
@@ -128,17 +121,23 @@ sed -e "s|INPUTFILES|$INFILES|" \
     -e "s|OUTPUTFILE|$OFILE|"   \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 	    
-chmod u+x $FSCRIPT.sh
-echo $FSCRIPT.sh
+chmod u+x "$FSCRIPT.sh"
+echo "$FSCRIPT.sh"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo $SUBC
+    exit
+fi
 if [[ $SUBC == *qsub* ]]; then
 	JOBID=`$SUBC $FSCRIPT.sh`
 	echo "JOBID: $JOBID"
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+elif [[ "$SUBC" == *simple* ]] ; then
+    "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
 
 exit
