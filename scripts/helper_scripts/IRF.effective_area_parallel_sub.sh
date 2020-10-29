@@ -17,11 +17,11 @@ if [[ -n "$TMPDIR" ]]; then
 else
     DDIR="/tmp/EFFAREA"
 fi
-mkdir -p $DDIR
+mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 
 # cp MC file to TMPDIR
-cp -f $MCFILE $DDIR/
+cp -f "$MCFILE" "$DDIR"/
 MCFILE=`basename $MCFILE`
 MCFILE=${DDIR}/${MCFILE}
 
@@ -47,7 +47,7 @@ for CUTSFILE in $CUTSLIST; do
     mkdir -p $OSUBDIR
     chmod -R g+w $OSUBDIR
 
-# parameter file template, change IGNOREFRACTIONOFEVENTS if needed
+# parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
     PARAMFILE="
     * OBSERVATORY 1
     * FILLINGMODE 0
@@ -61,6 +61,7 @@ for CUTSFILE in $CUTSLIST; do
     * FILLMONTECARLOHISTOS 0
     * ENERGYSPECTRUMINDEX 20 1.6 0.2
     * FILLMONTECARLOHISTOS 0
+    ESPECTRUM_FOR_WEIGHTING $VERITAS_EVNDISP_AUX_DIR/AstroData/TeV_data/EnergySpectrum_literatureValues_CrabNebula.dat 5
     * CUTFILE $CUTSFILE
      IGNOREFRACTIONOFEVENTS 0.5        
     * SIMULATIONFILE_DATA $MCFILE"
