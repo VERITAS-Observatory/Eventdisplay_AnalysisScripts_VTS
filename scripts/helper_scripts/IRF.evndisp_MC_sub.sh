@@ -23,9 +23,9 @@ VBFNAME=VBFFFILE
 NOISEFILE=NOISEFFILE
 EDVERSION=VVERSION
 
-#TMPTMP
-PEDNEVENTS="200000"
-TZERONEVENTS="100000"
+# number of pedestal events
+PEDNEVENTS="20000"
+TZERONEVENTS="10000"
 
 if [[ $NEVENTS -gt 0 ]]; then
     ITER=$((SGE_TASK_ID - 1))
@@ -186,12 +186,12 @@ fi
 # general analysis options
 ANAOPT=" -writenomctree -outputfile $DDIR/$ONAME.root"
 ANAOPT="$ANAOPT -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE} -lowgainpedestallevel=$PEDLEV"
-
-#####################
-# options for GRISU (handling of low-gain values)
+#
+######################
+## options for GRISU (handling of low-gain values)
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
-else
+fi
 # first event for analysis
 if [[ $NEVENTS -gt 0 ]]; then
 	 ANAOPT="-nevents=$NEVENTS -firstevent=$FIRSTEVENT $ANAOPT"
