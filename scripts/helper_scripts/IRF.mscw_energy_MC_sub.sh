@@ -39,19 +39,12 @@ MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID
 echo "MSCW options: $MOPT"
 
 # run mscw_energy
-if [[ $NROOTFILES == 1 ]]; then
-      rm -f $OSUBDIR/$OFILE.log
-      inputfilename="$INDIR/*[0-9]*.root"
-      outputfilename="$DDIR/$OFILE.mscw.root"
-      logfile="$OSUBDIR/$OFILE.mscw.log"
-elif	[[ $NROOTFILES > 1 ]]; then
-      ITER=$((SGE_TASK_ID - 1))
-      rm -f $OSUBDIR/${OFILE}_$ITER.log
-      inputfilename="$INDIR/*[0-9]_$ITER.root"
-      outputfilename="$DDIR/${OFILE}_$ITER.mscw.root"
-      logfile="$OSUBDIR/${OFILE}_$ITER.mscw.log"
-fi
-$EVNDISPSYS/bin/mscw_energy $MOPT -inputfile $inputfilename -outputfile $outputfilename -noise=$NOISE &> $logfile
+rm -f $OSUBDIR/$OFILE.log
+rm -f $OSUBDIR/$OFILE.list
+ls -1 $INDIR/*[0-9].root > $OSUBDIR/$OFILE.list
+outputfilename="$DDIR/$OFILE.mscw.root"
+logfile="$OSUBDIR/$OFILE.log"
+$EVNDISPSYS/bin/mscw_energy $MOPT -inputfilelist $OSUBDIR/$OFILE.list -outputfile $outputfilename -noise=$NOISE &> $logfile
 
 # cp results file back to data directory and clean up
 outputbasename=$( basename $outputfilename )
