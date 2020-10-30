@@ -27,6 +27,15 @@ mkdir -p "$TEMPDIR"
 #################################
 echo "Using run parameter file $ACUTS"
 
+#################################
+# low gain calibration file
+if [[ -e "$VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat" ]]; then
+   cp -f -v $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat $CALDIR/Calibration/
+else
+   echo "error - low-gain calibration list not found ($VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat)"
+   exit
+fi
+
 #########################################
 # pedestal calculation
 if [[ $CALIB == "1" || ( $CALIB == "2" || $CALIB == "4" ) ]]; then
