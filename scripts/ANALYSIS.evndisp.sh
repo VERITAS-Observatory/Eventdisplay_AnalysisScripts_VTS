@@ -12,7 +12,7 @@ if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
 EVNDISP data analysis: submit jobs from a simple run list
 
-ANALYSIS.evndisp.sh <runlist> [output directory] [runparameter file] [calibration] [Model3D] [teltoana] [calibration file name]
+ANALYSIS.evndisp.sh <runlist> [output directory] [runparameter file] [calibration] [teltoana] [calibration file name]
 
 required parameters:
 
@@ -26,15 +26,7 @@ optional parameters:
     [runparameter file]    file with integration window size and reconstruction cuts/methods,
                            expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
-			   Default: EVNDISP.reconstruction.runparameter (long sumwindow -> for use with CARE IRFs; DISP disabled )
-
-			   other options:
-
-			   EVNDISP.reconstruction.runparameter.DISP		 (long sumwindow -> for use with CARE IRFs;
-										                    DISP enabled, use RecID 1 in later stages to access it)
-										 
-			   EVNDISP.reconstruction.runparameter.SumWindow6-noDISP (short sumwindow -> for use with grisu IRFs; DISP disabled)
-			   EVNDISP.reconstruction.runparameter.SumWindow6-DISP	 (short sumwindow -> for use with grisu IRFs; DISP enabled [RecID 1])
+			   Default: EVNDISP.reconstruction.runparameter
 
     [calibration]	   
           0		   neither tzero nor pedestal calculation is performed, must have the calibration results
@@ -46,7 +38,6 @@ optional parameters:
                            laser run number is taken from calibration file,
                            gains taken from $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?/<laserrun>.gain.root 
 
-    [Model3D]              set to 1 to switch on 3D model (default is off)
 
     [teltoana]             restrict telescope combination to be analyzed:
                            e.g.: teltoana=123 (for tel. 1,2,3), 234, ...
@@ -76,38 +67,38 @@ exec 5>&1
 RLIST=$1
 [[ "$2" ]] && ODIR=$2 || ODIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
 mkdir -p $ODIR
-
-ACUTS_AUTO=EVNDISP.reconstruction.runparameter
-
-[[ "$3" ]] && ACUTS=$3 || ACUTS=$ACUTS_AUTO #EVNDISP.reconstruction.runparameter
+ACUTS_AUTO="EVNDISP.reconstruction.runparameter"
+if [[ $EDVERSION = "v4"* ]]; then
+   ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v48x"
+fi
+[[ "$3" ]] && ACUTS=$3 || ACUTS=${ACUTS_AUTO}
 [[ "$4" ]] && CALIB=$4 || CALIB=1
-[[ "$5" ]] && MODEL3D=$5 || MODEL3D=0
-[[ "$6" ]] && TELTOANA=$6 || TELTOANA=1234
-[[ "$7" ]] && CALIBFILE=$7 || CALIBFILE=calibrationlist.dat
-#[[ "$8" ]] && EXTRAPARS="-muon -hough" || EXTRAPARS=""
-
+[[ "$5" ]] && TELTOANA=$5 || TELTOANA=1234
+[[ "$6" ]] && CALIBFILE=$6 || CALIBFILE=calibrationlist.dat
+# VPM is on by default
 VPM=1
 
-echo "Using runparameter file $ACUTS"
+echo "Using runparameter file $ACUTS ($EDVERSION)"
 
 # Read runlist
 if [ ! -f "$RLIST" ] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-FILES=`cat $RLIST`
+FILES=`cat "$RLIST"`
 
 # Output directory for error/output
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANADATA"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
 
+# time tag used in script naming
 TIMETAG=`date +"%s"`
 
-NRUNS=`cat $RLIST | wc -l ` 
+NRUNS=`cat "$RLIST" | wc -l ` 
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -124,7 +115,7 @@ fi
 for AFILE in $FILES
 do
     echo "Now starting run $AFILE"
-    FSCRIPT="$LOGDIR/EVN.data-$AFILE"
+    FSCRIPT="$LOGDIR/EVN.data-$AFILE-$(date +%s)"
 
     sed -e "s|RUNFILE|$AFILE|"              \
         -e "s|CALIBRATIONOPTION|$CALIB|"    \
@@ -132,36 +123,31 @@ do
         -e "s|USEVPMPOINTING|$VPM|" \
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
-        -e "s|USECALIBLIST|$CALIBFILE|"                  \
-        -e "s|USEMODEL3D|$MODEL3D|"                   \
-        -e "s|EXTRAPARS|$EXTRAPARS|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
-    chmod u+x $FSCRIPT.sh
-    echo $FSCRIPT.sh
-	# output selected input during submission:
+    chmod u+x "$FSCRIPT.sh"
+    echo "$FSCRIPT.sh"
 
-	echo "Using runparameter file $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$ACUTS"
+    # output selected input during submission:
 
-	if [[ $VPM == "1" ]]; then
-	echo "VPM is switched on (default)"
-	else
-	echo "VPM bool is set to $VPM (switched off)"
-	fi  
-	if [[ $MODEL3D == "0" ]]; then
-            echo "Model3D is switched off (default)"
-	else
-            echo "Model3D bool is set to $MODEL3D (switched on)"
-	fi 
-	if [[ $TELTOANA == "1234" ]]; then
+    echo "Using runparameter file $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$ACUTS"
+
+    if [[ $VPM == "1" ]]; then
+        echo "VPM is switched on (default)"
+    else
+        echo "VPM bool is set to $VPM (switched off)"
+    fi  
+
+    if [[ $TELTOANA == "1234" ]]; then
 	echo "Telescope combination saved in the DB is analyzed (default)"
-	else
+    else
 	echo "Analyzed telescopes: $TELTOANA"
-	fi 
-	if [[ $CALIB == "4" ]]; then
-	echo "read calibration from calibration file $CALIBFILE"
-	else
+    fi 
+    if [[ $CALIB == "4" ]]; then
+            echo "read calibration from calibration file $CALIBFILE"
+    else
             echo "read calibration from VOffline DB (default)"
-	fi 
+    fi 
 
     # run locally or on cluster
     SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
@@ -192,7 +178,7 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat $LOGDIR/runscripts.$TIMETAG.dat | sort -u | $SUBC
+    cat "$LOGDIR/runscripts.$TIMETAG.dat" | sort -u | "$SUBC"
 fi
 
 exit
