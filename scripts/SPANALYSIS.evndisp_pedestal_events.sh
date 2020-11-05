@@ -7,9 +7,7 @@ echo "
 EVNDISP special-purpose analysis: calculate pedestals from a data file
                                   (for high and low gain)
 
-Note that not all parameters are the standard parameters used for the typical analysis.
-
-SPANALYSIS.evndisp_pedestal_events.sh <run number> [lowgain]
+SPANALYSIS.evndisp_pedestal_events.sh <run number> [samples] [calibdir]
 
 required parameters:
 
@@ -17,9 +15,10 @@ required parameters:
 
 optional parameters:
 
-    [lowgain]           low gain pedestal calculation, either 64 or 128 samples
-                        (expert user only!)
+    [samples]		for low gain pedestal calculation. Set to either 64 or 128 samples for low gain mode,
+                        0 for high gain mode (expert user only!)
 
+    [calibdir]		eg. \$VERITAS_USER_DATA_DIR/LowGainCalibration for low gain calibration.
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -32,34 +31,33 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 
 # Parse command line arguments
 RUNNUM=$1
-[[ "$2" ]] && LOWGAIN=$2 || LOWGAIN="0"
+[[ "$2" ]] && SAMPLES=$2 || SAMPLES="0"
+[[ "$3" ]] && CALIBDIR=$3 || CALIBDIR="$VERITAS_USER_DATA_DIR/"
 
-# Set proper options for low gain or high gain analysis
-if [[ $LOWGAIN == "64" ]]; then
-    # low gain run with 64 samples
-    OPT="-calibrationsumwindow=20 -calibrationsumfirst=40 -runmode=6 -reconstructionparameter EVNDISP.reconstruction.LGCalibration.runparameter"
-elif [[ $LOWGAIN == "128" ]]; then
-    # low gain run with 128 samples
-    OPT="-calibrationsumwindow=20 -calibrationsumfirst=100 -runmode=6 -reconstructionparameter EVNDISP.reconstruction.LGCalibration.runparameter"
-elif [[ $LOWGAIN == "100" ]]; then
-    # low gain run with 100 samples
-    OPT="-calibrationsumwindow=20 -calibrationsumfirst=75 -runmode=6 -reconstructionparameter EVNDISP.reconstruction.LGCalibration.runparameter"
-elif [[ $LOWGAIN == "0" ]]; then
-    OPT="-runmode=1 -calibrationsumwindow=20 -calibrationsumfirst=0"
-else
-    echo "Invalid low-gain parameter; using default high-gain options"
-    OPT="-runmode=1 -calibrationsumwindow=20 -calibrationsumfirst=0"
-fi
+OPT=" -calibrationsumwindow=20 -calibrationdirectory $CALIBDIR " 
 
-# Check if source file exists
-SF=`find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf"`
-if [[ ${#SF} = 0 ]]; then
-   echo "ERROR: VERITAS source (VBF) file $RUNNUM.cvbf not found in $VERITAS_DATA_DIR/data/"
-   exit 1
+#high gain mode
+if [[ $SAMPLES == "0" ]]; then
+	OPT="$OPT -runmode=1 -calibrationsumfirst=0 "
+
+#low gain mode
+else 
+	OPT="$OPT -runmode=6 -reconstructionparameter EVNDISP.reconstruction.LGCalibration.runparameter "
+
+	if [[ $SAMPLES == "64" ]]; then
+		OPT="$OPT -calibrationsumfirst=40 "
+	elif  [[ $SAMPLES == "128" ]]; then
+		OPT="$OPT -calibrationsumfirst=100 "
+	elif [[ $SAMPLES == "100" ]]; then
+		OPT="$OPT -calibrationsumfirst=75 "
+	else 
+		echo "Invalid number of samples given, please fix the script."
+		exit 1
+	fi
 fi
 
 # Run evndisp
-echo "$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT"
-$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT
+echo "$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT "
+$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT 
 
 exit
