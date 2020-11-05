@@ -101,8 +101,9 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     WOBBLE_OFFSETS=( 0.5 )
     NEVENTS="15000000"
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    ZENITH_ANGLES=$(ls $VERITAS_DATA_DIR/simulations/V6_FLWO/CARE_June1702_RHV/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
-    NSB_LEVELS=$(ls $VERITAS_DATA_DIR/simulations/V6_FLWO/CARE_June1702_RHV/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
+    DDIR="$VERITAS_DATA_DIR/simulations/V6_FLWO/CARE_June1702_RHV/"
+    ZENITH_ANGLES=$(ls ${DDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    NSB_LEVELS=$(ls $${DDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 ) 
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     DDIR="$VERITAS_DATA_DIR/simulations/V6_FLWO/${SIMTYPE}/Atmosphere${ATMOS}/"
@@ -175,8 +176,46 @@ for VX in $EPOCH; do
                 done # cuts
             done
             continue
-        fi
-        for ZA in ${ZENITH_ANGLES[@]}; do
+       fi
+       #############################################
+       # MVA training
+       if [[ $IRFTYPE == "TRAINTMVA" ]]
+       then
+            for VX in $EPOCH; do
+                for C in "Moderate" "Soft" "Hard"
+                do
+                    echo "Training $C cuts for ${VX}"
+                    MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadron_BDTs/${VX}/${C}/"
+                    mkdir -p -v "${MVADIR}"
+                    # list of background files
+                    TRAINDIR="$VERITAS_USER_DATA_DIR//analysis/Results/${EDVERSION}/BDTtraining/${EDVERSION}/RecID0_${SIMTYPE}/"
+                    rm -f "$MVADIR/BDTTraining.bck.list"
+                    ls -1 "$TRAINDIR"/*.root > "$MVADIR/BDTTraining.bck.list"
+                    NBCKF=`wc -l "$MVADIR/BDTTraining.bck.list"`
+                    echo "Total number of background files for training: $NBCKF"
+                    # retrieve size cut
+                    CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-*${C}-TMVA-Preselection.dat
+                    echo "$CUTFIL"
+                    SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH} | awk '{print $3}' | sort -u`
+                    if [ -z "$SIZECUT" ]
+                    then
+                        echo "No size cut found; skipping cut $C"
+                        continue
+                    fi
+                    echo "Size cut applied: $SIZECUT"
+                    cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/TMVA.BDT.runparameter
+                    sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/TMVA.BDT.runparameter
+                    ./IRF.trainTMVAforGammaHadronSeparation.sh \
+                                 "$MVADIR"/BDTTraining.bck.list \
+                                 "$MVADIR"/TMVA.BDT.runparameter \
+                                 "${MVADIR}" mva ${SIMTYPE} ${VX} "${ATM}" 0
+                done
+            done
+            continue
+       fi
+       #################################################
+       # zenith angle dependent analysis
+       for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
