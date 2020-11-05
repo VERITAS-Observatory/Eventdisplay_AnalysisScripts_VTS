@@ -4,12 +4,13 @@
 # EventDisplay version
 EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
 
-if [[ $# < 4 ]]; then
+if [[ "$#" -lt 4 ]]; then
 # begin help message
 echo "
 ANASUM parallel data analysis: submit jobs using a simple run list
 
-ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> [run parameter file] [mscw directory] [sim type] [method] [force atmosphere] 
+ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> [run parameter file] [mscw directory] [sim type] \
+[radial acceptances] [force atmosphere]
 
 required parameters:
 
@@ -35,8 +36,9 @@ optional parameters:
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June1702)
 			    Default: CARE_June1702
 
-    [method]                reconstruction method: GEO, DISP, FROGS.
-			    Default: GEO
+    [radial acceptance]     0=use external radial acceptance;
+                            1=use run-wise radial acceptance (calculated from data run);
+                            2=ignore radial acceptances (only for reflected region);
 
     [force atmosphere]	    use EAs generated with this atmospheric model (61 or 62).
 			    Default: Atmosphere determined from run date for each run.				
@@ -67,7 +69,8 @@ BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
 [[ "$7" ]] && SIMTYPE=$7 || SIMTYPE="DEFAULT"
-[[ "$8" ]] && METH=$8 || METH="GEO"
+METH="GEO"
+[[ "$8" ]] && RACC=$8 || RACC="0"
 [[ "$9" ]] && FORCEDATMO=$9 
 
 SIMTYPE_DEFAULT_V4="GRISU"
@@ -76,44 +79,12 @@ SIMTYPE_DEFAULT_V6="CARE_June1702"
 SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
 
 # cut definitions (note: VX to be replaced later in script)
-if [[ $CUTS == superhard ]]; then
-    CUT="NTel3-PointSource-SuperHard"
-elif [[ $CUTS == super ]]; then
-    CUT="NTel2-PointSource-SuperSoftSpectrum"
-elif [[ $CUTS == moderateopen ]]; then
-    CUT="NTel2-PointSource-ModerateOpen"
-elif [[ $CUTS == softopen ]]; then
-    CUT="NTel2-PointSource-SoftOpen"
-elif [[ $CUTS == hardopen ]]; then
-    CUT="NTel2-PointSource-HardOpen"
-elif [[ $CUTS == softExt ]]; then
-    CUT="NTel2-ExtendedSource-Soft"
-elif [[ $CUTS == soft2tel ]]; then
-    CUT="NTel2-PointSource-Soft"
-elif [[ $CUTS = moderate2tel ]]; then
-    CUT="NTel2-PointSource-Moderate"
-elif [[ $CUTS = moderateExt2tel ]]; then
-    CUT="NTel2-ExtendedSource-Moderate"
-elif [[ $CUTS = moderate3tel ]]; then
-    CUT="NTel3-PointSource-Moderate"
-elif [[ $CUTS = hard2tel ]]; then
-    CUT="NTel2-PointSource-Hard"
-elif [[ $CUTS = hard3tel ]]; then
-    CUT="NTel3-PointSource-Hard"
-elif [[ $CUTS = hardExt2tel ]]; then
-    CUT="NTel2-ExtendedSource-Hard"
-elif [[ $CUTS = frogs ]]; then
-    CUT="FROGS_NTel2_001-003-005CU_index2.5"
-elif [[ $CUTS = BDTmoderate2tel ]]; then
+if [[ $CUTS = BDTmoderate2tel ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
 elif [[ $CUTS = BDTsoft2tel ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
 elif [[ $CUTS = BDThard2tel ]]; then 
     CUT="NTel2-PointSource-Hard-TMVA-BDT"
-elif [[ $CUTS = BDTmoderate2telweak ]]; then
-    CUT="NTel2-PointSource-Moderate-TMVA-BDT-weak"
-elif [[ $CUTS = BDThard2telweak ]]; then
-    CUT="NTel2-PointSource-Hard-TMVA-BDT-weak"
 elif [[ $CUTS = BDTmoderate3tel ]]; then
     CUT="NTel3-PointSource-Moderate-TMVA-BDT"
 elif [[ $CUTS = BDThard3tel ]]; then
@@ -149,15 +120,23 @@ elif [[ $CUT == *ExtendedSource-* ]]; then
 fi
 
 RADACC="radialAcceptance-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUTRADACC}-${METH}-VX-TX.root"
+# START TEMPORARY (TESTS, comment)
+# EFFAREA="IGNOREEFFECTIVEAREA"
+# END TEMPORARY
 
-echo $CUTFILE
-echo $EFFAREA
-echo $RADACC
+echo "$CUTFILE"
+echo "$EFFAREA"
+echo "$RADACC"
 
 # background model parameters
 if [[ "$BACKGND" == *RB* ]]; then
     BM="RB"
     BMPARAMS="0.6 20"
+    if [[ "$RACC" == "2" ]]; then
+        echo "Error, Cannot use RB without radial acceptances:"
+        echo "Specify an acceptance (external=0, runwise=1) or use RE."
+        exit 1
+    fi
 elif [[ "$BACKGND" == *IGNOREACCEPTANCE* ]]; then
     BM="RE"
     BMPARAMS="0.1 2 6"
@@ -183,6 +162,7 @@ if [[ "$RUNP" == `basename $RUNP` ]]; then
 fi
 if [ ! -f "$RUNP" ]; then
     echo "Error, anasum run parameter file not found, exiting..."
+    echo "(searched for $RUNP)"
     exit 1
 fi
 
@@ -190,28 +170,37 @@ fi
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/ANASUM.ANADATA"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # output directory for anasum products
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 
 #########################################
 # make anasum run list
 ANARUNLIST="$ODIR/$CUTS.anasum.dat"
-rm -f $ANARUNLIST
+rm -f "$ANARUNLIST"
 echo "anasum run list: $ANARUNLIST"
 
 # run list header
-echo "* VERSION 6" >> $ANARUNLIST
-echo "" >> $ANARUNLIST
+if [[ $EDVERSION = "v4"* ]]; then
+    echo "* VERSION 6" >> "$ANARUNLIST"
+else
+    echo "* VERSION 7" >> "$ANARUNLIST"
+fi
+echo "" >> "$ANARUNLIST"
 
-RUNS=`cat $RLIST`
+RUNS=`cat "$RLIST"`
 
+# loop over all runs
 for RUN in ${RUNS[@]}; do
     # get array epoch, atmosphere and telescope combination for this run
-    RUNINFO=`$EVNDISPSYS/bin/printRunParameter $INDIR/$RUN.mscw.root -runinfo`
-    EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
+    if [ ! -e "$INDIR/$RUN.mscw.root" ]; then
+        echo "error: mscw file not found: $INDIR/$RUN.mscw.root"
+        continue
+    fi
+    RUNINFO=`"$EVNDISPSYS"/bin/printRunParameter "$INDIR/$RUN.mscw.root" -runinfo`
+    EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
     MAJOREPOCH=`echo $RUNINFO | awk '{print $(2)}'`
     ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
     if [[ $ATMO == *error* ]]; then
@@ -220,6 +209,7 @@ for RUN in ${RUNS[@]}; do
     fi
     OBSL=$(echo $RUNINFO | awk '{print $4}')
     TELTOANA=`echo $RUNINFO | awk '{print "T"$(5)}'`
+    # V4 and V5: grisu sims with ATM21/22
     if [[ $EPOCH == *"V4"* ]] || [[ $EPOCH == *"V5"* ]]; then
         ATMO=${ATMO/6/2}
     fi
@@ -244,28 +234,41 @@ for RUN in ${RUNS[@]}; do
 
     echo "RUN $RUN at epoch $EPOCH and atmosphere $ATMO (Telescopes $TELTOANA SIMTYPE $REPLACESIMTYPEEff $REPLACESIMTYPERad)"
     echo "File $INDIR/$RUN.mscw.root"
-    
+
     # do string replacements
     EFFAREARUN=${EFFAREA/VX/$EPOCH}
     EFFAREARUN=${EFFAREARUN/TX/$TELTOANA}
     EFFAREARUN=${EFFAREARUN/XX/$ATMO}
     EFFAREARUN=${EFFAREARUN/SX/$REPLACESIMTYPEEff}
-    if [ "$RADACC" != "IGNOREACCEPTANCE" ]; then 
+
+    if [[ ${RACC} == "1" ]]; then
+        echo "run-wise radical acceptances: "
+        #RADACCRUN="$ODIR/radialAcceptance-Cut-${CUT}-${METH}ID${RECID}-Run-${RUN}.root"
+        RADACCRUN="$ODIR/$RUN.anasum.radialAcceptance.root"
+        echo "   $RADACCRUN"
+    elif [[ ${RACC} == "0" ]]; then
+        echo "external radial acceptances: "
         RADACCRUN=${RADACC/VX/$MAJOREPOCH}
         RADACCRUN=${RADACCRUN/TX/$TELTOANA}
         RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
     else
-        RADACCRUN=$RADACC
+        echo "Ignore acceptances: "
+        RADACCRUN="IGNOREACCEPTANCE"
     fi
     
-    # write line to file
-    echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $ANARUNLIST
-    echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
-
+    # write line to anasum input file
+    if [[ $EDVERSION = "v4"* ]]; then
+        echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $ANARUNLIST
+        echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
+    # v5x: cuts are read from the effective area file
+    else
+        echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> "$ANARUNLIST"
+        echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
+    fi
 done
 
 # submit the job
 SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"
-$SUBSCRIPT.sh $ANARUNLIST $INDIR $ODIR $RUNP
+$SUBSCRIPT.sh "$ANARUNLIST" "$INDIR" "$ODIR" "$RUNP" "${RACC}"
 
 exit
