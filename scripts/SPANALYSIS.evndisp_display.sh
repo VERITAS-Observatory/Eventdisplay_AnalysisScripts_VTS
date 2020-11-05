@@ -27,7 +27,7 @@ optional parameters:
     [teltoana]              use 1 for T1 only, 13 for T1 and T3 only, etc.
                             (default telescope combination is 1234)
                             
-    [calib]		    0 or nocalib for -nocalibnoprolem, 1 or db for -readCalibDB [default], 2 or raw for -plotraw & -nocalibnoproblem
+    [calib]		    0 or nocalib for -nocalibnoproblem, 1 or db for -readCalibDB [default], 2 or raw for -plotraw & -nocalibnoproblem
 
     [highres]		    0 or lowres for regular window (default), 1 or highres for -highres, 2 or paper for -plotpaper
 
