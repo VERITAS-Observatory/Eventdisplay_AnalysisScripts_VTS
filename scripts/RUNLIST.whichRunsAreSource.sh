@@ -1,6 +1,5 @@
 #!/bin/bash
 # from a run list, prints the list of runs that target a specific source
-# written by Nathan Kelley-Hoskins Sept 2013
 
 # variables for coloring terminal output
 CONORM="\e[0m"
@@ -137,16 +136,20 @@ done
 
 # search through mysql result rows, where each row's elements
 # are assigned to RUNID and RUNDATE
-while read -r RUNID RUNSOURCE ; do
+while read -r RUNID RUNTYPE RUNSOURCE; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
 		
-		if [[ "$RUNSOURCE" == "$SOURCE" ]] ; then
+		if [[ "$RUNSOURCE" == "$SOURCE" ]] || [[ "$RUNTYPE" == "$SOURCE" ]] ; then
 			if ! $NOTFLAG ; then
 				echo "$RUNID"
 			fi
 		else
 			if $NOTFLAG ; then
-				echo "$RUNID $RUNSOURCE"
+				if [[ "$RUNSOURCE" == "NOSOURCE" ]]; then
+					echo "$RUNID $RUNTYPE" 
+				else
+					echo "$RUNID $RUNSOURCE"
+				fi
 			fi
 		fi
 		
@@ -155,6 +158,6 @@ while read -r RUNID RUNSOURCE ; do
 # You have to do it this way, because using a pipe | calls the command in a
 # subshell, and that prevents variables from being saved within the 'while' loop
 # http://stackoverflow.com/questions/14585045/is-it-possible-to-avoid-pipes-when-reading-from-mysql-in-bash
-done < <($MYSQL -e "USE VERITAS ; SELECT run_id, source_id FROM tblRun_Info WHERE $SUB ")
+done < <($MYSQL -e "USE VERITAS ; SELECT run_id, run_type, source_id FROM tblRun_Info WHERE $SUB ")
 
 exit

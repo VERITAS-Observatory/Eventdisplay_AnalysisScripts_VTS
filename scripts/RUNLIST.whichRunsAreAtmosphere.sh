@@ -1,6 +1,5 @@
 #!/bin/bash
 # from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22) or winter(21)
-# written by Nathan Kelley-Hoskins Sept 2013
 
 # check to see if input is from terminal, or from a pipe
 ISPIPEFILE=`readlink /dev/fd/0`

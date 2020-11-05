@@ -1,6 +1,5 @@
 #!/bin/bash
 # Generates a simple run list (one run per line) with quality cuts
-# written by Nathan Kelley-Hoskins Aug 2013
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 # begin help message

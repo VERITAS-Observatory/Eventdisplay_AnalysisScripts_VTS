@@ -1,6 +1,5 @@
 #!/bin/bash
 # from a run list, prints the list of runs that are considered V4 runs, before T1 was moved
-# written by Nathan Kelley-Hoskins Aug 2013
 
 #echo "\$#:$#   \$1:$1   \$2:$2   \$3:$3   \$4:$4"
 

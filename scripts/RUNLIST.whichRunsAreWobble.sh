@@ -1,6 +1,5 @@
 #!/bin/bash
 # from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22) or winter(21)
-# written by Nathan Kelley-Hoskins Sept 2013
 
 CONORM="\e[0m"
 CORED='\e[1;31m'

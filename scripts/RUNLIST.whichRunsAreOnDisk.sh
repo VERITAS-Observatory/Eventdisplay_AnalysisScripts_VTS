@@ -1,6 +1,5 @@
 #!/bin/bash
 # from a run list, prints the list of runs that are on disk.
-# written by Nathan Kelley-Hoskins Aug 2013
 
 NOTFLAG=false # flag for if the -n flag was used
 HELPFLAG=false # if true, print help text and exit
@@ -58,7 +57,12 @@ if [ ! -e $RUNFILE ] ; then
 	echo "File '$RUNFILE' could not be found, sorry."
 	exit	
 fi
-RUNLIST=`cat $RUNFILE`
+RUNLISTTMP=`cat $RUNFILE`
+RUNLIST=$(echo "$RUNLISTTMP" | grep -oP "^\d+$" )
+if [ -z "$RUNLIST" ] ; then
+  >&2 echo "Error, RUNLIST.whichRunsAreOnDisk.sh : input file/pipe contains no runs, exiting..." 
+  exit 1
+fi
 #echo "RUNLIST:$RUNLIST"
 #echo "Files not on disk:"
     
