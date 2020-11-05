@@ -66,30 +66,34 @@ fi
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/ANASUM.ANADATA"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # output directory
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/ANALYSIS.anasum_sub"
 
 TIMETAG=`date +"%s"`
 
-FSCRIPT="$LOGDIR/ANA.$ONAME"
+FSCRIPT="$LOGDIR/ANA.$ONAME-$(date +%s)"
 sed -e "s|FILELIST|$FLIST|" \
     -e "s|DATADIR|$INDIR|"  \
     -e "s|OUTDIR|$ODIR|"    \
     -e "s|OUTNAME|$ONAME|"  \
-    -e "s|RUNPARAM|$RUNP|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|RUNPARAM|$RUNP|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
-chmod u+x $FSCRIPT.sh
-echo $FSCRIPT.sh
+chmod u+x "$FSCRIPT.sh"
+echo "$FSCRIPT.sh"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/VTS/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo "$SUBC"
+    exit
+fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     
