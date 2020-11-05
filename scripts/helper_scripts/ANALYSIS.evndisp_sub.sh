@@ -14,6 +14,7 @@ TELTOANA=TELTOANACOMB
 LOGDIR="$ODIR"
 CALDIR="$ODIR"
 ACUTS=RECONSTRUCTIONRUNPARAMETERFILE
+EDVERSION=VVERSION
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -33,6 +34,12 @@ if [[ -e "$VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat" ]]; 
    cp -f -v $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat $CALDIR/Calibration/
 else
    echo "error - low-gain calibration list not found ($VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat)"
+   exit
+fi
+if [[ -e "$VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped" ]]; then
+   cp -f -v $VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped $CALDIR/Calibration/
+else
+   echo "error - low-gain calibration list not found ($VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped)"
    exit
 fi
 
@@ -78,8 +85,12 @@ fi
 if [[ $CALIB == "1" || ( $CALIB == "3" || $CALIB == "4" ) ]]; then
     rm -f $LOGDIR/$RUN.tzero.log
 # v485    $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -reconstructionparameter $ACUTS ${OPT[@]} &> $LOGDIR/$RUN.tzero.log 
-    $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -sumwindowaveragetime=6 -calibrationsummin=50 -reconstructionparameter "$ACUTS" "${OPT[@]}" -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log" 
-	echo "RUN$RUN TZEROLOG $LOGDIR/$RUN.tzero.log"
+    if [[ $EDVERSION = "v4"* ]]; then
+        $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -calibrationsummin=50 -reconstructionparameter "$ACUTS" "${OPT[@]}" -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log" 
+    else
+        $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -sumwindowaveragetime=6 -calibrationsummin=50 -reconstructionparameter "$ACUTS" "${OPT[@]}" -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log" 
+    fi
+    echo "RUN$RUN TZEROLOG $LOGDIR/$RUN.tzero.log"
 fi
 
 #########################################
