@@ -47,6 +47,7 @@ if [[ $RUNMODE != 1 ]]; then
 else
     RUNMODE=5   # low gain mode
 fi
+CALIBDIR="$VERITAS_USER_DATA_DIR/"
 
 # Check if source vbf file exists
 SF=`find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf"`
@@ -56,7 +57,7 @@ if [ ${#SF} = 0 ]; then
 fi
 
 # Run options
-OPT="-runmode=$RUNMODE -runnumber=$RUNNUM -lasermin=$LASERMIN -calibrationsumwindow=18 -calibrationsumfirst=2 -reconstructionparameter EVNDISP.reconstruction.SW18_noDoublePass.runparameter"
+OPT="-runmode=$RUNMODE -runnumber=$RUNNUM -lasermin=$LASERMIN -calibrationsumwindow=18 -calibrationsumfirst=2 -reconstructionparameter EVNDISP.reconstruction.SW18_noDoublePass.runparameter -calibrationdirectory $CALIBDIR -writeextracalibtree"
 
 # calculate pedestals (for high gain only)
 if [[ $RUNMODE == 2 ]]; then

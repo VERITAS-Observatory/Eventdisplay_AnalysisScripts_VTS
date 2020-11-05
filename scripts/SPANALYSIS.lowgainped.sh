@@ -105,6 +105,10 @@ do
     # run locally or on cluster
     SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
     SUBC=`eval "echo \"$SUBC\""`
+    if [[ $SUBC == *"ERROR"* ]]; then
+        echo $SUBC
+        exit
+    fi
     echo $SUBC
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
