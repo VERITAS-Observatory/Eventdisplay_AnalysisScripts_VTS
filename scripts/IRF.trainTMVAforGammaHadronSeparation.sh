@@ -9,12 +9,12 @@ if [[ $# < 10 ]]; then
 echo "
 TMVA training of BDT: submit jobs from a TMVA runparameter file
 
-ANALYSIS.tmva_bdt.sh <list of background files> <TMVA runparameter file> <output directory> <output file name> <sim type>
+IRF.trainTMVAforGammaHadronSeparation.sh <list of background files> <TMVA runparameter file> <output directory> <output file name> <sim type>
  [epoch] [atmosphere] [Rec ID]
 
 required parameters:
 
-    <list of background files>      list of background training samples with whole path to each file
+    <list of background files>      list of background training (mscw) files with whole path to each file
     
     <TMVA runparameter file>        TMVA runparameter file with basic options (incl. whole range of 
 	                                energy and zenith angle bins) and full path
@@ -31,7 +31,6 @@ optional parameters:
                                     default: \"V6\"
 
     [atmosphere]                    atmosphere model(s) (21 = winter, 22 = summer)
-                                    default: \"21 22\"                   
 
     [Rec ID]                        reconstruction ID(s) (default: \"0\")
                                     (see EVNDISP.reconstruction.runparameter)	    
@@ -55,18 +54,10 @@ RUNPAR=$2
 ODIR=$3
 ONAME=$4
 SIMTYPE=$5
-if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-    SIMTYPE="GRISU-SW6"
-elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then 
-    SIMTYPE="CARE_June1425"
-else
-    echo "Invalid simulation type. Exiting..."
-    exit 1
-fi
+echo "Simulation type: $SIMTYPE"
 [[ "$6" ]] && EPOCH=$6 || EPOCH="V6"
-[[ "$7" ]] && ATM=$7 || ATM="21 22"
+[[ "$7" ]] && ATM=$7 || ATM="61"
 [[ "$8" ]] && RECID=$8 || RECID="0"
-
 PARTICLE_TYPE="gamma"
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
