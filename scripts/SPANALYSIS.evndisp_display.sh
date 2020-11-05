@@ -16,6 +16,8 @@ EVNDISP special-purpose analysis: display data file and write results to file
 
 SPANALYSIS.evndisp_display.sh <sourcefile> [telescope combination] [calib] [highres] [run number] [TARGET] [WOBBLENORTH] [WOBBLEEAST] [RAOFFSET]
 
+Note that not all parameters are the standard parameters used for the typical analysis.
+
 required parameter:
 
     <sourcefile>            VERITAS data file (vbf or cvbf file)

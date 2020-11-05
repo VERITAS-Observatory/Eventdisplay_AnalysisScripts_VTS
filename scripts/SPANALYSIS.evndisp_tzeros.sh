@@ -6,6 +6,8 @@ if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
 EVNDISP special-purpose analysis: calculate mean tzeros from a data file
 
+Note that not all parameters are the standard parameters used for the typical analysis.
+
 VTS.EVNDISP.analyse_tzeros <run number> [teltoana] [readcalibdb]
 
 required parameters:

@@ -7,6 +7,8 @@ echo "
 EVNDISP special-purpose analysis: calculate pedestals from a data file
                                   (for high and low gain)
 
+Note that not all parameters are the standard parameters used for the typical analysis.
+
 SPANALYSIS.evndisp_pedestal_events.sh <run number> [lowgain]
 
 required parameters:
