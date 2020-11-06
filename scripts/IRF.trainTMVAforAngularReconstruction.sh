@@ -86,6 +86,7 @@ echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 FSCRIPT="$LOGDIR/TA.ID${RECID}.${EPOCH}.$DATE.MC"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EVNDISPFILE|$INDIR|" \
+    -e "s|VVERSION|$IRFVERSION|" \
     -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
 chmod u+x "$FSCRIPT.sh"
