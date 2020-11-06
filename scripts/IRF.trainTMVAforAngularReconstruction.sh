@@ -19,7 +19,7 @@ required parameters:
                             V5: array after T1 move (Fall 2009 - Fall 2012)
                             V6: array after camera update (after Fall 2012)
                             
-    <atmosphere>            atmosphere model (21 = winter, 22 = summer)
+    <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
     <zenith>                zenith angle of simulations [deg]
 
@@ -65,14 +65,14 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/TMVA_AngularReconstruction/ze${ZA}deg_offset${WOBBLE}deg/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p $ODIR
-chmod g+w $ODIR
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/TMVAAngRes/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # training file name
 BDTFILE="mvaAngRes_${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
@@ -86,19 +86,23 @@ echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 FSCRIPT="$LOGDIR/TA.ID${RECID}.${EPOCH}.$DATE.MC"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EVNDISPFILE|$INDIR|" \
-    -e "s|BDTFILE|$BDTFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
-chmod u+x $FSCRIPT.sh
-echo $FSCRIPT.sh
+chmod u+x "$FSCRIPT.sh"
+echo "$FSCRIPT.sh"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo $SUBC
+    exit
+fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 fi
 
 exit
