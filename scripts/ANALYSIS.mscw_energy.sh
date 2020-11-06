@@ -12,30 +12,28 @@ if [ $# -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [evndisp directory] [Rec ID] [output directory] [sim type] [ATM]
+ANALYSIS.mscw_energy.sh <runlist> [evndisp directory] [output directory] [Rec ID] [sim type] [ATM]
 
 required parameters:
 			
     <runlist>               simple run list with one run number per line.    
     
     
-    <evndisp directory>     directory containing evndisp output ROOT files.
-			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
 
 optional parameters:
 
-    [Rec ID]                reconstruction ID. Default 0.
-                            (see EVNDISP.reconstruction.runparameter)
-                            Use 0 for geometrical reconstruction (with GEO table)
-			    Use 1 for disp reconstruction (with DISP table).
-    
+    [evndisp directory]     directory containing evndisp output ROOT files.
+			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
+
     [output directory]      directory where mscw.root files are written
                             default: <evndisp directory>
-                            If RecID given: <evndisp directory>/RecID#
 
+    [Rec ID]                reconstruction ID. Default 0
+                            (see EVNDISP.reconstruction.runparameter)
+    
     [simulation type]       e.g. CARE_June1702
 
-    [ATM]                   set atmosphere ID (don't use value from evndisp file)
+    [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
 
 --------------------------------------------------------------------------------
 "
@@ -59,15 +57,8 @@ exec 5>&1
 # Parse command line arguments
 RLIST=$1
 [[ "$2" ]] && INPUTDIR=$2 || INPUTDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
-[[ "$3" ]] && ID=$3 || ID=0
-if [[ "$4" ]]; then
-    ODIR=$4
-elif [[ "$3" ]]; then
-    # user passed a Rec ID value
-    ODIR=$INPUTDIR/RecID$ID
-else
-    ODIR=$INPUTDIR
-fi
+[[ "$3" ]] && ODIR=$3 || ODIR=${INPUTDIR}
+[[ "$4" ]] && ID=$4 || ID=0
 [[ "$5" ]] && SIMTYPE=$5 || SIMTYPE=""
 [[ "$6" ]] && FORCEDATMO=$6
 
@@ -75,7 +66,6 @@ SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
 SIMTYPE_DEFAULT_V6="CARE_June1702"
 SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV"
-
 
 # Read runlist
 if [ ! -f "$RLIST" ] ; then
