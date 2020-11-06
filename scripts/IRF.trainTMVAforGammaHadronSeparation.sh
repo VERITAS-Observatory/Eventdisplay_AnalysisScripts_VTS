@@ -30,7 +30,8 @@ optional parameters:
     [epoch]                         array epoch e.g. V4, V5, V6
                                     default: \"V6\"
 
-    [atmosphere]                    atmosphere model(s) (21 = winter, 22 = summer)
+    [atmosphere]                    atmosphere model(s) (61 = winter, 62 = summer)
+                                    default: \"61\"
 
     [Rec ID]                        reconstruction ID(s) (default: \"0\")
                                     (see EVNDISP.reconstruction.runparameter)	    
@@ -72,6 +73,7 @@ fi
 if [[ "$RUNPAR" == `basename $RUNPAR` ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
+
 if [[ ! -f "$RUNPAR" ]]; then
     echo "Error, TMVA run parameter file $RUNPAR not found, exiting..."
     exit 1
@@ -81,8 +83,8 @@ RXPAR=`basename $RUNPAR .runparameter`
 echo "Original TMVA run parameter file: $RXPAR.runparameter "
 
 # output directory
-echo -e "Output files will be written to:\n $ODIR/RecID${RECID}"
-mkdir -p $ODIR/RecID${RECID}
+echo -e "Output files will be written to:\n $ODIR"
+mkdir -p $ODIR
 
 #####################################
 # energy bins
@@ -242,6 +244,10 @@ do
       # run locally or on cluster
       SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
       SUBC=`eval "echo \"$SUBC\""`
+      if [[ $SUBC == *"ERROR"* ]]; then
+            echo $SUBC
+            exit
+      fi
       if [[ $SUBC == *qsub* ]]; then
          JOBID=`$SUBC $FSCRIPT.sh`
          # account for -terse changing the job number format
@@ -255,6 +261,8 @@ do
       elif [[ $SUBC == *parallel* ]]; then
          echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
          cat $LOGDIR/runscripts.dat | $SUBC
+      elif [[ "$SUBC" == *simple* ]] ; then
+         "$FSCRIPT.sh" | tee "$FSCRIPT.log"
       fi
    done
 done
