@@ -117,8 +117,12 @@ fi
 VBFNAME="NO_VBFNAME"
 NOISEFILE="NO_NOISEFILE"
 
+#######################################################
 # GRISU simulations
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
+    if [[ -z $OBS_EVNDISP_AUX_DIR ]]; then
+        OBS_EVNDISP_AUX_DIR=$VERITAS_EVNDISP_AUX_DIR
+    fi
     # Input files (observe that these might need some adjustments)
     if [[ ${EPOCH:0:2} == "V4" ]]; then
         if [[ $ATM == "21" ]]; then
@@ -131,26 +135,29 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
         VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V5_Oct2012_newArrayConfig_20121027_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         NOISEFILE="$OBS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
     elif [[ ${EPOCH:0:2} == "V6" ]]; then
-            if [[ $ATM == "21-redHV" ]]; then
-                VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_ReducedHV_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
-            elif [[ $ATM == "21-UV" ]]; then
-                VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_UVfilters_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
-            elif [[ $ATM == "21-SNR" ]]; then
-                VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_201304_SN2013ak_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
-            else
-                VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_20121127_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
-            fi
+        if [[ $ATM == "21-redHV" ]]; then
+            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_ReducedHV_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+        elif [[ $ATM == "21-UV" ]]; then
+            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_UVfilters_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+        elif [[ $ATM == "21-SNR" ]]; then
+            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_201304_SN2013ak_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+        else
+            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_20121127_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+        fi
         NOISEFILE="$OBS_EVNDISP_AUX_DIR/NOISE/NOISE${NOISE}_20120827_v420.grisu"
     fi
+#######################################################
 elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
     WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
     LBL="PMTUpgrade_RHV_CARE_v1.6.2_12"
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+#######################################################
 elif [ ${SIMTYPE} == "CARE_June2020" ]; then
     VBFNAME=$(find ${SIMDIR}/Zd${ZA}/merged/Data/ -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
     echo _${WOFFSET}wob_${NOISE}MHz
     echo $SIMDIR/Zd${ZA}/merged/Data/
+#######################################################
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     # input files (observe that these might need some adjustments)
     if [[ $PARTICLE == "1" ]]; then
@@ -161,6 +168,7 @@ elif [ ${SIMTYPE:0:4} == "CARE" ]; then
        VBFNAME=$(find ${SIMDIR} -name "proton_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
     fi
 fi
+#######################################################
 
 if [ -e $OPDIR ]; then
     toexec=0

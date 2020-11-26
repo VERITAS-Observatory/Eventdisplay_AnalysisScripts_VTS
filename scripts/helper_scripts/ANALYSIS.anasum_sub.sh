@@ -39,14 +39,17 @@ if [[ ${RACC} == "1" ]]; then
    else
        RCUT=`cat "$FLIST" | grep '\*' | grep "$RUNNUM" | awk '{print $5}'`
    fi
+   EDVERSION=`$EVNDISPSYS/bin/makeRadialAcceptance --version | tr -d .`
+   if [[ $EDVERSION != "v4"* ]]; then
+       EXCLUSIONREGION="-f $RUNP"
+   fi
 
    # calculate radial acceptance
    "$EVNDISPSYS"/bin/makeRadialAcceptance -l "$FLIST"  \
                                         -d "$INDIR"  \
                                         -i "$EPOCH"  \
                                         -t "$TELTOANA" \
-                                        -c "$RCUT" \
-                                        -f "$RUNP" \
+                                        -c "$RCUT" $EXCLUSIONREGION \
                                         -o "${OUTPUTRACC}.root" &> "${OUTPUTRACC}.log"
 
    # check statistics

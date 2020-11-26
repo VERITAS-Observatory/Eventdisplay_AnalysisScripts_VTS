@@ -169,7 +169,7 @@ echo ""
 echo "============================================================================================"
 
 echo "After all runs have been analysed, please combine the results, eg by calling"
-echo $( dirname "$0" )"ANALYSIS.anasum_combine.sh \\"
+echo $( dirname "$0" )"/ANALYSIS.anasum_combine.sh \\"
 echo "	$FLIST \\"
 echo "	$ODIR \\"
 echo "	anasumCombined.root \\"
