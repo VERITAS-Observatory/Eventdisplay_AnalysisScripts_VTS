@@ -26,7 +26,9 @@ optional parameters:
     
     [epoch]                 array epoch(s) (e.g., V4, V5, V6)
                             (default: \"V4 V5 V6\")
-                            
+                            (V6 epochs: \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b 
+			     V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020\")
+
     [atmosphere]            atmosphere model(s) (21 = winter, 22 = summer)
                             (default: \"21 22\")
                             
@@ -59,9 +61,9 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 SIMTYPE=$1
 IRFTYPE=$2
 [[ "$3" ]] && EPOCH=$3 || EPOCH="V6 V5 V4"
-[[ "$4" ]] && ATMOS=$4 || ATMOS="21 22"
+[[ "$4" ]] && ATMOS=$4 || ATMOS="61 62"
 [[ "$5" ]] && RECID=$5 || RECID="0 2 3 4 5"
-[[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
+[[ "$6" ]] && CUTSLISTFILE=$6
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -90,28 +92,33 @@ if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
     fi
 elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     # CARE_June1702 simulation parameters
+    DDIR="$VERITAS_DATA_DIR/IRFPRODUCTION/v483/CARE_June1702"
+
     if [[ $ATMOS == "62" ]]; then
-        ZENITH_ANGLES=( 00 20 30 35 40 45 50 )
+        ZENITH_ANGLES=( 00 30 50 )
     else
         ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
     fi
-    NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
-    ZENITH_ANGLES=( 20 30 )
-    NSB_LEVELS=( 160 200 )
+    NSB_LEVELS=( 50 200 450 )
+    #ZENITH_ANGLES=( 20 30 )
+    #NSB_LEVELS=( 160 200 )
     WOBBLE_OFFSETS=( 0.5 )
     NEVENTS="15000000"
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    DDIR="$VERITAS_DATA_DIR/simulations/V6_FLWO/CARE_June1702_RHV/"
+    DDIR="/lustre/fs24/group/veritas/simulations/V6_FLWO/CARE_June1702"
     ZENITH_ANGLES=$(ls ${DDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
     NSB_LEVELS=$(ls $${DDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 ) 
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
-    DDIR="$VERITAS_DATA_DIR/simulations/V6_FLWO/${SIMTYPE}/Atmosphere${ATMOS}/"
-    ZENITH_ANGLES=$(ls $DDIR/ | awk -F "Zd" '{print $2}' | sort | uniq)
+    DDIR="/lustre/fs24/group/veritas/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
+    #ZENITH_ANGLES=( 50 )
+    ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${DDIR}/Zd$1/merged/Data/*.zst | awk -F "_" '{print $10}' |  awk -F MHz '{print $1}' | sort -u)
-    WOBBLE_OFFSETS=$(ls ${DDIR}/Zd$1/merged/Data/*.zst | awk -F "_" '{print $9}' |  awk -F wob '{print $1}' | sort -u)
-    NEVENTS="15000000"
+    #NSB_LEVELS=( 75 )
+    NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
+    WOBBLE_OFFSETS=( 0.75 )
+    #WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    NEVENTS="-1"
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
@@ -140,10 +147,10 @@ if [[ $CUTSLISTFILE != "" ]]; then
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 else
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
-#             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-#             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
-#             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
 fi
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
@@ -239,9 +246,9 @@ for VX in $EPOCH; do
                        elif [[ ${SIMTYPE:0:10} = "CARE_RedHV" ]]; then
                           SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1702_RHV/
                        elif [[ ${SIMTYPE:0:13} = "CARE_June2020" ]]; then
-                          SIMDIR="$VERITAS_DATA_DIR/simulations/V6_FLWO/${SIMTYPE}/Atmosphere${ATMOS}/"
+                          SIMDIR=$VERITAS_DATA_DIR/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
                        elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                          SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/${SIMTYPE}
+                          SIMDIR="/lustre/fs24/group/veritas/simulations/V6_FLWO/CARE_June1702"
                        fi
                        $(dirname "$0")/IRF.evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $ACUTS 1 $NEVENTS
                     ######################
@@ -249,16 +256,18 @@ for VX in $EPOCH; do
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
                         for ID in $RECID; do
                            $(dirname "$0")/IRF.generate_lookup_table_parts.sh $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
-                        done #recid
+                        done #recID
                     ######################
                     # analyse table files
                     elif [[ $IRFTYPE == "ANALYSETABLES" ]]; then
-                        TFIL="${TABLECOM}"
-                        # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
-                        # warning: do not mix disp and geo
-                        METH="GEO"
-                        TFILID=$TFIL$METH
-			$(dirname "$0")/IRF.mscw_energy_MC.sh $TFILID $VX $ATM $ZA $WOBBLE $NOISE "$RECID" $SIMTYPE
+                        for ID in $RECID; do
+			    TFIL="${TABLECOM}"
+                            # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
+                            # warning: do not mix disp and geo
+                            METH="GEO"
+                            TFILID=$TFIL$METH
+			    $(dirname "$0")/IRF.mscw_energy_MC.sh $TFILID $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
+			done #recID
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]]; then
