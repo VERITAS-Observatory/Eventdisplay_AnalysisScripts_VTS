@@ -154,7 +154,7 @@ elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
 #######################################################
 elif [ ${SIMTYPE} == "CARE_June2020" ]; then
-    VBFNAME=$(find ${SIMDIR}/Zd${ZA}/merged/Data/ -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+    VBFNAME=$(find ${SIMDIR} -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
     echo _${WOFFSET}wob_${NOISE}MHz
     echo $SIMDIR/Zd${ZA}/merged/Data/
 #######################################################
@@ -208,8 +208,8 @@ do
     echo "SIMDIR: $SIMDIR"
     echo "VBFILE: ${V} $FF"
     echo "NOISEFILE: ${NOISEFILE}"
-    # tmpdir requires a safety factor of 2.5 (from unzipping VBF file)
-    TMSF=$(echo "${FF%?}*3.0" | bc)
+    # tmpdir requires a safety factor of 2.5 or higher (from unzipping VBF file)
+    TMSF=$(echo "${FF%?}*3.5" | bc)
     if [[ ${NOISE} -eq 50 ]]; then
        TMSF=$(echo "${FF%?}*5.0" | bc)
     fi
