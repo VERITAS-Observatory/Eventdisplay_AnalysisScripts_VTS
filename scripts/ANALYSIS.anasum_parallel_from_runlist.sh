@@ -79,13 +79,13 @@ SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
 
 # cut definitions (note: VX to be replaced later in script)
-if [[ $CUTS = moderate2tel ]]; then
+if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
-elif [[ $CUTS = soft2tel ]]; then
+elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]] then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
-elif [[ $CUTS = hard2tel ]]; then 
+elif [[ $CUTS = "hard2tel" ]] || [[ $CUTS = "BDThard2tel" ]]; then 
     CUT="NTel2-PointSource-Hard-TMVA-BDT"
-elif [[ $CUTS = hard3tel ]]; then
+elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]] then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = NTel2ModeratePre ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-Preselection"
