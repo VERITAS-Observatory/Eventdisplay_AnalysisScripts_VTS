@@ -8,4 +8,4 @@ Scripts are moved into this separate directory to make the migration to Eventdis
 
 ## Usage
 
-Submission commands for a range of different batch systems can be found in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify accroding to your local needs.
+Submission commands for a range of different batch systems can be found in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify according to your local needs.
