@@ -24,8 +24,8 @@ NOISEFILE=NOISEFFILE
 EDVERSION=VVERSION
 
 # number of pedestal events
-PEDNEVENTS="20000"
-TZERONEVENTS="10000"
+PEDNEVENTS="200000"
+TZERONEVENTS="100000"
 
 if [[ $NEVENTS -gt 0 ]]; then
     ITER=$((SGE_TASK_ID - 1))
@@ -80,6 +80,9 @@ else
 fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
+CALDIR=${DDIR}
+mkdir -p ${CALDIR}/Calibration
+echo "Calibration directory: ${CALDIR}"
 
 ##################3
 # unzip vbf file to local scratch directory
@@ -121,21 +124,20 @@ VBF_FILE="$DDIR/$VBF_FILE"
 # option for all steps of the analysis
 MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG" 
 MCOPT="$MCOPT -reconstructionparameter $ACUTS -sourcefile $VBF_FILE"
-MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory $ODIR"
+MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory ${CALDIR}"
 MCOPT="$MCOPT $AMPCORR"
 
 # Low gain calibration
-mkdir -p $ODIR/Calibration
 LOWGAINCALIBRATIONFILE=NOFILE
 if [[ ${SIMTYPE:0:4} = "CARE" ]]; then
    if [[ $EDVERSION = "v4"* ]]; then
-       if [[ ! -f $ODIR/Calibration/calibrationlist.LowGainForCare.dat ]]; then
-          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.dat $ODIR/Calibration/calibrationlist.LowGainForCare.dat
+       if [[ ! -f ${CALDIR}/Calibration/calibrationlist.LowGainForCare.dat ]]; then
+          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.dat ${CALDIR}/Calibration/calibrationlist.LowGainForCare.dat
        fi
        LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.dat
    else
-       if [[ ! -f $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ]]; then
-          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat $ODIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
+       if [[ ! -f ${CALDIR}/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ]]; then
+          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ${CALDIR}/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
        fi
        LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
    fi
@@ -206,6 +208,7 @@ $EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
 # remove temporary files
 ls -lh "$DDIR"
 cp -f -v "$DDIR/$ONAME.root" "$ODIR/$ONAME.root"
+cp -r -f -v ${CALDIR}/Calibration ${ODIR}/
 chmod g+w "$ODIR/$ONAME.root"
 chmod g+w "$ODIR/$ONAME.log"
 chmod g+w "$ODIR/$ONAME.tzero.log"

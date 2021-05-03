@@ -1,26 +1,18 @@
 #!/bin/bash
 # display data files with eventdisplay
 
-## HARD-CODED VALUES
-# evndisp reconstruction runparamter
-ACUTS="EVNDISP.reconstruction.SW18_noDoublePass.runparameter"
-ACUTS="EVNDISP.reconstruction.runparameter"
-# run options
-OPT="-display=1 -reconstructionparameter $ACUTS -vbfnsamples "
-## END OF HARD-CODED VALUES
-
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 # begin help message
 echo "
 EVNDISP special-purpose analysis: display data file and write results to file
 
-SPANALYSIS.evndisp_display.sh <sourcefile> [telescope combination] [calib] [highres] [run number] [TARGET] [WOBBLENORTH] [WOBBLEEAST] [RAOFFSET]
+SPANALYSIS.evndisp_display.sh <run number> [telescope combination] [calib] [highres] [TARGET] [WOBBLENORTH] [WOBBLEEAST] [RAOFFSET]
 
 Note that not all parameters are the standard parameters used for the typical analysis.
 
 required parameter:
 
-    <sourcefile>            VERITAS data file (vbf or cvbf file)
+    <run number>            run number of VERITAS data file (vbf or cvbf file)
 
 optional parameters:
  
@@ -29,10 +21,8 @@ optional parameters:
                             
     [calib]		    0 or nocalib for -nocalibnoproblem, 1 or db for -readCalibDB [default], 2 or raw for -plotraw & -nocalibnoproblem
 
-    [highres]		    0 or lowres for regular window (default), 1 or highres for -highres, 2 or paper for -plotpaper
+    [highres]		    0 or lowres for regular window, 1 or highres for -highres (default), 2 or paper for -plotpaper
 
-    [run number]            run number (can differ from actual run number)
-    
     [TARGET]                target name (Crab, Mrk421, 1es2344, lsi+61303)
                             (for more do 'evndisp -printtargets')
                             
@@ -56,7 +46,7 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
-RUNFILE=$1
+RUN=$1
 [[ "$2" ]] && TELTOANA=$2 || TELTOANA="1234"
 if [[ $TELTOANA == "-1" ]]; then
     TELTOANA="1234"
@@ -70,28 +60,34 @@ else
 	CALIBOPT=" -readCalibDB "
 fi
 
+PLOTOPT=" -highres "
 if [[ "$4" == "1" ]] || [[ "$4" == "highres" ]]; then
 	PLOTOPT=" -highres "
+elif [[ "$4" == "0" ]] || [[ "$4" == "lowres" ]]; then
+	PLOTOPT=" "
 elif   [[ "$4" == "2" ]] || [[ "$4" == "paper" ]] ; then 
 	PLOTOPT=" -highres -plotpaper "
 fi
 
+# array analysis cut (depend on ED version)
+EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+ACUTS="EVNDISP.reconstruction.runparameter"
+if [[ $EDVERSION = "v4"* ]]; then
+   ACUTS="EVNDISP.reconstruction.runparameter.v48x"
+fi
+OPT="-display=1 -reconstructionparameter $ACUTS -vbfnsamples "
+
 OPT="$OPT $PLOTOPT $CALIBOPT "
 
-[[ "$5" ]] && OPT="$OPT -runnumber=$5"
-[[ "$6" ]] && OPT="$OPT -target $6"
-[[ "$7" ]] && OPT="$OPT -wobblenorth=$7"
-[[ "$8" ]] && OPT="$OPT -wobbleeast=$8"
-[[ "$9" ]] && OPT="$OPT -raoffset=$9"
+[[ "$5" ]] && OPT="$OPT -target $5"
+[[ "$6" ]] && OPT="$OPT -wobblenorth=$6"
+[[ "$7" ]] && OPT="$OPT -wobbleeast=$7"
+[[ "$8" ]] && OPT="$OPT -raoffset=$8"
 
-# Check if source file exists
-if [[ ! -f $RUNFILE ]]; then
-    echo "ERROR: VERITAS source file $RUNFILE not found"
-    exit 1
-fi
+RUN="96802"
 
 # Set remaining run options
-OPT="$OPT -sourcefile $RUNFILE -teltoana=$TELTOANA"
+OPT="$OPT runnumber=$RUN -teltoana=$TELTOANA"
 
 # Run evndisp
 echo "$EVNDISPSYS/bin/evndisp $OPT"

@@ -22,11 +22,14 @@ optional parameters:
     
     [output directory]     directory where output ROOT files will be stored.
 			   Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
+
+None of the following options are usually required:
 	 
     [runparameter file]    file with integration window size and reconstruction cuts/methods,
                            expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
-			   Default: EVNDISP.reconstruction.runparameter
+			   Default: EVNDISP.reconstruction.runparameter.v48x
+                           (for v5x versions: EVNDISP.reconstruction.runparameter)
 
     [calibration]	   
           0		   neither tzero nor pedestal calculation is performed, must have the calibration results
@@ -106,7 +109,7 @@ echo
 # of database and many jobs running in parallel
 SLEEPABIT="1s"
 if [ "$NRUNS" -gt "100" ] ; then
-   SLEEPABIT="30s"
+   SLEEPABIT="10s"
    echo "Long list of runs (${NRUNS}), will sleep after each run for ${SLEEPABIT}"
 fi
 

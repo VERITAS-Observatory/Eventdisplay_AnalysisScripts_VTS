@@ -19,7 +19,7 @@ required parameters:
     <output directory>      anasum output files are written to this directory
                         
     <cut set>               hardcoded cut sets predefined in the script
-                            (e.g., BDTmoderate2tel, BDTsoft2tel, BDThard3tel etc.)
+                            (i.e., moderate2tel, soft2tel, hard3tel)
     
     <background model>      background model
                             (RE = reflected region, RB = ring background, IGNOREACCEPTANCE = RE without ACCEPTANCE)
@@ -75,18 +75,20 @@ METH="GEO"
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
-SIMTYPE_DEFAULT_V6="CARE_June1702"
+SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
 
 # cut definitions (note: VX to be replaced later in script)
-if [[ $CUTS = moderate2tel ]]; then
+if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
-elif [[ $CUTS = soft2tel ]]; then
+elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
-elif [[ $CUTS = hard2tel ]]; then 
+elif [[ $CUTS = "hard2tel" ]] || [[ $CUTS = "BDThard2tel" ]]; then 
     CUT="NTel2-PointSource-Hard-TMVA-BDT"
-elif [[ $CUTS = hard3tel ]]; then
+elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
+elif [[ $CUTS = "supersoft" ]]; then
+    CUT="NTel2-PointSource-SuperSoft"
 elif [[ $CUTS = NTel2ModeratePre ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-Preselection"
 elif [[ $CUTS = NTel2SoftPre ]]; then
@@ -200,6 +202,10 @@ for RUN in ${RUNS[@]}; do
     # V4 and V5: grisu sims with ATM21/22
     if [[ $EPOCH == *"V4"* ]] || [[ $EPOCH == *"V5"* ]]; then
         ATMO=${ATMO/6/2}
+    fi
+    # V6 redHV only for summer atmospheres
+    if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
+       ATMO=${ATMO/62/61}
     fi
     if [[ $SIMTYPE == "DEFAULT" ]]; then
         if [[ $EPOCH == *"V4"* ]]; then
