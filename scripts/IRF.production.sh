@@ -63,7 +63,7 @@ IRFTYPE=$2
 [[ "$3" ]] && EPOCH=$3 || EPOCH="V6 V5 V4"
 [[ "$4" ]] && ATMOS=$4 || ATMOS="61 62"
 [[ "$5" ]] && RECID=$5 || RECID="0 2 3 4 5"
-[[ "$6" ]] && CUTSLISTFILE=$6
+[[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -145,13 +145,13 @@ if [[ $CUTSLISTFILE != "" ]]; then
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 else
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
-#    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 fi
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
