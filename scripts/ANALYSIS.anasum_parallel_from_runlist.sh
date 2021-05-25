@@ -83,10 +83,14 @@ if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
 elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
+elif [[ $CUTS = "soft2tel2" ]] || [[ $CUTS = "BDTsoft2tel2" ]]; then
+    CUT="NTel2-PointSource-Soft2-TMVA-BDT"
 elif [[ $CUTS = "hard2tel" ]] || [[ $CUTS = "BDThard2tel" ]]; then 
     CUT="NTel2-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
+elif [[ $CUTS = "softbox" ]]; then
+    CUT="NTel2-PointSource-Soft"
 elif [[ $CUTS = "supersoft" ]]; then
     CUT="NTel2-PointSource-SuperSoft"
 elif [[ $CUTS = NTel2ModeratePre ]]; then
