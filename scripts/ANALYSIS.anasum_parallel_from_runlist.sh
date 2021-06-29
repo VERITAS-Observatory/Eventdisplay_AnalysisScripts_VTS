@@ -97,6 +97,10 @@ elif [[ $CUTS = NTel2ModeratePre ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-Preselection"
 elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
+elif [[ $CUTS = "BDTExtended025moderate2tel" ]]; then
+    CUT="NTel2-Extended025-Moderate-TMVA-BDT"
+elif [[ $CUTS = "BDTExtended050moderate2tel" ]]; then
+    CUT="NTel2-Extended050-Moderate-TMVA-BDT"
 else
     echo "ERROR: unknown cut definition: $CUTS"
     exit 1
@@ -108,6 +112,8 @@ EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${METH}-VX-ATMXX-TX.r
 if [[ $CUT == *PointSource-* ]] ; then
     CUTRADACC=${CUT/-PointSource-/"-"}
     echo $CUTRACACC
+elif [[ $CUT == *"Extended"* ]]; then
+    CUTRADACC=${CUT/-PointSource-/"-"}
 elif [[ $CUT == *ExtendedSource-* ]]; then
     CUTRADACC=${CUT/-ExtendedSource-/"-"}
     echo $CUTRADACC
