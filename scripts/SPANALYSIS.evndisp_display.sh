@@ -84,8 +84,6 @@ OPT="$OPT $PLOTOPT $CALIBOPT "
 [[ "$7" ]] && OPT="$OPT -wobbleeast=$7"
 [[ "$8" ]] && OPT="$OPT -raoffset=$8"
 
-RUN="96802"
-
 # Set remaining run options
 OPT="$OPT runnumber=$RUN -teltoana=$TELTOANA"
 
