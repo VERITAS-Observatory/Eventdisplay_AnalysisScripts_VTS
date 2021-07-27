@@ -132,6 +132,9 @@ echo "$RADACC"
 if [[ "$BACKGND" == *RB* ]]; then
     BM="RB"
     BMPARAMS="0.6 20"
+    if [[ $CUT == *"Extended"* ]]; then
+        BMPARAMS="1.0 3"
+    fi
     if [[ "$RACC" == "2" ]]; then
         echo "Error, Cannot use RB without radial acceptances:"
         echo "Specify an acceptance (external=0, runwise=1) or use RE."
