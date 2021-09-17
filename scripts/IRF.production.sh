@@ -79,6 +79,8 @@ ACUTS="EVNDISP.reconstruction.runparameter"
 if [[ $IRFVERSION = "v4"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.v48x"
 fi
+# for NN analysis
+ACUTS="EVNDISP.reconstruction.runparameter.NN"
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
@@ -116,6 +118,11 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
     WOBBLE_OFFSETS=( 0.75 )
     #WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    # TEMPORARY
+    ZENITH_ANGLES=( 20 30 35 )
+    NSB_LEVELS=( 100 130 160 200 250 )
+    WOBBLE_OFFSETS=( 0.5 )
+    # (END TEMPORARY)
     NEVENTS="-1"
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
@@ -127,7 +134,7 @@ elif [ ${SIMTYPE:0:4} = "CARE" ]; then
        WOBBLE_OFFSETS=( 0.5 )
     fi
 else
-    echo "Invalid simulation type. Exiting..."
+    echo "Invalid simulation type: ${SIMTYPE}. Exiting..."
     exit 1
 fi
 echo "Zenith Angles: ${ZENITH_ANGLES}"

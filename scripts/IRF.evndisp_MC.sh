@@ -82,7 +82,11 @@ mkdir -p "$LOGDIR"
 
 # output directory for evndisp products (will be manipulated more later in the script)
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+    if [[ ${ACUTS} == "EVNDISP.reconstruction.runparameter.NN" ]]; then
+        ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/NN/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+    else
+        ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/TS/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+    fi
 fi
 # output dir
 OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
