@@ -31,7 +31,7 @@ required parameters:
     
     <sim type>              file simulation type (e.g. GRISU-SW6, CARE_June1425)
 
-    <runparameter file>     file with integration window size and reconstruction cuts/methods, expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
+    <runparameter file>     file with integration window size and reconstruction cuts/methods,
                             expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
 
