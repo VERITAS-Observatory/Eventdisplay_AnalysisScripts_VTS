@@ -56,7 +56,6 @@ NOISE=$5
 RECID=$6
 SIMTYPE=$7
 PARTICLE_TYPE="gamma"
-ANALYSIS_TYPE=""
 [[ "$8" ]] && ANALYSIS_TYPE=$8  || ANALYSIS_TYPE=""
 
 _sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/MSCW.sizecal.runparameter | grep " ${EPOCH} ")
