@@ -65,6 +65,8 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0 2 3 4 5"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
+ANALYSIS_TYPE="TS"
+
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
 
@@ -80,7 +82,9 @@ if [[ $IRFVERSION = "v4"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.v48x"
 fi
 # for NN analysis
-ACUTS="EVNDISP.reconstruction.runparameter.NN"
+if [[ $ANALYSIS_TYPE = "NN"* ]]; then
+  ACUTS="EVNDISP.reconstruction.runparameter.NN"
+fi
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
@@ -263,7 +267,7 @@ for VX in $EPOCH; do
                     # make tables
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
                         for ID in $RECID; do
-                           $(dirname "$0")/IRF.generate_lookup_table_parts.sh $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
+                           $(dirname "$0")/IRF.generate_lookup_table_parts.sh $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE $ANALYSIS_TYPE
                         done #recID
                     ######################
                     # analyse table files
