@@ -5,13 +5,13 @@
 # qsub parameters
 h_cpu=13:29:00; h_vmem=15000M; tmpdir_size=20G
 
-if [[ $# != 8 ]]; then
+if [[ $# -lt 8 ]]; then
 # begin help message
 echo "
 IRF generation: create partial effective area files from MC ROOT files
  (simulations that have been processed by both evndisp_MC and mscw_energy_MC)
 
-IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type>
+IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
 
@@ -37,6 +37,8 @@ required parameters:
                             Set to 0 for all telescopes, 1 to cut T1, etc.
         
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
+
+    [analysis type]         type of analysis (default="")
     
 --------------------------------------------------------------------------------
 "
@@ -61,6 +63,7 @@ NOISE=$6
 RECID=$7
 SIMTYPE=$8
 PARTICLE_TYPE="gamma"
+[[ "$9" ]] && ANALYSIS_TYPE=$9  || ANALYSIS_TYPE=""
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -68,7 +71,7 @@ CUTS_NAME=${CUTS_NAME%%.dat}
 
 # input directory containing mscw_energy_MC products
 if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
 fi
 if [[ ! -d $INDIR ]]; then
     echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
@@ -78,7 +81,7 @@ echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
