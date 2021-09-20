@@ -95,6 +95,12 @@ echo -e "Output files will be written to:\n $OPDIR"
 
 echo "Using runparameter file $ACUTS"
 
+# Analysis options
+EDOPTIONS=""
+if [[ ${ANALYSIS_TYPE} == *"SQ2"* ]]; then
+   EDOPTIONS="-imagesquared"
+fi
+
 # Create a unique set of run numbers
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="946500"
@@ -253,6 +259,7 @@ do
         -e "s|SIMULATIONTYPE|$SIMTYPE|" \
         -e "s|VBFFFILE|$V|" \
         -e "s|VVERSION|$EDVERSION|" \
+        -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
         -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh

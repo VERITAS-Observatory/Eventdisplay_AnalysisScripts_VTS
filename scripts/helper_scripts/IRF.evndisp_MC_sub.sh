@@ -22,6 +22,7 @@ TELTOANA="1234"
 VBFNAME=VBFFFILE
 NOISEFILE=NOISEFFILE
 EDVERSION=VVERSION
+ADDOPT="ADDITIONALOPTIONS"
 
 # number of pedestal events
 PEDNEVENTS="200000"
@@ -126,6 +127,7 @@ MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG"
 MCOPT="$MCOPT -reconstructionparameter $ACUTS -sourcefile $VBF_FILE"
 MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory ${CALDIR}"
 MCOPT="$MCOPT $AMPCORR"
+MCOPT="$MCOPT ${ADDOPT}"
 
 # Low gain calibration
 LOWGAINCALIBRATIONFILE=NOFILE
