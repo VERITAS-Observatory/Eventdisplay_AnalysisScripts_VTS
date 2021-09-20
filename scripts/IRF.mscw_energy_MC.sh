@@ -9,7 +9,7 @@ if [[ $# < 8 ]]; then
 echo "
 IRF generation: analyze simulation evndisp ROOT files using mscw_energy 
 
-IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [particle]
+IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [particle]
 
 required parameters:
 
@@ -34,6 +34,8 @@ required parameters:
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
 
 optional parameters:
+
+    [analysis type]         type of analysis (default="")
     
     [particle]              type of particle used in simulation:
                             gamma = 1, proton = 14, alpha (helium) = 402
@@ -62,7 +64,8 @@ WOBBLE=$5
 NOISE=$6
 RECID=$7
 SIMTYPE=$8
-[[ "$9" ]] && PARTICLE=$9 || PARTICLE=1
+[[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
+[[ "${10}" ]] && PARTICLE=$10 || PARTICLE=1
 
 # Particle names
 PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
@@ -82,7 +85,7 @@ _sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/MSCW.siz
 EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 # input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 fi
 if [[ ! -d $INDIR ]]; then
     echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
@@ -101,7 +104,7 @@ mkdir -p "$LOGDIR"
 
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 
