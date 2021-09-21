@@ -4,13 +4,13 @@
 # qsub parameters
 h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=1G
 
-if [[ $# != 8 ]]; then
+if [[ $# < 7 ]]; then
 # begin help message
 echo "
 IRF generation: create partial (for one point in the parameter space) lookup
                 tables from MC evndisp ROOT files
 
-IRF.generate_lookup_table_parts.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> <analysis type>
+IRF.generate_lookup_table_parts.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
         
@@ -32,7 +32,9 @@ required parameters:
     
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
 
-    <analysis type>         type of analysis (default="")
+    optional:
+
+    [analysis type]         type of analysis (default="")
     
 --------------------------------------------------------------------------------
 "
