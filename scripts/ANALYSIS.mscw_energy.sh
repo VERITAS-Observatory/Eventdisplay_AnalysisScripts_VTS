@@ -31,7 +31,7 @@ optional parameters:
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
     
-    [simulation type]       e.g. CARE_June1702
+    [simulation type]       e.g. CARE_June2020 (this is the default)
 
     [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
 
