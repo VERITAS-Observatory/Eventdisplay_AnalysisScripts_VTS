@@ -33,8 +33,8 @@ optional parameters:
     [mscw directory]        directory containing the mscw.root files.
 			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION
 
-    [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June1702)
-			    Default: CARE_June1702
+    [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
+			    Default: CARE_June2020
 
     [radial acceptance]     0=use external radial acceptance;
                             1=use run-wise radial acceptance (calculated from data run);
