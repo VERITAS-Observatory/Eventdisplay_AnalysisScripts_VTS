@@ -111,7 +111,7 @@ for ((i=1; i <= $NLINES; i++)); do
         RUNTEMPLIST="$LOGDIR/qsub_analyse_fileList_${ODIRBASE}_${RUN}_${DATECODE}_PID$$"
         rm -f $RUNTEMPLIST
         echo "$VERSION" > "$RUNTEMPLIST"
-        echo "$LINE" > $RUNTEMPLIST
+        echo "$LINE" >> $RUNTEMPLIST
 
         # prepare run scripts
         FSCRIPT="$LOGDIR/qsub_analyse-$DATE-RUN$RUN-$(date +%s)"
