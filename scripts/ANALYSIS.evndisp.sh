@@ -109,7 +109,7 @@ echo
 # of database and many jobs running in parallel
 SLEEPABIT="1s"
 if [ "$NRUNS" -gt "100" ] ; then
-   SLEEPABIT="10s"
+   SLEEPABIT="30s"
    echo "Long list of runs (${NRUNS}), will sleep after each run for ${SLEEPABIT}"
 fi
 
