@@ -197,5 +197,6 @@ if [[ $SUBC == *parallel* ]]; then
     echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC" >> Run_me.sh
     chmod +x Run_me.sh
     source Run_me.sh
+    rm Run_me.sh
 fi
 
