@@ -97,9 +97,17 @@ mkdir -p "$LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
+# run locally or on cluster
+SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`eval "echo \"$SUBC\""`
 
 # time tag used in script naming
 TIMETAG=`date +"%s"`
+TIMESUFF="-$(date +%s)"
+if [[ $SUBC == *parallel* ]]; then
+   TIMESUFF=""
+   touch $LOGDIR/runscripts.sh
+fi
 
 NRUNS=`cat "$RLIST" | wc -l ` 
 echo "total number of runs to analyze: $NRUNS"
@@ -118,7 +126,7 @@ fi
 for AFILE in $FILES
 do
     echo "Now starting run $AFILE"
-    FSCRIPT="$LOGDIR/EVN.data-$AFILE-$(date +%s)"
+    FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
 
     sed -e "s|RUNFILE|$AFILE|"              \
         -e "s|CALIBRATIONOPTION|$CALIB|"    \
@@ -153,9 +161,6 @@ do
             echo "read calibration from VOffline DB (default)"
     fi 
 
-    # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
         # account for -terse changing the job number format
@@ -171,7 +176,7 @@ do
             echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
+        echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
 	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
@@ -182,7 +187,16 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat "$LOGDIR/runscripts.$TIMETAG.dat" | sort -u | "$SUBC"
+    echo
+    echo "$LOGDIR/runscripts.sh"
+    echo
+    chmod +x $LOGDIR/runscripts.sh
+    echo "echo \"==================================\"" >> Run_me.sh
+    echo "echo \"List of scripts to run\"" >> Run_me.sh
+    cat $LOGDIR/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/' >> Run_me.sh
+    echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC" >> Run_me.sh
+    chmod +x Run_me.sh
+    source Run_me.sh
+    rm Run_me.sh
 fi
 
-exit
