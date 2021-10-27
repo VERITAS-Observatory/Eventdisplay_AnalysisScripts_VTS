@@ -192,7 +192,7 @@ if [[ $SUBC == *parallel* ]]; then
     echo
     chmod +x $LOGDIR/runscripts.sh
     echo "echo \"==================================\"" >> Run_me.sh
-    echo "echo \"List of Commands being Runs\"" >> Run_me.sh
+    echo "echo \"List of scripts to run\"" >> Run_me.sh
     cat $LOGDIR/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/' >> Run_me.sh
     echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC" >> Run_me.sh
     chmod +x Run_me.sh
