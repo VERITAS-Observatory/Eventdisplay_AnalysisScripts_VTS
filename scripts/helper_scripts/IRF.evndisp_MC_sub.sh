@@ -56,7 +56,7 @@ else
 fi
 
 # Amplitude correction factor options
-AMPCORR="-traceamplitudecorrection MSCW.sizecal.runparameter -pedestalDefaultPedestal=$PEDLEV"
+AMPCORR="-traceamplitudecorrection ThroughputCorrection.runparameter -pedestalDefaultPedestal=$PEDLEV"
 # CARE simulations: add Gaussian noise of 3.6 mV/ (7.84 mV/dc)  / 2
 # Current (2018) CARE simulations:
 #    no electronic noise included - therefore add
