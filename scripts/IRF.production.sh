@@ -1,7 +1,7 @@
 #!/bin/bash
 # IRF production script (VERITAS)
 #
-# full list of epcochs:
+# full list of epochs:
 # V6_2012_2013 V6_2013_2014 V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6
 #
 #
