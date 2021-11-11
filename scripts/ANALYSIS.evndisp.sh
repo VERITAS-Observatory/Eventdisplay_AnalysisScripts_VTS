@@ -80,6 +80,8 @@ fi
 [[ "$6" ]] && CALIBFILE=$6 || CALIBFILE=calibrationlist.dat
 # VPM is on by default
 VPM=1
+# Download file to disk (if not available)
+DOWNLOAD=0
 
 echo "Using runparameter file $ACUTS ($EDVERSION)"
 
@@ -135,6 +137,7 @@ do
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|VVERSION|$EDVERSION|" \
+        -e "s|DOWNLOADVBF|$DOWNLOAD|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
