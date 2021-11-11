@@ -2,6 +2,7 @@
 # from a run list, prints the list of runs that are on disk.
 
 NOTFLAG=false # flag for if the -n flag was used
+DATFLAG=false # flat to print full date of run
 HELPFLAG=false # if true, print help text and exit
 #echo "INP:'`basename $0`' '$1' '$2' '$3'"
 
@@ -27,6 +28,9 @@ else # it is a pipe
 	elif [ "$#" -eq "1" ] ; then # format is " cat runlist.dat | exe -flags"
 		if [ "$1" = "-n" ] ; then
 			NOTFLAG=true
+			RUNFILE=$2
+                elif [ "$1" = "-d" ] ; then
+                        DATFLAG=true
 			RUNFILE=$2
 		else
 			echo " Error: `basename $0` doesn't understand flag $1.  Only acceptable flag is -n"
@@ -114,6 +118,8 @@ while read -r RUNID RUNDATE ; do
 		else # file does not exist
 			if $NOTFLAG ; then # $NOTFLAG is true, and we should print the runnumber
 				echo "$RUNID"
+                        elif $DATFLAG ; then
+                                echo "file not found - date: $YY$MM$DD"
 			fi
 		fi
 	fi
