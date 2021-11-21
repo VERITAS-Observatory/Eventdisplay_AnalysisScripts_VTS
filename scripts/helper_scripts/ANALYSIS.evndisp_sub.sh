@@ -57,22 +57,6 @@ if [[ $DOWNLOAD == "1" ]]; then
    echo "DOWNLOAD STATUS $DOWNLOAD"
 fi
         
-#################################
-# low gain calibration file
-mkdir -p $CALDIR/Calibration/
-if [[ -e "$VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat" ]]; then
-   cp -f -v $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat $CALDIR/Calibration/
-else
-   echo "error - low-gain calibration list not found ($VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat)"
-   exit
-fi
-if [[ -e "$VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped" ]]; then
-   cp -f -v $VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped $CALDIR/Calibration/
-else
-   echo "error - low-gain calibration list not found ($VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped)"
-   exit
-fi
-
 #########################################
 # pedestal calculation
 if [[ $CALIB == "1" || ( $CALIB == "2" || $CALIB == "4" ) ]]; then
