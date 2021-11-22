@@ -15,6 +15,7 @@ LOGDIR="$ODIR"
 CALDIR="$ODIR"
 ACUTS=RECONSTRUCTIONRUNPARAMETERFILE
 EDVERSION=VVERSION
+DOWNLOAD=DOWNLOADVBF
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -29,21 +30,33 @@ mkdir -p "$TEMPDIR"
 echo "Using run parameter file $ACUTS"
 
 #################################
-# low gain calibration file
-mkdir -p $CALDIR/Calibration/
-if [[ -e "$VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat" ]]; then
-   cp -f -v $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat $CALDIR/Calibration/
-else
-   echo "error - low-gain calibration list not found ($VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGain.dat)"
-   exit
+# Download raw data (vbf) file
+if [[ $DOWNLOAD == "1" ]]; then
+   # check that bbftp exists
+   BBFTP=$(which bbftp)
+   if [[ $BBFTP == *"not found"* ]]; then
+        echo "error: bbftp not installed; exiting"
+        exit
+   fi
+   if [[ ! -e $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh ]]; then
+        echo "error: $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh script not installed; exiting"
+        exit
+   fi
+   # check if run is on disk
+   RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
+   if [[ ${RUNONDISK} == *"file not found"** ]]; then
+      echo "$RUN not on disk; try downloading to $TEMPDIR"
+      VERITAS_DATA_DIR=${TEMPDIR}
+      RAWDATE=$(echo $RUNONDISK | awk '{print $NF}')
+      VTSRAWDATA=$(grep VTSRAWDATA $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep "*" | awk '{print $NF}')
+      echo "DOWNLOAD FILE $VERITAS_DATA_DIR/d$RAWDATE/$RUN.cvbf"
+      ${BBFTP} -V -S -p 4 -u bbftp -e "get /veritas/data/d$RAWDATE/$RUN.cvbf $VERITAS_DATA_DIR/d$RAWDATE/$RUN.cvbf" $VTSRAWDATA
+   else
+        DOWNLOAD="0"
+   fi
+   echo "DOWNLOAD STATUS $DOWNLOAD"
 fi
-if [[ -e "$VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped" ]]; then
-   cp -f -v $VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped $CALDIR/Calibration/
-else
-   echo "error - low-gain calibration list not found ($VERITAS_EVNDISP_AUX_DIR/Calibration/LowGainPedestals.lped)"
-   exit
-fi
-
+        
 #########################################
 # pedestal calculation
 if [[ $CALIB == "1" || ( $CALIB == "2" || $CALIB == "4" ) ]]; then
@@ -125,5 +138,11 @@ cp -f -v "$TEMPDIR/$RUN.root" "$DATAFILE"
 echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
 rm -f "$TEMPDIR/$RUN.root"
 # DST cp -f -v $TEMPDIR/$RUN.dst.root $DATAFILE
+
+########################################
+# cleanup raw data (if downloaded)
+if [[ $DOWNLOAD == "1" ]]; then
+   rm -f -v $VERITAS_DATA_DIR/d$RAWDATE/$RUN.cvbf
+fi
 
 exit

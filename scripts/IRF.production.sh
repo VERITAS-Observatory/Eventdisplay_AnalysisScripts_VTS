@@ -1,7 +1,7 @@
 #!/bin/bash
 # IRF production script (VERITAS)
 #
-# full list of epcochs:
+# full list of epochs:
 # V6_2012_2013 V6_2013_2014 V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6
 #
 #
@@ -114,8 +114,8 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     set -- $ZENITH_ANGLES
     #NSB_LEVELS=( 75 )
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    WOBBLE_OFFSETS=( 0.75 )
-    #WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    #WOBBLE_OFFSETS=( 0.75 )
+    WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     NEVENTS="-1"
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters

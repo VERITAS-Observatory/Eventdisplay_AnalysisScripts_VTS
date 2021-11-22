@@ -80,6 +80,8 @@ fi
 [[ "$6" ]] && CALIBFILE=$6 || CALIBFILE=calibrationlist.dat
 # VPM is on by default
 VPM=1
+# Download file to disk (if not available)
+DOWNLOAD=0
 
 echo "Using runparameter file $ACUTS ($EDVERSION)"
 
@@ -115,10 +117,26 @@ echo
 
 # sleep required for large data sets to avoid overload
 # of database and many jobs running in parallel
-SLEEPABIT="1s"
+SLEEPABIT="30s"
 if [ "$NRUNS" -gt "100" ] ; then
    SLEEPABIT="30s"
    echo "Long list of runs (${NRUNS}), will sleep after each run for ${SLEEPABIT}"
+fi
+
+#################################
+# low gain calibration file
+mkdir -p ${ODIR}/Calibration/
+if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat" ]]; then
+   cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat ${ODIR}/Calibration/
+else
+   echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat)"
+   exit
+fi
+if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped" ]]; then
+   cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped ${ODIR}/Calibration/
+else
+   echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped)"
+   exit
 fi
 
 #########################################
@@ -135,6 +153,7 @@ do
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|VVERSION|$EDVERSION|" \
+        -e "s|DOWNLOADVBF|$DOWNLOAD|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
@@ -142,7 +161,7 @@ do
 
     # output selected input during submission:
 
-    echo "Using runparameter file $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$ACUTS"
+    echo "Using runparameter file ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/$ACUTS"
 
     if [[ $VPM == "1" ]]; then
         echo "VPM is switched on (default)"

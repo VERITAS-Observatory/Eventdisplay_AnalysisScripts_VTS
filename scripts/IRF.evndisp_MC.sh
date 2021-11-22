@@ -77,8 +77,7 @@ PARTICLE_TYPE=${PARTICLE_NAMES[$PARTICLE]}
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANAMCVBF"
-mkdir -p "$LOGDIR"
+#LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANAMCVBF"
 
 # output directory for evndisp products (will be manipulated more later in the script)
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
@@ -89,6 +88,8 @@ OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
+LOGDIR=${OPDIR}/$DATE
+mkdir -p "$LOGDIR"
 
 echo "Using runparameter file $ACUTS"
 
