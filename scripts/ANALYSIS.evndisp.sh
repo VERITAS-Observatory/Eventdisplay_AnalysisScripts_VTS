@@ -117,8 +117,8 @@ echo
 
 # sleep required for large data sets to avoid overload
 # of database and many jobs running in parallel
-SLEEPABIT="30s"
-if [ "$NRUNS" -gt "100" ] ; then
+SLEEPABIT="1s"
+if [ "$NRUNS" -gt "20" ] ; then
    SLEEPABIT="30s"
    echo "Long list of runs (${NRUNS}), will sleep after each run for ${SLEEPABIT}"
 fi
