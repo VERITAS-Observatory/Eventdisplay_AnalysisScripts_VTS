@@ -109,7 +109,7 @@ do
         continue
     fi
 
-    RUNINFO=`$EVNDISPSYS/bin/printRunParameter $BFILE -runinfo`
+    RUNINFO=`$EVNDISPSYS/bin/printRunParameter $BFILE -updated-runinfo`
     EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
     ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
     HVSETTINGS=`echo $RUNINFO | awk '{print $(4)}'`
