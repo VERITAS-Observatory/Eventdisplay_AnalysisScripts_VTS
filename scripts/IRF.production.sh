@@ -113,10 +113,10 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     #ZENITH_ANGLES=( 50 )
     ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    #NSB_LEVELS=( 75 )
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    #WOBBLE_OFFSETS=( 0.75 )
-    WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+#    NSB_LEVELS=( 400 )
+    WOBBLE_OFFSETS=$(ls ${DDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+#    WOBBLE_OFFSETS=( 0.5 )
     NEVENTS="-1"
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
@@ -287,7 +287,6 @@ for VX in $EPOCH; do
                             METH="GEO"
                             TFILID=$TFIL$METH
 			    $(dirname "$0")/IRF.mscw_energy_MC.sh $TFILID $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE
-                            exit
 			done #recID
                     ######################
                     # analyse effective areas
