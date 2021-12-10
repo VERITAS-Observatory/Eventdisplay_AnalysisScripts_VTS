@@ -9,6 +9,7 @@ TABFILE=TABLEFILE
 RECID=RECONSTRUCTIONID
 ODIR=OUTPUTDIRECTORY
 INFILE=EVNDISPFILE
+INLOGDIR=INPUTLOGDIR
 
 INDIR=`dirname $INFILE`
 BFILE=`basename $INFILE .root`
@@ -36,6 +37,14 @@ $EVNDISPSYS/bin/mscw_energy         \
     -arrayrecid=$RECID              \
     -inputfile $TEMPDIR/$BFILE.root \
     -writeReconstructedEventsOnly=1 &> $MSCWLOGFILE
+
+# move logfiles into output file
+if [[ -e ${INLOGDIR}/$BFILE.log ]]; then
+  $EVNDISPSYS/bin/logFile evndispLog $TEMPDIR/$BFILE.mscw.root ${INLOGDIR}/$BFILE.log
+fi
+if [[ -e $MSCWLOGFILE ]]; then
+  $EVNDISPSYS/bin/logFile mscwTableLog $TEMPDIR/$BFILE.mscw.root $MSCWLOGFILE
+fi
 
 # move output file from scratch and clean up
 cp -f -v $TEMPDIR/$BFILE.mscw.root $MSCWDATAFILE
