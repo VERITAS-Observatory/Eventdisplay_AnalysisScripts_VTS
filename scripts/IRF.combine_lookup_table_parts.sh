@@ -97,10 +97,15 @@ sed -e "s|TABLELIST|$FLIST|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
 chmod u+x "$FSCRIPT.sh"
+echo "$FSCRIPT.sh"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo $SUBC
+    exit
+fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
