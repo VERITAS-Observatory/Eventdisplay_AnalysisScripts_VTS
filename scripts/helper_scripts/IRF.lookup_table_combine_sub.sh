@@ -10,7 +10,11 @@ OFILE=OUTPUTFILE
 ODIR=OUTPUTDIR
 
 # combine the tables
-$EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root &> $ODIR/$OFILE.log 
+if [[ $IRFVERSION = "v4"* ]]; then
+    $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root median &> $ODIR/$OFILE.log 
+else
+    $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root &> $ODIR/$OFILE.log 
+fi
 
 # smooth lookup tables (not v4xx)
 IRFVERSION=`$EVNDISPSYS/bin/combineLookupTables --version | tr -d .| sed -e 's/[a-Z]*$//'`

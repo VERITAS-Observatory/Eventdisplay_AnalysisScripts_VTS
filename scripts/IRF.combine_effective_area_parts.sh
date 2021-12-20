@@ -2,7 +2,7 @@
 # combine many effective area files into one
 
 # qsub parameters
-h_cpu=5:29:00; h_vmem=6000M; tmpdir_size=10G
+h_cpu=11:29:00; h_vmem=6000M; tmpdir_size=10G
 
 if [[ $# < 5 ]]; then
 # begin help message
@@ -120,7 +120,7 @@ rm -f $FSCRIPT.sh
 sed -e "s|INPUTFILES|$INFILES|" \
     -e "s|OUTPUTFILE|$OFILE|"   \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
-	    
+
 chmod u+x "$FSCRIPT.sh"
 echo "$FSCRIPT.sh"
 
@@ -132,8 +132,8 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-	JOBID=`$SUBC $FSCRIPT.sh`
-	echo "JOBID: $JOBID"
+    JOBID=`$SUBC $FSCRIPT.sh`
+    echo "JOBID: $JOBID"
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
 elif [[ "$SUBC" == *simple* ]] ; then
