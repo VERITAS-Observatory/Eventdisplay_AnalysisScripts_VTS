@@ -12,7 +12,7 @@ if [ $# -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [evndisp directory] [output directory] [Rec ID] [sim type] [ATM]
+ANALYSIS.mscw_energy.sh <runlist> [evndisp directory] [output directory] [Rec ID] [sim type] [ATM] [evndisp log file directory]
 
 required parameters:
 			
@@ -34,6 +34,9 @@ optional parameters:
     [simulation type]       e.g. CARE_June2020 (this is the default)
 
     [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
+
+    [evndisp log file directory] directory with evndisplay log files (default: assume same 
+                            as evndisp output ROOT files)
 
 --------------------------------------------------------------------------------
 "
@@ -61,6 +64,7 @@ RLIST=$1
 [[ "$4" ]] && ID=$4 || ID=0
 [[ "$5" ]] && SIMTYPE=$5 || SIMTYPE=""
 [[ "$6" ]] && FORCEDATMO=$6
+[[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -105,7 +109,7 @@ do
         continue
     fi
 
-    RUNINFO=`$EVNDISPSYS/bin/printRunParameter $BFILE -runinfo`
+    RUNINFO=`$EVNDISPSYS/bin/printRunParameter $BFILE -updated-runinfo`
     EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
     ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
     HVSETTINGS=`echo $RUNINFO | awk '{print $(4)}'`
@@ -153,6 +157,7 @@ do
     sed -e "s|TABLEFILE|$TABFILE|" \
         -e "s|RECONSTRUCTIONID|$ID|" \
         -e "s|OUTPUTDIRECTORY|$ODIR|" \
+        -e "s|INPUTLOGDIR|${INPUTLOGDIR}|" \
         -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh

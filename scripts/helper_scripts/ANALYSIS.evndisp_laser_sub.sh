@@ -8,11 +8,10 @@ source $EVNDISPSYS/setObservatory.sh VTS
 RUN=RUNFILE
 TELTOANA=TELTOANACOMB
 LOGDIR=LOGDIRECTORY
-CDIR=CURRENTDIR
 echo $RUN
 
 # run eventdisplay
 rm -f "$LOGDIR/$RUN.laser.log"
-${CDIR}/SPANALYSIS.evndisp_laser_run.sh $RUN $TELTOANA &> $LOGDIR/$RUN.laser.log
+${EVNDISPSCRIPTS}/SPANALYSIS.evndisp_laser_run.sh $RUN $TELTOANA &> $LOGDIR/$RUN.laser.log
 
 exit

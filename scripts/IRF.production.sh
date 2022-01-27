@@ -1,7 +1,7 @@
 #!/bin/bash
 # IRF production script (VERITAS)
 #
-# full list of epcochs:
+# full list of epochs:
 # V6_2012_2013 V6_2013_2014 V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6
 #
 #
@@ -19,7 +19,8 @@ required parameters:
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             ANALYSETABLES, EFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
+                             (ANALYSETABLES, EFFECTIVEAREAS,)
+                             ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINMVANGRES )
     
 optional parameters:
@@ -117,7 +118,6 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     #ZENITH_ANGLES=( 50 )
     ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    #NSB_LEVELS=( 75 )
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
     WOBBLE_OFFSETS=( 0.75 )
     #WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
@@ -157,11 +157,18 @@ if [[ $CUTSLISTFILE != "" ]]; then
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
-else
+elif [ "${SIMTYPE}" = "GRISU" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
+else
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
 fi
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
          ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
@@ -247,6 +254,22 @@ for VX in $EPOCH; do
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
+                #######################
+                # analyse tables and generate effective areas
+                if [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
+                   for ID in $RECID; do
+                      TFIL="${TABLECOM}"
+                      # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
+                      # warning: do not mix disp and geo
+                      METH="GEO"
+                      TFILID=$TFIL$METH
+                      for CUTS in ${CUTLIST[@]}; do
+                         echo "Generate effective areas $CUTS"
+                         $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh $TFILID $CUTS $VX $ATM $ZA "${WOBBLE_OFFSETS}" "${NOISE}" $ID $SIMTYPE
+                      done
+                   done
+                   continue
+                fi
                 for WOBBLE in ${WOBBLE_OFFSETS[@]}; do
                     echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE, NEVENTS $NEVENTS"
                     ######################

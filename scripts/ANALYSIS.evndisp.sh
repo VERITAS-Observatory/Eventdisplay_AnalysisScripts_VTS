@@ -80,6 +80,8 @@ fi
 [[ "$6" ]] && CALIBFILE=$6 || CALIBFILE=calibrationlist.dat
 # VPM is on by default
 VPM=1
+# Download file to disk (if not available)
+DOWNLOAD=0
 
 echo "Using runparameter file $ACUTS ($EDVERSION)"
 
@@ -97,9 +99,17 @@ mkdir -p "$LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
+# run locally or on cluster
+SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`eval "echo \"$SUBC\""`
 
 # time tag used in script naming
 TIMETAG=`date +"%s"`
+TIMESUFF="-$(date +%s)"
+if [[ $SUBC == *parallel* ]]; then
+   TIMESUFF=""
+   touch $LOGDIR/runscripts.sh
+fi
 
 NRUNS=`cat "$RLIST" | wc -l ` 
 echo "total number of runs to analyze: $NRUNS"
@@ -108,9 +118,25 @@ echo
 # sleep required for large data sets to avoid overload
 # of database and many jobs running in parallel
 SLEEPABIT="1s"
-if [ "$NRUNS" -gt "100" ] ; then
+if [ "$NRUNS" -gt "20" ] ; then
    SLEEPABIT="30s"
    echo "Long list of runs (${NRUNS}), will sleep after each run for ${SLEEPABIT}"
+fi
+
+#################################
+# low gain calibration file
+mkdir -p ${ODIR}/Calibration/
+if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat" ]]; then
+   cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat ${ODIR}/Calibration/
+else
+   echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat)"
+   exit
+fi
+if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped" ]]; then
+   cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped ${ODIR}/Calibration/
+else
+   echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped)"
+   exit
 fi
 
 #########################################
@@ -118,7 +144,7 @@ fi
 for AFILE in $FILES
 do
     echo "Now starting run $AFILE"
-    FSCRIPT="$LOGDIR/EVN.data-$AFILE-$(date +%s)"
+    FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
 
     sed -e "s|RUNFILE|$AFILE|"              \
         -e "s|CALIBRATIONOPTION|$CALIB|"    \
@@ -127,6 +153,7 @@ do
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|VVERSION|$EDVERSION|" \
+        -e "s|DOWNLOADVBF|$DOWNLOAD|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
@@ -134,7 +161,7 @@ do
 
     # output selected input during submission:
 
-    echo "Using runparameter file $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$ACUTS"
+    echo "Using runparameter file ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/$ACUTS"
 
     if [[ $VPM == "1" ]]; then
         echo "VPM is switched on (default)"
@@ -153,9 +180,6 @@ do
             echo "read calibration from VOffline DB (default)"
     fi 
 
-    # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
         # account for -terse changing the job number format
@@ -171,7 +195,7 @@ do
             echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
+        echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
 	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
@@ -182,7 +206,16 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat "$LOGDIR/runscripts.$TIMETAG.dat" | sort -u | "$SUBC"
+    echo
+    echo "$LOGDIR/runscripts.sh"
+    echo
+    chmod +x $LOGDIR/runscripts.sh
+    echo "echo \"==================================\"" >> Run_me.sh
+    echo "echo \"List of scripts to run\"" >> Run_me.sh
+    cat $LOGDIR/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/' >> Run_me.sh
+    echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC" >> Run_me.sh
+    chmod +x Run_me.sh
+    source Run_me.sh
+    rm Run_me.sh
 fi
 
-exit

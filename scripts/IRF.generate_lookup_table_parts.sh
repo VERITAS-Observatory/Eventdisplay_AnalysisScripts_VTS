@@ -60,7 +60,7 @@ SIMTYPE=$7
 PARTICLE_TYPE="gamma"
 [[ "$8" ]] && ANALYSIS_TYPE=$8  || ANALYSIS_TYPE=""
 
-_sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/MSCW.sizecal.runparameter | grep " ${EPOCH} ")
+_sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
 EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
 # input directory containing evndisp products

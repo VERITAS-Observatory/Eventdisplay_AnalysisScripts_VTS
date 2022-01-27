@@ -1,5 +1,6 @@
 #!/bin/bash
 # script to analyse data files with anasum (parallel analysis) from a simple run list
+# additionally writes out script for anasum --> fits v2dl3 converter
 
 # EventDisplay version
 EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
@@ -7,9 +8,10 @@ EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
 if [[ "$#" -lt 4 ]]; then
 # begin help message
 echo "
-ANASUM parallel data analysis: submit jobs using a simple run list
+ANASUM parallel data analysis: submit jobs using a simple run list, create (optional) v2dl3 script
 
-ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> [run parameter file] [mscw directory] [sim type] \
+ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> \
+[run parameter file] [mscw directory] [v2dl3=0/1] [sim type] \
 [radial acceptances] [force atmosphere]
 
 required parameters:
@@ -44,8 +46,7 @@ optional parameters:
 			    Default: Atmosphere determined from run date for each run.				
 			    Attention: Must use the same atmospere for EAs as was used for the lookup tables in the mscw_energy stage!
 
-IMPORTANT! Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
-
+Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -68,10 +69,11 @@ CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
-[[ "$7" ]] && SIMTYPE=$7 || SIMTYPE="DEFAULT"
+[[ "$7" ]] && V2DL3=$7 || V2DL3="0"
+[[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 METH="GEO"
-[[ "$8" ]] && RACC=$8 || RACC="0"
-[[ "$9" ]] && FORCEDATMO=$9 
+[[ "$9" ]] && RACC=$9 || RACC="0"
+[[ "${10}" ]] && FORCEDATMO=${10}
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -180,6 +182,16 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 
 #########################################
+# make script for v2dl3
+if [[ V2DL3 -eq "1" ]]; then
+    V2DL3SCRIPT="$ODIR/${CUTS}_v2dl3_for_runlist_from_ED485-anasum.sh"
+    echo "Writing V2DL3 script to ${V2DL3SCRIPT}"
+    rm -f ${V2DL3SCRIPT}
+    echo "#!/bin/sh " > $V2DL3SCRIPT
+    echo "" >> $V2DL3SCRIPT
+fi
+
+#########################################
 # make anasum run list
 ANARUNLIST="$ODIR/$CUTS.anasum.dat"
 rm -f "$ANARUNLIST"
@@ -266,15 +278,28 @@ for RUN in ${RUNS[@]}; do
     if [[ $EDVERSION = "v4"* ]]; then
         echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $ANARUNLIST
         echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
+        if [[ V2DL3 -eq "1" ]]; then
+            # write line to v2dl3 script
+            echo "v2dl3 -ed --full-enclosure -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> $V2DL3SCRIPT
+        fi
     # v5x: cuts are read from the effective area file
     else
         echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> "$ANARUNLIST"
         echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
+        if [[ V2DL3 -eq "1" ]]; then
+            # write line to v2dl3 script
+            echo "v2dl3 -ed --full-enclosure -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> $V2DL3SCRIPT
+        fi
     fi
 done
 
 # submit the job
 SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"
 $SUBSCRIPT.sh "$ANARUNLIST" "$INDIR" "$ODIR" "$RUNP" "${RACC}"
+
+if [[ V2DL3 -eq "1" ]]; then
+   echo "V2DL3 script written to $V2DL3SCRIPT"
+   chmod u+x $V2DL3SCRIPT
+fi
 
 exit
