@@ -140,7 +140,11 @@ do
         SIMTYPE_RUN="$SIMTYPE"
     fi
 
-    TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-GEO.root
+    ANATYPE="GEO"
+    if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
+       ANATYPE="$VERITAS_ANALYSIS_TYPE"
+    fi 
+    TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
     echo $TABFILE
     # Check that table file exists
     if [[ "$TABFILE" == `basename $TABFILE` ]]; then

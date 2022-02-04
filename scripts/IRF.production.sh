@@ -72,6 +72,11 @@ IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-
 
 # version string for aux files
 AUX="auxv01"
+# Analysis Type
+ANATYPE="GEO"
+if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
+   ANATYPE="$VERITAS_ANALYSIS_TYPE"
+fi
 
 # number of events per evndisp analysis
 NEVENTS="-1"
@@ -115,17 +120,17 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     WOBBLE_OFFSETS=( 0.5 ) 
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     DDIR="/lustre/fs24/group/veritas/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    #ZENITH_ANGLES=( 50 )
-    ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
-    set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    WOBBLE_OFFSETS=( 0.75 )
-    #WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    # ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    # set -- $ZENITH_ANGLES
+    # NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
+    # WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    ######################################
     # TEMPORARY
     ZENITH_ANGLES=( 20 30 35 )
     NSB_LEVELS=( 100 130 160 200 250 )
     WOBBLE_OFFSETS=( 0.5 )
     # (END TEMPORARY)
+    ######################################
     NEVENTS="-1"
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
@@ -188,8 +193,7 @@ for VX in $EPOCH; do
             TFIL="${TABLECOM}"
             for ID in $RECID; do
                 echo "combine lookup tables"
-                METH="GEO"
-                $(dirname "$0")/IRF.combine_lookup_table_parts.sh "${TFIL}${METH}" "$VX" "$ATM" "$ID" "$SIMTYPE" "$VERITAS_ANALYSIS_TYPE"
+                $(dirname "$0")/IRF.combine_lookup_table_parts.sh "${TFIL}${ANATYPE}" "$VX" "$ATM" "$ID" "$SIMTYPE" "$VERITAS_ANALYSIS_TYPE"
             done
             continue
        fi
@@ -260,9 +264,7 @@ for VX in $EPOCH; do
                    for ID in $RECID; do
                       TFIL="${TABLECOM}"
                       # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
-                      # warning: do not mix disp and geo
-                      METH="GEO"
-                      TFILID=$TFIL$METH
+                      TFILID=$TFIL$ANATYPE
                       for CUTS in ${CUTLIST[@]}; do
                          echo "Generate effective areas $CUTS"
                          $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh $TFILID $CUTS $VX $ATM $ZA "${WOBBLE_OFFSETS}" "${NOISE}" $ID $SIMTYPE
@@ -300,8 +302,7 @@ for VX in $EPOCH; do
 			    TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                             # warning: do not mix disp and geo
-                            METH="GEO"
-                            TFILID=$TFIL$METH
+                            TFILID=$TFIL$ANATYPE
 			    $(dirname "$0")/IRF.mscw_energy_MC.sh $TFILID $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
 			done #recID
                     ######################
