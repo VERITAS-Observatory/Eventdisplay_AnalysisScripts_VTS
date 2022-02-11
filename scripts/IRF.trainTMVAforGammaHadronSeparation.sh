@@ -145,24 +145,10 @@ do
       grep "*" $RUNPAR | grep -v ENERGYBINS | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
     
       nTrainSignal=200000
-      if  [ "$i" -eq "0" ] && [ "$j" -eq "0" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "0" ] && [ "$j" -eq "1" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "0" ] && [ "$j" -eq "2" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "0" ] && [ "$j" -eq "3" ]; then
+      nTrainBackground=200000
+      if  [ "$i" -eq "0" ] && [ "$j" -eq "3" ]; then
           nTrainSignal=50000
           nTrainBackground=0
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "0" ]; then
-          nTrainSignal=200000
-          nTrainBackground=200000
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "1" ]; then
-          nTrainSignal=200000
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "2" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "3" ]; then
-          nTrainBackground=200000
       elif  [ "$i" -eq "2" ] && [ "$j" -eq "0" ]; then
           nTrainSignal=100000
           nTrainBackground=100000
@@ -172,8 +158,6 @@ do
       elif  [ "$i" -eq "2" ] && [ "$j" -eq "2" ]; then
           nTrainSignal=100000
           nTrainBackground=100000
-      elif  [ "$i" -eq "2" ] && [ "$j" -eq "3" ]; then
-          nTrainSignal=200000
       elif  [ "$i" -eq "3" ] && [ "$j" -eq "0" ]; then
           nTrainSignal=50000
           nTrainBackground=0
@@ -187,11 +171,20 @@ do
           nTrainSignal=100000
           nTrainBackground=0
       fi
+      ### (temporary)
+      nTrainBackground=0
+      nTrainSignal=0
+      ## (end temporary)
       echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
 
-      echo "* OUTPUTFILE $ODIR/RecID${RECID} $ONAME"_$i""_$j" " >> $RFIL.runparameter
+      # split runparameter file for event list writing and training
+      cp -v $RFIL.runparameter $RFIL.eventlist.runparameter
+      EVENTLIST="TMVA.${ONAME}_${i}_${j}"
+      echo "* OUTPUTFILE $ODIR/RecID${RECID} ${EVENTLIST}" >> $RFIL.eventlist.runparameter
+      echo "* OUTPUTFILE $ODIR/RecID${RECID} ${ONAME}_${i}_${j}" >> $RFIL.runparameter
+      echo "* PREEVENTLIST $ODIR/RecID${RECID}/${EVENTLIST}.root" >> $RFIL.runparameter
 
-      echo "#######################################################################################" >> $RFIL.runparameter
+      echo "#######################################################################################" >> $RFIL.eventlist.runparameter
       # signal and background files (depending on on-axis or cone data set)
       for ATMX in $ATM; do
           SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$VERITAS_ANALYSIS_TYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
@@ -208,7 +201,7 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE $arg" >> $RFIL.eventlist.runparameter
                           done
                       fi
                   fi
@@ -222,17 +215,17 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE $arg" >> $RFIL.eventlist.runparameter
                           done
                       fi
                   fi
               done
           fi
       done 
-      echo "#######################################################################################" >> $RFIL.runparameter
+      echo "#######################################################################################" >> $RFIL.eventlist.runparameter
    	  for arg in $(cat $BLIST)
    	  do
-         echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
+         echo "* BACKGROUNDFILE $arg" >> $RFIL.eventlist.runparameter
       done
          
       FSCRIPT=$LOGDIR/TMVA.$ONAME"_$i""_$j"
