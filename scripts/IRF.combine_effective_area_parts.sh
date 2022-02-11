@@ -116,6 +116,9 @@ echo "Processing epoch $EPOCH, atmosphere ATM$ATMOS, RecID $RECID (telescope com
 
 # output effective area name
 METH="GEO" 
+if [[ ! -z $ANALYSIS_TYPE ]]; then
+    METH=${ANALYSIS_TYPE}
+fi
 OFILE="effArea-${IRFVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM${ATMOS}-T${T}"
 
 FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}"
