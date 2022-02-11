@@ -54,7 +54,7 @@ BLIST=$1
 RUNPAR=$2
 ODIR=$3
 ONAME=$4
-SIMTYPE=$5
+[[ "$5" ]] && SIMTYPE=$5 || SIMTYPE="CARE_June2020"
 echo "Simulation type: $SIMTYPE"
 [[ "$6" ]] && EPOCH=$6 || EPOCH="V6"
 [[ "$7" ]] && ATM=$7 || ATM="61"
@@ -73,7 +73,6 @@ fi
 if [[ "$RUNPAR" == `basename $RUNPAR` ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
-
 if [[ ! -f "$RUNPAR" ]]; then
     echo "Error, TMVA run parameter file $RUNPAR not found, exiting..."
     exit 1
@@ -85,6 +84,7 @@ echo "Original TMVA run parameter file: $RXPAR.runparameter "
 # output directory
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p $ODIR
+mkdir -p $ODIR/RecID${RECID}
 
 #####################################
 # energy bins
@@ -124,13 +124,13 @@ for (( i=0; i < $NENE; i++ ))
 do
    echo "==========================================================================="
    echo " "
-   echo "EBin: $(($i+$count1)) of $NENE: ${EBINARRAY[$i]} to ${EBINARRAY[$i+1]}"
+   echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINARRAY[$i]} to ${EBINARRAY[$i+1]} (in log TeV)"
 ##############################################
 # loop over all zenith angle bins
    for (( j=0; j < $NZEW; j++ ))
    do
       echo "---------------------------------------------------------------------------"
-      echo "ZeBin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]}"
+      echo "Zenith Bin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
       
       # copy run parameter file with basic options to output directory
       cp -f $RUNPAR $ODIR
@@ -194,7 +194,7 @@ do
       echo "#######################################################################################" >> $RFIL.runparameter
       # signal and background files (depending on on-axis or cone data set)
       for ATMX in $ATM; do
-          SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
+          SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$VERITAS_ANALYSIS_TYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
           echo "Signal input directory: $SDIR"
           if [[ ! -d $SDIR ]]; then
               echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
@@ -218,7 +218,8 @@ do
               do
                   if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                       if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{50,80,120,170,230}.mscw.root`
+                          # SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{50,80,120,170,230}.mscw.root`
+                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
                           for arg in $SIGNALLIST
                           do
                               echo "* SIGNALFILE $arg" >> $RFIL.runparameter
@@ -229,10 +230,10 @@ do
           fi
       done 
       echo "#######################################################################################" >> $RFIL.runparameter
-   	for arg in $(cat $BLIST)
-   	do
+   	  for arg in $(cat $BLIST)
+   	  do
          echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
-   	done
+      done
          
       FSCRIPT=$LOGDIR/TMVA.$ONAME"_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \
