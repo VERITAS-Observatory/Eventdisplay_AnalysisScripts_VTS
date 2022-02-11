@@ -30,8 +30,24 @@ mkdir -p "$TEMPDIR"
 echo "Using run parameter file $ACUTS"
 
 #################################
+# check if run is on disk
+RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
+if [[ ${RUNONDISK} == *"file not found"** ]]; then
+  echo "$RUN not on disk"
+  if [[ $DOWNLOAD == "0" ]]; then
+      touch "$LOGDIR/$RUN.NOTONDISK"
+      exit
+  fi
+else
+    rm -f "$LOGDIR/$RUN.NOTONDISK"
+fi
+
+#################################
 # Download raw data (vbf) file
-if [[ $DOWNLOAD == "1" ]]; then
+# (note that download is not working on DESY cluster)
+# 1 = download to tmp disk (remove vbf file after analysis)
+# 2 = download to $VERITAS_DATA_DIR (keep vbf file after analysis)
+if [[ $DOWNLOAD == "1" ]] || [[ $DOWNLOAD == "2" ]]; then
    # check that bbftp exists
    BBFTP=$(which bbftp)
    if [[ $BBFTP == *"not found"* ]]; then
@@ -46,7 +62,9 @@ if [[ $DOWNLOAD == "1" ]]; then
    RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
    if [[ ${RUNONDISK} == *"file not found"** ]]; then
       echo "$RUN not on disk; try downloading to $TEMPDIR"
-      VERITAS_DATA_DIR=${TEMPDIR}
+      if [[ $DOWNLOAD == "1" ]]; then
+          VERITAS_DATA_DIR=${TEMPDIR}
+      fi
       RAWDATE=$(echo $RUNONDISK | awk '{print $NF}')
       VTSRAWDATA=$(grep VTSRAWDATA $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep "*" | awk '{print $NF}')
       echo "DOWNLOAD FILE $VERITAS_DATA_DIR/d$RAWDATE/$RUN.cvbf"
