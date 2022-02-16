@@ -55,6 +55,9 @@ RUNPAR=$2
 ODIR=$3
 ONAME=$4
 [[ "$5" ]] && SIMTYPE=$5 || SIMTYPE="CARE_June2020"
+echo "Background list: $BLIST"
+echo "Runparameters: $RUNPAR"
+echo "Output dir: $ODIR"
 echo "Simulation type: $SIMTYPE"
 [[ "$6" ]] && EPOCH=$6 || EPOCH="V6"
 [[ "$7" ]] && ATM=$7 || ATM="61"
