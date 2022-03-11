@@ -28,8 +28,14 @@ ADDOPT="ADDITIONALOPTIONS"
 PEDNEVENTS="200000"
 TZERONEVENTS="100000"
 
+echo "PROCESS ID ${Process}"
+echo "SGE_ID ${SGE_TASK_ID}"
 if [[ $NEVENTS -gt 0 ]]; then
-    ITER=$((SGE_TASK_ID - 1))
+    if [[ -z $SGE_TASK_ID ]]; then
+        ITER=$((SGE_TASK_ID - 1))
+    else
+        ITER=$((Process - 1))
+    fi
     FIRSTEVENT=$(($ITER * $NEVENTS))
     # increase run number
     RUNNUM=$((RUNNUM + $ITER))

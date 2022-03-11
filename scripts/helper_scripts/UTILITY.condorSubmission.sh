@@ -1,9 +1,9 @@
 #!/bin/bash
 # prepar a condor job submission file
 
-if [ "$1" = "-h" ] || [ $# -ne 3 ]; then
+if [ "$1" = "-h" ]; then
 echo "
-UTILITY.condorSubmission.sh [submission script] [memory request] [disk request]
+UTILITY.condorSubmission.sh [submission script] [memory request] [disk request] <optional: array jobs>
 
 --------------------------------------------------------------------------------
 "
@@ -19,4 +19,8 @@ echo "Log = ${1}.\$(Process).error" >> ${SUBFIL}
 echo "request_memory = ${2}" >> ${SUBFIL}
 echo "request_disk = ${3}" >> ${SUBFIL}
 echo "getenv = True" >> ${SUBFIL}
-echo "Queue 1" >> ${SUBFIL}
+if [ ! -z "$4" ]; then
+    echo "queue ${4}" >> ${SUBFIL}
+else
+    echo "queue 1" >> ${SUBFIL}
+fi
