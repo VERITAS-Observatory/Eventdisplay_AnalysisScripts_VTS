@@ -145,6 +145,7 @@ do
        ANATYPE="$VERITAS_ANALYSIS_TYPE"
     fi 
     TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
+    TABFILE="table-v570-auxv01-CARE_June2020-ATM62-V6_2012_2013a-TS.root"
     echo $TABFILE
     # Check that table file exists
     if [[ "$TABFILE" == `basename $TABFILE` ]]; then
