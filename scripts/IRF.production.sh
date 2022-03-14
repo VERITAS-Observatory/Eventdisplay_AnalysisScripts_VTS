@@ -120,15 +120,15 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     WOBBLE_OFFSETS=( 0.5 ) 
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     DDIR="/lustre/fs24/group/veritas/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    # ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
-    # set -- $ZENITH_ANGLES
-    # NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    # WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    set -- $ZENITH_ANGLES
+    NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
+    WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEMPORARY
-    ZENITH_ANGLES=( 20 30 35 )
-    NSB_LEVELS=( 100 130 160 200 250 )
-    WOBBLE_OFFSETS=( 0.5 )
+    # ZENITH_ANGLES=( 20 30 35 )
+    # NSB_LEVELS=( 100 130 160 200 250 )
+    # WOBBLE_OFFSETS=( 0.5 )
     # (END TEMPORARY)
     ######################################
     NEVENTS="-1"
@@ -175,8 +175,11 @@ else
              ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
 fi
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-         ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel3-PointSource-TMVA-BDT-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
