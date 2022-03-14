@@ -33,7 +33,6 @@ MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
 
 $EVNDISPSYS/bin/mscw_energy         \
     -tablefile $TABFILE             \
-    -noshorttree                    \
     -arrayrecid=$RECID              \
     -inputfile $TEMPDIR/$BFILE.root \
     -writeReconstructedEventsOnly=1 &> $MSCWLOGFILE

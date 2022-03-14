@@ -35,11 +35,8 @@ optional parameters:
     [mscw directory]        directory containing the mscw.root files.
 			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION
 
-    [v2dl3]                 use V2DL3 converter (v2dle=1; default=0)
-                            v2dl3 converter: run the generated script afterwards, or submit jobs with v2dl3_qsub.sh
-                       
-    [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June1702)
-			    Default: CARE_June1702
+    [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
+			    Default: CARE_June2020
 
     [radial acceptance]     0=use external radial acceptance;
                             1=use run-wise radial acceptance (calculated from data run);
@@ -74,7 +71,6 @@ BACKGND=$4
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
 [[ "$7" ]] && V2DL3=$7 || V2DL3="0"
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
-METH="GEO"
 [[ "$9" ]] && RACC=$9 || RACC="0"
 [[ "${10}" ]] && FORCEDATMO=${10}
 
@@ -82,6 +78,11 @@ SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
 SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
+
+ANATYPE="GEO"
+if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
+    ANATYPE="$VERITAS_ANALYSIS_TYPE"
+fi
 
 # cut definitions (note: VX to be replaced later in script)
 if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
@@ -111,7 +112,7 @@ else
     exit 1
 fi
 CUTFILE="ANASUM.GammaHadron-Cut-${CUT}.dat"
-EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${METH}-VX-ATMXX-TX.root"
+EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-VX-ATMXX-TX.root"
 
 # remove PointSource and ExtendedSource string from cut file name for radial acceptances names
 if [[ $CUT == *PointSource-* ]] ; then
@@ -124,7 +125,7 @@ elif [[ $CUT == *ExtendedSource-* ]]; then
     echo $CUTRADACC
 fi
 
-RADACC="radialAcceptance-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUTRADACC}-${METH}-VX-TX.root"
+RADACC="radialAcceptance-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUTRADACC}-${ANATYPE}-VX-TX.root"
 # START TEMPORARY (TESTS, comment)
 # EFFAREA="IGNOREEFFECTIVEAREA"
 # END TEMPORARY
@@ -235,6 +236,12 @@ for RUN in ${RUNS[@]}; do
     if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
        ATMO=${ATMO/62/61}
     fi
+
+    # TMPTMPTMP
+    EPOCH="V6_2012_2013a"
+    ATMO="62"
+
+    
     if [[ $SIMTYPE == "DEFAULT" ]]; then
         if [[ $EPOCH == *"V4"* ]]; then
             REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V4}

@@ -31,7 +31,7 @@ optional parameters:
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
     
-    [simulation type]       e.g. CARE_June1702
+    [simulation type]       e.g. CARE_June2020 (this is the default)
 
     [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
 
@@ -140,7 +140,12 @@ do
         SIMTYPE_RUN="$SIMTYPE"
     fi
 
-    TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-GEO.root
+    ANATYPE="GEO"
+    if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
+       ANATYPE="$VERITAS_ANALYSIS_TYPE"
+    fi 
+    TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
+    TABFILE="table-v570-auxv01-CARE_June2020-ATM62-V6_2012_2013a-TS.root"
     echo $TABFILE
     # Check that table file exists
     if [[ "$TABFILE" == `basename $TABFILE` ]]; then

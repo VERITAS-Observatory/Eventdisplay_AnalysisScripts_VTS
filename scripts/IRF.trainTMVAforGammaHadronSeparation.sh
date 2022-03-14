@@ -54,7 +54,10 @@ BLIST=$1
 RUNPAR=$2
 ODIR=$3
 ONAME=$4
-SIMTYPE=$5
+[[ "$5" ]] && SIMTYPE=$5 || SIMTYPE="CARE_June2020"
+echo "Background list: $BLIST"
+echo "Runparameters: $RUNPAR"
+echo "Output dir: $ODIR"
 echo "Simulation type: $SIMTYPE"
 [[ "$6" ]] && EPOCH=$6 || EPOCH="V6"
 [[ "$7" ]] && ATM=$7 || ATM="61"
@@ -73,7 +76,6 @@ fi
 if [[ "$RUNPAR" == `basename $RUNPAR` ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
-
 if [[ ! -f "$RUNPAR" ]]; then
     echo "Error, TMVA run parameter file $RUNPAR not found, exiting..."
     exit 1
@@ -85,6 +87,7 @@ echo "Original TMVA run parameter file: $RXPAR.runparameter "
 # output directory
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p $ODIR
+mkdir -p $ODIR/RecID${RECID}
 
 #####################################
 # energy bins
@@ -124,13 +127,13 @@ for (( i=0; i < $NENE; i++ ))
 do
    echo "==========================================================================="
    echo " "
-   echo "EBin: $(($i+$count1)) of $NENE: ${EBINARRAY[$i]} to ${EBINARRAY[$i+1]}"
+   echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINARRAY[$i]} to ${EBINARRAY[$i+1]} (in log TeV)"
 ##############################################
 # loop over all zenith angle bins
    for (( j=0; j < $NZEW; j++ ))
    do
       echo "---------------------------------------------------------------------------"
-      echo "ZeBin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]}"
+      echo "Zenith Bin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
       
       # copy run parameter file with basic options to output directory
       cp -f $RUNPAR $ODIR
@@ -145,24 +148,10 @@ do
       grep "*" $RUNPAR | grep -v ENERGYBINS | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
     
       nTrainSignal=200000
-      if  [ "$i" -eq "0" ] && [ "$j" -eq "0" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "0" ] && [ "$j" -eq "1" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "0" ] && [ "$j" -eq "2" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "0" ] && [ "$j" -eq "3" ]; then
+      nTrainBackground=200000
+      if  [ "$i" -eq "0" ] && [ "$j" -eq "3" ]; then
           nTrainSignal=50000
           nTrainBackground=0
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "0" ]; then
-          nTrainSignal=200000
-          nTrainBackground=200000
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "1" ]; then
-          nTrainSignal=200000
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "2" ]; then
-          nTrainBackground=200000
-      elif  [ "$i" -eq "1" ] && [ "$j" -eq "3" ]; then
-          nTrainBackground=200000
       elif  [ "$i" -eq "2" ] && [ "$j" -eq "0" ]; then
           nTrainSignal=100000
           nTrainBackground=100000
@@ -172,8 +161,6 @@ do
       elif  [ "$i" -eq "2" ] && [ "$j" -eq "2" ]; then
           nTrainSignal=100000
           nTrainBackground=100000
-      elif  [ "$i" -eq "2" ] && [ "$j" -eq "3" ]; then
-          nTrainSignal=200000
       elif  [ "$i" -eq "3" ] && [ "$j" -eq "0" ]; then
           nTrainSignal=50000
           nTrainBackground=0
@@ -187,14 +174,23 @@ do
           nTrainSignal=100000
           nTrainBackground=0
       fi
+      ### (temporary)
+      nTrainBackground=0
+      nTrainSignal=0
+      ## (end temporary)
       echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
 
-      echo "* OUTPUTFILE $ODIR/RecID${RECID} $ONAME"_$i""_$j" " >> $RFIL.runparameter
+      # split runparameter file for event list writing and training
+      cp -v $RFIL.runparameter $RFIL.eventlist.runparameter
+      EVENTLIST="TMVA.${ONAME}_${i}_${j}"
+      echo "* OUTPUTFILE $ODIR/RecID${RECID} ${EVENTLIST}" >> $RFIL.eventlist.runparameter
+      echo "* OUTPUTFILE $ODIR/RecID${RECID} ${ONAME}_${i}_${j}" >> $RFIL.runparameter
+      echo "* PREEVENTLIST $ODIR/RecID${RECID}/${EVENTLIST}.root" >> $RFIL.runparameter
 
-      echo "#######################################################################################" >> $RFIL.runparameter
+      echo "#######################################################################################" >> $RFIL.eventlist.runparameter
       # signal and background files (depending on on-axis or cone data set)
       for ATMX in $ATM; do
-          SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
+          SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$VERITAS_ANALYSIS_TYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
           echo "Signal input directory: $SDIR"
           if [[ ! -d $SDIR ]]; then
               echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
@@ -208,7 +204,7 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE $arg" >> $RFIL.eventlist.runparameter
                           done
                       fi
                   fi
@@ -218,21 +214,22 @@ do
               do
                   if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                       if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{50,80,120,170,230}.mscw.root`
+                          # SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{50,80,120,170,230}.mscw.root`
+                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE $arg" >> $RFIL.eventlist.runparameter
                           done
                       fi
                   fi
               done
           fi
       done 
-      echo "#######################################################################################" >> $RFIL.runparameter
-   	for arg in $(cat $BLIST)
-   	do
-         echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
-   	done
+      echo "#######################################################################################" >> $RFIL.eventlist.runparameter
+   	  for arg in $(cat $BLIST)
+   	  do
+         echo "* BACKGROUNDFILE $arg" >> $RFIL.eventlist.runparameter
+      done
          
       FSCRIPT=$LOGDIR/TMVA.$ONAME"_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \

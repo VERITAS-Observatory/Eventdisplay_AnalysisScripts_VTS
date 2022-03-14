@@ -10,7 +10,7 @@ if [ $# -lt 7 ]; then
 echo "
 IRF generation: analyze simulation VBF files using evndisp 
 
-IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [events]
+IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [events] [analysis type]
 
 required parameters:
 
@@ -31,7 +31,7 @@ required parameters:
     
     <sim type>              file simulation type (e.g. GRISU-SW6, CARE_June1425)
 
-    <runparameter file>     file with integration window size and reconstruction cuts/methods, expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
+    <runparameter file>     file with integration window size and reconstruction cuts/methods,
                             expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
 
@@ -43,6 +43,8 @@ optional parameters:
 
     [events]                number of events per division
                             (default: -1)
+
+    [analysis type]         type of analysis (default="")
 
 Note: zenith angles, wobble offsets, and noise values are hard-coded into script
 
@@ -70,6 +72,7 @@ SIMTYPE=$7
 [[ "$8" ]] && ACUTS=$8 || ACUTS=EVNDISP.reconstruction.runparameter
 [[ "$9" ]] && PARTICLE=$9 || PARTICLE=1
 [[ "${10}" ]] && NEVENTS=${10}  || NEVENTS=-1
+[[ "${11}" ]] && ANALYSIS_TYPE=${11} || ANALYSIS_TYPE=""
 
 # Particle names
 PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
@@ -81,7 +84,7 @@ DATE=`date +"%y%m%d"`
 
 # output directory for evndisp products (will be manipulated more later in the script)
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 # output dir
 OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
@@ -92,6 +95,12 @@ LOGDIR=${OPDIR}/$DATE
 mkdir -p "$LOGDIR"
 
 echo "Using runparameter file $ACUTS"
+
+# Analysis options
+EDOPTIONS=""
+if [[ ${ANALYSIS_TYPE} == *"SQ2"* ]]; then
+   EDOPTIONS="-imagesquared"
+fi
 
 # Create a unique set of run numbers
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
@@ -251,6 +260,7 @@ do
         -e "s|SIMULATIONTYPE|$SIMTYPE|" \
         -e "s|VBFFFILE|$V|" \
         -e "s|VVERSION|$EDVERSION|" \
+        -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
         -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh

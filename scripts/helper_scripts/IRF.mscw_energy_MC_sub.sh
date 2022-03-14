@@ -34,8 +34,6 @@ echo "Temporary directory: $DDIR"
 
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
-# use short output tree (use -noshorttree for Data/MC comparison)
-# MOPT="-shorttree $MOPT"
 echo "MSCW options: $MOPT"
 
 # run mscw_energy

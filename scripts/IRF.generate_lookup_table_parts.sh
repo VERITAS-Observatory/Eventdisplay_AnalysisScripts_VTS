@@ -4,13 +4,13 @@
 # qsub parameters
 h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=1G
 
-if [[ $# != 7 ]]; then
+if [[ $# < 7 ]]; then
 # begin help message
 echo "
 IRF generation: create partial (for one point in the parameter space) lookup
                 tables from MC evndisp ROOT files
 
-IRF.generate_lookup_table_parts.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type>
+IRF.generate_lookup_table_parts.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
         
@@ -31,6 +31,10 @@ required parameters:
                             (see EVNDISP.reconstruction.runparameter)
     
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
+
+    optional:
+
+    [analysis type]         type of analysis (default="")
     
 --------------------------------------------------------------------------------
 "
@@ -54,13 +58,14 @@ NOISE=$5
 RECID=$6
 SIMTYPE=$7
 PARTICLE_TYPE="gamma"
+[[ "$8" ]] && ANALYSIS_TYPE=$8  || ANALYSIS_TYPE=""
 
 _sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
 EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
 # input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 fi
 if [[ ! -d $INDIR ]]; then
     echo "Error, could not locate input directory. Locations searched:"
@@ -71,7 +76,7 @@ echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}/Tables"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}/Tables"
 fi
 echo "Output file directory: $ODIR"
 mkdir -p "$ODIR"

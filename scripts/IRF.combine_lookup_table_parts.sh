@@ -9,7 +9,7 @@ if [[ $# < 4 ]]; then
 echo "
 IRF generation: create a lookup table from a set of partial table files
 
-IRF.combine_lookup_table_parts.sh <table file name> <epoch> <atmosphere> <Rec ID> <sim type>
+IRF.combine_lookup_table_parts.sh <table file name> <epoch> <atmosphere> <Rec ID> <sim type> <analysis type>
 
 required parameters:
 
@@ -24,6 +24,8 @@ required parameters:
                             Set to 0 for all telescopes, 1 to cut T1, etc.
                             
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
+
+    <analysis type>         type of analysis (default="")
     
 --------------------------------------------------------------------------------
 "
@@ -44,10 +46,11 @@ EPOCH=$2
 ATM=$3
 RECID=$4
 SIMTYPE=$5
+[[ "$6" ]] && ANALYSIS_TYPE=$6  || ANALYSIS_TYPE=""
 
 # input directory containing partial table files
 if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/Tables/"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/Tables/"
 fi
 if [[ ! -d $INDIR ]]; then
     echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
@@ -57,7 +60,7 @@ echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/Tables/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/Tables/"
 fi
 echo -e "Output files will be written to:\n$ODIR"
 mkdir -p "$ODIR"
@@ -85,7 +88,6 @@ if [[ $NFIL = "0" ]]; then
 fi
 echo "$FLIST"
 echo "LOOKUPTABLE $OFILE" 
-
 
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_combine_sub"
