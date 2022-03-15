@@ -13,9 +13,9 @@ fi
 SUBFIL=${1}.condor
 rm -f ${SUBFIL}
 echo "Executable = ${1}" > ${SUBFIL}
-echo "Log = ${1}.\$(Process).log" >> ${SUBFIL}
-echo "Output = ${1}.\$(Process).output" >> ${SUBFIL}
-echo "Log = ${1}.\$(Process).error" >> ${SUBFIL}
+echo "Log = ${1}.\$(Cluster)_\$(Process).log" >> ${SUBFIL}
+echo "Output = ${1}.\$(Cluster)_\$(Process).output" >> ${SUBFIL}
+echo "Log = ${1}.\$(Cluster)_\$(Process).error" >> ${SUBFIL}
 echo "request_memory = ${2}" >> ${SUBFIL}
 echo "request_disk = ${3}" >> ${SUBFIL}
 echo "getenv = True" >> ${SUBFIL}
