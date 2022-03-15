@@ -3,7 +3,7 @@
 #
 
 # qsub parameters
-h_cpu=47:59:00; h_vmem=6000M; tmpdir_size=550G
+h_cpu=47:59:00; h_vmem=4000M; tmpdir_size=550G
 
 if [ $# -lt 7 ]; then
 # begin help message
@@ -91,7 +91,8 @@ OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
-LOGDIR=${OPDIR}/$DATE
+LOGDIR="/afs/ifh.de/group/cta/scratch/maierg/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/$DATE"
+# LOGDIR=${OPDIR}/$DATE
 mkdir -p "$LOGDIR"
 
 echo "Using runparameter file $ACUTS"
@@ -218,11 +219,8 @@ do
     echo "SIMDIR: $SIMDIR"
     echo "VBFILE: ${V} $FF"
     echo "NOISEFILE: ${NOISEFILE}"
-    # tmpdir requires a safety factor of 2.5 or higher (from unzipping VBF file)
-    TMSF=$(echo "${FF%?}*3.5" | bc)
-    if [[ ${NOISE} -eq 50 ]]; then
-       TMSF=$(echo "${FF%?}*5.0" | bc)
-    fi
+    # tmpdir requires a safety factor of 5. or higher (from unzipping VBF file)
+    TMSF=$(echo "${FF%?}*5.0" | bc)
     if [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
        # RedHV runs need more space during the analysis (otherwise quota is exceeded)
        TMSF=$(echo "${FF%?}*10.0" | bc)
