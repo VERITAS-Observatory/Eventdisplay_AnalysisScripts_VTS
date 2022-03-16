@@ -19,6 +19,7 @@ echo "Log = ${1}.\$(Cluster)_\$(Process).error" >> ${SUBFIL}
 echo "request_memory = ${2}" >> ${SUBFIL}
 echo "request_disk = ${3}" >> ${SUBFIL}
 echo "getenv = True" >> ${SUBFIL}
+echo "max_materialize = 50" >> ${SUBFIL}
 if [ ! -z "$4" ]; then
     echo "queue ${4}" >> ${SUBFIL}
 else
