@@ -114,7 +114,7 @@ echo "ODIR: $ODIR"
 echo "DATAFILE $MCFILE"
 echo "EFFFILE $EFFAREAFILE"
 # set parameters in run script
-FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s)"
+FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|DATAFILE|$MCFILE|" \
