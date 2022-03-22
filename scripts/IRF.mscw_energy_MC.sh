@@ -114,7 +114,7 @@ SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
 echo "Now processing zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
 
 # make run script
-FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ZA-$WOBBLE-$NOISE-$PARTICLE-$RECID"
+FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-$PARTICLE-$RECID"
 sed -e "s|INPUTDIR|$INDIR|" \
     -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|TABLEFILE|$TABFILE|" \
