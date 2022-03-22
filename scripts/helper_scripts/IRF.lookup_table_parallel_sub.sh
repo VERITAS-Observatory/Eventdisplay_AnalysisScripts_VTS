@@ -17,6 +17,9 @@ ODIR=OUTPUTDIR
 
 TABFILE="table_${SIMTYPE}_${ZA}deg_${WOBBLE}wob_noise${NOISE}_${EPOCH}_ATM${ATM}_ID${RECID}"
 
+echo "Cluster ID ${ClusterId}"
+echo "PROCESS ID ${ProcId}"
+
 # remove existing log and table file
 rm -f "$ODIR/$TABFILE.root"
 rm -f "$ODIR/$TABFILE.log"
