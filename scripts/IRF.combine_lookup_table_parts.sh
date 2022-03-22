@@ -92,7 +92,7 @@ echo "LOOKUPTABLE $OFILE"
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_combine_sub"
 
-FSCRIPT="$LOGDIR/CMB-TBL.$DATE.MC"
+FSCRIPT="$LOGDIR/CMB-TBL.$OFILE.$DATE.MC"
 
 sed -e "s|TABLELIST|$FLIST|" \
     -e "s|OUTPUTFILE|$OFILE|" \
