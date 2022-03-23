@@ -18,12 +18,12 @@ required parameters:
     <cuts file>             gamma/hadron cuts file (located in 
                              \$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles)
                             (might be a list of cut files)
-        
+
     <epoch>                 array epoch (e.g., V4, V5, V6)
                             V4: array before T1 move (before Fall 2009)
                             V5: array after T1 move (Fall 2009 - Fall 2012)
                             V6: array after camera update (after Fall 2012)
-                            
+
     <atmosphere>            atmosphere model (21 = winter, 22 = summer)
 
     <zenith>                zenith angle of simulations [deg]
