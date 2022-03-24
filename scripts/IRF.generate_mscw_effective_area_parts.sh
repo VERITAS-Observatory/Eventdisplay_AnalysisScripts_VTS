@@ -91,19 +91,19 @@ fi
 _sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
 EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 # input directories containing evndisp products
+INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     for W in ${WOBBLE}; do
        for N in ${NOISE}; do
-          INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
-          if [[ ! -d $INDIR ]]; then
-              echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
+          TDIR="${INDIR}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
+          if [[ ! -d $TDIR ]]; then
+              echo -e "Error, could not locate input directory. Locations searched:\n $TDIR"
               exit 1
           fi
-          echo "Input file directory: $INDIR"
+          echo "Input file directory: $TDIR"
          done
    done
 fi
-INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
@@ -113,7 +113,7 @@ mkdir -p "$LOGDIR"
 
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
