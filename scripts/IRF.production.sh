@@ -123,12 +123,11 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    # WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEMPORARY
-    # ZENITH_ANGLES=( 20 30 35 )
     # NSB_LEVELS=( 100 130 160 200 250 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    WOBBLE_OFFSETS=( 0.5 )
     # (END TEMPORARY)
     ######################################
     NEVENTS="-1"
@@ -270,7 +269,8 @@ for VX in $EPOCH; do
                       TFILID=$TFIL$ANATYPE
                       for CUTS in ${CUTLIST[@]}; do
                          echo "Generate effective areas $CUTS"
-                         $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh $TFILID $CUTS $VX $ATM $ZA "${WOBBLE_OFFSETS}" "${NOISE}" $ID $SIMTYPE
+                         $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh $TFILID $CUTS $VX $ATM $ZA \
+                             "${WOBBLE_OFFSETS}" "${NOISE}" $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
                       done
                    done
                    continue
