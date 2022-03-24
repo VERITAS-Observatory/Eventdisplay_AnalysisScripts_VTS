@@ -108,15 +108,26 @@ for NOISE in ${NNOISE[@]}; do
         rm -f "$DDIR/$EAPARAMS.dat"
         eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
 
-    # calculate effective areas
+        # calculate effective areas
         rm -f $OSUBDIR/$OFILE.root 
         $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
+        if [[ -f $EVNDISPSYS/bin/logFile ]]; then
+            $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.log
+            rm -f $OSUBDIR/$EAPARAMS.log
+            $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root $logfile
+            $EVNDISPSYS/bin/logFile mscwTableList $DDIR/$EAPARAMS.root $OSUBDIR/$OFILE.list
+        else
+            chmod g+w $OSUBDIR/$EAPARAMS.log
+        fi
 
         cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
         chmod g+w $OSUBDIR/$EAPARAMS.root
-        chmod g+w $OSUBDIR/$EAPARAMS.log
     done
     rm -f "$outputfilename"
+    if [[ -f $EVNDISPSYS/bin/logFile ]]; then
+        rm -f "$logfile"
+        rm -f "$OSUBDIR/$OFILE.list"
+    fi
   done
 done
 
