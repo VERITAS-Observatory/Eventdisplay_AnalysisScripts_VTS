@@ -103,6 +103,8 @@ elif [[ $CUTS = NTel2ModeratePre ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-Preselection"
 elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
+elif [[ $CUTS = NTel2Pre ]]; then
+    CUT="NTel2-PointSource-TMVA-BDT-Preselection"
 elif [[ $CUTS = "BDTExtended025moderate2tel" ]]; then
     CUT="NTel2-Extended025-Moderate-TMVA-BDT"
 elif [[ $CUTS = "BDTExtended050moderate2tel" ]]; then
@@ -237,11 +239,6 @@ for RUN in ${RUNS[@]}; do
        ATMO=${ATMO/62/61}
     fi
 
-    # TMPTMPTMP
-    EPOCH="V6_2012_2013a"
-    ATMO="62"
-
-    
     if [[ $SIMTYPE == "DEFAULT" ]]; then
         if [[ $EPOCH == *"V4"* ]]; then
             REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V4}
