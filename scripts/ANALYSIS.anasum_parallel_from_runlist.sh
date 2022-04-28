@@ -22,6 +22,7 @@ required parameters:
                         
     <cut set>               hardcoded cut sets predefined in the script
                             (i.e., moderate2tel, soft2tel, hard3tel)
+                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel2Pre, NTel3Pre)
     
     <background model>      background model
                             (RE = reflected region, RB = ring background, IGNOREACCEPTANCE = RE without ACCEPTANCE)
@@ -103,8 +104,12 @@ elif [[ $CUTS = NTel2ModeratePre ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-Preselection"
 elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
+elif [[ $CUTS = NTel3HardPre ]]; then
+    CUT="NTel3-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel2Pre ]]; then
     CUT="NTel2-PointSource-TMVA-BDT-Preselection"
+elif [[ $CUTS = NTel3Pre ]]; then
+    CUT="NTel3-PointSource-TMVA-BDT-Preselection"
 elif [[ $CUTS = "BDTExtended025moderate2tel" ]]; then
     CUT="NTel2-Extended025-Moderate-TMVA-BDT"
 elif [[ $CUTS = "BDTExtended050moderate2tel" ]]; then
