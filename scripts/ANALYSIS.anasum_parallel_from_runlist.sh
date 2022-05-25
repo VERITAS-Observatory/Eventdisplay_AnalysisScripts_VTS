@@ -96,6 +96,8 @@ elif [[ $CUTS = "hard2tel" ]] || [[ $CUTS = "BDThard2tel" ]]; then
     CUT="NTel2-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
+elif [[ $CUTS = "moderatebox" ]]; then
+    CUT="NTel2-PointSource-Moderate"
 elif [[ $CUTS = "softbox" ]]; then
     CUT="NTel2-PointSource-Soft"
 elif [[ $CUTS = "supersoft" ]]; then
