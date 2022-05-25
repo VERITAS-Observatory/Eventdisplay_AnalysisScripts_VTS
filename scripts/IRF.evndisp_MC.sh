@@ -91,8 +91,7 @@ OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
-LOGDIR="/afs/ifh.de/group/cta/scratch/maierg/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/$DATE"
-# LOGDIR=${OPDIR}/$DATE
+LOGDIR=${OPDIR}/$DATE
 mkdir -p "$LOGDIR"
 
 echo "Using runparameter file $ACUTS"
