@@ -111,7 +111,7 @@ for ((i=1; i <= $NLINES; i++)); do
         RUNTEMPLIST="$LOGDIR/qsub_analyse_fileList_${ODIRBASE}_${RUN}_${DATECODE}_PID$$"
         rm -f $RUNTEMPLIST
         echo "$VERSION" > "$RUNTEMPLIST"
-        echo "$LINE" > $RUNTEMPLIST
+        echo "$LINE" >> $RUNTEMPLIST
 
         # prepare run scripts
         FSCRIPT="$LOGDIR/qsub_analyse-$DATE-RUN$RUN-$(date +%s)"
@@ -143,7 +143,9 @@ for ((i=1; i <= $NLINES; i++)); do
                 echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
                 JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
             fi
-            
+        elif [[ $SUBC == *condor* ]]; then
+            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+            condor_submit $FSCRIPT.sh.condor
 	    echo "RUN $RUN JOBID $JOBID"
             echo "RUN $RUN SCRIPT $FSCRIPT.sh"
             if [[ $SUBC != */dev/null* ]] ; then

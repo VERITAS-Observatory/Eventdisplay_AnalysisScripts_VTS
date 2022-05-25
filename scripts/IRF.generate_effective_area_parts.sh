@@ -5,25 +5,25 @@
 # qsub parameters
 h_cpu=13:29:00; h_vmem=15000M; tmpdir_size=20G
 
-if [[ $# != 8 ]]; then
+if [[ $# -lt 8 ]]; then
 # begin help message
 echo "
 IRF generation: create partial effective area files from MC ROOT files
  (simulations that have been processed by both evndisp_MC and mscw_energy_MC)
 
-IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type>
+IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
 
     <cuts file>             gamma/hadron cuts file (located in 
                              \$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles)
                             (might be a list of cut files)
-        
+
     <epoch>                 array epoch (e.g., V4, V5, V6)
                             V4: array before T1 move (before Fall 2009)
                             V5: array after T1 move (Fall 2009 - Fall 2012)
                             V6: array after camera update (after Fall 2012)
-                            
+
     <atmosphere>            atmosphere model (21 = winter, 22 = summer)
 
     <zenith>                zenith angle of simulations [deg]
@@ -37,6 +37,8 @@ required parameters:
                             Set to 0 for all telescopes, 1 to cut T1, etc.
         
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
+
+    [analysis type]         type of analysis (default="")
     
 --------------------------------------------------------------------------------
 "
@@ -61,6 +63,7 @@ NOISE=$6
 RECID=$7
 SIMTYPE=$8
 PARTICLE_TYPE="gamma"
+[[ "$9" ]] && ANALYSIS_TYPE=$9  || ANALYSIS_TYPE=""
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -68,7 +71,7 @@ CUTS_NAME=${CUTS_NAME%%.dat}
 
 # input directory containing mscw_energy_MC products
 if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
 fi
 if [[ ! -d $INDIR ]]; then
     echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
@@ -78,7 +81,7 @@ echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
@@ -111,7 +114,7 @@ echo "ODIR: $ODIR"
 echo "DATAFILE $MCFILE"
 echo "EFFFILE $EFFAREAFILE"
 # set parameters in run script
-FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s)"
+FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|DATAFILE|$MCFILE|" \
@@ -130,6 +133,9 @@ fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
+elif [[ $SUBC == *condor* ]]; then
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
 elif [[ "$SUBC" == *simple* ]]; then

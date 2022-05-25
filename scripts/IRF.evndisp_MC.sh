@@ -3,14 +3,14 @@
 #
 
 # qsub parameters
-h_cpu=47:59:00; h_vmem=6000M; tmpdir_size=550G
+h_cpu=47:59:00; h_vmem=2000M; tmpdir_size=550G
 
 if [ $# -lt 7 ]; then
 # begin help message
 echo "
 IRF generation: analyze simulation VBF files using evndisp 
 
-IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [events]
+IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [events] [analysis type]
 
 required parameters:
 
@@ -31,7 +31,7 @@ required parameters:
     
     <sim type>              file simulation type (e.g. GRISU-SW6, CARE_June1425)
 
-    <runparameter file>     file with integration window size and reconstruction cuts/methods, expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
+    <runparameter file>     file with integration window size and reconstruction cuts/methods,
                             expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
 
@@ -43,6 +43,8 @@ optional parameters:
 
     [events]                number of events per division
                             (default: -1)
+
+    [analysis type]         type of analysis (default="")
 
 Note: zenith angles, wobble offsets, and noise values are hard-coded into script
 
@@ -70,6 +72,7 @@ SIMTYPE=$7
 [[ "$8" ]] && ACUTS=$8 || ACUTS=EVNDISP.reconstruction.runparameter
 [[ "$9" ]] && PARTICLE=$9 || PARTICLE=1
 [[ "${10}" ]] && NEVENTS=${10}  || NEVENTS=-1
+[[ "${11}" ]] && ANALYSIS_TYPE=${11} || ANALYSIS_TYPE=""
 
 # Particle names
 PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
@@ -81,17 +84,24 @@ DATE=`date +"%y%m%d"`
 
 # output directory for evndisp products (will be manipulated more later in the script)
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 # output dir
 OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
-LOGDIR=${OPDIR}/$DATE
+LOGDIR="/afs/ifh.de/group/cta/scratch/maierg/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/$DATE"
+# LOGDIR=${OPDIR}/$DATE
 mkdir -p "$LOGDIR"
 
 echo "Using runparameter file $ACUTS"
+
+# Analysis options
+EDOPTIONS=""
+if [[ ${ANALYSIS_TYPE} == *"SQ2"* ]]; then
+   EDOPTIONS="-imagesquared"
+fi
 
 # Create a unique set of run numbers
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
@@ -209,11 +219,8 @@ do
     echo "SIMDIR: $SIMDIR"
     echo "VBFILE: ${V} $FF"
     echo "NOISEFILE: ${NOISEFILE}"
-    # tmpdir requires a safety factor of 2.5 or higher (from unzipping VBF file)
-    TMSF=$(echo "${FF%?}*3.5" | bc)
-    if [[ ${NOISE} -eq 50 ]]; then
-       TMSF=$(echo "${FF%?}*5.0" | bc)
-    fi
+    # tmpdir requires a safety factor of 5. or higher (from unzipping VBF file)
+    TMSF=$(echo "${FF%?}*5.0" | bc)
     if [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
        # RedHV runs need more space during the analysis (otherwise quota is exceeded)
        TMSF=$(echo "${FF%?}*10.0" | bc)
@@ -251,6 +258,7 @@ do
         -e "s|SIMULATIONTYPE|$SIMTYPE|" \
         -e "s|VBFFFILE|$V|" \
         -e "s|VVERSION|$EDVERSION|" \
+        -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
         -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh
@@ -269,6 +277,13 @@ do
             JOBID=`$SUBC $FSCRIPT.sh`
         fi      
         echo "RUN $RUNNUM: JOBID $JOBID"
+    elif [[ $SUBC == *condor* ]]; then
+        if [[ $NEVENTS -gt 0 ]]; then
+            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size 10
+        else
+            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        fi
+        condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
     fi

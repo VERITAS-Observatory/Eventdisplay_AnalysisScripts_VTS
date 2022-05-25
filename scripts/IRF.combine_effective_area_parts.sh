@@ -9,7 +9,7 @@ if [[ $# < 5 ]]; then
 echo "
 IRF generation: combine partial effective area files
 
-IRF.combine_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <Rec ID> <sim type> [name]
+IRF.combine_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <Rec ID> <sim type> [name] [analysis type]
 
 required parameters:
     
@@ -29,6 +29,9 @@ optional parameters:
 
    [name]                   name added to the effective area output file
                             (default is today's date)
+
+   [analysis type]          type of analysis (default="")
+    
 
 examples:
 
@@ -57,6 +60,7 @@ ATMOS=$3
 RECID=$4
 SIMTYPE=$5
 [[ "$6" ]] && EANAME=$6 || EANAME="${DATE}"
+[[ "$7" ]] && ANALYSIS_TYPE=$7  || ANALYSIS_TYPE=""
 PARTICLE_TYPE="gamma"
 
 # Generate EA base file name based on cuts file
@@ -66,7 +70,7 @@ CUTS_NAME=${CUTS_NAME%%.dat}
 
 # input directory with effective areas
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas_${CUTS_NAME}"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas_${CUTS_NAME}"
 fi
 if [[ ! -d $INDIR ]]; then
     echo "Error, could not locate input directory. Locations searched:"
@@ -79,7 +83,7 @@ echo "Input files: $INFILES"
 
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
@@ -112,9 +116,12 @@ echo "Processing epoch $EPOCH, atmosphere ATM$ATMOS, RecID $RECID (telescope com
 
 # output effective area name
 METH="GEO" 
+if [[ ! -z $ANALYSIS_TYPE ]]; then
+    METH=${ANALYSIS_TYPE}
+fi
 OFILE="effArea-${IRFVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM${ATMOS}-T${T}"
 
-FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}"
+FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}-$(date +%s%N)"
 rm -f $FSCRIPT.sh
 
 sed -e "s|INPUTFILES|$INFILES|" \
@@ -134,6 +141,9 @@ fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
+elif [[ $SUBC == *condor* ]]; then
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
 elif [[ "$SUBC" == *simple* ]] ; then

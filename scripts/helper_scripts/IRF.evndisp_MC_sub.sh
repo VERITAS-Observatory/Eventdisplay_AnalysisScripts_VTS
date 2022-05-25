@@ -22,13 +22,20 @@ TELTOANA="1234"
 VBFNAME=VBFFFILE
 NOISEFILE=NOISEFFILE
 EDVERSION=VVERSION
+ADDOPT="ADDITIONALOPTIONS"
 
 # number of pedestal events
 PEDNEVENTS="200000"
 TZERONEVENTS="100000"
 
+echo "PROCESS ID ${Process}"
+echo "SGE_ID ${SGE_TASK_ID}"
 if [[ $NEVENTS -gt 0 ]]; then
-    ITER=$((SGE_TASK_ID - 1))
+    if [[ -z $SGE_TASK_ID ]]; then
+        ITER=$((SGE_TASK_ID - 1))
+    else
+        ITER=$((Process - 1))
+    fi
     FIRSTEVENT=$(($ITER * $NEVENTS))
     # increase run number
     RUNNUM=$((RUNNUM + $ITER))
@@ -126,6 +133,7 @@ MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG"
 MCOPT="$MCOPT -reconstructionparameter $ACUTS -sourcefile $VBF_FILE"
 MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory ${CALDIR}"
 MCOPT="$MCOPT $AMPCORR"
+MCOPT="$MCOPT ${ADDOPT}"
 
 # Low gain calibration
 LOWGAINCALIBRATIONFILE=NOFILE

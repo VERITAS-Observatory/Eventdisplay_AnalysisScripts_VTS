@@ -194,6 +194,9 @@ do
             echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
             echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
