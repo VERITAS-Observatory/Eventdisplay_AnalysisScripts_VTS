@@ -126,7 +126,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(ls ${DDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEMPORARY
     # NSB_LEVELS=( 100 130 160 200 250 )
