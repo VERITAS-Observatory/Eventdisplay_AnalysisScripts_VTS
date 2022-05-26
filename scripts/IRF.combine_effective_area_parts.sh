@@ -86,8 +86,6 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p "$ODIR"
-chmod g+w "$ODIR"
 
 # Run scripts and log files are written into this directory
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/${ANALYSIS_TYPE}"
