@@ -85,7 +85,7 @@ NEVENTS="-1"
 if [[ $IRFVERSION = "v4"* ]]; then
     ACUTS="EVNDISP.reconstruction.runparameter.v4x"
     if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
-      ACUTS="EVNDISP.reconstruction.runparameter.NN.v48x"
+      ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
     fi
 else
     ACUTS="EVNDISP.reconstruction.runparameter"
