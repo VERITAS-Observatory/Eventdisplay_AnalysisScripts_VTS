@@ -153,6 +153,9 @@ echo "RUN$RUN EVNDISPLOG $LOGFILE"
 # move data file from tmp dir to data dir
 DATAFILE="$ODIR/$RUN.root"
 cp -f -v "$TEMPDIR/$RUN.root" "$DATAFILE"
+if [[ -f "$TEMPDIR/$RUN.IPR.root" ]]; then
+    cp -f -v "$TEMPDIR/$RUN.IPR.root" "$ODIR/$RUN.IPR.root"
+fi
 echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
 rm -f "$TEMPDIR/$RUN.root"
 # DST cp -f -v $TEMPDIR/$RUN.dst.root $DATAFILE
