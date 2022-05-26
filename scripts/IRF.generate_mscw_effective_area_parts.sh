@@ -107,7 +107,7 @@ fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCWEFFAREA.ANATABLES/$(date +%s%N)/"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCWEFFAREA.ANATABLES/${ANALYSIS_TYPE}/$(date +%s%N)/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 

@@ -90,7 +90,7 @@ mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
 # Run scripts and log files are written into this directory
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/${ANALYSIS_TYPE}"
 echo "Writing run scripts and log files to $LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
