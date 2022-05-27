@@ -290,7 +290,7 @@ for RUN in ${RUNS[@]}; do
         echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
         if [[ V2DL3 -eq "1" ]]; then
             # write line to v2dl3 script
-            echo "v2dl3 -ed --full-enclosure -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> $V2DL3SCRIPT
+            echo "python  \$PWD/pyV2DL3/script/v2dl3_for_Eventdisplay.py -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> $V2DL3SCRIPT
         fi
     # v5x: cuts are read from the effective area file
     else
@@ -298,7 +298,7 @@ for RUN in ${RUNS[@]}; do
         echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
         if [[ V2DL3 -eq "1" ]]; then
             # write line to v2dl3 script
-            echo "v2dl3 -ed --full-enclosure -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> $V2DL3SCRIPT
+            echo "python  \$PWD/pyV2DL3/script/v2dl3_for_Eventdisplay.py -f $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> $V2DL3SCRIPT
         fi
     fi
 done
