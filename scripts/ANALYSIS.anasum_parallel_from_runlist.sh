@@ -240,11 +240,7 @@ for RUN in ${RUNS[@]}; do
     if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
        ATMO=${ATMO/62/61}
     fi
-
-    # TMPTMPTMP
-    EPOCH="V6_2012_2013a"
-    ATMO="62"
-
+    
     
     if [[ $SIMTYPE == "DEFAULT" ]]; then
         if [[ $EPOCH == *"V4"* ]]; then
@@ -303,7 +299,6 @@ for RUN in ${RUNS[@]}; do
     fi
 done
 
-exit
 
 # submit the job
 SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"
