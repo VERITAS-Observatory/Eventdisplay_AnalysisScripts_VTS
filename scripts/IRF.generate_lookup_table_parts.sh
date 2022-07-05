@@ -19,7 +19,7 @@ required parameters:
                             V5: array after T1 move (Fall 2009 - Fall 2012)
                             V6: array after camera update (after Fall 2012)
                             
-    <atmosphere>            atmosphere model (21 = winter, 22 = summer)
+    <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
     <zenith>                zenith angle of simulations [deg]
 
