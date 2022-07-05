@@ -8,19 +8,23 @@ source $EVNDISPSYS/setObservatory.sh VTS
 INDIR=EVNDISPFILE
 ODIR=OUTPUTDIR
 ONAME=BDTFILE
-EDVERSION=VVERSION
+RECID="0"
+TELTYPE="0"
 
-# train
 rm -f "$ODIR/$ONAME*"
 
 # fraction of events to use for training,
 # remaining events will be used for testing
 TRAINTESTFRACTION=0.5
 
-if [[ $EDVERSION = "v4*" ]]; then
-    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction "$INDIR/*[0-9].root" $ODIR $ONAME > $ODIR/$ONAME.log
-else
-    "$EVNDISPSYS"/bin/trainTMVAforAngularReconstruction "$INDIR/*[0-9].root" "$ODIR" "$ONAME" "$TRAINTESTFRACTION" > "$ODIR/$ONAME.log"
-fi
+ls -1 "$INDIR/*[0-9].root" | sort -R | head -n 1 > $ODIR/${ONAME}.list
 
-exit
+for disp in BDTDisp BDTDispError
+do
+    "$EVNDISPSYS"/bin/trainTMVAforAngularReconstruction \
+        $ODIR/${ONAME}.list \
+        "$TRAINTESTFRACTION" \
+        "$RECID" \
+        "$TELTYPE" \
+        "$disp" > "$ODIR/$ONAME-$disp.log"
+done

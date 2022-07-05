@@ -10,7 +10,7 @@ echo "
 TMVA (BDT) training for angular resolution from MC ROOT files for different zenith angle bins
  (simulations that have been processed by evndisp_MC) 
 
-IRF.trainTMVAforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <NSB level> <sim type>
+IRF.trainTMVAforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
 
@@ -23,9 +23,18 @@ required parameters:
 
     <zenith>                zenith angle of simulations [deg]
 
+    <offset angle>          offset angle of simulations [deg]
+
     <NSB level>             NSB level of simulations [MHz]
+
+    <Rec ID>                reconstruction ID
+                            (see EVNDISP.reconstruction.runparameter)
     
     <sim type>              simulation type (e.g. GRISU, CARE)
+
+    optional:
+
+    [analysis type]         type of analysis (default="")
     
 --------------------------------------------------------------------------------
 "
@@ -44,25 +53,30 @@ IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforAngularReconstruction --version | tr -d 
 EPOCH=$1
 ATM=$2
 ZA=$3
-NOISE=$4
-WOBBLE="0.5"
-RECID="0"
-SIMTYPE=$5
+WOBBLE=$4
+NOISE=$5
+RECID=$6
+SIMTYPE=$7
 PARTICLE_TYPE="gamma"
+[[ "$8" ]] && ANALYSIS_TYPE=$8  || ANALYSIS_TYPE=""
+
+_sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
+EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
 # input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 fi
 if [[ ! -d $INDIR ]]; then
-    echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
+    echo "Error, could not locate input directory. Locations searched:"
+    echo "$INDIR"
     exit 1
 fi
 echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/TMVA_AngularReconstruction/ze${ZA}deg_offset${WOBBLE}deg/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}/TMVA_AngularReconstruction/ze${ZA}deg_offset${WOBBLE}deg/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
@@ -70,7 +84,7 @@ chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/TMVAAngRes/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/TMVAAngRes/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/$(date +%s | cut -c -8)/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -100,8 +114,7 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
-    echo "JOBID: $JOBID"
+    $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
     condor_submit $FSCRIPT.sh.condor
