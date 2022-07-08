@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=11:29:00; h_vmem=8000M; tmpdir_size=10G
 
-if [[ $# != 5 ]]; then
+if [[ $# -lt 7 ]]; then
 # begin help message
 echo "
 TMVA (BDT) training for angular resolution from MC ROOT files for different zenith angle bins
@@ -23,9 +23,9 @@ required parameters:
 
     <zenith>                zenith angle of simulations [deg]
 
-    <offset angle>          offset angle of simulations [deg]
+    <offset angle>          list of offset angle of simulations [deg]
 
-    <NSB level>             NSB level of simulations [MHz]
+    <NSB level>             list of NSB level of simulations [MHz]
 
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
@@ -63,20 +63,9 @@ PARTICLE_TYPE="gamma"
 _sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
 EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
-# input directory containing evndisp products
-if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
-fi
-if [[ ! -d $INDIR ]]; then
-    echo "Error, could not locate input directory. Locations searched:"
-    echo "$INDIR"
-    exit 1
-fi
-echo "Input file directory: $INDIR"
-
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}/TMVA_AngularReconstruction/ze${ZA}deg_offset${WOBBLE}deg/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}/TMVA_AngularReconstruction/ze${ZA}deg/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
@@ -84,12 +73,42 @@ chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/TMVAAngRes/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/$(date +%s | cut -c -8)/"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/${ANALYSIS_TYPE}/TMVAAngRes/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/$(date +%s | cut -c -8)/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
 # training file name
-BDTFILE="mvaAngRes_${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
+BDTFILE="mvaAngRes_${ZA}deg"
+
+# prepare list of input files
+EVNLIST=$ODIR/${BDTFILE}.list
+rm -f ${EVNLIST}
+touch ${EVNLIST}
+
+check_evndisp_directory()
+{
+    # input directory containing evndisp products
+    if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
+        INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${1}deg_NSB${2}MHz"
+    fi
+    if [[ ! -d $INDIR ]]; then
+        echo "Error, could not locate input directory. Locations searched:"
+        echo "$INDIR"
+        exit 1
+    fi
+    echo $INDIR
+}
+
+for W in ${WOBBLE}
+do
+    for N in ${NOISE}
+    do
+        check_evndisp_directory $W $N
+        # choose a random file from all files
+        ls -1 $INDIR/*[0-9].root | sort -R | head -n 1 >> ${EVNLIST}
+    done
+done
+echo "FILE LIST: ${EVNLIST}"
 
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub"
@@ -97,9 +116,9 @@ SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforAngularReconstruction_
 echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
             
 # set parameters in run script
-FSCRIPT="$LOGDIR/TA.ID${RECID}.${EPOCH}.$DATE.MC"
+FSCRIPT="$LOGDIR/TA.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.$DATE.MC"
 sed -e "s|OUTPUTDIR|$ODIR|" \
-    -e "s|EVNDISPFILE|$INDIR|" \
+    -e "s|EVNLIST|$EVNLIST|" \
     -e "s|VVERSION|$IRFVERSION|" \
     -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 

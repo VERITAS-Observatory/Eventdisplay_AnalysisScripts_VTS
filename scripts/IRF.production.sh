@@ -130,8 +130,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     ######################################
     # TEMPORARY
     # NSB_LEVELS=( 100 130 160 200 250 )
-    ZENITH_ANGLES=( 20 30 35 )
+    ZENITH_ANGLES=( 20 60 )
     WOBBLE_OFFSETS=( 0.5 )
+    NSB_LEVELS=( 200 )
     # (END TEMPORARY)
     ######################################
     NEVENTS="-1"
@@ -262,11 +263,17 @@ for VX in $EPOCH; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+               FIXEDWOBBLE="0.25 0.5 0.75"
+               # TODO (choose three wobble offsets)
+               FIXEDWOBBLE="0.5 0.75"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 200 $SIMTYPE
+                   FIXEDNSB=200
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 170 $SIMTYPE
+                   FIXEDNSB="160 250 250"
                fi
+               $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
+                   $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                   $SIMTYPE $VERITAS_ANALYSIS_TYPE
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
