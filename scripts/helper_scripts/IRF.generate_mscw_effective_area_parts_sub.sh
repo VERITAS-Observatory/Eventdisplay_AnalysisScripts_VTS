@@ -48,16 +48,35 @@ for NOISE in ${NNOISE[@]}; do
     fi
     mkdir -p "$DDIR"
     echo "Temporary directory: $DDIR"
-
     #####################
     # run mscw_energy
     rm -f $OSUBDIR/$OFILE.log
     rm -f $OSUBDIR/$OFILE.list
-    ls -1 $INDIR/*[0-9].root > $OSUBDIR/$OFILE.list
+    if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
+        echo "Using evndisp root files from ${INDIR}"
+        ls -1 ${INDIR}/*[0-9].root > $OSUBDIR/$OFILE.list
+    elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
+        if command -v zstd /dev/null; then
+            echo "Copying evndisp root.zst files to ${DDIR}/evndisp"
+            mkdir -p ${DDIR}/evndisp
+            FLIST=$(find ${INDIR} -name "*[0-9].root.zst")
+            for F in $FLIST
+            do
+                echo "unpacking $F"
+                ofile=$(basename $F .zst)
+                zstd -d $F -o ${DDIR}/evndisp/${ofile}
+            done
+        else
+            echo "Error: no zstd installation"
+            exit
+        fi
+        ls -1 ${DDIR}/evndisp/*[0-9].root > $OSUBDIR/$OFILE.list
+    fi
     outputfilename="$DDIR/$OFILE.mscw.root"
     logfile="$OSUBDIR/$OFILE.log"
     echo "Starting analysis (log file: $logfile)"
     $EVNDISPSYS/bin/mscw_energy $MOPT -inputfilelist $OSUBDIR/$OFILE.list -outputfile $outputfilename -noise=$NOISE &> $logfile
+    rm -rf ${DDIR}/evndisp
 
     #####################
     # run effective areas

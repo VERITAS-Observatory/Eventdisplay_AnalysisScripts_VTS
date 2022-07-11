@@ -21,7 +21,7 @@ required parameters:
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
                              (ANALYSETABLES, EFFECTIVEAREAS,)
                              ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINMVANGRES )
+                             MVAEVNDISP, TRAINMVANGRES, EVNDISPCOMPRESS )
     
 optional parameters:
     
@@ -126,9 +126,12 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEMPORARY
-    # ZENITH_ANGLES=( 20 30 35 )
-    # NSB_LEVELS=( 100 130 160 200 250 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    # ZENITH_ANGLES=( 40 )
+    # WOBBLE_OFFSETS=( 0.0 )
+    # NSB_LEVELS=( 400 )
+    # ZENITH_ANGLES=( 40 )
+    # WOBBLE_OFFSETS=( 0.75 )
+    # NSB_LEVELS=( 400 )
     # (END TEMPORARY)
     ######################################
     NEVENTS="-1"
@@ -175,11 +178,11 @@ else
              ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
 fi
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
-         ANASUM.GammaHadron-Cut-NTel3-PointSource-TMVA-BDT-Preselection.dat
-         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+#CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
+#         ANASUM.GammaHadron-Cut-NTel3-PointSource-TMVA-BDT-Preselection.dat
+#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
+#         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -279,7 +282,7 @@ for VX in $EPOCH; do
                     echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE, NEVENTS $NEVENTS"
                     ######################
                     # run simulations through evndisp
-                    if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]]; then
+                    if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                           SIMDIR=$VERITAS_DATA_DIR/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
                        elif [[ ${SIMTYPE:0:13} = "CARE_June1425" ]]; then
@@ -291,7 +294,11 @@ for VX in $EPOCH; do
                        elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
                           SIMDIR="/lustre/fs24/group/veritas/simulations/V6_FLWO/CARE_June1702"
                        fi
-                       $(dirname "$0")/IRF.evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE
+                       if [[ $IRFTYPE == "EVNDISP" ]]; then
+                           $(dirname "$0")/IRF.evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE
+                       elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
+                           $(dirname "$0")/IRF.compress_evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                       fi
                     ######################
                     # make tables
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
