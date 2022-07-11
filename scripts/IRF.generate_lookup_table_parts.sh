@@ -2,7 +2,7 @@
 # script to run over all noise levels and create lookup tables (queue submit)
 
 # qsub parameters
-h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=1G
+h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=20G
 
 if [[ $# < 7 ]]; then
 # begin help message

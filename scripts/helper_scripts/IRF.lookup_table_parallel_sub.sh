@@ -24,12 +24,42 @@ echo "PROCESS ID ${ProcId}"
 rm -f "$ODIR/$TABFILE.root"
 rm -f "$ODIR/$TABFILE.log"
 
+
+# temporary directory
+if [[ -n "$TMPDIR" ]]; then 
+    DDIR="$TMPDIR/evndispfiles"
+else
+    DDIR="/tmp/evndispfiles"
+fi
+mkdir -p "$DDIR"
+echo $PATH
+
+if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
+    echo "Copying evndisp root files to ${TMPDIR}"
+    find ${INDIR} -name "*[0-9].root" -exec cp -v {} ${TMPDIR} \;
+elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
+    if command -v zstd /dev/null; then
+        echo "Copying evndisp root.zst files to ${TMPDIR}"
+        FLIST=$(find ${INDIR} -name "*[0-9].root.zst")
+        for F in $FLIST
+        do
+            echo "unpacking $F"
+            ofile=$(basename $F .zst)
+            zstd -d $F -o ${TMPDIR}/${ofile}
+        done
+    else
+        echo "Error: no zstd installation"
+        exit
+    fi
+fi
+
+
 # make the table part
 # v5x versions: parameter -limitEnergyReconstruction is obsolete
 $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
-                            -inputfile "$INDIR/*[0-9].root" \
+                            -inputfile "${TMPDIR}/*[0-9].root" \
                             -tablefile "$ODIR/$TABFILE.root" \
                             -ze=$ZA \
                             -arrayrecid=$RECID \
