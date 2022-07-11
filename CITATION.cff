@@ -3,7 +3,7 @@
 cff-version: 1.2.0
 message: If you use this software, please cite it using these metadata.
 title: "Eventdisplay Analysis Scripts for VERITAS"
-# doi: 
+doi: 10.5281/zenodo.6816986
 version: 4.87d
 date-released: 2022-07-12
 keywords:
