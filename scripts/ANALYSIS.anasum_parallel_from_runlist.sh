@@ -36,7 +36,7 @@ optional parameters:
 			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION
 
     [v2dl3 path]            path to V2DL3 installation to be used in preparation
-                            of v2dl3 script (use "" to disable this option)
+                            of v2dl3 script (use "NOTSET" to disable this option)
                         
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
@@ -72,7 +72,7 @@ CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
-[[ "$7" ]] && V2DL3=$7 || V2DL3=""
+[[ "$7" ]] && V2DL3=$7 || V2DL3="NOTSET"
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 [[ "$9" ]] && RACC=$9 || RACC="0"
 [[ "${10}" ]] && FORCEDATMO=${10}
@@ -190,7 +190,7 @@ mkdir -p "$ODIR"
 
 #########################################
 # make script for v2dl3
-if [[ -n "$V2DL3" ]]; then
+if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
     V2DL3SCRIPT="$ODIR/${CUTS}_v2dl3_for_runlist_from_ED${EDVERSION}-anasum.sh"
     echo "Writing V2DL3 script to ${V2DL3SCRIPT}"
     rm -f ${V2DL3SCRIPT}
@@ -240,7 +240,6 @@ for RUN in ${RUNS[@]}; do
     if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
        ATMO=${ATMO/62/61}
     fi
-    
     
     if [[ $SIMTYPE == "DEFAULT" ]]; then
         if [[ $EPOCH == *"V4"* ]]; then
@@ -293,18 +292,17 @@ for RUN in ${RUNS[@]}; do
         echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> "$ANARUNLIST"
         echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
     fi
-    if [[ -n "$V2DL3" ]]; then
+    if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
         # write line to v2dl3 script
         echo "python  ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> ${V2DL3SCRIPT}
     fi
 done
 
-
 # submit the job
 SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"
 $SUBSCRIPT.sh "$ANARUNLIST" "$INDIR" "$ODIR" "$RUNP" "${RACC}"
 
-if [[ -n "$V2DL3" ]]; then
+if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
    echo "V2DL3 script written to $V2DL3SCRIPT"
 fi
 
