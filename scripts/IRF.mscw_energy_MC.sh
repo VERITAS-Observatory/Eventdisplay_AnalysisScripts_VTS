@@ -4,12 +4,12 @@
 # qsub parameters
 h_cpu=10:29:00; h_vmem=6000M; tmpdir_size=100G
 
-if [[ $# < 8 ]]; then
+if [[ $# -lt 8 ]]; then
 # begin help message
 echo "
 IRF generation: analyze simulation evndisp ROOT files using mscw_energy 
 
-IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [particle]
+IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
 
 required parameters:
 
@@ -35,11 +35,10 @@ required parameters:
 
 optional parameters:
 
-    [analysis type]         type of analysis (default="")
+    [analysis type]        type of analysis (default="")
     
-    [particle]              type of particle used in simulation:
-                            gamma = 1, proton = 14, alpha (helium) = 402
-                            (default = 1  -->  gamma)
+    [dispBDT]              use dispDBDT angular reconstruction
+                           (default: 0; use: 1)
                             
 --------------------------------------------------------------------------------
 "
@@ -65,11 +64,8 @@ NOISE=$6
 RECID=$7
 SIMTYPE=$8
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
-[[ "${10}" ]] && PARTICLE=$10 || PARTICLE=1
-
-# Particle names
-PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
-PARTICLE_TYPE=${PARTICLE_NAMES[$PARTICLE]}
+[[ "${10}" ]] && DISPBDT=${10} || DISPBDT=1
+PARTICLE_TYPE="gamma"
 
 # Check that table file exists
 if [[ "$TABFILE" == `basename "$TABFILE"` ]]; then
@@ -111,10 +107,10 @@ echo -e "Output files will be written to:\n $ODIR"
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
 
-echo "Now processing zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
+echo "Now processing zenith angle $ZA, wobble $WOBBLE, noise level $NOISE (DISP: $DISPBDT)"
 
 # make run script
-FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-$PARTICLE-$RECID"
+FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-${PARTICLE_TYPE}-$RECID"
 sed -e "s|INPUTDIR|$INDIR|" \
     -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|TABLEFILE|$TABFILE|" \
@@ -122,6 +118,8 @@ sed -e "s|INPUTDIR|$INDIR|" \
     -e "s|NOISELEVEL|$NOISE|" \
     -e "s|WOBBLEOFFSET|$WOBBLE|" \
     -e "s|NFILES|$NROOTFILES|" \
+    -e "s|IEPO|${EPOCH_LABEL}|" \
+    -e "s|USEDISP|${DISPBDT}|" \
     -e "s|RECONSTRUCTIONID|$RECID|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
 chmod u+x "$FSCRIPT.sh"
