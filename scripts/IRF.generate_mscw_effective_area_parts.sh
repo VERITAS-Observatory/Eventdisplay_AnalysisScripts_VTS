@@ -11,7 +11,7 @@ echo "
 IRF generation: analyze simulation evndisp ROOT files using mscw_energy (analyse all NSB and offset angles simulatenously)
                 create partial effective area files from MC ROOT files
 
-IRF.generate_mscw_effective_area_parts.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> <analysis type>
+IRF.generate_mscw_effective_area_parts.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
 
 required parameters:
 
@@ -26,7 +26,7 @@ required parameters:
                             V5: array after T1 move (Fall 2009 - Fall 2012)
                             V6: array after camera update (after Fall 2012)
 
-    <atmosphere>            atmosphere model (21 = winter, 22 = summer)
+    <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
     <zenith>                zenith angle of simulations [deg]
 
@@ -37,12 +37,15 @@ required parameters:
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
 
-                            Set to 0 for all telescopes, 1 to cut T1, etc.
-
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
 
-    <analysis type>         type of analysis (default="")
+optional parameters:
 
+    [analysis type]         type of analysis (default="")
+    
+    [dispBDT]              use dispDBDT angular reconstruction
+                           (default: 0; use: 1)
+                            
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -67,12 +70,10 @@ WOBBLE=$6
 NOISE=$7
 RECID=$8
 SIMTYPE=$9
+PARTICLE_TYPE="gamma"
 [[ "${10}" ]] && ANALYSIS_TYPE=${10}  || ANALYSIS_TYPE=""
-
-# Particle names
-PARTICLE=1
-PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
-PARTICLE_TYPE=${PARTICLE_NAMES[$PARTICLE]}
+[[ "${11}" ]] && DISPBDT=${11} || DISPBDT=0
+EVNIRFVERSION="v4N"
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -90,9 +91,10 @@ fi
 
 _sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
 EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
-# input directories containing evndisp products
-INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+
+# input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
     for W in ${WOBBLE}; do
        for N in ${NOISE}; do
           TDIR="${INDIR}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
@@ -104,21 +106,23 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
          done
    done
 fi
+echo "Input file directory: $INDIR"
 
-# directory for run scripts
+
+# Output file directory
+if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
+fi
+echo -e "Output files will be written to:\n $ODIR"
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
+
+# run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCWEFFAREA.ANATABLES/${ANALYSIS_TYPE}/$(date +%s%N)/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
-# Output file directory
-if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
-fi
-echo -e "Output files will be written to:\n $ODIR"
-mkdir -p "$ODIR"
-
-# Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.generate_mscw_effective_area_parts_sub"
 
 WOFFS=${WOBBLE[*]}
@@ -130,18 +134,22 @@ EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg"
 
 # make run script
 FSCRIPT="$LOGDIR/MSCWEFFAREA-ARRAY-$EPOCH-$ZA-$PARTICLE-${NOISE[0]}-${CUTS_NAME}-$DATE.MC_$(date +%s)"
-sed -e "s|INPUTDIR|$INDIR|" \
-    -e "s|OUTPUTDIR|$ODIR|" \
-    -e "s|TABLEFILE|$TABFILE|" \
-    -e "s|EFFFILE|$EFFAREAFILE|" \
-    -e "s|ZENITHANGLE|$ZA|" \
+rm -f "$FSCRIPT.sh"
+sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISS|" \
     -e "s|WOBBLEOFFSET|$WOFFS|" \
+    -e "s|ARRAYEPOCH|$EPOCH|" \
+    -e "s|RECONSTRUCTIONID|$RECID|" \
+
+    -e "s|USEDISP|${DISPBDT}|" \
+    -e "s|TABLEFILE|$TABFILE|" \
+    -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|GAMMACUTS|${CUTSFILE}|" \
-    -e "s|RECONSTRUCTIONID|$RECID|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|INPUTDIR|$INDIR|" \
+    -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
 chmod u+x "$FSCRIPT.sh"
-echo "$FSCRIPT.sh"
+echo "Run script written to: $FSCRIPT"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
@@ -157,7 +165,7 @@ elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
     condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
