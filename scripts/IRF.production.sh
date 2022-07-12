@@ -63,9 +63,10 @@ SIMTYPE=$1
 IRFTYPE=$2
 [[ "$3" ]] && EPOCH=$3 || EPOCH="V6 V5 V4"
 [[ "$4" ]] && ATMOS=$4 || ATMOS="61 62"
-[[ "$5" ]] && RECID=$5 || RECID="0 2 3 4 5"
+[[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
+DISPBDT=0
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -130,9 +131,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     ######################################
     # TEMPORARY
     # NSB_LEVELS=( 100 130 160 200 250 )
-    ZENITH_ANGLES=( 20 60 )
-    WOBBLE_OFFSETS=( 0.5 )
-    NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 40 )
     # WOBBLE_OFFSETS=( 0.0 )
     # NSB_LEVELS=( 400 )
@@ -271,7 +272,7 @@ for VX in $EPOCH; do
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                FIXEDWOBBLE="0.25 0.5 0.75"
                # TODO (choose three wobble offsets)
-               FIXEDWOBBLE="0.5 0.75"
+               FIXEDWOBBLE="0.25 0.5 0.75"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB=200
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
@@ -295,7 +296,8 @@ for VX in $EPOCH; do
                          $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
-                             $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                             $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                             $DISPBDT
                       done
                    done
                    continue
@@ -343,7 +345,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT
 			            done #recID
                     ######################
                     # analyse effective areas
