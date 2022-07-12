@@ -2,7 +2,7 @@
 # submit TMVA training for angular reconstruction
 
 # qsub parameters
-h_cpu=11:29:00; h_vmem=8000M; tmpdir_size=10G
+h_cpu=47:29:00; h_vmem=8000M; tmpdir_size=10G
 
 if [[ $# -lt 7 ]]; then
 # begin help message
@@ -46,8 +46,9 @@ fi
 bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
-# EventDisplay version
+# EventDisplay version (for output of IRFs)
 IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforAngularReconstruction --version | tr -d .| sed -e 's/[a-Z]*$//'`
+EVNIRFVERSION="v4N"
 
 # Parse command line arguments
 EPOCH=$1
@@ -89,7 +90,7 @@ check_evndisp_directory()
 {
     # input directory containing evndisp products
     if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-        INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${1}deg_NSB${2}MHz"
+        INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${1}deg_NSB${2}MHz"
     fi
     if [[ ! -d $INDIR ]]; then
         echo "Error, could not locate input directory. Locations searched:"
@@ -105,40 +106,44 @@ do
     do
         check_evndisp_directory $W $N
         # choose a random file from all files
-        ls -1 $INDIR/*[0-9].root | sort -R | head -n 1 >> ${EVNLIST}
+        ls -1 $INDIR/*[0-9].root.zst | sort -R | head -n 1 >> ${EVNLIST}
     done
 done
 echo "FILE LIST: ${EVNLIST}"
 
-# Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub"
+for disp in BDTDisp BDTDispError
+do
+    # Job submission script
+    SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub"
 
-echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
-            
-# set parameters in run script
-FSCRIPT="$LOGDIR/TA.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.$DATE.MC"
-sed -e "s|OUTPUTDIR|$ODIR|" \
-    -e "s|EVNLIST|$EVNLIST|" \
-    -e "s|VVERSION|$IRFVERSION|" \
-    -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
+    echo "Processing $disp Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
+                
+    # set parameters in run script
+    FSCRIPT="$LOGDIR/TA.${disp}.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.$DATE.MC"
+    sed -e "s|OUTPUTDIR|$ODIR|" \
+        -e "s|EVNLIST|$EVNLIST|" \
+        -e "s|VVERSION|$IRFVERSION|" \
+        -e "s|BDTTYPE|$disp|" \
+        -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
-chmod u+x "$FSCRIPT.sh"
-echo "$FSCRIPT.sh"
+    chmod u+x "$FSCRIPT.sh"
+    echo "$FSCRIPT.sh"
 
-# run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
-if [[ $SUBC == *"ERROR"* ]]; then
-    echo $SUBC
-    exit
-fi
-if [[ $SUBC == *qsub* ]]; then
-    $SUBC $FSCRIPT.sh
-elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    condor_submit $FSCRIPT.sh.condor
-elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-fi
+    # run locally or on cluster
+    SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`eval "echo \"$SUBC\""`
+    if [[ $SUBC == *"ERROR"* ]]; then
+        echo $SUBC
+        exit
+    fi
+    if [[ $SUBC == *qsub* ]]; then
+        $SUBC $FSCRIPT.sh
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        condor_submit $FSCRIPT.sh.condor
+    elif [[ $SUBC == *parallel* ]]; then
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
+    fi
+done
 
 exit
