@@ -20,6 +20,7 @@ DISPBDT=USEDISP
 OSUBDIR="$ODIR/MSCW_RECID$RECID"
 if [ $DISPBDT -eq 1 ]; then
     OSUBDIR="${OSUBDIR}_DISP"
+fi
 mkdir -p "$OSUBDIR"
 chmod g+w "$OSUBDIR"
 echo "Output directory for data products: " $OSUBDIR
