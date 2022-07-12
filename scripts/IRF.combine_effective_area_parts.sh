@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=11:29:00; h_vmem=6000M; tmpdir_size=10G
 
-if [[ $# < 5 ]]; then
+if [[ $# -lt 5 ]]; then
 # begin help message
 echo "
 IRF generation: combine partial effective area files
@@ -44,7 +44,7 @@ exit
 fi
 
 # date
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 
 # Run init script
 bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"

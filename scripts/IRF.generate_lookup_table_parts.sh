@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=20G
 
-if [[ $# < 7 ]]; then
+if [[ $# -lt 7 ]]; then
 # begin help message
 echo "
 IRF generation: create partial (for one point in the parameter space) lookup

@@ -5,7 +5,7 @@
 # qsub parameters
 h_cpu=11:29:00; h_vmem=15000M; tmpdir_size=100G
 
-if [[ $# < 10 ]]; then
+if [[ $# -lt 10 ]]; then
 # begin help message
 echo "
 IRF generation: analyze simulation evndisp ROOT files using mscw_energy (analyse all NSB and offset angles simulatenously)

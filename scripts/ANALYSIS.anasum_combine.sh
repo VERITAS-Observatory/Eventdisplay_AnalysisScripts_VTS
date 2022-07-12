@@ -1,7 +1,7 @@
 #!/bin/bash
 # script to combine anasum files processed in parallel mode
 
-if [[ $# < 3 ]]; then
+if [[ $# -lt 3 ]]; then
 # begin help message
 echo "
 ANASUM parallel data analysis: combine parallel-processed anasum runs
