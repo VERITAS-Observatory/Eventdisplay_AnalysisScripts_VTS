@@ -134,7 +134,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
     # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 40 )
+    # ZENITH_ANGLES=( 30 35 )
     # WOBBLE_OFFSETS=( 0.0 )
     # NSB_LEVELS=( 400 )
     # ZENITH_ANGLES=( 40 )
@@ -270,8 +270,6 @@ for VX in $EPOCH; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               FIXEDWOBBLE="0.25 0.5 0.75"
-               # TODO (choose three wobble offsets)
                FIXEDWOBBLE="0.25 0.5 0.75"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB=200
