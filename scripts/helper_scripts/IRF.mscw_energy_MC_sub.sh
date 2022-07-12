@@ -95,6 +95,8 @@ $EVNDISPSYS/bin/mscw_energy $MOPT \
     -outputfile $outputfilename \
     -noise=$NOISE &> $logfile
 
+$EVNDISPSYS/bin/logFile mscwTableLog $outputfilename $logfile
+
 # cp results file back to data directory and clean up
 outputbasename=$( basename $outputfilename )
 cp -f -v $outputfilename $OSUBDIR/$outputbasename

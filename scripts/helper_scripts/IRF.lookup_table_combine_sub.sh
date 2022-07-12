@@ -15,13 +15,15 @@ if [[ $IRFVERSION = "v4"* ]]; then
 else
     $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root &> $ODIR/$OFILE.log 
 fi
+$EVNDISPSYS/bin/logFile makeTableLog $ODIR/$OFILE.root $ODIR/$OFILE.log
+$EVNDISPSYS/bin/logFile makeTableFileList $ODIR/$OFILE.root $ODIR/$FLIST
 
 # smooth lookup tables (not v4xx)
-IRFVERSION=`$EVNDISPSYS/bin/combineLookupTables --version | tr -d .| sed -e 's/[a-Z]*$//'`
-if [[ $IRFVERSION = "v4"* ]]; then
-    echo "no smoothing in version $IRFVERSION"
-else
-    "$EVNDISPSYS"/bin/smoothLookupTables "$ODIR/$OFILE.root" "$ODIR/$OFILE-smoothed.root" &> "$ODIR/$OFILE-smoothed.log"
-fi
+# IRFVERSION=`$EVNDISPSYS/bin/combineLookupTables --version | tr -d .| sed -e 's/[a-Z]*$//'`
+# if [[ $IRFVERSION = "v4"* ]]; then
+#    echo "no smoothing in version $IRFVERSION"
+# else
+#    "$EVNDISPSYS"/bin/smoothLookupTables "$ODIR/$OFILE.root" "$ODIR/$OFILE-smoothed.root" &> "$ODIR/$OFILE-smoothed.log"
+# fi
 
 exit
