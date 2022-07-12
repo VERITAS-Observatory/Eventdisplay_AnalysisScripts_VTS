@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=20:29:00; h_vmem=8000M; tmpdir_size=10G
 
-if [[ $# < 4 ]]; then
+if [[ $# -lt 4 ]]; then
 # begin help message
 echo "
 IRF generation: create a lookup table from a set of partial table files

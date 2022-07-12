@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=8:00:00; h_vmem=4000M; tmpdir_size=10G
 
-if [[ $# < 3 ]]; then
+if [[ $# -lt 3 ]]; then
 # begin help message
 echo "
 ANASUM data analysis: submit jobs from an anasum run list

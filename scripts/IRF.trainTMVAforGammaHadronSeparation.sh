@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=11:59:59; h_vmem=11599M; tmpdir_size=24G
 
-if [[ $# < 10 ]]; then
+if [[ $# -lt 10 ]]; then
 # begin help message
 echo "
 TMVA training of BDT: submit jobs from a TMVA runparameter file
