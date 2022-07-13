@@ -65,6 +65,7 @@ RLIST=$1
 [[ "$5" ]] && SIMTYPE=$5 || SIMTYPE=""
 [[ "$6" ]] && FORCEDATMO=$6
 [[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
+DISPBDT="0"
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -109,7 +110,7 @@ do
         continue
     fi
 
-    RUNINFO=`$EVNDISPSYS/bin/printRunParameter $BFILE -updated-runinfo`
+    RUNINFO=$($EVNDISPSYS/bin/printRunParameter $BFILE -updated-runinfo)
     EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
     ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
     HVSETTINGS=`echo $RUNINFO | awk '{print $(4)}'`
@@ -154,6 +155,24 @@ do
         echo "Error, table file '$TABFILE' not found, exiting..."
         exit 1
     fi
+    DISPDIR="NOTSET"
+    if [[ $DISPBDT == "1" ]]; then
+        if [ "$HVSETTINGS" == "obsLowHV" ]; then
+            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_redHV/"
+        else
+            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}/"
+        fi
+        ZA=$($EVNDISPSYS/bin/printRunParameter $BFILE -elevation | awk '{print $3}')
+        if (( $(echo "90.-$ZA < 40" |bc -l) )); then
+            DISPDIR="${DISPDIR}/SZE/"
+        elif (( $(echo "90.-$ZA < 50" |bc -l) )); then
+            DISPDIR="${DISPDIR}/MZE/"
+        else
+            DISPDIR="${DISPDIR}/LZE/"
+        fi
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/${DISPDIR}/"
+        echo "DISPDIR (Elevation is $ZA deg): " $DISPDIR
+    fi
 
     FSCRIPT="$LOGDIR/MSCW.data-ID$ID-$AFILE"
     rm -f $FSCRIPT.sh
@@ -162,6 +181,7 @@ do
         -e "s|RECONSTRUCTIONID|$ID|" \
         -e "s|OUTPUTDIRECTORY|$ODIR|" \
         -e "s|INPUTLOGDIR|${INPUTLOGDIR}|" \
+        -e "s|DISPBDT|${DISPDIR}|" \
         -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh

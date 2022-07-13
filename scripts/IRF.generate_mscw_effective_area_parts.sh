@@ -94,7 +94,7 @@ EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
 # input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
     for W in ${WOBBLE}; do
        for N in ${NOISE}; do
           TDIR="${INDIR}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
@@ -140,7 +140,6 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|WOBBLEOFFSET|$WOFFS|" \
     -e "s|ARRAYEPOCH|$EPOCH|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
-
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
