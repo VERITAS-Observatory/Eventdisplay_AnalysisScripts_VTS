@@ -10,6 +10,7 @@ RECID=RECONSTRUCTIONID
 ODIR=OUTPUTDIRECTORY
 INFILE=EVNDISPFILE
 INLOGDIR=INPUTLOGDIR
+DISPDIR=DISPBDT
 
 INDIR=`dirname $INFILE`
 BFILE=`basename $INFILE .root`
@@ -31,7 +32,18 @@ cp -f -v $INFILE $TEMPDIR
 
 MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
 
+MOPT=""
+if [[ DISPBDT != "NOTSET" ]]; then
+    MOPT="-redo_stereo_reconstruction"
+    MOPT="$MOPT -tmva_disperror_weight 50"
+    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
+    MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
+    echo "DISP BDT options: $MOPT"
+fi
+
 $EVNDISPSYS/bin/mscw_energy         \
+    ${MOPT} \
     -tablefile $TABFILE             \
     -arrayrecid=$RECID              \
     -inputfile $TEMPDIR/$BFILE.root \
