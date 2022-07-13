@@ -10,12 +10,14 @@ source $EVNDISPSYS/setObservatory.sh VTS
 IINDIR=INPUTDIR
 ODIR=OUTPUTDIR
 TABFILE=TABLEFILE
-EEFFAREAFILE=EFFFILE
 ZA=ZENITHANGLE
 NNOISE=( NOISELEVEL )
 NWOBBLE=( WOBBLEOFFSET )
+EEFFAREAFILE=EFFFILE
 RECID="RECONSTRUCTIONID"
 CUTSLIST="GAMMACUTS"
+EPOCH="ARRAYEPOCH"
+DISPBDT=USEDISP
 
 # output directory
 CUTSFILE=${CUTSLIST[0]%%.dat}
@@ -28,8 +30,27 @@ echo "Output directory for data products: " $OSUBDIR
 
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
-# use short output tree (use -noshorttree for Data/MC comparison)
-# MOPT="-shorttree $MOPT"
+# dispBDT reconstruction
+if [ $DISPBDT -eq 1 ]; then
+    MOPT="$MOPT -redo_stereo_reconstruction"
+    MOPT="$MOPT -tmva_disperror_weight 50"
+    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    if [[ ${EPOCH} == *"redHV"* ]]; then
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}redHV/"
+    else
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}/"
+    fi
+    if [[ "${ZA}" -lt "40" ]]; then
+        DISPDIR="${DISPDIR}/SZE/"
+    elif [[ "${ZA}" -lt "50" ]]; then
+        DISPDIR="${DISPDIR}/MZE/"
+    else
+        DISPDIR="${DISPDIR}/LZE/"
+    fi
+    MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
+    MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
+    echo "DISP BDT options: $MOPT"
+fi
 echo "MSCW options: $MOPT"
 
 for NOISE in ${NNOISE[@]}; do
@@ -127,15 +148,26 @@ for NOISE in ${NNOISE[@]}; do
         rm -f "$DDIR/$EAPARAMS.dat"
         eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
 
-    # calculate effective areas
+        # calculate effective areas
         rm -f $OSUBDIR/$OFILE.root 
         $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
+        if [[ -f $EVNDISPSYS/bin/logFile ]]; then
+            $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.log
+            rm -f $OSUBDIR/$EAPARAMS.log
+            $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root $logfile
+            $EVNDISPSYS/bin/logFile mscwTableList $DDIR/$EAPARAMS.root $OSUBDIR/$OFILE.list
+        else
+            chmod g+w $OSUBDIR/$EAPARAMS.log
+        fi
 
         cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
         chmod g+w $OSUBDIR/$EAPARAMS.root
-        chmod g+w $OSUBDIR/$EAPARAMS.log
     done
     rm -f "$outputfilename"
+    if [[ -f $EVNDISPSYS/bin/logFile ]]; then
+        rm -f "$logfile"
+        rm -f "$OSUBDIR/$OFILE.list"
+    fi
   done
 done
 

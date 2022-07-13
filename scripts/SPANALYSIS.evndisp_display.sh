@@ -73,7 +73,7 @@ fi
 EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
 ACUTS="EVNDISP.reconstruction.runparameter"
 if [[ $EDVERSION = "v4"* ]]; then
-   ACUTS="EVNDISP.reconstruction.runparameter.v48x"
+   ACUTS="EVNDISP.reconstruction.runparameter.v4x"
 fi
 OPT="-display=1 -reconstructionparameter $ACUTS -vbfnsamples "
 

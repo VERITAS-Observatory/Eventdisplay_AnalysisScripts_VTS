@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=8:00:00; h_vmem=4000M; tmpdir_size=10G
 
-if [[ $# < 3 ]]; then
+if [[ $# -lt 3 ]]; then
 # begin help message
 echo "
 ANASUM data analysis: submit jobs from an anasum run list
@@ -102,9 +102,10 @@ if [[ $SUBC == *qsub* ]]; then
         echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
         JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
     fi
-    
     echo "RUN $AFILE JOBID $JOBID"
-    
+elif [[ $SUBC == *condor* ]]; then
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
     cat $LOGDIR/runscripts.$TIMETAG.dat | $SUBC

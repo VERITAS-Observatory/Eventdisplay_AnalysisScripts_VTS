@@ -68,20 +68,23 @@ PARTICLE_TYPE=${PARTICLE_NAMES[$PARTICLE]}
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-#LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANAMCVBF"
 
-# output directory for evndisp products (will be manipulated more later in the script)
+# input/output directory for evndisp products
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+    IDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
-# output dir
-OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
+# input dir
+IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
+OPDIR=${IPDIR/$EDVERSION/v4N}
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
-echo -e "Output files will be written to:\n $OPDIR"
+# overwrite INDIR
+IDIR="/lustre/fs23/group/veritas/IRFPRODUCTION/v487/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 LOGDIR=${OPDIR}/$DATE
 mkdir -p "$LOGDIR"
-
+echo -e "input files will be read from:\n $IPDIR"
+echo -e "output file will be writtin to:\n $OPDIR"
 
 # Analysis options
 EDOPTIONS=""
@@ -169,6 +172,7 @@ fi
 
 #####################################
 # Loop over all VBFFiles
+# for V in ${VBFNAME}
 for V in ${VBFNAME}
 do
     echo "Processing ${V}"
@@ -203,7 +207,8 @@ do
     # make run script
     FSCRIPT="$LOGDIR/comp-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM-${RUNNUM}"
     sed -e "s|RUNNUMBER|$RUNNUM|" \
-        -e "s|OUTPUTDIR|$OPDIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|OUTPUTDIR|$OPDIR|" \
+        -e "s|INPUTDIR|$IPDIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh
     echo $FSCRIPT.sh

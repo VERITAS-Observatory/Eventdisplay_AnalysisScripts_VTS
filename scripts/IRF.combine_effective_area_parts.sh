@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=11:29:00; h_vmem=6000M; tmpdir_size=10G
 
-if [[ $# < 5 ]]; then
+if [[ $# -lt 5 ]]; then
 # begin help message
 echo "
 IRF generation: combine partial effective area files
@@ -44,7 +44,7 @@ exit
 fi
 
 # date
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 
 # Run init script
 bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
@@ -86,11 +86,9 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p "$ODIR"
-chmod g+w "$ODIR"
 
 # Run scripts and log files are written into this directory
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/${ANALYSIS_TYPE}"
 echo "Writing run scripts and log files to $LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
@@ -121,7 +119,7 @@ if [[ ! -z $ANALYSIS_TYPE ]]; then
 fi
 OFILE="effArea-${IRFVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM${ATMOS}-T${T}"
 
-FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}"
+FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}-$(date +%s%N)"
 rm -f $FSCRIPT.sh
 
 sed -e "s|INPUTFILES|$INFILES|" \
@@ -141,6 +139,9 @@ fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
+elif [[ $SUBC == *condor* ]]; then
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
 elif [[ "$SUBC" == *simple* ]] ; then

@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=20:29:00; h_vmem=8000M; tmpdir_size=10G
 
-if [[ $# < 4 ]]; then
+if [[ $# -lt 4 ]]; then
 # begin help message
 echo "
 IRF generation: create a lookup table from a set of partial table files
@@ -73,7 +73,7 @@ fi
 
 # run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCW.MAKETABLES/$(date +%s | cut -c -8)/"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCW.MAKETABLES/${ANALYSIS_TYPE}/$(date +%s | cut -c -8)/"
 echo -e "Log files will be written to:\n$LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -92,7 +92,7 @@ echo "LOOKUPTABLE $OFILE"
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_combine_sub"
 
-FSCRIPT="$LOGDIR/CMB-TBL.$DATE.MC"
+FSCRIPT="$LOGDIR/CMB-TBL.$OFILE.$DATE.MC"
 
 sed -e "s|TABLELIST|$FLIST|" \
     -e "s|OUTPUTFILE|$OFILE|" \
@@ -111,6 +111,9 @@ fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
+elif [[ $SUBC == *condor* ]]; then
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
 fi

@@ -13,9 +13,15 @@ NOISE=NOISELEVEL
 WOBBLE=WOBBLEOFFSET
 NROOTFILES=NFILES
 RECID="RECONSTRUCTIONID"
+EPOCH="ARRAYEPOCH"
+ATM="ATMOS"
+DISPBDT=USEDISP
 
 # output directory
 OSUBDIR="$ODIR/MSCW_RECID$RECID"
+if [ $DISPBDT -eq 1 ]; then
+    OSUBDIR="${OSUBDIR}_DISP"
+fi
 mkdir -p "$OSUBDIR"
 chmod g+w "$OSUBDIR"
 echo "Output directory for data products: " $OSUBDIR
@@ -35,6 +41,28 @@ echo "Temporary directory: $DDIR"
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
 echo "MSCW options: $MOPT"
+
+# dispBDT reconstruction
+if [ $DISPBDT -eq 1 ]; then
+    MOPT="$MOPT -redo_stereo_reconstruction"
+    MOPT="$MOPT -tmva_disperror_weight 50"
+    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    if [[ ${EPOCH} == *"redHV"* ]]; then
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_redHV/"
+    else
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}/"
+    fi
+    if [[ "${ZA}" -lt "40" ]]; then
+        DISPDIR="${DISPDIR}/SZE/"
+    elif [[ "${ZA}" -lt "50" ]]; then
+        DISPDIR="${DISPDIR}/MZE/"
+    else
+        DISPDIR="${DISPDIR}/LZE/"
+    fi
+    MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
+    MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
+    echo "DISP BDT options: $MOPT"
+fi
 
 # input evndisp files
 rm -f $OSUBDIR/$OFILE.log
@@ -63,7 +91,12 @@ fi
 # run mscw_energy
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
-$EVNDISPSYS/bin/mscw_energy $MOPT -inputfilelist $OSUBDIR/$OFILE.list -outputfile $outputfilename -noise=$NOISE &> $logfile
+$EVNDISPSYS/bin/mscw_energy $MOPT \
+    -inputfilelist $OSUBDIR/$OFILE.list \
+    -outputfile $outputfilename \
+    -noise=$NOISE &> $logfile
+
+$EVNDISPSYS/bin/logFile mscwTableLog $outputfilename $logfile
 
 # cp results file back to data directory and clean up
 outputbasename=$( basename $outputfilename )

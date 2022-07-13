@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=11:29:00; h_vmem=4000M; tmpdir_size=40G
 
-if [[ $# < 2 ]]; then
+if [[ $# -lt 2 ]]; then
 # begin help message
 echo "
 EVNDISP DST maker: submit jobs from a simple run list
@@ -104,6 +104,9 @@ for RUN in $RUNNUMS; do
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
 		echo "RUN $RUN: JOBID $JOBID"
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
     elif [[ $SUBC == *simple* ]]; then

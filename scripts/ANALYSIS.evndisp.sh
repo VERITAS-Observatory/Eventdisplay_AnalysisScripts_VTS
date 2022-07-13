@@ -28,7 +28,7 @@ None of the following options are usually required:
     [runparameter file]    file with integration window size and reconstruction cuts/methods,
                            expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
-			   Default: EVNDISP.reconstruction.runparameter.v48x
+			               Default: EVNDISP.reconstruction.runparameter.v4x
                            (for v5x versions: EVNDISP.reconstruction.runparameter)
 
     [calibration]	   
@@ -72,7 +72,7 @@ RLIST=$1
 mkdir -p $ODIR
 ACUTS_AUTO="EVNDISP.reconstruction.runparameter"
 if [[ $EDVERSION = "v4"* ]]; then
-   ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v48x"
+   ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v4x"
 fi
 [[ "$3" ]] && ACUTS=$3 || ACUTS=${ACUTS_AUTO}
 [[ "$4" ]] && CALIB=$4 || CALIB=1
@@ -118,7 +118,7 @@ echo
 # sleep required for large data sets to avoid overload
 # of database and many jobs running in parallel
 SLEEPABIT="1s"
-if [ "$NRUNS" -gt "20" ] ; then
+if [ "$NRUNS" -gt "50" ] ; then
    SLEEPABIT="30s"
    echo "Long list of runs (${NRUNS}), will sleep after each run for ${SLEEPABIT}"
 fi
@@ -194,6 +194,9 @@ do
             echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
             echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"

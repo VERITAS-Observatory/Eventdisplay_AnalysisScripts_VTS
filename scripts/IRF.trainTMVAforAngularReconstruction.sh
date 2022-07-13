@@ -2,15 +2,15 @@
 # submit TMVA training for angular reconstruction
 
 # qsub parameters
-h_cpu=11:29:00; h_vmem=8000M; tmpdir_size=10G
+h_cpu=47:29:00; h_vmem=8000M; tmpdir_size=40G
 
-if [[ $# != 5 ]]; then
+if [[ $# -lt 7 ]]; then
 # begin help message
 echo "
 TMVA (BDT) training for angular resolution from MC ROOT files for different zenith angle bins
  (simulations that have been processed by evndisp_MC) 
 
-IRF.trainTMVAforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <NSB level> <sim type>
+IRF.trainTMVAforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
 
@@ -23,9 +23,18 @@ required parameters:
 
     <zenith>                zenith angle of simulations [deg]
 
-    <NSB level>             NSB level of simulations [MHz]
+    <offset angle>          list of offset angle of simulations [deg]
+
+    <NSB level>             list of NSB level of simulations [MHz]
+
+    <Rec ID>                reconstruction ID
+                            (see EVNDISP.reconstruction.runparameter)
     
     <sim type>              simulation type (e.g. GRISU, CARE)
+
+    optional:
+
+    [analysis type]         type of analysis (default="")
     
 --------------------------------------------------------------------------------
 "
@@ -37,32 +46,27 @@ fi
 bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
-# EventDisplay version
+# EventDisplay version (for output of IRFs)
 IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforAngularReconstruction --version | tr -d .| sed -e 's/[a-Z]*$//'`
+EVNIRFVERSION="v4N"
 
 # Parse command line arguments
 EPOCH=$1
 ATM=$2
 ZA=$3
-NOISE=$4
-WOBBLE="0.5"
-RECID="0"
-SIMTYPE=$5
+WOBBLE=$4
+NOISE=$5
+RECID=$6
+SIMTYPE=$7
 PARTICLE_TYPE="gamma"
+[[ "$8" ]] && ANALYSIS_TYPE=$8  || ANALYSIS_TYPE=""
 
-# input directory containing evndisp products
-if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
-fi
-if [[ ! -d $INDIR ]]; then
-    echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
-    exit 1
-fi
-echo "Input file directory: $INDIR"
+_sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
+EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
 # Output file directory
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/TMVA_AngularReconstruction/ze${ZA}deg_offset${WOBBLE}deg/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}/TMVA_AngularReconstruction/ze${ZA}deg/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
@@ -70,40 +74,76 @@ chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/TMVAAngRes/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/${ANALYSIS_TYPE}/TMVAAngRes/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/$(date +%s | cut -c -8)/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
 # training file name
-BDTFILE="mvaAngRes_${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
+BDTFILE="mvaAngRes_${ZA}deg"
 
-# Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub"
+# prepare list of input files
+EVNLIST=$ODIR/${BDTFILE}.list
+rm -f ${EVNLIST}
+touch ${EVNLIST}
 
-echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
-            
-# set parameters in run script
-FSCRIPT="$LOGDIR/TA.ID${RECID}.${EPOCH}.$DATE.MC"
-sed -e "s|OUTPUTDIR|$ODIR|" \
-    -e "s|EVNDISPFILE|$INDIR|" \
-    -e "s|VVERSION|$IRFVERSION|" \
-    -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
+check_evndisp_directory()
+{
+    # input directory containing evndisp products
+    if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
+        INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${1}deg_NSB${2}MHz"
+    fi
+    if [[ ! -d $INDIR ]]; then
+        echo "Error, could not locate input directory. Locations searched:"
+        echo "$INDIR"
+        exit 1
+    fi
+    echo $INDIR
+}
 
-chmod u+x "$FSCRIPT.sh"
-echo "$FSCRIPT.sh"
+for W in ${WOBBLE}
+do
+    for N in ${NOISE}
+    do
+        check_evndisp_directory $W $N
+        # choose a random file from all files
+        ls -1 $INDIR/*[0-9].root.zst | sort -R | head -n 1 >> ${EVNLIST}
+    done
+done
+echo "FILE LIST: ${EVNLIST}"
 
-# run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
-if [[ $SUBC == *"ERROR"* ]]; then
-    echo $SUBC
-    exit
-fi
-if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
-    echo "JOBID: $JOBID"
-elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-fi
+for disp in BDTDisp BDTDispError
+do
+    # Job submission script
+    SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub"
+
+    echo "Processing $disp Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
+                
+    # set parameters in run script
+    FSCRIPT="$LOGDIR/TA.${disp}.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.$DATE.MC"
+    sed -e "s|OUTPUTDIR|$ODIR|" \
+        -e "s|EVNLIST|$EVNLIST|" \
+        -e "s|VVERSION|$IRFVERSION|" \
+        -e "s|BDTTYPE|$disp|" \
+        -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
+
+    chmod u+x "$FSCRIPT.sh"
+    echo "$FSCRIPT.sh"
+
+    # run locally or on cluster
+    SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`eval "echo \"$SUBC\""`
+    if [[ $SUBC == *"ERROR"* ]]; then
+        echo $SUBC
+        exit
+    fi
+    if [[ $SUBC == *qsub* ]]; then
+        $SUBC $FSCRIPT.sh
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        condor_submit $FSCRIPT.sh.condor
+    elif [[ $SUBC == *parallel* ]]; then
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
+    fi
+done
 
 exit

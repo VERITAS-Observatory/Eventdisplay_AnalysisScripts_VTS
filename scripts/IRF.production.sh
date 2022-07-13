@@ -63,9 +63,10 @@ SIMTYPE=$1
 IRFTYPE=$2
 [[ "$3" ]] && EPOCH=$3 || EPOCH="V6 V5 V4"
 [[ "$4" ]] && ATMOS=$4 || ATMOS="61 62"
-[[ "$5" ]] && RECID=$5 || RECID="0 2 3 4 5"
+[[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
+DISPBDT=0
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -81,14 +82,17 @@ fi
 # number of events per evndisp analysis
 NEVENTS="-1"
 
-# Default run parameter file for evndisp analysis
-ACUTS="EVNDISP.reconstruction.runparameter"
+# run parameter file for evndisp analysis
 if [[ $IRFVERSION = "v4"* ]]; then
-  ACUTS="EVNDISP.reconstruction.runparameter.v48x"
-fi
-# for NN analysis
-if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
-  ACUTS="EVNDISP.reconstruction.runparameter.NN"
+    ACUTS="EVNDISP.reconstruction.runparameter.v4x"
+    if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
+      ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
+    fi
+else
+    ACUTS="EVNDISP.reconstruction.runparameter"
+    if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
+      ACUTS="EVNDISP.reconstruction.runparameter.NN"
+    fi
 fi
 
 # simulation types and definition of parameter space
@@ -123,10 +127,14 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    WOBBLE_OFFSETS=$(ls ${DDIR}/Zd${ZENITH_ANGLES}/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(ls ${DDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEMPORARY
-    # ZENITH_ANGLES=( 40 )
+    # NSB_LEVELS=( 100 130 160 200 250 )
+    # ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 30 35 )
     # WOBBLE_OFFSETS=( 0.0 )
     # NSB_LEVELS=( 400 )
     # ZENITH_ANGLES=( 40 )
@@ -178,11 +186,13 @@ else
              ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
 fi
-#CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-TMVA-BDT-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel3-PointSource-TMVA-BDT-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
+         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
+         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -199,7 +209,9 @@ for VX in $EPOCH; do
             TFIL="${TABLECOM}"
             for ID in $RECID; do
                 echo "combine lookup tables"
-                $(dirname "$0")/IRF.combine_lookup_table_parts.sh "${TFIL}${ANATYPE}" "$VX" "$ATM" "$ID" "$SIMTYPE" "$VERITAS_ANALYSIS_TYPE"
+                $(dirname "$0")/IRF.combine_lookup_table_parts.sh \
+                    "${TFIL}${ANATYPE}" "$VX" "$ATM" \
+                    "$ID" "$SIMTYPE" "$VERITAS_ANALYSIS_TYPE"
             done
             continue
        fi
@@ -209,7 +221,9 @@ for VX in $EPOCH; do
             for ID in $RECID; do
                 for CUTS in ${CUTLIST[@]}; do
                     echo "combine effective areas $CUTS"
-                   $(dirname "$0")/IRF.combine_effective_area_parts.sh "$CUTS" "$VX" "$ATM" "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE"
+                   $(dirname "$0")/IRF.combine_effective_area_parts.sh \
+                       "$CUTS" "$VX" "$ATM" \
+                       "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE"
                 done # cuts
             done
             continue
@@ -256,11 +270,15 @@ for VX in $EPOCH; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+               FIXEDWOBBLE="0.25 0.5 0.75"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 200 $SIMTYPE
+                   FIXEDNSB=200
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh $VX $ATM $ZA 170 $SIMTYPE
+                   FIXEDNSB="160 250 250"
                fi
+               $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
+                   $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                   $SIMTYPE $VERITAS_ANALYSIS_TYPE
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
@@ -273,7 +291,11 @@ for VX in $EPOCH; do
                       TFILID=$TFIL$ANATYPE
                       for CUTS in ${CUTLIST[@]}; do
                          echo "Generate effective areas $CUTS"
-                         $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh $TFILID $CUTS $VX $ATM $ZA "${WOBBLE_OFFSETS}" "${NOISE}" $ID $SIMTYPE
+                         $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
+                             $TFILID $CUTS $VX $ATM $ZA \
+                             "${WOBBLE_OFFSETS}" "${NOISE}" \
+                             $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                             $DISPBDT
                       done
                    done
                    continue
@@ -295,33 +317,43 @@ for VX in $EPOCH; do
                           SIMDIR="/lustre/fs24/group/veritas/simulations/V6_FLWO/CARE_June1702"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
-                           $(dirname "$0")/IRF.evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE
+                           $(dirname "$0")/IRF.evndisp_MC.sh \
+                               $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
+                               $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
-                           $(dirname "$0")/IRF.compress_evndisp_MC.sh $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                           $(dirname "$0")/IRF.compress_evndisp_MC.sh \
+                               $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
+                               $SIMTYPE $VERITAS_ANALYSIS_TYPE
                        fi
                     ######################
                     # make tables
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
                         for ID in $RECID; do
-                           $(dirname "$0")/IRF.generate_lookup_table_parts.sh $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                           $(dirname "$0")/IRF.generate_lookup_table_parts.sh \
+                               $VX $ATM $ZA $WOBBLE $NOISE \
+                               $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
                         done #recID
                     ######################
                     # analyse table files
                     elif [[ $IRFTYPE == "ANALYSETABLES" ]]; then
                         for ID in $RECID; do
-			    TFIL="${TABLECOM}"
+                            TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                             # warning: do not mix disp and geo
                             TFILID=$TFIL$ANATYPE
-			    $(dirname "$0")/IRF.mscw_energy_MC.sh $TFILID $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
-			done #recID
+                            $(dirname "$0")/IRF.mscw_energy_MC.sh \
+                                $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
+                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT
+			            done #recID
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]]; then
                         for ID in $RECID; do
                             for CUTS in ${CUTLIST[@]}; do
                                 echo "combine effective areas $CUTS"
-                               $(dirname "$0")/IRF.generate_effective_area_parts.sh $CUTS $VX $ATM $ZA $WOBBLE $NOISE $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                               $(dirname "$0")/IRF.generate_effective_area_parts.sh \
+                                   $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
+                                   $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
                             done # cuts
                         done #recID
                     fi

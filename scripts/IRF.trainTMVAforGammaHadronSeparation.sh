@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=11:59:59; h_vmem=11599M; tmpdir_size=24G
 
-if [[ $# < 10 ]]; then
+if [[ $# -lt 10 ]]; then
 # begin help message
 echo "
 TMVA training of BDT: submit jobs from a TMVA runparameter file
@@ -252,9 +252,10 @@ do
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
          fi
-    
          echo "JOBID:  $JOBID"
-    
+      elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        condor_submit $FSCRIPT.sh.condor
       elif [[ $SUBC == *parallel* ]]; then
          echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
          cat $LOGDIR/runscripts.dat | $SUBC

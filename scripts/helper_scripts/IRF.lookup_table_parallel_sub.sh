@@ -7,7 +7,7 @@ source $EVNDISPSYS/setObservatory.sh VTS
 # parameters replaced by parent script using sed
 ZA=ZENITHANGLE
 WOBBLE=WOBBLEOFFSET
-NOISE=SIMNOISE
+NOISE=NOISELEVEL
 EPOCH=ARRAYEPOCH
 ATM=ATMOSPHERE
 RECID=RECONSTRUCTIONID
@@ -16,6 +16,9 @@ INDIR=INPUTDIR
 ODIR=OUTPUTDIR
 
 TABFILE="table_${SIMTYPE}_${ZA}deg_${WOBBLE}wob_noise${NOISE}_${EPOCH}_ATM${ATM}_ID${RECID}"
+
+echo "Cluster ID ${ClusterId}"
+echo "PROCESS ID ${ProcId}"
 
 # remove existing log and table file
 rm -f "$ODIR/$TABFILE.root"
