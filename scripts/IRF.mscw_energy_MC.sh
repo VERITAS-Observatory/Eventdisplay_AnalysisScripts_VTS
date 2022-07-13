@@ -92,7 +92,7 @@ if [[ ! -d $INDIR ]]; then
 fi
 echo "Input file directory: $INDIR"
 
-NROOTFILES=$( ls -l "$INDIR"/*.root | wc -l )
+NROOTFILES=$( ls -l "$INDIR"/*.root.zst | wc -l )
 echo "NROOTFILES $NROOTFILES"
 
 # Output file directory
@@ -120,6 +120,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISE|" \
     -e "s|WOBBLEOFFSET|$WOBBLE|" \
     -e "s|ARRAYEPOCH|$EPOCH|" \
+    -e "s|ATMOS|$ATM|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|NFILES|$NROOTFILES|" \

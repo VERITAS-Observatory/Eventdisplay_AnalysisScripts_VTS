@@ -14,6 +14,7 @@ WOBBLE=WOBBLEOFFSET
 NROOTFILES=NFILES
 RECID="RECONSTRUCTIONID"
 EPOCH="ARRAYEPOCH"
+ATM="ATMOS"
 DISPBDT=USEDISP
 
 # output directory
@@ -47,9 +48,9 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
     if [[ ${EPOCH} == *"redHV"* ]]; then
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}redHV/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_redHV/"
     else
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}/"
     fi
     if [[ "${ZA}" -lt "40" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
