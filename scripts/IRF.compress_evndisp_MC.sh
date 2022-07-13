@@ -79,7 +79,7 @@ OPDIR=${IPDIR/$EDVERSION/v4N}
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 # overwrite INDIR
-IDIR="/lustre/fs23/group/veritas/IRFPRODUCTION/v486/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+IDIR="/lustre/fs23/group/veritas/IRFPRODUCTION/v487/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 LOGDIR=${OPDIR}/$DATE
 mkdir -p "$LOGDIR"
