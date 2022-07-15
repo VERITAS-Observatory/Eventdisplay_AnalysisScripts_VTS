@@ -141,12 +141,18 @@ fi
 
 ## double pass correction
 # OPT+=( -nodp2005 )
+# OPT+=( -writeimagepixellist )
 
 #########################################
 # run eventdisplay
 LOGFILE="$LOGDIR/$RUN.log"
 rm -f "$LOGDIR/$RUN.log"
-$EVNDISPSYS/bin/evndisp -runnumber="$RUN" -reconstructionparameter "$ACUTS" -outputfile "$TEMPDIR/$RUN.root" "${OPT[@]}" -calibrationdirectory "$CALDIR" &> "$LOGFILE"
+$EVNDISPSYS/bin/evndisp \
+    -runnumber="$RUN" \
+    -reconstructionparameter "$ACUTS" \
+    -outputfile "$TEMPDIR/$RUN.root" \
+    "${OPT[@]}" \
+    -calibrationdirectory "$CALDIR" &> "$LOGFILE"
 # DST $EVNDISPSYS/bin/evndisp -runnumber=$RUN -nevents=250000 -runmode=4 -readcalibdb -dstfile $TEMPDIR/$RUN.dst.root -reconstructionparameter $ACUTS -outputfile $TEMPDIR/$RUN.root ${OPT[@]} &> "$LOGFILE"
 echo "RUN$RUN EVNDISPLOG $LOGFILE"
 
