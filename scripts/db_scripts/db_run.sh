@@ -194,6 +194,32 @@ read_flasher_calibration()
     done
 }
 
+read_pointing()
+{
+    mkdir -p ${DBDIR}/${RUN}
+    if [[ ! -e ${DBDIR}/${RUN}/${RUN}.pointingflag ]] || [[ ${OVERWRITE} == 1 ]]; then
+        ./db_pointingflag.sh ${RUN} > ${DBDIR}/${RUN}/${RUN}.pointingflag
+        echo "pointing flag file (written):  ${DBDIR}/${RUN}/${RUN}.pointingflag"
+    else
+        echo "pointing flag file (found):  ${DBDIR}/${RUN}/${RUN}.pointingflag"
+    fi
+    for (( j=0; j<${NTEL}; j++ ));
+    do
+        if [[ ! -e ${DBDIR}/${RUN}/${RUN}.VPM_${j} ]] || [[ ${OVERWRITE} == 1 ]]; then
+            ./db_VPM.sh ${j} "$(get_start_time)" "$(get_end_time)" > ${DBDIR}/${RUN}/${RUN}.VPM_TEL${j}
+            echo "VPM TEL ${j} (written): ${DBDIR}/${RUN}/${RUN}.VPM_TEL${j}"
+        else
+            echo "VPM TEL ${j} (found): ${DBDIR}/${RUN}/${RUN}.VPM_TEL${j}"
+        fi
+        if [[ ! -e ${DBDIR}/${RUN}/${RUN}.rawpointing_${j} ]] || [[ ${OVERWRITE} == 1 ]]; then
+            ./db_rawpointing.sh ${j} "$(get_start_time)" "$(get_end_time)" > ${DBDIR}/${RUN}/${RUN}.rawpointing_TEL${j}
+            echo "Rawpointing TEL ${j} (written): ${DBDIR}/${RUN}/${RUN}.rawpointing_TEL${j}"
+        else
+            echo "Rawpointing TEL ${j} (found): ${DBDIR}/${RUN}/${RUN}.rawpointing_TEL${j}"
+        fi
+    done
+}
+
 read_runinfo
 read_rundqm
 read_laser_run_and_dqm
@@ -201,3 +227,4 @@ read_target
 read_camera_rotation
 read_pixel_data
 read_flasher_calibration
+read_pointing
