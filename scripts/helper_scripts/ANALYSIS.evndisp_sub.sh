@@ -84,7 +84,6 @@ fi
 # pedestal calculation
 if [[ $CALIB == "1" || ( $CALIB == "2" || $CALIB == "4" ) ]]; then
     rm -f $LOGDIR/$RUN.ped.log
-    echo "AAA ${OPT[@]}"
     $EVNDISPSYS/bin/evndisp \
         -runmode=1 -runnumber="$RUN" \
         -reconstructionparameter "$ACUTS" \

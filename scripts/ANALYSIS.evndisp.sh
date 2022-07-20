@@ -148,7 +148,13 @@ do
     echo "Now starting run $AFILE"
     FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
 
-    if [[ -d ${DBTEXTDIRECTORY}/$AFILE ]]; then
+    if [[ ${TRUN} -lt 100000 ]]; then
+        DBRUNDIR="${DBTEXTDIRECTORY}/${AFILE:0:1}/${AFILE}"
+    else
+        DBRUNDIR="${DBTEXTDIRECTORY}/${AFILE:0:2}/${AFILE}"
+    fi
+
+    if [[ -d ${DBRUNDIR} ]]; then
         DBTEXTDIR="${DBTEXTDIRECTORY}"
     else
         DBTEXTDIR="0"
@@ -213,7 +219,8 @@ do
 	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
     fi
 
-    if [[ ! -d ${DBTEXTDIRECTORY}/$AFILE ]]; then
+    if [[ ! -d ${DBRUNDIR} ]]; then
+        echo "SLEEPING ${DBTEXTDIRECTORY}/$AFILE"
         sleep ${SLEEPABIT}
     fi
 done
