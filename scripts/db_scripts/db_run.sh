@@ -219,7 +219,6 @@ read_laser_calibration()
 
 read_pointing()
 {
-    read_run_from_DB pointingflag
     for (( j=0; j<${NTEL}; j++ ));
     do
         read_run_from_DB VPM ${RUN} $j 1
