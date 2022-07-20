@@ -37,9 +37,9 @@ IRFTYPE=$2
 process_irfs()
 {
     EPOCHS=$(cat $4 | sort -u)
-    # for E in $EPOCHS
-    EPOCHS=(V6_2019_2020w V6_2020_2021w V6_2021_2022w )
-    for E in ${EPOCHS[@]};
+    # EPOCHS=(V6_2019_2020w V6_2020_2021w V6_2021_2022w )
+    # for E in ${EPOCHS[@]};
+    for E in $EPOCHS
     do
         echo $E $1 $2 $3
         ./IRF.production.sh $2 $1 $E $3
@@ -48,7 +48,7 @@ process_irfs()
 
 if [[ ${SIMTYPE} == "CARE_June2020" ]]; then
     process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_WINTER.dat
-#    process_irfs ${IRFTYPE} ${SIMTYPE} 62 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_SUMMER.dat
+    process_irfs ${IRFTYPE} ${SIMTYPE} 62 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_SUMMER.dat
 elif [[ ${SIMTYPE} == "CARE_RedHV" ]]; then
     process_irfs ${IRFTYPE} ${SIMTYPE} 61 "$VERITAS_EVNDISP_AUX_DIR/IRF_EPOC*.dat"
 fi
