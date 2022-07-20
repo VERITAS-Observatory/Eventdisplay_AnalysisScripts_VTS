@@ -82,6 +82,8 @@ fi
 VPM=1
 # Download file to disk (if not available)
 DOWNLOAD=0
+# directory with DB text
+DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/DBTEXT"
 
 echo "Using runparameter file $ACUTS ($EDVERSION)"
 
@@ -146,6 +148,12 @@ do
     echo "Now starting run $AFILE"
     FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
 
+    if [[ -d ${DBTEXTDIRECTORY}/$AFILE ]]; then
+        DBTEXTDIR="${DBTEXTDIRECTORY}"
+    else
+        DBTEXTDIR="0"
+    fi
+
     sed -e "s|RUNFILE|$AFILE|"              \
         -e "s|CALIBRATIONOPTION|$CALIB|"    \
         -e "s|OUTPUTDIRECTORY|$ODIR|"       \
@@ -154,6 +162,7 @@ do
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|VVERSION|$EDVERSION|" \
         -e "s|DOWNLOADVBF|$DOWNLOAD|" \
+        -e "s|DATABASETEXT|${DBTEXTDIR}|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
@@ -204,7 +213,9 @@ do
 	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
     fi
 
-    sleep ${SLEEPABIT}
+    if [[ ! -d ${DBTEXTDIRECTORY}/$AFILE ]]; then
+        sleep ${SLEEPABIT}
+    fi
 done
 
 # Execute all FSCRIPTs locally in parallel
