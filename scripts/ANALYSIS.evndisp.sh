@@ -148,7 +148,7 @@ do
     echo "Now starting run $AFILE"
     FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
 
-    if [[ ${TRUN} -lt 100000 ]]; then
+    if [[ ${AFILE} -lt 100000 ]]; then
         DBRUNDIR="${DBTEXTDIRECTORY}/${AFILE:0:1}/${AFILE}"
     else
         DBRUNDIR="${DBTEXTDIRECTORY}/${AFILE:0:2}/${AFILE}"
