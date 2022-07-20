@@ -143,7 +143,7 @@ read_run_from_DB()
     else
         OFIL="$(getDBTextFileDirectory ${RRUN})/${RRUN}.${TTOOL}_TEL${TELID}"
     fi
-    if [[ ! -e ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
+    if [[ ! -e ${OFIL} ]] || [[ ! -s ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
         rm -f ${OFIL}
         if [[ USETIME -eq "0" ]]; then
             cmd="./db_${TTOOL}.sh ${RRUN} ${TELID}"
