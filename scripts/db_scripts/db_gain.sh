@@ -3,9 +3,9 @@
 
 if [ ! -n "$2" ] || [ "$1" = "-h" ]; then
 echo "
-db_lasergain: read relative gains from VERITAS ID
+db_gain: read relative gains from VERITAS ID
 
-db_lasergain.sh <run> <tel_id>
+db_gain.sh <run> <tel_id>
 
 (tel_id should start counting at 1)
 "

@@ -211,8 +211,8 @@ read_laser_calibration()
             if [[ $bittest == "0" ]]; then
                 continue
             fi
-            read_run_from_DB lasergain ${L} ${j}
-            read_run_from_DB lasertoffset ${L} ${j}
+            read_run_from_DB gain ${L} ${j}
+            read_run_from_DB toffset ${L} ${j}
         done
     done
 }
