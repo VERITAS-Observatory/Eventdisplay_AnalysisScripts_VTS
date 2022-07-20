@@ -5,15 +5,15 @@ if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
 echo "
 db_VPM: read VPM data from VTS database
 
-db_VPM.sh <tel id> <start date> <stop date>
+db_VPM.sh <start date> <stop date> <tel id>
 
 "
 exit
 fi
 
-TELID="$1"
-STARTDATE="$2"
-ENDDATE="$3"
+STARTDATE="$1"
+ENDDATE="$2"
+TELID="$3"
 
 STARTMJD=$($EVNDISPSYS/bin/printMJD "${STARTDATE}")
 ENDMJD=$($EVNDISPSYS/bin/printMJD "${ENDDATE}")

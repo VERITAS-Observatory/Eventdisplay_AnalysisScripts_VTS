@@ -3,13 +3,13 @@
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
-db_targetname.sh : read target info from VTS database
+db_target.sh : read target info from VTS database
 
-db_targetname.sh "target name"
+db_target.sh "target name"
 
 examples:
 
-   ./db_targetname.sh Crab
+   ./db_target.sh Crab
 
 "
 exit

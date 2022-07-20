@@ -11,9 +11,9 @@ db_rawpointing: read positioner data from VTS database
 exit
 fi
 
-TELID="$1"
-STARTDATE="$2"
-ENDDATE="$3"
+STARTDATE="$1"
+ENDDATE="$2"
+TELID="$3"
 
 TIMESTART=${STARTDATE//:/}
 TIMESTART=${TIMESTART//-/}
