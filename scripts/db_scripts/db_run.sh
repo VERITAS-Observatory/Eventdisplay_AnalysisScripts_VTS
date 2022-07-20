@@ -208,7 +208,7 @@ read_laser_calibration()
         do
             jhex=$(echo "obase=16; $((j))" | bc)
             bittest=$((($excluded_telescopes & 0x$jhex) != 0))
-            if [[ $bittest == "0" ]]; then
+            if [[ $bittest == "0" ]] && [[ $excluded_telescopes != "0" ]]; then
                 continue
             fi
             read_run_from_DB gain ${L} ${j}
