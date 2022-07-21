@@ -46,37 +46,49 @@ getDBTextFileDirectory()
 get_start_time()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
+    if [[ "$1" == "DB" ]]; then
+        field_name="db_start_time"
+    else
+        field_name="data_start_time"
+    fi
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ )); 
             do
-                if [[ ${a[$j]} == "db_start_time" ]]; then
-                    db_start_time_index=$j
+                if [[ ${a[$j]} == "$field_name" ]]; then
+                    start_time_index=$j
                     break;
                 fi
             done
         fi
-        db_start_time="${a[$db_start_time_index]}"
+        start_time="${a[$start_time_index]}"
     done < ${OFIL}
-    echo "${db_start_time}"
+    echo "${start_time}"
 }
 
 get_end_time()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
+    if [[ "$1" == "DB" ]]; then
+        field_name="db_end_time"
+    else
+        field_name="data_end_time"
+    fi
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ )); 
             do
-                if [[ ${a[$j]} == "db_end_time" ]]; then
-                    db_end_time_index=$j
+                if [[ ${a[$j]} == "$field_name" ]]; then
+                    end_time_index=$j
                     break;
                 fi
             done
         fi
-        db_end_time="${a[$db_end_time_index]}"
+        end_time="${a[$end_time_index]}"
     done < ${OFIL}
-    echo "${db_end_time}"
+    # add 1 minute to end time to be save
+    end_time=$(date -d "${end_time} + 1 minutes" +'%Y-%m-%d %H:%M:%S')
+    echo "${end_time}"
 }
 
 get_laser_run()
@@ -145,7 +157,7 @@ read_run_from_DB()
     fi
     if [[ ! -e ${OFIL} ]] || [[ ! -s ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
         rm -f ${OFIL}
-        if [[ USETIME -eq "0" ]]; then
+        if [[ $USETIME -eq "0" ]]; then
             cmd="./db_${TTOOL}.sh ${RRUN} ${TELID}"
         else
             cmd="./db_${TTOOL}.sh \"$(get_start_time)\" \"$(get_end_time)\" ${TELID}"
