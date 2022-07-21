@@ -16,6 +16,7 @@ CALDIR="$ODIR"
 ACUTS=RECONSTRUCTIONRUNPARAMETERFILE
 EDVERSION=VVERSION
 DOWNLOAD=DOWNLOADVBF
+DBTEXTDIRECTORY=DATABASETEXT
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -74,12 +75,20 @@ if [[ $DOWNLOAD == "1" ]] || [[ $DOWNLOAD == "2" ]]; then
    fi
    echo "DOWNLOAD STATUS $DOWNLOAD"
 fi
+
+if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
+    OPT=( -dbtextdirectory ${DBTEXTDIRECTORY} )
+fi
         
 #########################################
 # pedestal calculation
 if [[ $CALIB == "1" || ( $CALIB == "2" || $CALIB == "4" ) ]]; then
     rm -f $LOGDIR/$RUN.ped.log
-    $EVNDISPSYS/bin/evndisp -runmode=1 -runnumber="$RUN" -reconstructionparameter "$ACUTS" -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.ped.log"
+    $EVNDISPSYS/bin/evndisp \
+        -runmode=1 -runnumber="$RUN" \
+        -reconstructionparameter "$ACUTS" \
+        "${OPT[@]}" \
+        -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.ped.log"
     echo "RUN$RUN PEDLOG $LOGDIR/$RUN.ped.log"
 fi
 
@@ -116,12 +125,12 @@ fi
 # average tzero calculation
 if [[ $CALIB == "1" || ( $CALIB == "3" || $CALIB == "4" ) ]]; then
     rm -f $LOGDIR/$RUN.tzero.log
-# v485    $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -reconstructionparameter $ACUTS ${OPT[@]} &> $LOGDIR/$RUN.tzero.log 
-    if [[ $EDVERSION = "v4"* ]]; then
-        $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -calibrationsummin=50 -reconstructionparameter "$ACUTS" "${OPT[@]}" -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log" 
-    else
-        $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -sumwindowaveragetime=6 -calibrationsummin=50 -reconstructionparameter "$ACUTS" "${OPT[@]}" -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log" 
-    fi
+    $EVNDISPSYS/bin/evndisp \
+        -runnumber=$RUN -runmode=7 \
+        -calibrationsummin=50 \
+        -reconstructionparameter "$ACUTS" \
+        "${OPT[@]}" \
+        -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log" 
     echo "RUN$RUN TZEROLOG $LOGDIR/$RUN.tzero.log"
 fi
 
@@ -141,12 +150,18 @@ fi
 
 ## double pass correction
 # OPT+=( -nodp2005 )
+# OPT+=( -writeimagepixellist )
 
 #########################################
 # run eventdisplay
 LOGFILE="$LOGDIR/$RUN.log"
 rm -f "$LOGDIR/$RUN.log"
-$EVNDISPSYS/bin/evndisp -runnumber="$RUN" -reconstructionparameter "$ACUTS" -outputfile "$TEMPDIR/$RUN.root" "${OPT[@]}" -calibrationdirectory "$CALDIR" &> "$LOGFILE"
+$EVNDISPSYS/bin/evndisp \
+    -runnumber="$RUN" \
+    -reconstructionparameter "$ACUTS" \
+    -outputfile "$TEMPDIR/$RUN.root" \
+    "${OPT[@]}" \
+    -calibrationdirectory "$CALDIR" &> "$LOGFILE"
 # DST $EVNDISPSYS/bin/evndisp -runnumber=$RUN -nevents=250000 -runmode=4 -readcalibdb -dstfile $TEMPDIR/$RUN.dst.root -reconstructionparameter $ACUTS -outputfile $TEMPDIR/$RUN.root ${OPT[@]} &> "$LOGFILE"
 echo "RUN$RUN EVNDISPLOG $LOGFILE"
 

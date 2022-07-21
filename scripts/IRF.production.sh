@@ -15,7 +15,7 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 
 required parameters:
 
-    <sim type>              original VBF file simulation type (e.g. GRISU-SW6, CARE_June1702)
+    <sim type>              original VBF file simulation type (e.g. GRISU-SW6, CARE_June2020, CARE_RedHV)
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -41,7 +41,7 @@ optional parameters:
 
     [sim directory]         directory containing simulation VBF files
 
-    example:     ./IRF.production.sh CARE_June1702 ANALYSETABLES V6 61 0
+    example:     ./IRF.production.sh CARE_June2020 ANALYSETABLES V6 61 0
 
 --------------------------------------------------------------------------------
 "
