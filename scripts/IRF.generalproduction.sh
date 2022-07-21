@@ -37,10 +37,12 @@ IRFTYPE=$2
 process_irfs()
 {
     EPOCHS=$(cat $4 | sort -u)
+    # EPOCHS=(V6_2019_2020w V6_2020_2021w V6_2021_2022w )
+    # for E in ${EPOCHS[@]};
     for E in $EPOCHS
     do
         echo $E $1 $2 $3
-        # ./IRF.production.sh $2 $1 $E $3
+        ./IRF.production.sh $2 $1 $E $3
     done
 }
 
