@@ -76,7 +76,7 @@ if [[ $DOWNLOAD == "1" ]] || [[ $DOWNLOAD == "2" ]]; then
    echo "DOWNLOAD STATUS $DOWNLOAD"
 fi
 
-if [[ ! "${DBTEXTDIRECTORY}" -eq "0" ]]; then
+if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     OPT=( -dbtextdirectory ${DBTEXTDIRECTORY} )
 fi
         
