@@ -220,7 +220,7 @@ do
     fi
 
     if [[ ! -d ${DBRUNDIR} ]]; then
-        echo "SLEEPING ${DBTEXTDIRECTORY}/$AFILE"
+        echo "SLEEPING ${DBRUNDIR}/$AFILE"
         sleep ${SLEEPABIT}
     fi
 done
