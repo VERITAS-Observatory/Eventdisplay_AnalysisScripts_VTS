@@ -17,6 +17,7 @@ EEFFAREAFILE=EFFFILE
 RECID="RECONSTRUCTIONID"
 CUTSLIST="GAMMACUTS"
 EPOCH="ARRAYEPOCH"
+ATM="ATMOS"
 DISPBDT=USEDISP
 
 # output directory
@@ -24,21 +25,26 @@ CUTSFILE=${CUTSLIST[0]%%.dat}
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
 OSUBDIR="${ODIR}/EffectiveAreas_${CUTS_NAME}"
+if [ $DISPBDT -eq 1 ]; then
+    OSUBDIR="${OSUBDIR}_DISP"
+fi
 mkdir -p "$OSUBDIR"
 chmod g+w "$OSUBDIR"
 echo "Output directory for data products: " $OSUBDIR
 
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
+echo "MSCW options: $MOPT"
+
 # dispBDT reconstruction
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
     if [[ ${EPOCH} == *"redHV"* ]]; then
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}redHV/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_redHV/"
     else
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}/"
     fi
     if [[ "${ZA}" -lt "40" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
@@ -51,7 +57,6 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
-echo "MSCW options: $MOPT"
 
 for NOISE in ${NNOISE[@]}; do
   for WOBBLE in ${NWOBBLE[@]}; do
@@ -96,7 +101,10 @@ for NOISE in ${NNOISE[@]}; do
     outputfilename="$DDIR/$OFILE.mscw.root"
     logfile="$OSUBDIR/$OFILE.log"
     echo "Starting analysis (log file: $logfile)"
-    $EVNDISPSYS/bin/mscw_energy $MOPT -inputfilelist $OSUBDIR/$OFILE.list -outputfile $outputfilename -noise=$NOISE &> $logfile
+    $EVNDISPSYS/bin/mscw_energy $MOPT \
+        -inputfilelist $OSUBDIR/$OFILE.list \
+        -outputfile $outputfilename \
+        -noise=$NOISE &> $logfile
     rm -rf ${DDIR}/evndisp
 
     #####################
@@ -117,6 +125,9 @@ for NOISE in ${NNOISE[@]}; do
             exit 1
         fi
         OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
+        if [ $DISPBDT -eq 1 ]; then
+            OSUBDIR="${OSUBDIR}_DISP"
+        fi
         echo -e "Output files will be written to:\n $OSUBDIR"
         mkdir -p $OSUBDIR
         chmod -R g+w $OSUBDIR

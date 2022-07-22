@@ -144,6 +144,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|GAMMACUTS|${CUTSFILE}|" \
+    -e "s|ATMOS|${ATM}|" \
     -e "s|INPUTDIR|$INDIR|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
