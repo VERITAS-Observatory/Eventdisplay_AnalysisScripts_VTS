@@ -87,7 +87,7 @@ get_end_time()
         end_time="${a[$end_time_index]}"
     done < ${OFIL}
     # add 1 minute to end time to be save
-    end_time=$(date -d "${end_time} + 1 minutes" +'%Y-%m-%d %H:%M:%S')
+    end_time=$(date -d "${end_time} 1 minutes" +'%Y-%m-%d %H:%M:%S')
     echo "${end_time}"
 }
 
