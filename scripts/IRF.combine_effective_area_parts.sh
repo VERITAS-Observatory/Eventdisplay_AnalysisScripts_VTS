@@ -9,7 +9,7 @@ if [[ $# -lt 5 ]]; then
 echo "
 IRF generation: combine partial effective area files
 
-IRF.combine_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <Rec ID> <sim type> [name] [analysis type]
+IRF.combine_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <Rec ID> <sim type> [name] [analysis type] [dispBDT]
 
 required parameters:
     
@@ -32,6 +32,10 @@ optional parameters:
 
    [analysis type]          type of analysis (default="")
     
+    
+    [dispBDT]              use dispDBDT angular reconstruction
+                           (default: 0; use: 1)
+                            
 
 examples:
 
@@ -61,6 +65,7 @@ RECID=$4
 SIMTYPE=$5
 [[ "$6" ]] && EANAME=$6 || EANAME="${DATE}"
 [[ "$7" ]] && ANALYSIS_TYPE=$7  || ANALYSIS_TYPE=""
+[[ "$8" ]] && DISPBDT=$8 || DISPBDT=0
 PARTICLE_TYPE="gamma"
 
 # Generate EA base file name based on cuts file
@@ -71,6 +76,9 @@ CUTS_NAME=${CUTS_NAME%%.dat}
 # input directory with effective areas
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_${PARTICLE_TYPE}/EffectiveAreas_${CUTS_NAME}"
+    if [[ $DISPBDT == "1" ]]; then
+        INDIR="${INDIR}_DISP"
+    fi
 fi
 if [[ ! -d $INDIR ]]; then
     echo "Error, could not locate input directory. Locations searched:"
@@ -117,9 +125,12 @@ METH="GEO"
 if [[ ! -z $ANALYSIS_TYPE ]]; then
     METH=${ANALYSIS_TYPE}
 fi
+if [[ $DISPBDT == "1" ]]; then
+    METH="${METH}-DISP"
+fi
 OFILE="effArea-${IRFVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM${ATMOS}-T${T}"
 
-FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}-$(date +%s%N)"
+FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}-${DISPBDT}-$(date +%s%N)"
 rm -f $FSCRIPT.sh
 
 sed -e "s|INPUTFILES|$INFILES|" \
@@ -127,13 +138,13 @@ sed -e "s|INPUTFILES|$INFILES|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
 chmod u+x "$FSCRIPT.sh"
-echo "$FSCRIPT.sh"
+echo "Run script written to: $FSCRIPT"
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *"ERROR"* ]]; then
-    echo $SUBC
+    echo "$SUBC"
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
@@ -143,8 +154,8 @@ elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
     condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
-elif [[ "$SUBC" == *simple* ]] ; then
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
+elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
 

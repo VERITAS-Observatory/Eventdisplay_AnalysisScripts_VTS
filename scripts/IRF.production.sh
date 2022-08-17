@@ -66,7 +66,7 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=0
+DISPBDT=1
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -223,7 +223,8 @@ for VX in $EPOCH; do
                     echo "combine effective areas $CUTS"
                    $(dirname "$0")/IRF.combine_effective_area_parts.sh \
                        "$CUTS" "$VX" "$ATM" \
-                       "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE"
+                       "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE" \
+                       "$DISPBDT"
                 done # cuts
             done
             continue
