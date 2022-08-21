@@ -10,6 +10,7 @@ MCFILE=DATAFILE
 ODIR=OUTPUTDIR
 CUTSLIST="GAMMACUTS"
 EFFAREAFILE=EFFFILE
+DISPBDT=USEDISP
 
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then 
@@ -43,6 +44,9 @@ for CUTSFILE in $CUTSLIST; do
     fi
 
     OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
+    if [[ $DISPBDT == "1" ]]; then
+        OSUBDIR="${OSUBDIR}_DISP"
+    fi
     echo -e "Output files will be written to:\n $OSUBDIR"
     mkdir -p $OSUBDIR
     chmod -R g+w $OSUBDIR
