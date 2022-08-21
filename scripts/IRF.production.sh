@@ -66,7 +66,7 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=1
+DISPBDT=0
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -134,11 +134,11 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
     # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 30 35 )
-    # WOBBLE_OFFSETS=( 0.0 )
-    # NSB_LEVELS=( 400 )
-    # ZENITH_ANGLES=( 40 )
-    # WOBBLE_OFFSETS=( 0.75 )
+    # ZENITH_ANGLES=( 50 )
+    # WOBBLE_OFFSETS=( 1.25 )
+    # NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 20 40 60 )
+    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
     # NSB_LEVELS=( 400 )
     # (END TEMPORARY)
     ######################################
@@ -193,6 +193,7 @@ CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
          ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -354,7 +355,8 @@ for VX in $EPOCH; do
                                 echo "combine effective areas $CUTS"
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
-                                   $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                                   $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                                   $DISPBDT
                             done # cuts
                         done #recID
                     fi
