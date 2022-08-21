@@ -18,7 +18,7 @@ ATM="ATMOS"
 DISPBDT=USEDISP
 
 # output directory
-OSUBDIR="$ODIR/MSCW_RECID$RECID"
+OSUBDIR="$ODIR/MSCW_RECID${RECID}"
 if [ $DISPBDT -eq 1 ]; then
     OSUBDIR="${OSUBDIR}_DISP"
 fi
@@ -46,7 +46,9 @@ echo "MSCW options: $MOPT"
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT="$MOPT -minangle_stereo_reconstruction=20."
+    MOPT="$MOPT -maxloss=0.2"
+    # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_redHV/"
     else

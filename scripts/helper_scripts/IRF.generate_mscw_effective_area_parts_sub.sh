@@ -40,7 +40,9 @@ echo "MSCW options: $MOPT"
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT="$MOPT -minangle_stereo_reconstruction=20."
+    MOPT="$MOPT -maxloss=0.2"
+    # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_redHV/"
     else
@@ -66,6 +68,17 @@ for NOISE in ${NNOISE[@]}; do
     # file names
     OFILE="${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
 
+    # echo "CHECKING FOR ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root"
+    # if [[ -e ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root ]]; then
+    #    filesize=$(du -h ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root | cut -f 1)
+    #    echo "FOUND with size $filesize"
+    #    if [[ $filesize -ge 800 ]]; then
+    #        continue
+    #    fi
+    # else
+    #     echo "NOT FOUND"
+    # fi
+
     # temporary directory
     if [[ -n "$TMPDIR" ]]; then 
         DDIR="$TMPDIR/MSCW_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
@@ -74,6 +87,7 @@ for NOISE in ${NNOISE[@]}; do
     fi
     mkdir -p "$DDIR"
     echo "Temporary directory: $DDIR"
+
     #####################
     # run mscw_energy
     rm -f $OSUBDIR/$OFILE.log
