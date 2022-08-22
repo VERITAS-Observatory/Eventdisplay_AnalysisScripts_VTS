@@ -66,7 +66,7 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=0
+DISPBDT=1
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -158,7 +158,7 @@ else
 fi
 echo "Zenith Angles: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
-echo "Wobble offsets: $WOBBLE_OFFSETS"
+echo "Wobble offsets: ${WOBBLE_OFFSETS}"
 
 # Set gamma/hadron cuts
 if [[ $CUTSLISTFILE != "" ]]; then
@@ -272,11 +272,11 @@ for VX in $EPOCH; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               FIXEDWOBBLE="0.25 0.5 0.75"
+               FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB=200
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                   FIXEDNSB="160 250 250"
+                   FIXEDNSB="160 200 250"
                fi
                $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
                    $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
@@ -341,7 +341,6 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
-                            # warning: do not mix disp and geo
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
