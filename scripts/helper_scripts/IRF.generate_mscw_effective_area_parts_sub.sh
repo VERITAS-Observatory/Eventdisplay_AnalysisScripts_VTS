@@ -48,12 +48,14 @@ if [ $DISPBDT -eq 1 ]; then
     else
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}/"
     fi
-    if [[ "${ZA}" -lt "40" ]]; then
+    if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
-    elif [[ "${ZA}" -lt "50" ]]; then
+    elif [[ "${ZA}" -lt "48" ]]; then
         DISPDIR="${DISPDIR}/MZE/"
-    else
+    elif [[ "${ZA}" -lt "58" ]]; then
         DISPDIR="${DISPDIR}/LZE/"
+    else
+        DISPDIR="${DISPDIR}/XZE/"
     fi
     MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"

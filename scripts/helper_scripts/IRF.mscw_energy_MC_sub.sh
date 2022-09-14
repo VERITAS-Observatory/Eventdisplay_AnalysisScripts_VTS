@@ -46,7 +46,7 @@ echo "MSCW options: $MOPT"
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT="$MOPT -minangle_stereo_reconstruction=20."
     MOPT="$MOPT -maxloss=0.2"
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
@@ -54,12 +54,14 @@ if [ $DISPBDT -eq 1 ]; then
     else
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}/"
     fi
-    if [[ "${ZA}" -lt "40" ]]; then
+    if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
-    elif [[ "${ZA}" -lt "50" ]]; then
+    elif [[ "${ZA}" -lt "48" ]]; then
         DISPDIR="${DISPDIR}/MZE/"
-    else
+    elif [[ "${ZA}" -lt "58" ]]; then
         DISPDIR="${DISPDIR}/LZE/"
+    else
+        DISPDIR="${DISPDIR}/XZE/"
     fi
     MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
