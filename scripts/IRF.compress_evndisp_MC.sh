@@ -120,8 +120,8 @@ NOISEFILE="NO_NOISEFILE"
 #######################################################
 # GRISU simulations
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    if [[ -z $OBS_EVNDISP_AUX_DIR ]]; then
-        OBS_EVNDISP_AUX_DIR=$VERITAS_EVNDISP_AUX_DIR
+    if [[ -z $VERITAS_EVNDISP_AUX_DIR ]]; then
+        VERITAS_EVNDISP_AUX_DIR=$VERITAS_EVNDISP_AUX_DIR
     fi
     # Input files (observe that these might need some adjustments)
     if [[ ${EPOCH:0:2} == "V4" ]]; then
@@ -130,10 +130,10 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
         else
             VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V4_Oct2012_SummerV4ForProcessing_20130611_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         fi
-        NOISEFILE="$OBS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
+        NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
     elif [[ ${EPOCH:0:2} == "V5" ]]; then
         VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V5_Oct2012_newArrayConfig_20121027_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
-        NOISEFILE="$OBS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
+        NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
     elif [[ ${EPOCH:0:2} == "V6" ]]; then
         if [[ $ATM == "21-redHV" ]]; then
             VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_ReducedHV_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
@@ -144,7 +144,7 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
         else
             VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_20121127_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         fi
-        NOISEFILE="$OBS_EVNDISP_AUX_DIR/NOISE/NOISE${NOISE}_20120827_v420.grisu"
+        NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE${NOISE}_20120827_v420.grisu"
     fi
 #######################################################
 elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
