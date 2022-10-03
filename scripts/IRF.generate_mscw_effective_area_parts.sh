@@ -133,7 +133,7 @@ echo "Now processing zenith angle $ZA, wobble ${WOFFS}, noise level ${NOISS}"
 EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg"
 
 # make run script
-FSCRIPT="$LOGDIR/MSCWEFFAREA-ARRAY-$EPOCH-$ZA-$PARTICLE-${NOISE[0]}-${CUTS_NAME}-$DATE.MC_$(date +%s)"
+FSCRIPT="$LOGDIR/MSCWEFFAREA-ARRAY-$EPOCH-$ZA-$PARTICLE-${NOISE[0]}-${CUTS_NAME}-$DISPBDT-$DATE.MC_$(date +%s)"
 rm -f "$FSCRIPT.sh"
 sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISS|" \
