@@ -15,7 +15,8 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 
 required parameters:
 
-    <sim type>              original VBF file simulation type (e.g. GRISU-SW6, CARE_June2020, CARE_RedHV)
+    <sim type>              original VBF file simulation type 
+                            (e.g. GRISU-SW6, CARE_June2020, CARE_RedHV, CARE_UV)
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -117,6 +118,11 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
     WOBBLE_OFFSETS=( 0.5 )
     NEVENTS="15000000"
+elif [ "${SIMTYPE}" = "CARE_UV" ]; then
+    DDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
+    ZENITH_ANGLES=$(ls ${DDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    NSB_LEVELS=$(ls ${DDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
+    WOBBLE_OFFSETS=( 0.5 ) 
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     DDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/
     ZENITH_ANGLES=$(ls ${DDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
@@ -136,9 +142,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 1.25 )
-    # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 20 40 60 )
-    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
+    NSB_LEVELS=( 200 400 )
+    ZENITH_ANGLES=( 20 40 60 )
+    WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
     # NSB_LEVELS=( 400 )
     # (END TEMPORARY)
     ######################################
@@ -311,6 +317,8 @@ for VX in $EPOCH; do
                           SIMDIR=$VERITAS_DATA_DIR/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
                        elif [[ ${SIMTYPE:0:13} = "CARE_June1425" ]]; then
                           SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
+                       elif [[ ${SIMTYPE:0:10} = "CARE_UV" ]]; then
+                          SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1409_UV/
                        elif [[ ${SIMTYPE:0:10} = "CARE_RedHV" ]]; then
                           SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1702_RHV/
                        elif [[ ${SIMTYPE:0:13} = "CARE_June2020" ]]; then
