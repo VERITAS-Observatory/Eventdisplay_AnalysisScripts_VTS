@@ -179,6 +179,9 @@ if [[ $CUTSLISTFILE != "" ]]; then
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+elif [ "${SIMTYPE}" = "CARE_UV" ]; then
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
