@@ -82,6 +82,7 @@ SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
 SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
+SIMTYPE_DEFAULT_V6UV="CARE_UV"
 
 ANATYPE="GEO"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
@@ -249,6 +250,11 @@ for RUN in ${RUNS[@]}; do
     if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
        ATMO=${ATMO/62/61}
     fi
+    # V6 UV only for ATM 21
+    if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
+       ATMO=${ATMO/62/21}
+       ATMO=${ATMO/61/21}
+    fi
     
     if [[ $SIMTYPE == "DEFAULT" ]]; then
         if [[ $EPOCH == *"V4"* ]]; then
@@ -259,6 +265,9 @@ for RUN in ${RUNS[@]}; do
             REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V5}
         elif [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
             REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V6redHV}
+            REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V6}
+        elif [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
+            REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V6UV}
             REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V6}
         else
             REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V6}
