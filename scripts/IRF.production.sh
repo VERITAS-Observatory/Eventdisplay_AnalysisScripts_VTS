@@ -67,7 +67,7 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=1
+DISPBDT=0
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -178,9 +178,11 @@ if [[ $CUTSLISTFILE != "" ]]; then
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoftOpen.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "CARE_UV" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoftOpen.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
@@ -200,9 +202,9 @@ CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
          ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
          ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
+#          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
