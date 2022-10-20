@@ -40,7 +40,7 @@ echo "MSCW options: $MOPT"
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=20."
+    MOPT="$MOPT -minangle_stereo_reconstruction=10."
     MOPT="$MOPT -maxloss=0.2"
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
