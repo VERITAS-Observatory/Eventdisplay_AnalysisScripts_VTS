@@ -216,11 +216,13 @@ do
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
+    elif [[ "$SUBC" == *test* ]]; then
+        echo "TESTING SCRIPT $FSCRIPT.sh"
     fi
 
-    if [[ ! -d ${DBRUNDIR} ]]; then
-        echo "SLEEPING ${DBRUNDIR}/$AFILE"
+    if [[ ! -d ${DBRUNDIR} ]] || [[ ${DBTEXTDIR} == "0" ]]; then
+        echo "SLEEPING (${SLEEPABIT}) ${DBRUNDIR}/$AFILE"
         sleep ${SLEEPABIT}
     fi
 done

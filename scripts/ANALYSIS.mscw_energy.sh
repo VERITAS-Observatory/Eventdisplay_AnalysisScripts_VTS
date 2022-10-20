@@ -71,6 +71,7 @@ SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
 SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV"
+SIMTYPE_DEFAULT_V6_UV="CARE_UV"
 
 # Read runlist
 if [ ! -f "$RLIST" ] ; then
@@ -133,6 +134,9 @@ do
             if [ "$HVSETTINGS" == "obsLowHV" ]; then
                 SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6_REDHV"
                 ATMO="61"
+            elif [ "$HVSETTINGS" == "obsFilter" ]; then
+                SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6_UV"
+                ATMO="21"
             else
                 SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6"
             fi
@@ -159,6 +163,8 @@ do
     if [[ $DISPBDT == "1" ]]; then
         if [ "$HVSETTINGS" == "obsLowHV" ]; then
             DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_redHV/"
+        elif [ "$HVSETTINGS" == "obsFilter" ]; then
+            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_UV/"
         else
             DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}/"
         fi
