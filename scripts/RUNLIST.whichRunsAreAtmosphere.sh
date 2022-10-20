@@ -1,5 +1,5 @@
 #!/bin/bash
-# from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22) or winter(21)
+# from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22/62) or winter(21/61)
 
 # check to see if input is from terminal, or from a pipe
 ISPIPEFILE=`readlink /dev/fd/0`
@@ -7,11 +7,11 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} && $# < 2 ]]; then # its a terminal 
     echo
     echo "From a runlist or pipe, prints the run numbers that are of a particular atmosphere."
     echo " $ `basename $0` [w|21|s|22] <file of runs>" ; echo
-    echo "w = 21 = winter, s = 22 = summer" ; echo
+    echo "w = 21 = 61 = winter, s = 22 = 62 = summer" ; echo
     echo "Print list of summer runs:"
     echo " $ `basename $0` s myrunlist.dat" ; echo
     echo "Print list of winter runs:"
-    echo " $ `basename $0` 21 myrunlist.dat" ; echo
+    echo " $ `basename $0` 61 myrunlist.dat" ; echo
     echo "Works with pipes : " 
     echo " $ cat myrunlist.dat | `basename $0` w" ; echo
     echo "Summer/winter transition dates taken from $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
@@ -33,10 +33,10 @@ SUMMFLAG=false
 WINTFLAG=false
 LOWARG=`echo "$1" | tr '[A-Z]' '[a-z]'` # make all uppercase letters in arg 1 lowercase, for easier handling
 #echo "\$LOWARG: '$LOWARG'"
-if [[ "$LOWARG" == *w* ]] || [[ "$LOWARG" == "21" ]] ; then
+if [[ "$LOWARG" == *w* ]] || [[ "$LOWARG" == "21" ]] || [[ "$LOWARG" == "61" ]] ; then
 	WINTFLAG=true
 fi
-if [[ "$LOWARG" == *s* ]] || [[ "$LOWARG" == "22" ]] ; then
+if [[ "$LOWARG" == *s* ]] || [[ "$LOWARG" == "22" ]] || [[ "$LOWARG" == "62" ]] ; then
 	SUMMFLAG=true
 fi
 #echo "\$WINTFLAG:$WINTFLAG    \$SUMMFLAG:$SUMMFLAG"
