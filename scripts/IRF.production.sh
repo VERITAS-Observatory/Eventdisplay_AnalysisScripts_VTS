@@ -66,7 +66,7 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=0
+DISPBDT=1
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -134,11 +134,11 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
     # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 30 35 )
-    # WOBBLE_OFFSETS=( 0.0 )
-    # NSB_LEVELS=( 400 )
-    # ZENITH_ANGLES=( 40 )
-    # WOBBLE_OFFSETS=( 0.75 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSETS=( 1.25 )
+    # NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 20 40 60 )
+    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
     # NSB_LEVELS=( 400 )
     # (END TEMPORARY)
     ######################################
@@ -158,7 +158,7 @@ else
 fi
 echo "Zenith Angles: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
-echo "Wobble offsets: $WOBBLE_OFFSETS"
+echo "Wobble offsets: ${WOBBLE_OFFSETS}"
 
 # Set gamma/hadron cuts
 if [[ $CUTSLISTFILE != "" ]]; then
@@ -193,6 +193,7 @@ CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
          ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -223,7 +224,8 @@ for VX in $EPOCH; do
                     echo "combine effective areas $CUTS"
                    $(dirname "$0")/IRF.combine_effective_area_parts.sh \
                        "$CUTS" "$VX" "$ATM" \
-                       "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE"
+                       "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE" \
+                       "$DISPBDT"
                 done # cuts
             done
             continue
@@ -270,11 +272,11 @@ for VX in $EPOCH; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               FIXEDWOBBLE="0.25 0.5 0.75"
+               FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB=200
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                   FIXEDNSB="160 250 250"
+                   FIXEDNSB="160 200 250"
                fi
                $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
                    $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
@@ -339,7 +341,6 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
-                            # warning: do not mix disp and geo
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
@@ -353,7 +354,8 @@ for VX in $EPOCH; do
                                 echo "combine effective areas $CUTS"
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
-                                   $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                                   $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                                   $DISPBDT
                             done # cuts
                         done #recID
                     fi

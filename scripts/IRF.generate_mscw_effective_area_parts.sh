@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to analyse MC files with lookup tables
+# analyse MC files with lookup tables
 # and run effective area analysis
 
 # qsub parameters
@@ -36,6 +36,7 @@ required parameters:
     
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
+                            Set to 0 for all telescopes, 1 to cut T1, etc.
 
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
 
@@ -108,7 +109,6 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
 fi
 echo "Input file directory: $INDIR"
 
-
 # Output file directory
 if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
@@ -144,6 +144,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|GAMMACUTS|${CUTSFILE}|" \
+    -e "s|ATMOS|${ATM}|" \
     -e "s|INPUTDIR|$INDIR|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 

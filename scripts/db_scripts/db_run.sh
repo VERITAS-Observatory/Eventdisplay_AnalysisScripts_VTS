@@ -87,7 +87,7 @@ get_end_time()
         end_time="${a[$end_time_index]}"
     done < ${OFIL}
     # add 1 minute to end time to be save
-    end_time=$(date -d "${end_time} + 1 minutes" +'%Y-%m-%d %H:%M:%S')
+    end_time=$(date -d "${end_time} 1 minutes" +'%Y-%m-%d %H:%M:%S')
     echo "${end_time}"
 }
 
@@ -124,6 +124,21 @@ get_excluded_telescopes()
     echo ${excluded_telescopes}
 }
 
+
+hasbitset() 
+{
+    local num=$1
+    local bit=$2
+    bitset="0"
+
+    if (( num & 2**(bit-1) )); then
+        bitset="1"
+    else
+        bitset="0"
+    fi
+    echo $bitset
+}
+
 get_source_id()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
@@ -155,7 +170,8 @@ read_run_from_DB()
     else
         OFIL="$(getDBTextFileDirectory ${RRUN})/${RRUN}.${TTOOL}_TEL${TELID}"
     fi
-    if [[ ! -e ${OFIL} ]] || [[ ! -s ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
+    # if [[ ! -e ${OFIL} ]] || [[ ! -s ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
+    if [[ ! -e ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
         rm -f ${OFIL}
         if [[ $USETIME -eq "0" ]]; then
             cmd="./db_${TTOOL}.sh ${RRUN} ${TELID}"
@@ -218,9 +234,8 @@ read_laser_calibration()
         excluded_telescopes=$(get_excluded_telescopes ${L})
         for (( j=1; j<=${NTEL}; j++ ));
         do
-            jhex=$(echo "obase=16; $((j))" | bc)
-            bittest=$((($excluded_telescopes & 0x$jhex) != 0))
-            if [[ $bittest == "0" ]] && [[ $excluded_telescopes != "0" ]]; then
+            bittest=$(hasbitset $excluded_telescopes $j)
+            if [[ $bittest == "1" ]] && [[ $excluded_telescopes != "0" ]]; then
                 continue
             fi
             read_run_from_DB gain ${L} ${j}

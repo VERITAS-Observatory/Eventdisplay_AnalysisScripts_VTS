@@ -17,6 +17,7 @@ EEFFAREAFILE=EFFFILE
 RECID="RECONSTRUCTIONID"
 CUTSLIST="GAMMACUTS"
 EPOCH="ARRAYEPOCH"
+ATM="ATMOS"
 DISPBDT=USEDISP
 
 # output directory
@@ -24,34 +25,42 @@ CUTSFILE=${CUTSLIST[0]%%.dat}
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
 OSUBDIR="${ODIR}/EffectiveAreas_${CUTS_NAME}"
+if [ $DISPBDT -eq 1 ]; then
+    OSUBDIR="${OSUBDIR}_DISP"
+fi
 mkdir -p "$OSUBDIR"
 chmod g+w "$OSUBDIR"
 echo "Output directory for data products: " $OSUBDIR
 
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
+echo "MSCW options: $MOPT"
+
 # dispBDT reconstruction
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT="$MOPT -minangle_stereo_reconstruction=20."
+    MOPT="$MOPT -maxloss=0.2"
+    # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}redHV/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_redHV/"
     else
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH:0:2}/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}/"
     fi
-    if [[ "${ZA}" -lt "40" ]]; then
+    if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
-    elif [[ "${ZA}" -lt "50" ]]; then
+    elif [[ "${ZA}" -lt "48" ]]; then
         DISPDIR="${DISPDIR}/MZE/"
-    else
+    elif [[ "${ZA}" -lt "58" ]]; then
         DISPDIR="${DISPDIR}/LZE/"
+    else
+        DISPDIR="${DISPDIR}/XZE/"
     fi
     MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
-echo "MSCW options: $MOPT"
 
 for NOISE in ${NNOISE[@]}; do
   for WOBBLE in ${NWOBBLE[@]}; do
@@ -61,6 +70,17 @@ for NOISE in ${NNOISE[@]}; do
     # file names
     OFILE="${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
 
+    # echo "CHECKING FOR ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root"
+    # if [[ -e ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root ]]; then
+    #    filesize=$(du -h ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root | cut -f 1)
+    #    echo "FOUND with size $filesize"
+    #    if [[ $filesize -ge 800 ]]; then
+    #        continue
+    #    fi
+    # else
+    #     echo "NOT FOUND"
+    # fi
+
     # temporary directory
     if [[ -n "$TMPDIR" ]]; then 
         DDIR="$TMPDIR/MSCW_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
@@ -69,6 +89,7 @@ for NOISE in ${NNOISE[@]}; do
     fi
     mkdir -p "$DDIR"
     echo "Temporary directory: $DDIR"
+
     #####################
     # run mscw_energy
     rm -f $OSUBDIR/$OFILE.log
@@ -96,7 +117,10 @@ for NOISE in ${NNOISE[@]}; do
     outputfilename="$DDIR/$OFILE.mscw.root"
     logfile="$OSUBDIR/$OFILE.log"
     echo "Starting analysis (log file: $logfile)"
-    $EVNDISPSYS/bin/mscw_energy $MOPT -inputfilelist $OSUBDIR/$OFILE.list -outputfile $outputfilename -noise=$NOISE &> $logfile
+    $EVNDISPSYS/bin/mscw_energy $MOPT \
+        -inputfilelist $OSUBDIR/$OFILE.list \
+        -outputfile $outputfilename \
+        -noise=$NOISE &> $logfile
     rm -rf ${DDIR}/evndisp
 
     #####################
@@ -117,6 +141,9 @@ for NOISE in ${NNOISE[@]}; do
             exit 1
         fi
         OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
+        if [ $DISPBDT -eq 1 ]; then
+            OSUBDIR="${OSUBDIR}_DISP"
+        fi
         echo -e "Output files will be written to:\n $OSUBDIR"
         mkdir -p $OSUBDIR
         chmod -R g+w $OSUBDIR
