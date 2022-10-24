@@ -89,10 +89,8 @@ if [[ $IRFVERSION = "v4"* ]]; then
     if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
       ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
     fi
-else
-    ACUTS="EVNDISP.reconstruction.runparameter"
-    if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
-      ACUTS="EVNDISP.reconstruction.runparameter.NN"
+    if [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
+      ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
     fi
 fi
 
@@ -136,15 +134,15 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${DDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEMPORARY
-    # NSB_LEVELS=( 100 130 160 200 250 )
-    # ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    NSB_LEVELS=( 100 130 160 200 250 300 )
+    ZENITH_ANGLES=( 20 30 35 40 )
+    WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 1.25 )
-    NSB_LEVELS=( 200 400 )
-    ZENITH_ANGLES=( 20 40 60 )
-    WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
+    # NSB_LEVELS=( 200 400 )
+    # ZENITH_ANGLES=( 20 40 60 )
+    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
     # NSB_LEVELS=( 400 )
     # (END TEMPORARY)
     ######################################
