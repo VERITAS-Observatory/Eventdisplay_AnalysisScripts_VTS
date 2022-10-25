@@ -1,8 +1,8 @@
 #!/bin/bash
 # combine many effective area files into one
 
-# qsub parameters
-h_cpu=11:29:00; h_vmem=6000M; tmpdir_size=10G
+# job requirements
+h_cpu=11:29:00; h_vmem=4000M; tmpdir_size=1G
 
 if [[ $# -lt 5 ]]; then
 # begin help message
