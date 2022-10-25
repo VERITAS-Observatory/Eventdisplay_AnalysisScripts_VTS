@@ -1,4 +1,6 @@
 # scripts to prepare a release
+#
+# TODO needs to be adapted to v4
 # 
 # includes
 # - testing
@@ -42,8 +44,6 @@ LIST="runlist_releaseTesting"
 ERUN="EVNDISP.reconstruction.runparameter.NN"
 ANAMETHOD="NN"
 
-ERUN="EVNDISP.reconstruction.runparameter.TL5025"
-ANAMETHOD="TL5025"
 
 SIMSUB=""
 
