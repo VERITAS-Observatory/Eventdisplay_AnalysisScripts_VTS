@@ -219,7 +219,7 @@ do
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-	$FSCRIPT.sh |& tee "$FSCRIPT.log"
+        $FSCRIPT.sh |& tee "$FSCRIPT.log"
     fi
 done
 
