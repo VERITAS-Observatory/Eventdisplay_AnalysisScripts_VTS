@@ -1,5 +1,5 @@
 #!/bin/bash
-# prepar a condor job submission file
+# prepare a condor job submission file
 
 if [ "$1" = "-h" ]; then
 echo "
@@ -12,10 +12,12 @@ fi
 
 SUBFIL=${1}.condor
 rm -f ${SUBFIL}
+echo "JobBatchName = ${1}" > ${SUBFIL}
 echo "Executable = ${1}" > ${SUBFIL}
 echo "Log = ${1}.\$(Cluster)_\$(Process).log" >> ${SUBFIL}
 echo "Output = ${1}.\$(Cluster)_\$(Process).output" >> ${SUBFIL}
-echo "Log = ${1}.\$(Cluster)_\$(Process).error" >> ${SUBFIL}
+echo "Error = ${1}.\$(Cluster)_\$(Process).error" >> ${SUBFIL}
+echo "Log = ${1}.\$(Cluster)_\$(Process).log" >> ${SUBFIL}
 echo "request_memory = ${2}" >> ${SUBFIL}
 echo "request_disk = ${3}" >> ${SUBFIL}
 echo "getenv = True" >> ${SUBFIL}
