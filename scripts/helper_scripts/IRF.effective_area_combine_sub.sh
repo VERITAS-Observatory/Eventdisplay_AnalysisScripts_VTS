@@ -32,6 +32,5 @@ chmod -R g+w $ODIRDL3array
 rm -f $ODIRDL3array/$OFILE.list
 ls -1 $EAFILES > $ODIRDL3array/$OFILE.list
 $EVNDISPSYS/bin/combineEffectiveAreas "$ODIRDL3array/$OFILE.list" ${ODIRDL3array}/$OFILE DL3reduced &> ${ODIRDL3array}/$OFILE.log 
-bzip2 ${ODIRDL3array}/$OFILE.combine.log
 
 exit
