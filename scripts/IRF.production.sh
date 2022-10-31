@@ -92,6 +92,9 @@ if [[ $IRFVERSION = "v4"* ]]; then
     if [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
       ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
     fi
+    if [[ $VERITAS_ANALYSIS_TYPE = "AP"* ]]; then
+      ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
+    fi
 fi
 
 # simulation types and definition of parameter space
