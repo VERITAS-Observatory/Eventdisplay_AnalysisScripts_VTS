@@ -191,7 +191,7 @@ mkdir -p "$ODIR"
 #########################################
 # make script for v2dl3
 if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
-    V2DL3SCRIPT="$ODIR/${CUTS}_v2dl3_for_runlist_from_ED${EDVERSION}-anasum.sh"
+    V2DL3SCRIPT="$ODIR/v2dl3_from_runlist_${CUTS}.sh"
     echo "Writing V2DL3 script to ${V2DL3SCRIPT}"
     rm -f ${V2DL3SCRIPT}
     echo "#!/bin/sh " > ${V2DL3SCRIPT}
