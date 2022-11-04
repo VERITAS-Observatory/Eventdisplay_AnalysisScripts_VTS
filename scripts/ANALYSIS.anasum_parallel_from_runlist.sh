@@ -196,7 +196,10 @@ if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
     rm -f ${V2DL3SCRIPT}
     echo "#!/bin/sh " > ${V2DL3SCRIPT}
     echo "" >> ${V2DL3SCRIPT}
-   chmod u+x ${V2DL3SCRIPT}
+    echo "source activate base" >> ${V2DL3SCRIPT}
+    echo "conda activate v2dl3Eventdisplay" >> ${V2DL3SCRIPT}
+    echo "export PYTHONPATH=\$PYTHONPATH:${V2DL3}" >> ${V2DL3SCRIPT}
+    chmod u+x ${V2DL3SCRIPT}
 fi
 
 #########################################
@@ -294,9 +297,14 @@ for RUN in ${RUNS[@]}; do
     fi
     if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
         # write line to v2dl3 script
-        echo "python  ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> ${V2DL3SCRIPT}
+        V2DL3OPT="--fuzzy_boundary 0.05"
+        echo "python  ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py ${V2DL3OPT} -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits.gz" >> ${V2DL3SCRIPT}
     fi
 done
+
+if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
+    echo "conda deactivate" >> ${V2DL3SCRIPT}
+fi
 
 # submit the job
 SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"
