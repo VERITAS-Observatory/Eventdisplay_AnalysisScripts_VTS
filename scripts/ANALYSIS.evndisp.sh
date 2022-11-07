@@ -70,9 +70,14 @@ exec 5>&1
 RLIST=$1
 [[ "$2" ]] && ODIR=$2 || ODIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
 mkdir -p $ODIR
-ACUTS_AUTO="EVNDISP.reconstruction.runparameter"
-if [[ $EDVERSION = "v4"* ]]; then
-   ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v4x"
+
+ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v4x"
+if [[ $VERITAS_ANALYSIS_TYPE = "AP"* ]]; then
+   ACUTS_AUTO="EVNDISP.reconstruction.runparameter.AP.v4x"
+elif [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
+   ACUTS_AUTO="EVNDISP.reconstruction.runparameter.NN.v4x"
+elif [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
+   ACUTS_AUTO="EVNDISP.reconstruction.runparameter.CC.v4x"
 fi
 [[ "$3" ]] && ACUTS=$3 || ACUTS=${ACUTS_AUTO}
 [[ "$4" ]] && CALIB=$4 || CALIB=1
@@ -85,7 +90,7 @@ DOWNLOAD=0
 # directory with DB text
 DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/DBTEXT"
 
-echo "Using runparameter file $ACUTS ($EDVERSION)"
+echo "Using runparameter file $ACUTS ($EDVERSION, $VERITAS_ANALYSIS_TYPE)"
 
 # Read runlist
 if [ ! -f "$RLIST" ] ; then
