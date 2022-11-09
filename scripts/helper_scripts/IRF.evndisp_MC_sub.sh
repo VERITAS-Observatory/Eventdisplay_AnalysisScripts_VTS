@@ -213,7 +213,7 @@ echo "$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT" &> $ODIR/$ONAME.log
 $EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
 
 #################################################################################
-# remove temporary files
+# cleanup
 ls -lh "$DDIR"
 cp -f -v "$DDIR/$ONAME.root" "$ODIR/$ONAME.root"
 cp -r -f -v ${CALDIR}/Calibration ${ODIR}/
