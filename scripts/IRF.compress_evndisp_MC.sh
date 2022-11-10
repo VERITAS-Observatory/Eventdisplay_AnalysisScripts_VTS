@@ -71,17 +71,15 @@ DATE=`date +"%y%m%d"`
 
 # input/output directory for evndisp products
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    IDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+    IDIR="$VERITAS_IRFPRODUCTION_DIR/${EDVERSION}/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 # input dir
 IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
-OPDIR=${IPDIR/$EDVERSION/v4N}
+# OPDIR=${IPDIR/$EDVERSION/v4N}
+OPDIR=${IPDIR}
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
-# overwrite INDIR
-IDIR="/lustre/fs23/group/veritas/IRFPRODUCTION/v487/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
-IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
-LOGDIR=${OPDIR}/$DATE
+LOGDIR=${IPDIR}/${DATE}-$(uuidgen)
 mkdir -p "$LOGDIR"
 echo -e "input files will be read from:\n $IPDIR"
 echo -e "output file will be writtin to:\n $OPDIR"
@@ -222,9 +220,19 @@ do
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
         echo "RUN $RUNNUM: JOBID $JOBID"
+    elif [[ $SUBC == *condor* ]]; then
+        if [[ $NEVENTS -gt 0 ]]; then
+            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size 10
+        else
+            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        fi
+        if [[ $SUBC == *submit* ]]; then
+            condor_submit $FSCRIPT.sh.condor
+        fi
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
     fi
 done
+echo "Run scripts are found in ${LOGDIR}"
 
 exit
