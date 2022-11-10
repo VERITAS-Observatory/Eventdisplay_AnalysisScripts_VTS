@@ -132,7 +132,10 @@ fi
 
 #################################
 # low gain calibration file
-mkdir -p ${ODIR}/Calibration/
+for T in Tel_1 Tel_2 Tel_3 Tel_4
+do
+    mkdir -p ${ODIR}/Calibration/${T}
+done
 if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat" ]]; then
    cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat ${ODIR}/Calibration/
 else
