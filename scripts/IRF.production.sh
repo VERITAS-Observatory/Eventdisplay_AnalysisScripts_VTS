@@ -85,15 +85,15 @@ NEVENTS="-1"
 
 # run parameter file for evndisp analysis
 if [[ $IRFVERSION = "v4"* ]]; then
-    ACUTS="EVNDISP.reconstruction.runparameter.v4x"
+    ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
     if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
       ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
     fi
     if [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
       ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
     fi
-    if [[ $VERITAS_ANALYSIS_TYPE = "AP"* ]]; then
-      ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
+    if [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
+      ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
     fi
 fi
 
@@ -137,16 +137,14 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${DDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEMPORARY
-    NSB_LEVELS=( 100 130 160 200 250 300 )
-    ZENITH_ANGLES=( 20 30 35 40 )
-    WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 1.25 )
-    # NSB_LEVELS=( 200 400 )
-    # ZENITH_ANGLES=( 20 40 60 )
-    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
-    # NSB_LEVELS=( 400 )
+    # TEST PRODUCTION
+    # NSB_LEVELS=( 160 200 250 300 400 )
+    # ZENITH_ANGLES=( 20 40 50 60 )
+    # WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.5 )
+    # !TEST PRODUCTION
+    # NSB_LEVELS=( 50 75 100 130 350 450 )
+    # ZENITH_ANGLES=( 00 30 35 45 55 )
+    # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
     # (END TEMPORARY)
     ######################################
     NEVENTS="-1"
@@ -205,7 +203,8 @@ fi
 #         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
