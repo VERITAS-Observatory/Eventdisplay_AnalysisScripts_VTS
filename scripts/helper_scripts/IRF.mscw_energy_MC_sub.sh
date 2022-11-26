@@ -43,6 +43,7 @@ MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID
 echo "MSCW options: $MOPT"
 
 # dispBDT reconstruction
+# note: loss cuts needs to be euqivalent to those used in training
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
