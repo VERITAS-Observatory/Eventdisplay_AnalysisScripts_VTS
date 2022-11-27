@@ -138,7 +138,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     ######################################
     # TEST
     # NSB_LEVELS=( 160 )
-    # ZENITH_ANGLES=( 20 )
+    # ZENITH_ANGLES=( 00 )
     # WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
