@@ -136,6 +136,11 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
     WOBBLE_OFFSETS=$(ls ${DDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
+    # TEST
+    # NSB_LEVELS=( 160 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    ######################################
     # TEMPORARY
     # TEST PRODUCTION
     # NSB_LEVELS=( 160 200 250 300 400 )
