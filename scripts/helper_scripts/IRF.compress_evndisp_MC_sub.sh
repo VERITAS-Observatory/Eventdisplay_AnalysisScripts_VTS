@@ -47,7 +47,7 @@ compress_file()
 {
     if command -v zstd /dev/null; then
         zstd ${1}
-        zstd --test ${1}.root.zst
+        zstd --test ${1}.zst
     else
         echo "Error: zstd compressing executable not found"
         exit
