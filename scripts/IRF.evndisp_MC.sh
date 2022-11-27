@@ -287,7 +287,7 @@ do
         else
             $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
         fi
-        condor_submit $FSCRIPT.sh.condor
+       # condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
     fi
