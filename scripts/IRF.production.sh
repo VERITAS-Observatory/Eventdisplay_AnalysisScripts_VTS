@@ -72,6 +72,10 @@ DISPBDT=0
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
 
+# uuid for this job batch
+DATE=`date +"%y%m%d"`
+UUID=${DATE}-$(uuidgen)
+
 # version string for aux files
 AUX="auxv01"
 # Analysis Type
@@ -339,11 +343,11 @@ for VX in $EPOCH; do
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE
+                               $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE $UUID
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            $(dirname "$0")/IRF.compress_evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                               $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
                        fi
                     ######################
                     # make tables
@@ -385,4 +389,5 @@ done  #VX
 
 # Go back to the original user directory.
 cd $olddir
+echo "UUID for this processing batch: ${UUID}"
 exit

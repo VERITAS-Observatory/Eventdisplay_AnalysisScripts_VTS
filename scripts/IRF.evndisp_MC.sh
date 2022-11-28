@@ -10,7 +10,7 @@ if [ $# -lt 7 ]; then
 echo "
 IRF generation: analyze simulation VBF files using evndisp 
 
-IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [events] [analysis type]
+IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [events] [analysis type] [uuid]
 
 required parameters:
 
@@ -46,6 +46,8 @@ optional parameters:
 
     [analysis type]         type of analysis (default="")
 
+    [uuid]                  UUID used for submit directory
+
 Note: zenith angles, wobble offsets, and noise values are hard-coded into script
 
 --------------------------------------------------------------------------------
@@ -60,6 +62,8 @@ bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 
 # EventDisplay version
 EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+# directory for run scripts
+DATE=`date +"%y%m%d"`
 
 # Parse command line arguments
 SIMDIR=$1
@@ -73,14 +77,11 @@ SIMTYPE=$7
 [[ "$9" ]] && PARTICLE=$9 || PARTICLE=1
 [[ "${10}" ]] && NEVENTS=${10}  || NEVENTS=-1
 [[ "${11}" ]] && ANALYSIS_TYPE=${11} || ANALYSIS_TYPE=""
+[[ "${12}" ]] && UUID=${12} || UUID=${DATE}-$(uuidgen)
 
 # Particle names
 PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
 PARTICLE_TYPE=${PARTICLE_NAMES[$PARTICLE]}
-
-# directory for run scripts
-DATE=`date +"%y%m%d"`
-#LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANAMCVBF"
 
 # output directory for evndisp products (will be manipulated more later in the script)
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
@@ -91,7 +92,7 @@ OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
-LOGDIR=${OPDIR}/$DATE
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
 mkdir -p "$LOGDIR"
 
 echo "Using runparameter file $ACUTS"
@@ -247,7 +248,7 @@ do
     SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.evndisp_MC_sub"
 
     # make run script
-    FSCRIPT="$LOGDIR/evn-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM-${RUNNUM}"
+    FSCRIPT="${LOGDIR}/evn-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM-${RUNNUM}"
     sed -e "s|DATADIR|$SIMDIR|" \
         -e "s|RUNNUMBER|$RUNNUM|" \
         -e "s|ZENITHANGLE|$ZA|" \
@@ -287,10 +288,13 @@ do
         else
             $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
         fi
-        condor_submit $FSCRIPT.sh.condor
+        # use ./helper_scripts/submit_scripts_to_htcondor.sh script to submit all
+        # script at once from ${LOGDIR}
+        # condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
     fi
 done
+echo "LOG/SUBMIT DIR: ${LOGDIR}"
 
 exit

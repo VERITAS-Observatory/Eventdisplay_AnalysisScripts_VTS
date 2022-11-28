@@ -10,7 +10,7 @@ if [ $# -lt 7 ]; then
 echo "
 IRF generation: compress evndisp output and move log files into final provduct
 
-IRF.compress_evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> [analysis type]
+IRF.compress_evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> [analysis type]  [uuid]
 
 required parameters:
 
@@ -36,6 +36,8 @@ optional parameters:
     
     [analysis type]         type of analysis (default="")
 
+    [uuid]                  UUID used for submit directory
+
 Note: zenith angles, wobble offsets, and noise values are hard-coded into script
 
 --------------------------------------------------------------------------------
@@ -50,6 +52,8 @@ bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 
 # EventDisplay version
 EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+# directory for run scripts
+DATE=`date +"%y%m%d"`
 
 # Parse command line arguments
 SIMDIR=$1
@@ -61,13 +65,11 @@ NOISE=$6
 SIMTYPE=$7
 PARTICLE=1
 [[ "${8}" ]] && ANALYSIS_TYPE=${8} || ANALYSIS_TYPE=""
+[[ "${9}" ]] && UUID=${9} || UUID=${DATE}-$(uuidgen)
 
 # Particle names
 PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
 PARTICLE_TYPE=${PARTICLE_NAMES[$PARTICLE]}
-
-# directory for run scripts
-DATE=`date +"%y%m%d"`
 
 # input/output directory for evndisp products
 if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
@@ -79,10 +81,10 @@ IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 OPDIR=${IPDIR}
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
-LOGDIR=${IPDIR}/${DATE}-$(uuidgen)
+echo -e "Output files will be written to:\n $OPDIR"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
 mkdir -p "$LOGDIR"
 echo -e "input files will be read from:\n $IPDIR"
-echo -e "output file will be writtin to:\n $OPDIR"
 
 # Analysis options
 EDOPTIONS=""
@@ -145,6 +147,11 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
         NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE${NOISE}_20120827_v420.grisu"
     fi
 #######################################################
+elif [ ${SIMTYPE:0:10} == "CARE_UV" ]; then
+    # example gamma_00deg_750m_0.5wob_180mhz_up_ATM21_part0.cvbf.bz2
+    WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
+    VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_${ZA}deg_750m_${WOBBLE}wob_${NOISE}mhz_up_ATM${ATM}_part0.cvbf.bz2")
+#######################################################
 elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
     WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
@@ -170,7 +177,6 @@ fi
 
 #####################################
 # Loop over all VBFFiles
-# for V in ${VBFNAME}
 for V in ${VBFNAME}
 do
     echo "Processing ${V}"
@@ -182,11 +188,8 @@ do
     echo "SIMDIR: $SIMDIR"
     echo "VBFILE: ${V} $FF"
     echo "NOISEFILE: ${NOISEFILE}"
-    # tmpdir requires a safety factor of 2.5 or higher (from unzipping VBF file)
-    TMSF=$(echo "${FF%?}*3.5" | bc)
-    if [[ ${NOISE} -eq 50 ]]; then
-       TMSF=$(echo "${FF%?}*5.0" | bc)
-    fi
+    # tmpdir requires a safety factor of 5. or higher (from unzipping VBF file)
+    TMSF=$(echo "${FF%?}*5.0" | bc)
     if [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
        # RedHV runs need more space during the analysis (otherwise quota is exceeded)
        TMSF=$(echo "${FF%?}*10.0" | bc)
@@ -226,13 +229,13 @@ do
         else
             $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
         fi
-        if [[ $SUBC == *submit* ]]; then
-            condor_submit $FSCRIPT.sh.condor
-        fi
+        # use ./helper_scripts/submit_scripts_to_htcondor.sh script to submit all
+        # script at once from ${LOGDIR}
+        # condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
     fi
 done
-echo "Run scripts are found in ${LOGDIR}"
+echo "LOG/SUBMIT DIR: ${LOGDIR}"
 
 exit
