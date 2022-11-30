@@ -46,6 +46,12 @@ fi
 ONAME="$RUNNUM"
 echo "Runnumber $RUNNUM"
 
+# check if output file exist
+# if [ -e "$ODIR/$ONAME.root" ]; then
+#    echo "OUTPUT $ODIR/$ONAME.root exists; skipping this job"
+#    exit
+# fi
+
 #################################
 # detector configuration and cuts
 echo "Using run parameter file $ACUTS"
