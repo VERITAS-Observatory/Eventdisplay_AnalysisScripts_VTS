@@ -20,8 +20,8 @@ required parameters:
                             V4: array before T1 move (before Fall 2009)
                             V5: array after T1 move (Fall 2009 - Fall 2012)
                             V6: array after camera update (after Fall 2012)
-    
-    <atmosphere>            atmosphere model (21 = winter, 22 = summer)
+
+    <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
     <zenith>                zenith angle of simulations [deg]
 
@@ -62,7 +62,7 @@ bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 
 # EventDisplay version
 EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
-# directory for run scripts
+# date used in run scripts / log file directories
 DATE=`date +"%y%m%d"`
 
 # Parse command line arguments

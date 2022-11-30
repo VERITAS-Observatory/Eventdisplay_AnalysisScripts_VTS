@@ -355,7 +355,7 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                            $(dirname "$0")/IRF.generate_lookup_table_parts.sh \
                                $VX $ATM $ZA $WOBBLE $NOISE \
-                               $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                               $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
                         done #recID
                     ######################
                     # analyse table files
