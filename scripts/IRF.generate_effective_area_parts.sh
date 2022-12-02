@@ -31,10 +31,9 @@ required parameters:
     <offset angle>          offset angle of simulations [deg]
 
     <NSB level>             NSB level of simulations [MHz]
-    
+
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
-                            Set to 0 for all telescopes, 1 to cut T1, etc.
 
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
 
@@ -42,9 +41,11 @@ optional parameters:
 
     [analysis type]         type of analysis (default="")
     
-    [dispBDT]               use dispDBDT angular reconstruction
-                            (default: 0; use: 1)
-                            
+    [dispBDT]              use dispDBDT angular reconstruction
+                           (default: 0; use: 1)
+
+    [uuid]                  UUID used for submit directory
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -56,7 +57,9 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # EventDisplay version
-IRFVERSION=`$EVNDISPSYS/bin/makeEffectiveArea --version | tr -d .| sed -e 's/[a-Z]*$//'`
+EDVERSION=`$EVNDISPSYS/bin/makeEffectiveArea --version | tr -d .| sed -e 's/[a-Z]*$//'`
+# date used in run scripts / log file directories
+DATE=`date +"%y%m%d"`
 
 # Parse command line arguments
 CUTSFILE="$1"
@@ -68,8 +71,9 @@ NOISE=$6
 RECID=$7
 SIMTYPE=$8
 PARTICLE_TYPE="gamma"
-[[ "$9" ]] && ANALYSIS_TYPE=$9  || ANALYSIS_TYPE=""
+[[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
+[[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -77,28 +81,27 @@ CUTS_NAME=${CUTS_NAME%%.dat}
 
 # input directory containing mscw_energy_MC products
 if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
     if [[ ${DISPBDT} == "1" ]]; then
         INDIR=${INDIR}_DISP
     fi
 fi
 if [[ ! -d $INDIR ]]; then
-    echo -e "Error, could not locate input directory. Locations searched:\n $INDIR"
+    echo "Error, could not locate input directory. Locations searched:"
+    echo "$INDIR"
     exit 1
 fi
 echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-# run scripts and output are written into this directory
-DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/${ANALYSIS_TYPE}/$(date +%s | cut -c -8)/${ZA}deg_${WOBBLE}wob_NOISE${NOISE}_${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}_${RECID}/"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -122,7 +125,7 @@ echo "CUTSFILE: $CUTSFILE"
 echo "ODIR: $ODIR"
 echo "DATAFILE $MCFILE"
 echo "EFFFILE $EFFAREAFILE"
-# set parameters in run script
+# make run script
 FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
@@ -145,11 +148,12 @@ if [[ $SUBC == *qsub* ]]; then
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    condor_submit $FSCRIPT.sh.condor
+#    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
+echo "LOG/SUBMIT DIR: ${LOGDIR}"
 
 exit
