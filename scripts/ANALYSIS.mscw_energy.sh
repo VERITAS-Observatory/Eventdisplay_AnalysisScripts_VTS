@@ -90,7 +90,7 @@ echo -e "Output files will be written to:\n $ODIR"
 
 # run scripts are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCW.ANADATA"
+LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/MSCW.ANADATA"
 mkdir -p $LOGDIR
 echo -e "Log files will be written to:\n $LOGDIR"
 
@@ -214,7 +214,7 @@ do
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        condor_submit $FSCRIPT.sh.condor
+#        condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
