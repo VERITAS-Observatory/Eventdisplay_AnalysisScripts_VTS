@@ -77,7 +77,6 @@ if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
 fi
 # input dir
 IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
-# OPDIR=${IPDIR/$EDVERSION/v4N}
 OPDIR=${IPDIR}
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
