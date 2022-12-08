@@ -37,6 +37,8 @@ if [[ DISPBDT != "NOTSET" ]]; then
     MOPT="-redo_stereo_reconstruction"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
     MOPT="$MOPT -tmva_disperror_weight 50"
+    # note: loss cuts needs to be euqivalent to that used in training
+    MOPT="$MOPT -maxloss=0.2"
     MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
     echo "DISP BDT options: $MOPT"

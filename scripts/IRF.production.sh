@@ -67,10 +67,14 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=0
+DISPBDT=1
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
+
+# uuid for this job batch
+DATE=`date +"%y%m%d"`
+UUID=${DATE}-$(uuidgen)
 
 # version string for aux files
 AUX="auxv01"
@@ -85,14 +89,15 @@ NEVENTS="-1"
 
 # run parameter file for evndisp analysis
 if [[ $IRFVERSION = "v4"* ]]; then
-    ACUTS="EVNDISP.reconstruction.runparameter.v4x"
+    ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
     if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
       ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
     fi
-else
-    ACUTS="EVNDISP.reconstruction.runparameter"
-    if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
-      ACUTS="EVNDISP.reconstruction.runparameter.NN"
+    if [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
+      ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
+    fi
+    if [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
+      ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
     fi
 fi
 
@@ -107,8 +112,7 @@ if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
        WOBBLE_OFFSETS=( 0.5 )
     fi
 elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
-    # CARE_June1702 simulation parameters
-    DDIR="$VERITAS_DATA_DIR/IRFPRODUCTION/v483/CARE_June1702"
+    SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
 
     if [[ $ATMOS == "62" ]]; then
         ZENITH_ANGLES=( 00 30 50 )
@@ -118,39 +122,48 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
     WOBBLE_OFFSETS=( 0.5 )
     NEVENTS="15000000"
-elif [ "${SIMTYPE}" = "CARE_UV" ]; then
-    DDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
-    ZENITH_ANGLES=$(ls ${DDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
-    NSB_LEVELS=$(ls ${DDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
+elif [ "${SIMTYPE}" = "CARE_UV_June1409" ]; then
+    SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
+    ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    NSB_LEVELS=$(ls ${SIMDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 ) 
+elif [ "${SIMTYPE}" = "CARE_UV_2212" ]; then
+    SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_2212_UV/
+    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $10}' |  awk -F "wob" '{print $1}' | sort -u)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    DDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/
-    ZENITH_ANGLES=$(ls ${DDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
-    NSB_LEVELS=$(ls ${DDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
+    SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/
+    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 ) 
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
-    DDIR="/lustre/fs24/group/veritas/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${DDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${DDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
-    WOBBLE_OFFSETS=$(ls ${DDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    ######################################
+    # TEST
+    # NSB_LEVELS=( 160 )
+    # ZENITH_ANGLES=( 00 )
+    # WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
-    # NSB_LEVELS=( 100 130 160 200 250 )
-    # ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
-    # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 1.25 )
-    NSB_LEVELS=( 200 400 )
-    ZENITH_ANGLES=( 20 40 60 )
-    WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
-    # NSB_LEVELS=( 400 )
+    # TEST PRODUCTION
+    # NSB_LEVELS=( 160 200 250 300 400 )
+    # ZENITH_ANGLES=( 20 40 50 60 )
+    # WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.5 )
+    # !TEST PRODUCTION
+    # NSB_LEVELS=( 50 75 100 130 350 450 )
+    # ZENITH_ANGLES=( 00 30 35 45 55 )
+    # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
     # (END TEMPORARY)
     ######################################
     NEVENTS="-1"
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
+    SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
     NSB_LEVELS=( 50 80 120 170 230 290 370 450 )
     WOBBLE_OFFSETS=( 0.5 )
@@ -204,7 +217,8 @@ fi
 #         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -308,7 +322,7 @@ for VX in $EPOCH; do
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
                              $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
-                             $DISPBDT
+                             $DISPBDT $UUID
                       done
                    done
                    continue
@@ -319,26 +333,18 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                          SIMDIR=$VERITAS_DATA_DIR/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
-                       elif [[ ${SIMTYPE:0:13} = "CARE_June1425" ]]; then
-                          SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
-                       elif [[ ${SIMTYPE:0:10} = "CARE_UV" ]]; then
-                          SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1409_UV/
-                       elif [[ ${SIMTYPE:0:10} = "CARE_RedHV" ]]; then
-                          SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1702_RHV/
+                          SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
                        elif [[ ${SIMTYPE:0:13} = "CARE_June2020" ]]; then
-                          SIMDIR=$VERITAS_DATA_DIR/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
-                       elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                          SIMDIR="/lustre/fs24/group/veritas/simulations/V6_FLWO/CARE_June1702"
+                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE
+                               $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE $UUID
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            $(dirname "$0")/IRF.compress_evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                               $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
                        fi
                     ######################
                     # make tables
@@ -346,7 +352,7 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                            $(dirname "$0")/IRF.generate_lookup_table_parts.sh \
                                $VX $ATM $ZA $WOBBLE $NOISE \
-                               $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                               $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
                         done #recID
                     ######################
                     # analyse table files
@@ -357,7 +363,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT
+                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT $UUID
 			            done #recID
                     ######################
                     # analyse effective areas
@@ -368,7 +374,7 @@ for VX in $EPOCH; do
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
                                    $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
-                                   $DISPBDT
+                                   $DISPBDT $UUID
                             done # cuts
                         done #recID
                     fi
@@ -380,4 +386,5 @@ done  #VX
 
 # Go back to the original user directory.
 cd $olddir
+echo "UUID for this processing batch: ${UUID}"
 exit

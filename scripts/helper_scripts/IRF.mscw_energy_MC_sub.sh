@@ -11,6 +11,7 @@ TABFILE=TABLEFILE
 ZA=ZENITHANGLE
 NOISE=NOISELEVEL
 WOBBLE=WOBBLEOFFSET
+ANATYPE=ANALYSISTYPE
 NROOTFILES=NFILES
 RECID="RECONSTRUCTIONID"
 EPOCH="ARRAYEPOCH"
@@ -43,6 +44,7 @@ MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID
 echo "MSCW options: $MOPT"
 
 # dispBDT reconstruction
+# note: loss cuts needs to be equivalent to that used in training
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
@@ -50,9 +52,9 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -maxloss=0.2"
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_redHV/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}_redHV/"
     else
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}/"
     fi
     if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"

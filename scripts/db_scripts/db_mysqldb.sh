@@ -3,7 +3,7 @@
 
 if [ "$1" = "-h" ]; then
 echo "
-db_mysqldb.sh: return mysql DB command including VERITAS DB from EVNDISP.globalrunparameter
+db_mysqldb.sh: return mysql DB command including VERITAS DB from EVNDISP.global.runparameter
 
 db_mysqldb.sh
 

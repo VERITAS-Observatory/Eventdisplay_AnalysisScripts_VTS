@@ -46,6 +46,12 @@ fi
 ONAME="$RUNNUM"
 echo "Runnumber $RUNNUM"
 
+# check if output file exist
+# if [ -e "$ODIR/$ONAME.root" ]; then
+#    echo "OUTPUT $ODIR/$ONAME.root exists; skipping this job"
+#    exit
+# fi
+
 #################################
 # detector configuration and cuts
 echo "Using run parameter file $ACUTS"
@@ -213,7 +219,7 @@ echo "$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT" &> $ODIR/$ONAME.log
 $EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
 
 #################################################################################
-# remove temporary files
+# cleanup
 ls -lh "$DDIR"
 cp -f -v "$DDIR/$ONAME.root" "$ODIR/$ONAME.root"
 cp -r -f -v ${CALDIR}/Calibration ${ODIR}/

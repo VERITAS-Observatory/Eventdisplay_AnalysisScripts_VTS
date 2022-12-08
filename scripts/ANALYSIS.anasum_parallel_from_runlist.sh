@@ -82,7 +82,7 @@ SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
 SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
-SIMTYPE_DEFAULT_V6UV="CARE_UV"
+SIMTYPE_DEFAULT_V6UV="CARE_UV_2212"
 
 ANATYPE="GEO"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
@@ -203,12 +203,15 @@ mkdir -p "$ODIR"
 #########################################
 # make script for v2dl3
 if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
-    V2DL3SCRIPT="$ODIR/${CUTS}_v2dl3_for_runlist_from_ED${EDVERSION}-anasum.sh"
+    V2DL3SCRIPT="$ODIR/v2dl3_from_runlist_${CUTS}.sh"
     echo "Writing V2DL3 script to ${V2DL3SCRIPT}"
     rm -f ${V2DL3SCRIPT}
     echo "#!/bin/sh " > ${V2DL3SCRIPT}
     echo "" >> ${V2DL3SCRIPT}
-   chmod u+x ${V2DL3SCRIPT}
+    echo "source activate base" >> ${V2DL3SCRIPT}
+    echo "conda activate v2dl3Eventdisplay" >> ${V2DL3SCRIPT}
+    echo "export PYTHONPATH=\$PYTHONPATH:${V2DL3}" >> ${V2DL3SCRIPT}
+    chmod u+x ${V2DL3SCRIPT}
 fi
 
 #########################################
@@ -314,9 +317,14 @@ for RUN in ${RUNS[@]}; do
     fi
     if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
         # write line to v2dl3 script
-        echo "python  ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits" >> ${V2DL3SCRIPT}
+        V2DL3OPT="--fuzzy_boundary 0.05"
+        echo "python  ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py ${V2DL3OPT} -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits.gz" >> ${V2DL3SCRIPT}
     fi
 done
+
+if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
+    echo "conda deactivate" >> ${V2DL3SCRIPT}
+fi
 
 # submit the job
 SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"

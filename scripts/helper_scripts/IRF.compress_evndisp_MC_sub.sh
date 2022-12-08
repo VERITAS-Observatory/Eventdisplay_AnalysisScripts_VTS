@@ -14,6 +14,7 @@ if [[ -n "$TMPDIR" ]]; then
 else
     DDIR="/tmp/testDir"
 fi
+DDIR=${DDIR}/$(uuidgen)
 mkdir -p $DDIR
 mkdir -p $ODIR
 
@@ -22,10 +23,9 @@ compare_log_file()
     $EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root > ${DDIR}/${1}.log
     if cmp -s "${2}" "${DDIR}/${1}.log"; then
         echo "FILES ${1} ${2} are the same, removing"
-        touch $ODIR/$ONAME.${1}.goodlog
     else
-        echo "Error, ${1} ${2} differ"
         touch $ODIR/$ONAME.${1}.errorlog
+        echo "Error, ${1} ${2} differ" >> $ODIR/$ONAME.${1}.errorlog
     fi
 }
 
@@ -43,6 +43,18 @@ add_log_file()
      fi
 }
 
+compress_file()
+{
+    if command -v zstd /dev/null; then
+        zstd ${1}
+        zstd --test ${1}.zst
+    else
+        echo "Error: zstd compressing executable not found"
+        exit
+    fi
+}
+
+
 echo "EVNDISP input root file $IDIR/$ONAME.root"
 echo "EVNDISP output root file $ODIR/$ONAME.root.zst"
 cp -v $IDIR/$ONAME.root ${DDIR}/
@@ -57,13 +69,5 @@ compare_log_file evndispLog $IDIR/$ONAME.log
 compare_log_file evndisppedLog $IDIR/$ONAME.ped.log
 compare_log_file evndisptzeroLog $IDIR/$ONAME.tzero.log
 
-### compress
-if command -v zstd /dev/null; then
-    zstd $DDIR/$ONAME.root
-    zstd --test $DDIR/$ONAME.root.zst
-    mv -f -v $DDIR/$ONAME.root.zst ${ODIR}/
-else
-    echo "Error: zstd compressing executable not found"
-fi
-
-exit
+compress_file $DDIR/$ONAME.root
+mv -f -v $DDIR/$ONAME.root.zst ${ODIR}/
