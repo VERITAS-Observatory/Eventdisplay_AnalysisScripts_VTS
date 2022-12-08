@@ -30,13 +30,12 @@ required parameters:
 
     <zenith>                zenith angle of simulations [deg]
 
-    <offset angle>          list of offset angles of simulations [deg]
+    <offset angle>          offset angle of simulations [deg]
 
-    <NSB level>             list of NSB level of simulations [MHz]
-    
+    <NSB level>             NSB level of simulations [MHz]
+
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
-                            Set to 0 for all telescopes, 1 to cut T1, etc.
 
     <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
 
@@ -46,7 +45,9 @@ optional parameters:
     
     [dispBDT]              use dispDBDT angular reconstruction
                            (default: 0; use: 1)
-                            
+
+    [uuid]                  UUID used for submit directory
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -58,7 +59,9 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # EventDisplay version
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
+EDVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
+# date used in run scripts / log file directories
+DATE=`date +"%y%m%d"`
 
 # Parse command line arguments
 TABFILE=$1
@@ -74,6 +77,7 @@ SIMTYPE=$9
 PARTICLE_TYPE="gamma"
 [[ "${10}" ]] && ANALYSIS_TYPE=${10}  || ANALYSIS_TYPE=""
 [[ "${11}" ]] && DISPBDT=${11} || DISPBDT=0
+[[ "${12}" ]] && UUID=${12} || UUID=${DATE}-$(uuidgen)
 EVNIRFVERSION="v4N"
 
 CUTS_NAME=`basename $CUTSFILE`
@@ -111,15 +115,13 @@ echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-# run scripts and output are written into this directory
-DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCWEFFAREA.ANATABLES/${ANALYSIS_TYPE}/$(date +%s%N)/"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -163,11 +165,12 @@ if [[ $SUBC == *qsub* ]]; then
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    condor_submit $FSCRIPT.sh.condor
+#    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
+echo "LOG/SUBMIT DIR: ${LOGDIR}"
 
 exit

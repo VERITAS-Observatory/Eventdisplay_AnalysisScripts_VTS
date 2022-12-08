@@ -39,7 +39,9 @@ optional parameters:
     
     [dispBDT]              use dispDBDT angular reconstruction
                            (default: 0; use: 1)
-                            
+
+    [uuid]                  UUID used for submit directory
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -51,7 +53,9 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # EventDisplay version
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
+EDVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
+# date used in run scripts / log file directories
+DATE=`date +"%y%m%d"`
 
 # Parse command line arguments
 TABFILE=$1
@@ -66,6 +70,7 @@ SIMTYPE=$8
 PARTICLE_TYPE="gamma"
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
+[[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
 EVNIRFVERSION="v4N"
 
 # Check that table file exists
@@ -97,15 +102,13 @@ echo "NROOTFILES $NROOTFILES"
 
 # Output file directory
 if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-# run scripts and output are written into this directory
-DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCW.ANATABLES/${ANALYSIS_TYPE}/$(date +%s | cut -c -8)/"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -122,6 +125,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|ARRAYEPOCH|$EPOCH|" \
     -e "s|ATMOS|$ATM|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
+    -e "s|ANALYSISTYPE|${ANALYSIS_TYPE}|" \
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|NFILES|$NROOTFILES|" \
     -e "s|TABLEFILE|$TABFILE|" \
@@ -143,11 +147,12 @@ if [[ $SUBC == *qsub* ]]; then
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    condor_submit $FSCRIPT.sh.condor
+#    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
+echo "LOG/SUBMIT DIR: ${LOGDIR}"
 
 exit

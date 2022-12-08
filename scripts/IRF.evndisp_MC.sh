@@ -127,6 +127,7 @@ fi
 # NOISEFILE - noise library (in grisu format)
 VBFNAME="NO_VBFNAME"
 NOISEFILE="NO_NOISEFILE"
+echo "SIMTYPE $SIMTYPE"
 
 #######################################################
 # GRISU simulations
@@ -158,10 +159,16 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
         NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE${NOISE}_20120827_v420.grisu"
     fi
 #######################################################
-elif [ ${SIMTYPE:0:10} == "CARE_UV" ]; then
+elif [ ${SIMTYPE} == "CARE_UV_June1409" ]; then
     # example gamma_00deg_750m_0.5wob_180mhz_up_ATM21_part0.cvbf.bz2
     WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_${ZA}deg_750m_${WOBBLE}wob_${NOISE}mhz_up_ATM${ATM}_part0.cvbf.bz2")
+#######################################################
+elif [ ${SIMTYPE} == "CARE_UV_2212" ]; then
+    # example gamma_V6_CARE_uvf_Atmosphere61_zen20deg_0.25wob_120MHz.vbf.zst
+    LBL="CARE_uvf"
+    VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+    echo "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz"
 #######################################################
 elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
