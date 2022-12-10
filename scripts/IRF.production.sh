@@ -67,7 +67,7 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=1
+DISPBDT=0
 
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -145,14 +145,15 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 160 )
-    # ZENITH_ANGLES=( 00 )
+    # NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
     # TEST PRODUCTION
     # NSB_LEVELS=( 160 200 250 300 400 )
     # ZENITH_ANGLES=( 20 40 50 60 )
+    # ZENITH_ANGLES=( 00 30 35 45 55 )
     # WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.5 )
     # !TEST PRODUCTION
     # NSB_LEVELS=( 50 75 100 130 350 450 )
@@ -218,7 +219,7 @@ fi
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
