@@ -65,7 +65,7 @@ RLIST=$1
 [[ "$5" ]] && SIMTYPE=$5 || SIMTYPE=""
 [[ "$6" ]] && FORCEDATMO=$6
 [[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
-DISPBDT="0"
+DISPBDT="1"
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -166,15 +166,17 @@ do
         elif [ "$HVSETTINGS" == "obsFilter" ]; then
             DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_UV/"
         else
-            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}/"
+            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_${ANATYPE}/"
         fi
         ZA=$($EVNDISPSYS/bin/printRunParameter $BFILE -elevation | awk '{print $3}')
-        if (( $(echo "90.-$ZA < 40" |bc -l) )); then
+        if (( $(echo "90.-$ZA < 38" |bc -l) )); then
             DISPDIR="${DISPDIR}/SZE/"
-        elif (( $(echo "90.-$ZA < 50" |bc -l) )); then
+        elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
             DISPDIR="${DISPDIR}/MZE/"
-        else
+        elif (( $(echo "90.-$ZA < 58" |bc -l) )); then
             DISPDIR="${DISPDIR}/LZE/"
+        else
+            DISPDIR="${DISPDIR}/XZE/"
         fi
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/${DISPDIR}/"
         echo "DISPDIR (Elevation is $ZA deg): " $DISPDIR
