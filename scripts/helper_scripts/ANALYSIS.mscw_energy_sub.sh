@@ -41,6 +41,7 @@ if [[ DISPBDT != "NOTSET" ]]; then
     MOPT="$MOPT -maxloss=0.2"
     MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
+    MOPT="$MOPT -tmva_filename_dispsign_reconstruction $DISPDIR/BDTDispSign_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
 
