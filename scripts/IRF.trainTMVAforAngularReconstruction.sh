@@ -111,7 +111,7 @@ do
 done
 echo "FILE LIST: ${EVNLIST}"
 
-for disp in BDTDisp BDTDispError
+for disp in BDTDispEnergy BDTDisp BDTDispError BDTDispSign
 do
     # Job submission script
     SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub"
