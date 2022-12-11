@@ -77,6 +77,7 @@ BACKGND=$4
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 [[ "$9" ]] && RACC=$9 || RACC="0"
 [[ "${10}" ]] && FORCEDATMO=${10}
+DISPBDT="1"
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -127,7 +128,11 @@ else
     exit 1
 fi
 CUTFILE="ANASUM.GammaHadron-Cut-${CUT}.dat"
-EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-VX-ATMXX-TX.root"
+if [[ $DISPBDT == "1" ]]; then
+    EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-DISP-VX-ATMXX-TX.root"
+else
+    EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-VX-ATMXX-TX.root"
+fi
 
 # remove PointSource and ExtendedSource string from cut file name for radial acceptances names
 if [[ $CUT == *PointSource-* ]] ; then
