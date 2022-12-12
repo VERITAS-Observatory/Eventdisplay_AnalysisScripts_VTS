@@ -67,7 +67,7 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=0
+DISPBDT=1
 
 # evndisplay version
 EDVERSION=$($EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//')
@@ -365,7 +365,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT $UUID
+                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT $UUID ${EDVERSION}
 			            done #recID
                     ######################
                     # analyse effective areas
