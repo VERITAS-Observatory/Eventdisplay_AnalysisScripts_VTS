@@ -46,6 +46,8 @@ optional parameters:
 
     [uuid]                  UUID used for submit directory
 
+    [version]               Eventdisplay version (e.g., v490)
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -56,8 +58,6 @@ fi
 bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/makeEffectiveArea --version | tr -d .| sed -e 's/[a-Z]*$//'`
 # date used in run scripts / log file directories
 DATE=`date +"%y%m%d"`
 
@@ -74,6 +74,7 @@ PARTICLE_TYPE="gamma"
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
 [[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
+[[ "${12}" ]] && EDVERSION=${12} || EDVERSION=$($EVNDISPSYS/bin/makeEffectiveArea --version | tr -d .| sed -e 's/[a-Z]*$//')
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}

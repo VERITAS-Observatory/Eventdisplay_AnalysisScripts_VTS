@@ -70,7 +70,8 @@ IRFTYPE=$2
 DISPBDT=0
 
 # evndisplay version
-IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
+EDVERSION=$($EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//')
+echo "Eventdisplay version: ${EDVERSION}"
 
 # uuid for this job batch
 DATE=`date +"%y%m%d"`
@@ -88,7 +89,7 @@ fi
 NEVENTS="-1"
 
 # run parameter file for evndisp analysis
-if [[ $IRFVERSION = "v4"* ]]; then
+if [[ $EDVERSION = "v4"* ]]; then
     ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
     if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
       ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
@@ -229,7 +230,7 @@ for VX in $EPOCH; do
     for ATM in $ATMOS; do
        ######################
        # set lookup table file name
-       TABLECOM="table-${IRFVERSION}-${AUX}-${SIMTYPE}-ATM${ATM}-${VX}-"
+       TABLECOM="table-${EDVERSION}-${AUX}-${SIMTYPE}-ATM${ATM}-${VX}-"
        ######################
        # combine lookup tables
        if [[ $IRFTYPE == "COMBINETABLES" ]]; then
@@ -323,7 +324,7 @@ for VX in $EPOCH; do
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
                              $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
-                             $DISPBDT $UUID
+                             $DISPBDT $UUID ${EDVERSION}
                       done
                    done
                    continue
@@ -375,7 +376,7 @@ for VX in $EPOCH; do
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
                                    $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
-                                   $DISPBDT $UUID
+                                   $DISPBDT $UUID ${EDVERSION}
                             done # cuts
                         done #recID
                     fi

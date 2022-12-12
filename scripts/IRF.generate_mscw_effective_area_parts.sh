@@ -48,6 +48,8 @@ optional parameters:
 
     [uuid]                  UUID used for submit directory
 
+    [version]               Eventdisplay version (e.g., v490)
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -58,8 +60,6 @@ fi
 bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
 # date used in run scripts / log file directories
 DATE=`date +"%y%m%d"`
 
@@ -78,6 +78,7 @@ PARTICLE_TYPE="gamma"
 [[ "${10}" ]] && ANALYSIS_TYPE=${10}  || ANALYSIS_TYPE=""
 [[ "${11}" ]] && DISPBDT=${11} || DISPBDT=0
 [[ "${12}" ]] && UUID=${12} || UUID=${DATE}-$(uuidgen)
+[[ "${13}" ]] && EDVERSION=${13} || EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//')
 EVNIRFVERSION="v4N"
 
 CUTS_NAME=`basename $CUTSFILE`

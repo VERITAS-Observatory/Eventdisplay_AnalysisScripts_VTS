@@ -50,6 +50,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
     MOPT="$MOPT -maxloss=0.2"
+#    MOPT="$MOPT -disp_use_intersect"
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}_redHV/"
