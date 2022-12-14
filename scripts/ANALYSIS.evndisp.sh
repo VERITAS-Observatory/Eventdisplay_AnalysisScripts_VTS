@@ -79,6 +79,9 @@ elif [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
 elif [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
    ACUTS_AUTO="EVNDISP.reconstruction.runparameter.CC.v4x"
 fi
+if [[ $EDVERSION == "v487" ]]; then
+    ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v48x"
+fi
 [[ "$3" ]] && ACUTS=$3 || ACUTS=${ACUTS_AUTO}
 [[ "$4" ]] && CALIB=$4 || CALIB=1
 [[ "$5" ]] && TELTOANA=$5 || TELTOANA=1234
@@ -162,7 +165,7 @@ do
         DBRUNDIR="${DBTEXTDIRECTORY}/${AFILE:0:2}/${AFILE}"
     fi
 
-    if [[ -d ${DBRUNDIR} ]]; then
+    if [[ -d ${DBRUNDIR} ]] && [[ ${EDVERSION} != "v487" ]]; then
         DBTEXTDIR="${DBTEXTDIRECTORY}"
     else
         DBTEXTDIR="0"

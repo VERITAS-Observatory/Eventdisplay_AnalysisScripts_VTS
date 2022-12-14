@@ -65,7 +65,7 @@ RLIST=$1
 [[ "$5" ]] && SIMTYPE=$5 || SIMTYPE=""
 [[ "$6" ]] && FORCEDATMO=$6
 [[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
-DISPBDT="1"
+DISPBDT="0"
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -150,7 +150,7 @@ do
        ANATYPE="$VERITAS_ANALYSIS_TYPE"
     fi 
     TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
-    echo $TABFILE
+    echo "TABLEFILE: $TABFILE"
     # Check that table file exists
     if [[ "$TABFILE" == `basename $TABFILE` ]]; then
         TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
@@ -216,7 +216,9 @@ do
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-#        condor_submit $FSCRIPT.sh.condor
+        if [[ ${EDVERSION} == "v487" ]]; then
+           condor_submit $FSCRIPT.sh.condor
+        fi
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
