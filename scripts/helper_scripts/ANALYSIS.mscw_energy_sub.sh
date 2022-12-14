@@ -40,9 +40,12 @@ if [[ DISPBDT != "NOTSET" ]]; then
     # note: loss cuts needs to be equivalent to that used in training
     MOPT="$MOPT -maxloss=0.2"
     # MOPT="$MOPT -disp_use_intersect"
-    MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
-    MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
-    MOPT="$MOPT -tmva_filename_dispsign_reconstruction $DISPDIR/BDTDispSign_BDT_"
+    # unzip xml files
+    cp -v -f ${DISPDIR}/*.xml.gz ${TMPDIR}/
+    gunzip -v ${TMPDIR}/*.xml.gz
+    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${TMPDIR}/BDTDisp_BDT_"
+    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${TMPDIR}/BDTDispError_BDT_"
+    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${TMPDIR}/BDTDispSign_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
 

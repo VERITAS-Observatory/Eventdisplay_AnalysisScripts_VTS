@@ -21,7 +21,7 @@ DISPBDT=USEDISP
 # output directory
 OSUBDIR="$ODIR/MSCW_RECID${RECID}"
 if [ $DISPBDT -eq 1 ]; then
-    OSUBDIR="${OSUBDIR}_DISP"
+    OSUBDIR="${OSUBDIR}_DISP_TEST"
 fi
 mkdir -p "$OSUBDIR"
 chmod g+w "$OSUBDIR"
@@ -66,9 +66,12 @@ if [ $DISPBDT -eq 1 ]; then
     else
         DISPDIR="${DISPDIR}/XZE/"
     fi
-    MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
-    MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
-    MOPT="$MOPT -tmva_filename_dispsign_reconstruction $DISPDIR/BDTDispSign_BDT_"
+    # unzip XML files into tmpdir
+    cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
+    gunzip -v ${DDIR}/*xml.gz
+    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
+    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
+    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
 
