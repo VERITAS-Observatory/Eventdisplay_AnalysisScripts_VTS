@@ -70,7 +70,8 @@ IRFTYPE=$2
 DISPBDT=1
 
 # evndisplay version
-IRFVERSION=`$EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//'`
+EDVERSION=$($EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//')
+echo "Eventdisplay version: ${EDVERSION}"
 
 # uuid for this job batch
 DATE=`date +"%y%m%d"`
@@ -88,7 +89,7 @@ fi
 NEVENTS="-1"
 
 # run parameter file for evndisp analysis
-if [[ $IRFVERSION = "v4"* ]]; then
+if [[ $EDVERSION = "v4"* ]]; then
     ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
     if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
       ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
@@ -145,14 +146,15 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 160 )
-    # ZENITH_ANGLES=( 00 )
+    # NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
     # TEST PRODUCTION
     # NSB_LEVELS=( 160 200 250 300 400 )
     # ZENITH_ANGLES=( 20 40 50 60 )
+    # ZENITH_ANGLES=( 00 30 35 45 55 )
     # WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.5 )
     # !TEST PRODUCTION
     # NSB_LEVELS=( 50 75 100 130 350 450 )
@@ -218,7 +220,7 @@ fi
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -228,7 +230,7 @@ for VX in $EPOCH; do
     for ATM in $ATMOS; do
        ######################
        # set lookup table file name
-       TABLECOM="table-${IRFVERSION}-${AUX}-${SIMTYPE}-ATM${ATM}-${VX}-"
+       TABLECOM="table-${EDVERSION}-${AUX}-${SIMTYPE}-ATM${ATM}-${VX}-"
        ######################
        # combine lookup tables
        if [[ $IRFTYPE == "COMBINETABLES" ]]; then
@@ -322,7 +324,7 @@ for VX in $EPOCH; do
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
                              $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
-                             $DISPBDT $UUID
+                             $DISPBDT $UUID ${EDVERSION}
                       done
                    done
                    continue
@@ -363,7 +365,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT $UUID
+                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT $UUID ${EDVERSION}
 			            done #recID
                     ######################
                     # analyse effective areas
@@ -374,7 +376,7 @@ for VX in $EPOCH; do
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
                                    $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
-                                   $DISPBDT $UUID
+                                   $DISPBDT $UUID ${EDVERSION}
                             done # cuts
                         done #recID
                     fi

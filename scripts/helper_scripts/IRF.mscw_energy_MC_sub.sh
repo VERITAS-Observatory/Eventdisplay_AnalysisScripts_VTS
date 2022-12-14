@@ -50,6 +50,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
     MOPT="$MOPT -maxloss=0.2"
+    # MOPT="$MOPT -disp_use_intersect"
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${EPOCH} == *"redHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}_redHV/"
@@ -65,8 +66,12 @@ if [ $DISPBDT -eq 1 ]; then
     else
         DISPDIR="${DISPDIR}/XZE/"
     fi
-    MOPT="$MOPT -tmva_filename_stereo_reconstruction $DISPDIR/BDTDisp_BDT_"
-    MOPT="$MOPT -tmva_filename_disperror_reconstruction $DISPDIR/BDTDispError_BDT_"
+    # unzip XML files into tmpdir
+    cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
+    gunzip -v ${DDIR}/*xml.gz
+    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
+    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
+    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
 
