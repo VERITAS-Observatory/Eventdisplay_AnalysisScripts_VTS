@@ -21,7 +21,7 @@ DISPBDT=USEDISP
 # output directory
 OSUBDIR="$ODIR/MSCW_RECID${RECID}"
 if [ $DISPBDT -eq 1 ]; then
-    OSUBDIR="${OSUBDIR}_DISP_TEST"
+    OSUBDIR="${OSUBDIR}_DISP"
 fi
 mkdir -p "$OSUBDIR"
 chmod g+w "$OSUBDIR"
