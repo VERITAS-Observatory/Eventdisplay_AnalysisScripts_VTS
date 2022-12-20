@@ -148,7 +148,12 @@ if [[ $SUBC == *qsub* ]]; then
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-#    condor_submit $FSCRIPT.sh.condor
+    echo
+    echo "-------------------------------------------------------------------------------"
+    echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+    echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+    echo "-------------------------------------------------------------------------------"
+    echo
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
