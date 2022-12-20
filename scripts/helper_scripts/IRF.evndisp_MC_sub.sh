@@ -25,8 +25,8 @@ EDVERSION=VVERSION
 ADDOPT="ADDITIONALOPTIONS"
 
 # number of pedestal events
-PEDNEVENTS="200000"
-TZERONEVENTS="100000"
+PEDNEVENTS="10000"
+TZERONEVENTS="10000"
 
 echo "PROCESS ID ${Process}"
 echo "SGE_ID ${SGE_TASK_ID}"
@@ -221,16 +221,66 @@ $EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
 #################################################################################
 # cleanup
 ls -lh "$DDIR"
-cp -f -v "$DDIR/$ONAME.root" "$ODIR/$ONAME.root"
 cp -r -f -v ${CALDIR}/Calibration ${ODIR}/
-chmod g+w "$ODIR/$ONAME.root"
-chmod g+w "$ODIR/$ONAME.log"
-chmod g+w "$ODIR/$ONAME.tzero.log"
-chmod -R g+w $ODIR/Calibration
-rm -f -v "$DDIR/$ONAME.root"
 rm -f -v "$VBF_FILE"
 
 echo "EVNDISP output root file written to $ODIR/$ONAME.root"
 echo "EVNDISP log file written to $ODIR/$ONAME.log"
+#################################################################################
+# add log files to eventdisplay files and compress file
 
-exit
+### add log files to evndisp file
+add_log_file()
+{
+     # first check if logFile is already included in evndisp file
+     LCON=$($EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root | grep "Error: log file object" | wc -l)
+     if [[ ${LCON} == 1 ]]; then
+         echo "writing log file ${2}"
+         if [[ -f ${2} ]]; then
+             $EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root ${2}
+         fi
+     else
+         echo "log file ${2} already in $DDIR/$ONAME.root"
+     fi
+}
+
+add_log_file evndispLog $ODIR/$ONAME.log
+add_log_file evndisppedLog $ODIR/$ONAME.ped.log
+add_log_file evndisptzeroLog $ODIR/$ONAME.tzero.log
+
+### check that log files are filled correctly
+compare_log_file()
+{
+    $EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root > ${DDIR}/${1}.log
+    if cmp -s "${2}" "${DDIR}/${1}.log"; then
+        echo "FILES ${1} ${2} are the same, removing"
+    else
+        touch $ODIR/$ONAME.${1}.errorlog
+        echo "Error, ${1} ${2} differ" >> $ODIR/$ONAME.${1}.errorlog
+    fi
+}
+
+compare_log_file evndispLog $ODIR/$ONAME.log
+compare_log_file evndisppedLog $ODIR/$ONAME.ped.log
+compare_log_file evndisptzeroLog $ODIR/$ONAME.tzero.log
+
+### compress evndisp root file
+compress_file()
+{
+    if command -v zstd /dev/null; then
+        zstd ${1}
+        zstd --test ${1}.zst
+    else
+        echo "Error: zstd compressing executable not found"
+        exit
+    fi
+}
+
+compress_file $DDIR/$ONAME.root
+mv -f -v $DDIR/$ONAME.root.zst ${ODIR}/
+
+### set group permissions
+chmod g+w "$ODIR/$ONAME.root.zst"
+chmod g+w "$ODIR/$ONAME.log"
+chmod g+w "$ODIR/$ONAME.tzero.log"
+chmod -R g+w $ODIR/Calibration

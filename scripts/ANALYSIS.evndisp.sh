@@ -71,7 +71,7 @@ RLIST=$1
 [[ "$2" ]] && ODIR=$2 || ODIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
 mkdir -p $ODIR
 
-ACUTS_AUTO="EVNDISP.reconstruction.runparameter.APv4x"
+ACUTS_AUTO="EVNDISP.reconstruction.runparameter.AP.v4x"
 if [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
    ACUTS_AUTO="EVNDISP.reconstruction.runparameter.TS.v4x"
 elif [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then

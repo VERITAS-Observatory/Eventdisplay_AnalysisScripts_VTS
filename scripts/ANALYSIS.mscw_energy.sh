@@ -218,6 +218,13 @@ do
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
         if [[ ${EDVERSION} == "v487" ]]; then
            condor_submit $FSCRIPT.sh.condor
+        else
+            echo
+            echo "-------------------------------------------------------------------------------"
+            echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+            echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+            echo "-------------------------------------------------------------------------------"
+            echo
         fi
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
