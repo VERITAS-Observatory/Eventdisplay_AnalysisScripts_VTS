@@ -78,9 +78,9 @@ if [ ! -f "$RLIST" ] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-FILES=`cat $RLIST`
+FILES=`cat "$RLIST"`
 
-NRUNS=`cat $RLIST | wc -l ` 
+NRUNS=`cat "$RLIST" | wc -l ` 
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -91,7 +91,7 @@ echo -e "Output files will be written to:\n $ODIR"
 # run scripts are written into this directory
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/MSCW.ANADATA"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
@@ -201,7 +201,6 @@ do
     echo "Submission command: $SUBC"
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
-        
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -230,7 +229,7 @@ do
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-        $FSCRIPT.sh |& tee "$FSCRIPT.log"
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
     fi
 done
 
@@ -238,5 +237,3 @@ done
 if [[ $SUBC == *parallel* ]]; then
     cat $LOGDIR/runscripts.$TIMETAG.dat | $SUBC
 fi
-
-exit

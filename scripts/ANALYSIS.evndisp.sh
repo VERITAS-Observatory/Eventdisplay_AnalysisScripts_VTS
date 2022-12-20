@@ -102,10 +102,14 @@ if [ ! -f "$RLIST" ] ; then
 fi
 FILES=`cat "$RLIST"`
 
-# Output directory for error/output
+NRUNS=`cat "$RLIST" | wc -l ` 
+echo "total number of runs to analyze: $NRUNS"
+echo
+# run scripts are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANADATA"
+LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/EVNDISP.ANADATA"
 mkdir -p "$LOGDIR"
+echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
@@ -113,7 +117,6 @@ SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
 SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
 
-# time tag used in script naming
 TIMETAG=`date +"%s"`
 TIMESUFF="-$(date +%s)"
 if [[ $SUBC == *parallel* ]]; then
@@ -121,7 +124,6 @@ if [[ $SUBC == *parallel* ]]; then
    touch $LOGDIR/runscripts.sh
 fi
 
-NRUNS=`cat "$RLIST" | wc -l ` 
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -214,7 +216,7 @@ do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
         
-        echo "RUN $AFILE JOBID $JOBID"
+		echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
             echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
@@ -222,7 +224,16 @@ do
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        condor_submit $FSCRIPT.sh.condor
+        if [[ ${EDVERSION} == "v487" ]]; then
+           condor_submit $FSCRIPT.sh.condor
+        else
+            echo
+            echo "-------------------------------------------------------------------------------"
+            echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+            echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+            echo "-------------------------------------------------------------------------------"
+            echo
+        fi
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
@@ -252,4 +263,3 @@ if [[ $SUBC == *parallel* ]]; then
     source Run_me.sh
     rm Run_me.sh
 fi
-
