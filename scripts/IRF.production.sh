@@ -80,7 +80,7 @@ UUID=${DATE}-$(uuidgen)
 # version string for aux files
 AUX="auxv01"
 # Analysis Type
-ANATYPE="GEO"
+ANATYPE="AP"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
    ANATYPE="$VERITAS_ANALYSIS_TYPE"
 fi
@@ -148,7 +148,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # TEST
     # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
     # TEST PRODUCTION

@@ -145,7 +145,7 @@ do
         SIMTYPE_RUN="$SIMTYPE"
     fi
 
-    ANATYPE="GEO"
+    ANATYPE="AP"
     if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
        ANATYPE="$VERITAS_ANALYSIS_TYPE"
     fi 

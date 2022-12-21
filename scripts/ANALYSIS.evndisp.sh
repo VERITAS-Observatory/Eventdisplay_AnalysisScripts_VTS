@@ -78,6 +78,8 @@ elif [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
    ACUTS_AUTO="EVNDISP.reconstruction.runparameter.NN.v4x"
 elif [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
    ACUTS_AUTO="EVNDISP.reconstruction.runparameter.CC.v4x"
+else
+   VERITAS_ANALYSIS_TYPE="AP"
 fi
 if [[ $EDVERSION == "v487" ]]; then
     ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v48x"

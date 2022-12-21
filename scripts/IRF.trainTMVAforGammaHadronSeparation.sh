@@ -66,6 +66,10 @@ PARTICLE_TYPE="gamma"
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
 
+if [[ -z $VERITAS_ANALYSIS_TYPE ]]; then
+    VERITAS_ANALYSIS_TYPE="AP"
+fi
+
 # Check that list of background files exists
 if [[ ! -f "$BLIST" ]]; then
     echo "Error, list of background files $BLIST not found, exiting..."
