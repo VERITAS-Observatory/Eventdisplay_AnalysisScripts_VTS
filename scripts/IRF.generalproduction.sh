@@ -42,6 +42,12 @@ process_irfs()
     # for E in ${EPOCHS[@]};
     for E in $EPOCHS
     do
+        if [[ $E == "V6_2012_2013a" ]] && [[ $3 == "61" ]]; then
+            continue
+        fi
+        if [[ $E == "V6_2020_2021w" ]] && [[ $3 == "61" ]]; then
+            continue
+        fi
         echo $E $1 $2 $3
         ./IRF.production.sh $2 $1 $E $3
     done
