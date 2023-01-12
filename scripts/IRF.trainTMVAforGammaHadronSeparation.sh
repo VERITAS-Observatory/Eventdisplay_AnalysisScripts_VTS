@@ -4,13 +4,13 @@
 # qsub parameters
 h_cpu=11:59:59; h_vmem=11599M; tmpdir_size=24G
 
-if [[ $# -lt 10 ]]; then
+if [[ $# -lt 7 ]]; then
 # begin help message
 echo "
 TMVA training of BDT: submit jobs from a TMVA runparameter file
 
 IRF.trainTMVAforGammaHadronSeparation.sh <list of background files> <TMVA runparameter file> <output directory> <output file name> <sim type>
- [epoch] [atmosphere] [Rec ID]
+ <epoch> <atmosphere>
 
 required parameters:
 
@@ -25,16 +25,11 @@ required parameters:
 
     <sim type>                      original VBF file simulation type (e.g. GRISU, CARE)
 
-optional parameters:
-
-    [epoch]                         array epoch e.g. V4, V5, V6
+    <epoch>                         array epoch e.g. V4, V5, V6
                                     default: \"V6\"
 
-    [atmosphere]                    atmosphere model(s) (61 = winter, 62 = summer)
+    <atmosphere>                    atmosphere model(s) (61 = winter, 62 = summer)
                                     default: \"61\"
-
-    [Rec ID]                        reconstruction ID(s) (default: \"0\")
-                                    (see EVNDISP.reconstruction.runparameter)	    
 
 additional info:
 
@@ -61,7 +56,7 @@ echo "Output dir: $ODIR"
 echo "Simulation type: $SIMTYPE"
 [[ "$6" ]] && EPOCH=$6 || EPOCH="V6"
 [[ "$7" ]] && ATM=$7 || ATM="61"
-[[ "$8" ]] && RECID=$8 || RECID="0"
+RECID="0"
 PARTICLE_TYPE="gamma"
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
@@ -91,7 +86,6 @@ echo "Original TMVA run parameter file: $RXPAR.runparameter "
 # output directory
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p $ODIR
-mkdir -p $ODIR/RecID${RECID}
 
 #####################################
 # energy bins
@@ -118,7 +112,7 @@ ZENITH_ANGLES=( 20 30 35 40 45 50 55 )
 #####################################
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/TMVA.ANADATA"
+LOGDIR="$ODIR/$DATE/TMVA.ANADATA"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
 
@@ -140,10 +134,10 @@ do
       echo "Zenith Bin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
       
       # copy run parameter file with basic options to output directory
-      cp -f $RUNPAR $ODIR
+      # cp -v -f $RUNPAR $ODIR
 
       # updating the run parameter file for each parameter space
-      RFIL=$ODIR/RecID${RECID}/$RXPAR"_$i""_$j"
+      RFIL=$ODIR/$RXPAR"_$i""_$j"
       echo "TMVA Runparameter file: $RFIL.runparameter"
       rm -f $RFIL
       
@@ -184,14 +178,9 @@ do
       ## (end temporary)
       echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
 
-      # split runparameter file for event list writing and training
-      cp -v $RFIL.runparameter $RFIL.eventlist.runparameter
-      EVENTLIST="TMVA.${ONAME}_${i}_${j}"
-      echo "* OUTPUTFILE $ODIR/RecID${RECID} ${EVENTLIST}" >> $RFIL.eventlist.runparameter
-      echo "* OUTPUTFILE $ODIR/RecID${RECID} ${ONAME}_${i}_${j}" >> $RFIL.runparameter
-      echo "* PREEVENTLIST $ODIR/RecID${RECID}/${EVENTLIST}.root" >> $RFIL.runparameter
+      echo "* OUTPUTFILE $ODIR/ ${ONAME}_${i}_${j}" >> $RFIL.runparameter
 
-      echo "#######################################################################################" >> $RFIL.eventlist.runparameter
+      echo "#######################################################################################" >> $RFIL.runparameter
       # signal and background files (depending on on-axis or cone data set)
       for ATMX in $ATM; do
           SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$VERITAS_ANALYSIS_TYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
@@ -208,7 +197,7 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.eventlist.runparameter
+                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
                           done
                       fi
                   fi
@@ -222,25 +211,27 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.eventlist.runparameter
+                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
                           done
                       fi
                   fi
               done
           fi
       done 
-      echo "#######################################################################################" >> $RFIL.eventlist.runparameter
+      echo "#######################################################################################" >> $RFIL.runparameter
    	  for arg in $(cat $BLIST)
    	  do
-         echo "* BACKGROUNDFILE $arg" >> $RFIL.eventlist.runparameter
+         echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
       done
          
       FSCRIPT=$LOGDIR/TMVA.$ONAME"_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \
-          -e "s|OUTNAME|$ODIR/RecID${RECID}/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
+          -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
       chmod u+x $FSCRIPT.sh
       echo $FSCRIPT.sh
+
+      exit
 
       # run locally or on cluster
       SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
