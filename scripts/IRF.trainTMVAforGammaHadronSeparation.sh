@@ -231,8 +231,6 @@ do
       chmod u+x $FSCRIPT.sh
       echo $FSCRIPT.sh
 
-      exit
-
       # run locally or on cluster
       SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
       SUBC=`eval "echo \"$SUBC\""`
