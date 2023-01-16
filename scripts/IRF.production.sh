@@ -290,7 +290,7 @@ for VX in $EPOCH; do
                     ./IRF.trainTMVAforGammaHadronSeparation.sh \
                                  "$MVADIR"/BDTTraining.bck.list \
                                  "$MVADIR"/TMVA.BDT.runparameter \
-                                 "${MVADIR}" mva ${SIMTYPE} ${VX} "${ATM}"
+                                 "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                 done
             done
             continue
