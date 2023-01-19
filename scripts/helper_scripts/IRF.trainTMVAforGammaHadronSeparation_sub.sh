@@ -7,6 +7,8 @@ source $EVNDISPSYS/setObservatory.sh VTS
 # parameters replaced by parent script using sed
 RXPAR=RUNPARAM
           
+"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter WRITETRAININGEVENTS > "$RXPAR"_preselect.log
+
 "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter > "$RXPAR".log
 
 # remove unnecessary *.C files

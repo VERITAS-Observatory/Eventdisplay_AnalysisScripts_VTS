@@ -147,35 +147,31 @@ do
     
       nTrainSignal=200000
       nTrainBackground=200000
-      if  [ "$i" -eq "0" ] && [ "$j" -eq "3" ]; then
-          nTrainSignal=50000
-          nTrainBackground=0
-      elif  [ "$i" -eq "2" ] && [ "$j" -eq "0" ]; then
-          nTrainSignal=100000
-          nTrainBackground=100000
-      elif  [ "$i" -eq "2" ] && [ "$j" -eq "1" ]; then
-          nTrainSignal=100000
-          nTrainBackground=0
-      elif  [ "$i" -eq "2" ] && [ "$j" -eq "2" ]; then
-          nTrainSignal=100000
-          nTrainBackground=100000
-      elif  [ "$i" -eq "3" ] && [ "$j" -eq "0" ]; then
-          nTrainSignal=50000
-          nTrainBackground=0
-      elif  [ "$i" -eq "3" ] && [ "$j" -eq "1" ]; then
-          nTrainSignal=28000
-          nTrainBackground=0
-      elif  [ "$i" -eq "3" ] && [ "$j" -eq "2" ]; then
-          nTrainSignal=50000
-          nTrainBackground=0
-      elif  [ "$i" -eq "3" ] && [ "$j" -eq "3" ]; then
-          nTrainSignal=100000
-          nTrainBackground=0
-      fi
-      ### (temporary)
-      nTrainBackground=0
-      nTrainSignal=0
-      ## (end temporary)
+#      if  [ "$i" -eq "0" ] && [ "$j" -eq "3" ]; then
+#          nTrainSignal=50000
+#          nTrainBackground=0
+#      elif  [ "$i" -eq "2" ] && [ "$j" -eq "0" ]; then
+#          nTrainSignal=100000
+#          nTrainBackground=100000
+#      elif  [ "$i" -eq "2" ] && [ "$j" -eq "1" ]; then
+#          nTrainSignal=100000
+#          nTrainBackground=0
+#      elif  [ "$i" -eq "2" ] && [ "$j" -eq "2" ]; then
+#          nTrainSignal=100000
+#          nTrainBackground=100000
+#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "0" ]; then
+#          nTrainSignal=50000
+#          nTrainBackground=0
+#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "1" ]; then
+#          nTrainSignal=28000
+#          nTrainBackground=0
+#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "2" ]; then
+#          nTrainSignal=50000
+#          nTrainBackground=0
+#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "3" ]; then
+#          nTrainSignal=100000
+#          nTrainBackground=0
+#      fi
       echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
 
       echo "* OUTPUTFILE $ODIR/ ${ONAME}_${i}_${j}" >> $RFIL.runparameter
