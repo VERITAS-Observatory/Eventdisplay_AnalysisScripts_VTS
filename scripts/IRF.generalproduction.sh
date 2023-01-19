@@ -42,10 +42,10 @@ process_irfs()
     # for E in ${EPOCHS[@]};
     for E in $EPOCHS
     do
-        if [[ $E == "V6_2012_2013a" ]] && [[ $3 == "61" ]]; then
+        if [[ ${E:(-1)} == "w" ]] && [[ $3 == "62" ]]; then
             continue
         fi
-        if [[ $E == "V6_2020_2021w" ]] && [[ $3 == "61" ]]; then
+        if [[ ${E:(-1)} == "s" ]] && [[ $3 == "61" ]]; then
             continue
         fi
         echo $E $1 $2 $3
