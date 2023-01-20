@@ -2,7 +2,7 @@
 # script to train BDTs with TMVA
 
 # qsub parameters
-h_cpu=11:59:59; h_vmem=11599M; tmpdir_size=24G
+h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=24G
 
 if [[ $# -lt 7 ]]; then
 # begin help message
@@ -147,31 +147,7 @@ do
     
       nTrainSignal=200000
       nTrainBackground=200000
-#      if  [ "$i" -eq "0" ] && [ "$j" -eq "3" ]; then
-#          nTrainSignal=50000
-#          nTrainBackground=0
-#      elif  [ "$i" -eq "2" ] && [ "$j" -eq "0" ]; then
-#          nTrainSignal=100000
-#          nTrainBackground=100000
-#      elif  [ "$i" -eq "2" ] && [ "$j" -eq "1" ]; then
-#          nTrainSignal=100000
-#          nTrainBackground=0
-#      elif  [ "$i" -eq "2" ] && [ "$j" -eq "2" ]; then
-#          nTrainSignal=100000
-#          nTrainBackground=100000
-#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "0" ]; then
-#          nTrainSignal=50000
-#          nTrainBackground=0
-#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "1" ]; then
-#          nTrainSignal=28000
-#          nTrainBackground=0
-#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "2" ]; then
-#          nTrainSignal=50000
-#          nTrainBackground=0
-#      elif  [ "$i" -eq "3" ] && [ "$j" -eq "3" ]; then
-#          nTrainSignal=100000
-#          nTrainBackground=0
-#      fi
+
       echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
 
       echo "* OUTPUTFILE $ODIR/ ${ONAME}_${i}_${j}" >> $RFIL.runparameter
