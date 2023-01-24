@@ -22,7 +22,7 @@ required parameters:
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
                              (ANALYSETABLES, EFFECTIVEAREAS,)
                              ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINMVANGRES, EVNDISPCOMPRESS )
+                             MVAEVNDISP, TRAINTMVA, TRAINMVANGRES, EVNDISPCOMPRESS )
     
 optional parameters:
     
@@ -262,21 +262,23 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "TRAINTMVA" ]]
        then
             for VX in $EPOCH; do
-                for C in "Moderate" "Soft" "Hard"
+                # for C in "Moderate" "Soft" "Hard"
+                for C in "Moderate"
                 do
                     echo "Training $C cuts for ${VX}"
-                    MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadron_BDTs/${VX}/${C}/"
+                    MVADIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/${VX}/${C}/"
                     mkdir -p -v "${MVADIR}"
                     # list of background files
-                    TRAINDIR="$VERITAS_USER_DATA_DIR//analysis/Results/${EDVERSION}/BDTtraining/${EDVERSION}/RecID0_${SIMTYPE}/"
+                    TRAINDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/${SIMTYPE}/mscw/"
+                    mkdir -p ${TRAINDIR}
                     rm -f "$MVADIR/BDTTraining.bck.list"
                     ls -1 "$TRAINDIR"/*.root > "$MVADIR/BDTTraining.bck.list"
                     NBCKF=`wc -l "$MVADIR/BDTTraining.bck.list"`
                     echo "Total number of background files for training: $NBCKF"
                     # retrieve size cut
                     CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-*${C}-TMVA-Preselection.dat
-                    echo "$CUTFIL"
-                    SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH} | awk '{print $3}' | sort -u`
+                    echo "CUTFILE: $CUTFIL"
+                    SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
                     if [ -z "$SIZECUT" ]
                     then
                         echo "No size cut found; skipping cut $C"
@@ -288,7 +290,7 @@ for VX in $EPOCH; do
                     ./IRF.trainTMVAforGammaHadronSeparation.sh \
                                  "$MVADIR"/BDTTraining.bck.list \
                                  "$MVADIR"/TMVA.BDT.runparameter \
-                                 "${MVADIR}" mva ${SIMTYPE} ${VX} "${ATM}" 0
+                                 "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                 done
             done
             continue
