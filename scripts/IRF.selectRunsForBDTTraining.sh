@@ -28,7 +28,7 @@ BRIGHTSOURCES=( Crab Mrk421 )
 
 echo "Reference values: ${MEPOCH} ${OBSMODE} ${MULT} ${BRIGHTSOURCES[*]} "
 
-FLIST=$(find ${1} -name "83*[0-9].log"  | sed 's/\.log$//')
+FLIST=$(find ${1} -name "*[0-9].mscw.log"  | sed 's/\.log$//')
 
 mkdir -p ${2}
 
