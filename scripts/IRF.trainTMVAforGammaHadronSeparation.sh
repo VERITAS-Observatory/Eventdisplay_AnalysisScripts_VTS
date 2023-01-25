@@ -1,7 +1,11 @@
 #!/bin/bash
 # script to train BDTs with TMVA
+#
+# note the large amount of hardwired parameters in this scripts
+# dependence especially on the type of simulations and
+# available zenith / NSB bins
+#
 
-# qsub parameters
 h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=24G
 
 if [[ $# -lt 7 ]]; then
@@ -59,7 +63,7 @@ echo "Simulation type: $SIMTYPE"
 RECID="0"
 PARTICLE_TYPE="gamma"
 # evndisplay version
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
+IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforGammaHadronSeparation --version | tr -d .| sed -e 's/[a-Z]*$//'`
 
 if [[ -z $VERITAS_ANALYSIS_TYPE ]]; then
     VERITAS_ANALYSIS_TYPE="AP"
@@ -94,9 +98,6 @@ declare -a EBINARRAY=( $ENBINS ) #convert to array
 count1=1
 NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
 
-####################################
-# energy reconstruction method
-echo "Energy reconstruction method: 1 (hard-coded)"
 #####################################
 # zenith angle bins
 ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
@@ -106,8 +107,7 @@ NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 
 #####################################
 # zenith angle bins of MC simulation files
-# ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
-ZENITH_ANGLES=( 20 30 35 40 45 50 55 )
+ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
 
 #####################################
 # directory for run scripts
@@ -196,7 +196,7 @@ do
          echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
       done
          
-      FSCRIPT=$LOGDIR/TMVA.$ONAME"_$i""_$j"
+      FSCRIPT=$LOGDIR/$ONAME"_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \
           -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
