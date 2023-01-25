@@ -152,6 +152,8 @@ for ((i=1; i <= $NLINES; i++)); do
                 echo "RUN $RUN OLOG $FSCRIPT.sh.o$JOBID"
                 echo "RUN $RUN ELOG $FSCRIPT.sh.e$JOBID"
             fi
+	elif [[ $SUBC == *sbatch* ]]; then
+            $SUBC $FSCRIPT.sh
         elif [[ $SUBC == *parallel* ]]; then
             echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIRTEMP/runscripts.$TIMETAG.dat"
         elif [[ "$SUBC" == *simple* ]] ; then
