@@ -259,6 +259,8 @@ for VX in $EPOCH; do
        fi
        #############################################
        # MVA training
+       # train per epoch and atmosphere and for each cut
+       # (cut as sizesecondmax cut is applied)
        if [[ $IRFTYPE == "TRAINTMVA" ]]
        then
             for VX in $EPOCH; do
@@ -287,12 +289,11 @@ for VX in $EPOCH; do
                             continue
                         fi
                         echo "Size cut applied: $SIZECUT"
-                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/TMVA.BDT.runparameter
-                        sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/TMVA.BDT.runparameter
-                        continue
+                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                        sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
                         ./IRF.trainTMVAforGammaHadronSeparation.sh \
                                      "$MVADIR"/BDTTraining.bck.list \
-                                     "$MVADIR"/TMVA.BDT.runparameter \
+                                     "$MVADIR"/BDT.runparameter \
                                      "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                     done
                 done
