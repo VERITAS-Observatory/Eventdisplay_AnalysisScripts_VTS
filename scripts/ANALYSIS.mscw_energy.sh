@@ -226,7 +226,7 @@ do
             echo
         fi
     elif [[ $SUBC == *sbatch* ]]; then
-	echo "$SUBC $FSCRIPT.sh"      
+        $SUBC $FSCRIPT.sh      
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
