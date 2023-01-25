@@ -51,9 +51,9 @@ do
     fi
     TMPTARGET=$(echo $RUNINFO | cut -d\  -f6- )
     BRK="FALSE"
-    for S in ${BRIGHTSOURCES}
+    for (( l=0; l < ${#BRIGHTSOURCES[@]}; l++ ))
     do
-        if [[ "${TMPTARGET}" == "${S}" ]]; then
+        if [[ "${TMPTARGET}" == "${BRIGHTSOURCES[$l]}" ]]; then
             BRK="TRUE"
             break
         fi
