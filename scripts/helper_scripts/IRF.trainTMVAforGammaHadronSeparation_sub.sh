@@ -14,7 +14,5 @@ RXPAR=RUNPARAM
 # remove unnecessary *.C files
 CDIR=`dirname $RXPAR`
 rm -f -v "$CDIR"/$ONAME*.C
-# gzip XML files
-gzip -f -v "$CDIR"/$ONAME*.xml
 
 exit
