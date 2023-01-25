@@ -269,12 +269,13 @@ for VX in $EPOCH; do
                     for C in "NTel2-PointSource-Moderate" "NTel2-PointSource-Soft" "NTel3-PointSource-Hard"
                     do
                         echo "Training $C cuts for ${VX} ATM${ATM}"
-                        MVADIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/${VX}_ATM${ATM}/${C}/"
+                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/"
+                        MVADIR="${BDTDIR}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         mkdir -p -v "${MVADIR}"
                         # list of background files
                         # (TODO: select atmosphere / epoch file)
                         # (TODO: nominal/redHV/UVfilter)
-                        TRAINDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/mscw/"
+                        TRAINDIR="${BDTDIR}/mscw/"
                         # retrieve size cut
                         CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
                         echo "CUTFILE: $CUTFIL"
