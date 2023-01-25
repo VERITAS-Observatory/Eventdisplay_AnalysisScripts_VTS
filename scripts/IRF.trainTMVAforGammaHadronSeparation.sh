@@ -13,12 +13,12 @@ if [[ $# -lt 7 ]]; then
 echo "
 TMVA training of BDT: submit jobs from a TMVA runparameter file
 
-IRF.trainTMVAforGammaHadronSeparation.sh <list of background files> <TMVA runparameter file> <output directory> <output file name> <sim type>
+IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA runparameter file> <output directory> <output file name> <sim type>
  <epoch> <atmosphere>
 
 required parameters:
 
-    <list of background files>      list of background training (mscw) files with whole path to each file
+    <background file directory>     directory with background training (mscw) files
     
     <TMVA runparameter file>        TMVA runparameter file with basic options (incl. whole range of 
 	                                energy and zenith angle bins) and full path
@@ -49,12 +49,12 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
-BLIST=$1
+BDIR=$1
 RUNPAR=$2
 ODIR=$3
 ONAME=$4
 [[ "$5" ]] && SIMTYPE=$5 || SIMTYPE="CARE_June2020"
-echo "Background list: $BLIST"
+echo "Background file directory: $BDIR"
 echo "Runparameters: $RUNPAR"
 echo "Output dir: $ODIR"
 echo "Simulation type: $SIMTYPE"
@@ -70,8 +70,8 @@ if [[ -z $VERITAS_ANALYSIS_TYPE ]]; then
 fi
 
 # Check that list of background files exists
-if [[ ! -f "$BLIST" ]]; then
-    echo "Error, list of background files $BLIST not found, exiting..."
+if [[ ! -d "$BDIR" ]]; then
+    echo "Error, directory with background files $BDIR not found, exiting..."
     exit 1
 fi
 
@@ -101,7 +101,6 @@ NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
 #####################################
 # zenith angle bins
 ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
-
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
 NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 
@@ -179,7 +178,6 @@ do
               do
                   if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                       if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                          # SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{50,80,120,170,230}.mscw.root`
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
                           for arg in $SIGNALLIST
                           do
@@ -191,6 +189,13 @@ do
           fi
       done 
       echo "#######################################################################################" >> $RFIL.runparameter
+      BLIST="$ODIR/BackgroundRunlist_Ze${j}.list"
+      rm -f ${BLIST}
+      if [[ ! -d "${BDIR}/Ze_${j}" ]]; then
+          echo "Error, directory with background files ${BDIR}/Ze_${j} not found, exiting..."
+          exit 1
+      fi
+      ls -1 ${BDIR}/Ze_${j}/*.root > ${BLIST}
    	  for arg in $(cat $BLIST)
    	  do
          echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
