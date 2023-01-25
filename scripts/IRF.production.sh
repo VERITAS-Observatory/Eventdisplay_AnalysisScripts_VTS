@@ -146,8 +146,8 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 20 )
+    NSB_LEVELS=( 200 )
+    ZENITH_ANGLES=( 20 )
     WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
@@ -219,8 +219,9 @@ fi
 #         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -274,11 +275,6 @@ for VX in $EPOCH; do
                         # (TODO: select atmosphere / epoch file)
                         # (TODO: nominal/redHV/UVfilter)
                         TRAINDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/mscw/"
-                        mkdir -p ${TRAINDIR}
-                        rm -f "$MVADIR/BDTTraining.bck.list"
-                        ls -1 "$TRAINDIR"/*.root > "$MVADIR/BDTTraining.bck.list"
-                        NBCKF=`wc -l "$MVADIR/BDTTraining.bck.list"`
-                        echo "Total number of background files for training: $NBCKF"
                         # retrieve size cut
                         CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
                         echo "CUTFILE: $CUTFIL"
@@ -292,7 +288,7 @@ for VX in $EPOCH; do
                         cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
                         sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
                         ./IRF.trainTMVAforGammaHadronSeparation.sh \
-                                     "$MVADIR"/BDTTraining.bck.list \
+                                     "${TRAINDIR}" \
                                      "$MVADIR"/BDT.runparameter \
                                      "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                     done

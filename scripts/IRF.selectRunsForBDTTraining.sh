@@ -9,13 +9,16 @@
 #
 #
 
-if [ $# -ne 2 ]; then
-     echo "./IRF.selectRunsForBDTTraining.sh <source evndisp directory> <target evndisp directory>"
+if [ $# -ne 3 ]; then
+     echo "./IRF.selectRunsForBDTTraining.sh <source evndisp directory> <target evndisp directory> <TMVA run parameter file>"
      echo 
+     echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
      exit
 fi
 
+TARGETDIR="${2}"
+RUNPAR="${3}"
 
 # MAJOR EPOCH
 MEPOCH="V6"
@@ -28,6 +31,16 @@ BRIGHTSOURCES=( Crab Mrk421 )
 
 echo "Reference values: ${MEPOCH} ${OBSMODE} ${MULT} ${BRIGHTSOURCES[*]} "
 
+# zenith angle bins
+ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+echo "Zenith angle definition: $ZEBINS"
+declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
+NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
+for (( j=0; j < $NZEW; j++ ))
+do
+    mkdir -p ${TARGETDIR}/Ze_${j}
+done
+
 FLIST=$(find ${1} -name "*[0-9].mscw.log"  | sed 's/\.log$//')
 
 mkdir -p ${2}
@@ -35,6 +48,16 @@ mkdir -p ${2}
 for F in ${FLIST}
 do
     ls -1 ${F}.log
+    RUNZENITH=$($EVNDISPSYS/bin/printRunParameter ${F}.root -zenith | awk '{print $4}')
+    ZEBIN=0
+    for (( j=0; j < $NZEW; j++ ))
+    do
+        if [[ ${RUNZENITH} > ${ZEBINARRAY[$j]} ]] && [[ ${RUNZENITH} < ${ZEBINARRAY[$j+1]} ]]; then
+            ZEBIN=$j
+            break;
+        fi
+    done
+    echo "Zenith bin: ${ZEBIN}"
     RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${F}.root -runinfo)
 
     TMPMEPOCH=$(echo $RUNINFO | awk '{print $2}')
@@ -62,10 +85,13 @@ do
         echo "   skipping $TMPTARGET"
         continue
     fi
-    echo "   found $TMPTARGET $TMPOBSMODE $TMPMEPOCH $TMPMULT"
+    echo "   found $TMPTARGET $TMPOBSMODE $TMPMEPOCH $TMPMULT $RUNZENITH (ZE bin ${ZEBIN})"
     BNAME=$(basename ${F}.root)
-    if [[ ! -e ${2}/${BNAME} ]]; then
-        ln -s ${F}.root ${2}/${BNAME}
+    if [[ ! -e ${TARGETDIR}/Ze_${ZEBIN}/${BNAME} ]]; then
+        ln -s ${F}.root ${TARGETDIR}/Ze_${ZEBIN}/${BNAME}
+    fi
+    if [[ ! -e ${TARGETDIR}/${BNAME} ]]; then
+        ln -s ${F}.root ${TARGETDIR}/${BNAME}
     fi
 done
 
