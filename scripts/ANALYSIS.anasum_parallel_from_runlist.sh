@@ -89,6 +89,9 @@ ANATYPE="AP"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
     ANATYPE="$VERITAS_ANALYSIS_TYPE"
 fi
+if [[ ${EDVERSION} == "v487" ]]; then
+    ANATYPE="GEO"
+fi
 
 # cut definitions (note: VX to be replaced later in script)
 if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
