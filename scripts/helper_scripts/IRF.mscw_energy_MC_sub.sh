@@ -78,13 +78,14 @@ fi
 # input evndisp files
 rm -f $OSUBDIR/$OFILE.log
 rm -f $OSUBDIR/$OFILE.list
-if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
+echo "INDIR ${INDIR}"
+if [ -n "$(find "${INDIR}/" -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Using evndisp root files from ${INDIR}"
     ls -1 ${INDIR}/*[0-9].root > $OSUBDIR/$OFILE.list
-elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
+elif [ -n "$(find  "${INDIR}/" -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     if command -v zstd /dev/null; then
         echo "Copying evndisp root.zst files to ${TMPDIR}"
-        FLIST=$(find ${INDIR} -name "*[0-9].root.zst")
+        FLIST=$(find "${INDIR}/" -name "*[0-9].root.zst")
         for F in $FLIST
         do
             echo "unpacking $F"
@@ -97,7 +98,8 @@ elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     fi
     ls -1 ${TMPDIR}/*[0-9].root > $OSUBDIR/$OFILE.list
 fi
-
+echo "Evndisp files:"
+cat $OSUBDIR/$OFILE.list
 
 # run mscw_energy
 outputfilename="$DDIR/$OFILE.mscw.root"
