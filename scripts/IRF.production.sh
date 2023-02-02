@@ -89,17 +89,13 @@ fi
 NEVENTS="-1"
 
 # run parameter file for evndisp analysis
-if [[ $EDVERSION = "v4"* ]]; then
-    ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
-    if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
-      ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
-    fi
-    if [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
-      ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
-    fi
-    if [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
-      ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
-    fi
+ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
+if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
+  ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
+elif [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
+  ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
+elif [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
+  ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
 fi
 
 # simulation types and definition of parameter space
@@ -146,8 +142,8 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 20 )
+    NSB_LEVELS=( 200 )
+    ZENITH_ANGLES=( 20 )
     WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
@@ -223,6 +219,7 @@ fi
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-SuperHard-TMVA-BDT.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
