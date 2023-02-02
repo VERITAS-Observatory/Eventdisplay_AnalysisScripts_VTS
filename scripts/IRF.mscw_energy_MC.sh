@@ -92,13 +92,20 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 fi
 if [[ ! -d $INDIR ]]; then
-    echo "Error, could not locate input directory. Locations searched:"
-    echo "$INDIR"
-    exit 1
+    echo "Input directory not found; try without ANALYSIS_TYPE"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EDVERSION}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    if [[ ! -d $INDIR ]]; then
+        echo "Error, could not locate input directory. Locations searched:"
+        echo "$INDIR"
+        exit 1
+    fi
 fi
 echo "Input file directory: $INDIR"
 
-NROOTFILES=$( ls -l "$INDIR"/*.root.zst | wc -l )
+NROOTFILES=$( ls -l "$INDIR"/*.root.zst 2>/dev/null | wc -l )
+if [[ $NROOTFILES == "0" ]]; then
+    NROOTFILES=$( ls -l "$INDIR"/*.root 2>/dev/null | wc -l )
+fi
 echo "NROOTFILES $NROOTFILES"
 
 # Output file directory
