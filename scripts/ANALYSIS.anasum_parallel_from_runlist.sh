@@ -59,7 +59,7 @@ fi
 
 ###########################
 # IRFs
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
+IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 AUXVERSION="auxv01"
 
 # Run init script
