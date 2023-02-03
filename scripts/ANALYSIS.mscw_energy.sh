@@ -158,7 +158,8 @@ do
     fi
     if [ ! -f "$TABFILE" ]; then
         echo "Error, table file '$TABFILE' not found, exiting..."
-        exit 1
+        continue
+#        exit 1
     fi
     DISPDIR="NOTSET"
     if [[ $DISPBDT == "1" ]]; then
