@@ -76,9 +76,8 @@ if [[ $DOWNLOAD == "1" ]] || [[ $DOWNLOAD == "2" ]]; then
    echo "DOWNLOAD STATUS $DOWNLOAD"
 fi
 
-## TMP TMP add epoch file
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
-    OPT=( -dbtextdirectory ${DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter.mjd )
+    OPT=( -dbtextdirectory ${DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter )
 fi
 
         

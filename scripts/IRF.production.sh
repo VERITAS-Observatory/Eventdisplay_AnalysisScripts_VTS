@@ -219,8 +219,10 @@ fi
 #         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -259,38 +261,39 @@ for VX in $EPOCH; do
        fi
        #############################################
        # MVA training
+       # train per epoch and atmosphere and for each cut
+       # (cut as sizesecondmax cut is applied)
        if [[ $IRFTYPE == "TRAINTMVA" ]]
        then
             for VX in $EPOCH; do
-                # for C in "Moderate" "Soft" "Hard"
-                for C in "Moderate"
-                do
-                    echo "Training $C cuts for ${VX}"
-                    MVADIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/${VX}/${C}/"
-                    mkdir -p -v "${MVADIR}"
-                    # list of background files
-                    TRAINDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/${SIMTYPE}/mscw/"
-                    mkdir -p ${TRAINDIR}
-                    rm -f "$MVADIR/BDTTraining.bck.list"
-                    ls -1 "$TRAINDIR"/*.root > "$MVADIR/BDTTraining.bck.list"
-                    NBCKF=`wc -l "$MVADIR/BDTTraining.bck.list"`
-                    echo "Total number of background files for training: $NBCKF"
-                    # retrieve size cut
-                    CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-*${C}-TMVA-Preselection.dat
-                    echo "CUTFILE: $CUTFIL"
-                    SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
-                    if [ -z "$SIZECUT" ]
-                    then
-                        echo "No size cut found; skipping cut $C"
-                        continue
-                    fi
-                    echo "Size cut applied: $SIZECUT"
-                    cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/TMVA.BDT.runparameter
-                    sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/TMVA.BDT.runparameter
-                    ./IRF.trainTMVAforGammaHadronSeparation.sh \
-                                 "$MVADIR"/BDTTraining.bck.list \
-                                 "$MVADIR"/TMVA.BDT.runparameter \
-                                 "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                for ATM in $ATMOS; do
+                    for C in "NTel2-PointSource-Moderate" "NTel2-PointSource-Soft" "NTel3-PointSource-Hard"
+                    do
+                        echo "Training $C cuts for ${VX} ATM${ATM}"
+                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/"
+                        MVADIR="${BDTDIR}/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                        mkdir -p -v "${MVADIR}"
+                        # list of background files
+                        # (TODO: select atmosphere / epoch file)
+                        # (TODO: nominal/redHV/UVfilter)
+                        TRAINDIR="${BDTDIR}/mscw/"
+                        # retrieve size cut
+                        CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
+                        echo "CUTFILE: $CUTFIL"
+                        SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
+                        if [ -z "$SIZECUT" ]
+                        then
+                            echo "No size cut found; skipping cut $C"
+                            continue
+                        fi
+                        echo "Size cut applied: $SIZECUT"
+                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                        sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
+                        ./IRF.trainTMVAforGammaHadronSeparation.sh \
+                                     "${TRAINDIR}" \
+                                     "$MVADIR"/BDT.runparameter \
+                                     "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                    done
                 done
             done
             continue

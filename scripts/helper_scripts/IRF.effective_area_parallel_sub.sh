@@ -53,7 +53,6 @@ for CUTSFILE in $CUTSLIST; do
 
 # parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
     PARAMFILE="
-    * OBSERVATORY 1
     * FILLINGMODE 0
     * ENERGYRECONSTRUCTIONMETHOD 1
     * ENERGYAXISBINS 60
@@ -81,7 +80,12 @@ for CUTSFILE in $CUTSLIST; do
 
     cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
     chmod g+w $OSUBDIR/$EAPARAMS.root
-    chmod g+w $OSUBDIR/$EAPARAMS.log
+    if [[ -f $EVNDISPSYS/bin/logFile ]]; then
+        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.log
+        rm -f $OSUBDIR/$EAPARAMS.log
+    else
+        chmod g+w $OSUBDIR/$EAPARAMS.log
+    fi
 
 done
 
