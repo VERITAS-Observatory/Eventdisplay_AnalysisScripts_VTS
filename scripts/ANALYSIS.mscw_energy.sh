@@ -149,6 +149,9 @@ do
     if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
        ANATYPE="$VERITAS_ANALYSIS_TYPE"
     fi 
+    if [[ ${EDVERSION} == "v487" ]]; then
+        ANATYPE="GEO"
+    fi
     TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
     echo "TABLEFILE: $TABFILE"
     # Check that table file exists
