@@ -1,4 +1,4 @@
-# select runs for BDT training
+# select mscw files for BDT training
 # 
 # selection is based on 
 # - epoch
@@ -10,7 +10,7 @@
 #
 
 if [ $# -ne 3 ]; then
-     echo "./IRF.selectRunsForBDTTraining.sh <source evndisp directory> <target evndisp directory> <TMVA run parameter file>"
+     echo "./IRF.selectRunsForBDTTraining.sh <source mscw directory> <target mscw directory> <TMVA run parameter file>"
      echo 
      echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
