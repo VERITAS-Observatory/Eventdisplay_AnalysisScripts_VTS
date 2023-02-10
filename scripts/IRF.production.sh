@@ -67,7 +67,6 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=0
 
 # evndisplay version
 EDVERSION=$($EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//')
@@ -81,8 +80,12 @@ UUID=${DATE}-$(uuidgen)
 AUX="auxv01"
 # Analysis Type
 ANATYPE="AP"
+DISPBDT=0
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
-   ANATYPE="$VERITAS_ANALYSIS_TYPE"
+   ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
+       DISPBDT="1"
+   fi
 fi
 
 # number of events per evndisp analysis
@@ -90,11 +93,11 @@ NEVENTS="-1"
 
 # run parameter file for evndisp analysis
 ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
-if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
+if [[ $ANATYPE = "NN"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
-elif [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
+elif [[ $ANATYPE = "CC"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
-elif [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
+elif [[ $ANATYPE = "TS"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
 fi
 
@@ -142,9 +145,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 200 )
-    ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
+    NSB_LEVELS=( 160 200 250 )
+    #  ZENITH_ANGLES=( 20 )
+    WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
     ######################################
     # TEMPORARY
     # TEST PRODUCTION
@@ -217,8 +220,8 @@ fi
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
+#CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-SuperHard-TMVA-BDT.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
@@ -238,7 +241,7 @@ for VX in $EPOCH; do
                 echo "combine lookup tables"
                 $(dirname "$0")/IRF.combine_lookup_table_parts.sh \
                     "${TFIL}${ANATYPE}" "$VX" "$ATM" \
-                    "$ID" "$SIMTYPE" "$VERITAS_ANALYSIS_TYPE"
+                    "$ID" "$SIMTYPE" "$ANATYPE"
             done
             continue
        fi
@@ -250,7 +253,7 @@ for VX in $EPOCH; do
                     echo "combine effective areas $CUTS"
                    $(dirname "$0")/IRF.combine_effective_area_parts.sh \
                        "$CUTS" "$VX" "$ATM" \
-                       "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE" \
+                       "$ID" "$SIMTYPE" "$AUX" "$ANATYPE" \
                        "$DISPBDT"
                 done # cuts
             done
@@ -309,7 +312,7 @@ for VX in $EPOCH; do
                fi
                $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
                    $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                   $SIMTYPE $ANATYPE
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
@@ -325,7 +328,7 @@ for VX in $EPOCH; do
                          $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
-                             $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                             $ID $SIMTYPE $ANATYPE \
                              $DISPBDT $UUID ${EDVERSION}
                       done
                    done
@@ -344,11 +347,11 @@ for VX in $EPOCH; do
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE $UUID
+                               $SIMTYPE $ACUTS 1 $NEVENTS $ANATYPE $UUID
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            $(dirname "$0")/IRF.compress_evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
+                               $SIMTYPE $ANATYPE $UUID
                        fi
                     ######################
                     # make tables
@@ -356,7 +359,7 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                            $(dirname "$0")/IRF.generate_lookup_table_parts.sh \
                                $VX $ATM $ZA $WOBBLE $NOISE \
-                               $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
+                               $ID $SIMTYPE $ANATYPE $UUID
                         done #recID
                     ######################
                     # analyse table files
@@ -367,7 +370,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT $UUID ${EDVERSION}
+                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID ${EDVERSION}
 			            done #recID
                     ######################
                     # analyse effective areas
@@ -377,7 +380,7 @@ for VX in $EPOCH; do
                                 echo "combine effective areas $CUTS"
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
-                                   $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                                   $ID $SIMTYPE $ANATYPE \
                                    $DISPBDT $UUID ${EDVERSION}
                             done # cuts
                         done #recID
