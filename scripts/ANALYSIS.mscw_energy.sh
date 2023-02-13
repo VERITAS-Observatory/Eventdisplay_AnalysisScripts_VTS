@@ -69,7 +69,6 @@ DISPBDT="0"
 ANATYPE="AP"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-   echo "AAA $ANATYPE"
    if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
       DISPBDT="1"
    fi
