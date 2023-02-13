@@ -145,9 +145,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 160 200 250 )
+    # NSB_LEVELS=( 160 200 250 )
     #  ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
+    WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
     # TEST PRODUCTION
@@ -270,13 +270,16 @@ for VX in $EPOCH; do
                     for C in "NTel2-PointSource-Moderate" "NTel2-PointSource-Soft" "NTel3-PointSource-Hard"
                     do
                         echo "Training $C cuts for ${VX} ATM${ATM}"
-                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/"
+                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining/"
                         MVADIR="${BDTDIR}/${VX}_ATM${ATM}/${C/PointSource-/}/"
-                        mkdir -p -v "${MVADIR}"
                         # list of background files
-                        # (TODO: select atmosphere / epoch file)
                         # (TODO: nominal/redHV/UVfilter)
                         TRAINDIR="${BDTDIR}/mscw/"
+                        if [[ $DISPBDT == "1" ]]; then
+                            TRAINDIR="${BDTDIR}/mscw_DISP/"
+                            MVADIR="${BDTDIR}/DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                        fi 
+                        mkdir -p -v "${MVADIR}"
                         # retrieve size cut
                         CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
                         echo "CUTFILE: $CUTFIL"
