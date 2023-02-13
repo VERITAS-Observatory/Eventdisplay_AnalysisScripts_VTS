@@ -89,7 +89,10 @@ SIMTYPE_DEFAULT_V6UV="CARE_UV_2212"
 
 ANATYPE="AP"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
-    ANATYPE="$VERITAS_ANALYSIS_TYPE"
+   ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
+      DISPBDT="1"
+   fi
 fi
 
 # cut definitions (note: VX to be replaced later in script)
