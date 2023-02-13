@@ -20,7 +20,8 @@ required parameters:
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
                              (ANALYSETABLES, EFFECTIVEAREAS,)
                              ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, TRAINMVANGRES, EVNDISPCOMPRESS )
+                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
+                             TRAINMVANGRES, EVNDISPCOMPRESS )
 
 --------------------------------------------------------------------------------
 "

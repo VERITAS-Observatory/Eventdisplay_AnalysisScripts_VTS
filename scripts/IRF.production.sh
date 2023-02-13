@@ -22,7 +22,8 @@ required parameters:
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
                              (ANALYSETABLES, EFFECTIVEAREAS,)
                              ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, TRAINMVANGRES, EVNDISPCOMPRESS )
+                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
+                             TRAINMVANGRES, EVNDISPCOMPRESS )
     
 optional parameters:
     
@@ -226,6 +227,13 @@ CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
+# Cut types are used for BDT training and optimisation
+CUTTYPES="NTel2-PointSource-Moderate
+          NTel2-PointSource-Soft
+          NTel3-PointSource-Hard"
+CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
+CUTTYPES=${CUTTYPES//$'\n'/}
+
 ############################################################
 # loop over complete parameter space and submit production
 for VX in $EPOCH; do
@@ -263,13 +271,11 @@ for VX in $EPOCH; do
        # MVA training
        # train per epoch and atmosphere and for each cut
        # (cut as sizesecondmax cut is applied)
-       if [[ $IRFTYPE == "TRAINTMVA" ]]
-       then
+       if [[ $IRFTYPE == "TRAINTMVA" ]] || [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
             for VX in $EPOCH; do
                 for ATM in $ATMOS; do
-                    for C in "NTel2-PointSource-Moderate" "NTel2-PointSource-Soft" "NTel3-PointSource-Hard"
-                    do
-                        echo "Training $C cuts for ${VX} ATM${ATM}"
+                    for C in ${CUTTYPES[@]}; do
+                        echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
                         BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining/"
                         MVADIR="${BDTDIR}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         # list of background files
@@ -280,22 +286,30 @@ for VX in $EPOCH; do
                             MVADIR="${BDTDIR}/DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         fi 
                         mkdir -p -v "${MVADIR}"
-                        # retrieve size cut
-                        CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
-                        echo "CUTFILE: $CUTFIL"
-                        SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
-                        if [ -z "$SIZECUT" ]
-                        then
-                            echo "No size cut found; skipping cut $C"
-                            continue
-                        fi
-                        echo "Size cut applied: $SIZECUT"
-                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
-                        sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
-                        ./IRF.trainTMVAforGammaHadronSeparation.sh \
-                                     "${TRAINDIR}" \
-                                     "$MVADIR"/BDT.runparameter \
-                                     "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                        if [[ $IRFTYPE == "TRAINTMVA" ]]; then
+                            # retrieve size cut
+                            CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
+                            echo "CUTFILE: $CUTFIL"
+                            SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
+                            if [ -z "$SIZECUT" ]
+                            then
+                                echo "No size cut found; skipping cut $C"
+                                continue
+                            fi
+                            echo "Size cut applied: $SIZECUT"
+                            cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
+                            ./IRF.trainTMVAforGammaHadronSeparation.sh \
+                                         "${TRAINDIR}" \
+                                         "$MVADIR"/BDT.runparameter \
+                                         "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                         elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
+                             echo "OPTIMIZE TMVA $C"
+                             ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
+                                 "$MVADIR" \
+                                 "${C}" \
+                                 ${SIMTYPE} ${VX} "${ATM}"
+                         fi
                     done
                 done
             done

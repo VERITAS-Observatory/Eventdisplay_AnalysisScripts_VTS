@@ -41,7 +41,6 @@ echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadron_BDTs/${EPOCH}_ATM${ATM}/${CUT}/"
 cd ${PREDIR}/${CUT}
 rm -f ${PREDIR}/${CUT}/${CUT}.optimised.dat
-cd $EVNDISPSYS/macros/VTS/
-root -l -q -b "optimizeBDTcuts.C(\"rates_${EPOCH}_ATM${ATM}.root\", \"$MVADIR\", 0, ${ENBINS}, 0, ${ZEBINS})" > ${PREDIR}/${CUT}/${CUT}_${EPOCH}_ATM${ATM}.optimised.dat
+root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"rates_${EPOCH}_ATM${ATM}.root\", \"$MVADIR\", 0, ${ENBINS}, 0, ${ZEBINS})" > ${PREDIR}/${CUT}/${CUT}_${EPOCH}_ATM${ATM}.optimised.dat
 
 exit
