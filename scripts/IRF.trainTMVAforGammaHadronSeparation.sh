@@ -65,8 +65,13 @@ PARTICLE_TYPE="gamma"
 # evndisplay version
 IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforGammaHadronSeparation --version | tr -d .| sed -e 's/[a-Z]*$//'`
 
-if [[ -z $VERITAS_ANALYSIS_TYPE ]]; then
-    VERITAS_ANALYSIS_TYPE="AP"
+DISPBDT=""
+ANATYPE="AP"
+if [[ ! -z $VERITAS_ANALYSIS_TYPE ]]; then
+    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+    if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
+        DISPBDT="_DISP"
+    fi 
 fi
 
 # Check that list of background files exists
@@ -154,7 +159,7 @@ do
       echo "#######################################################################################" >> $RFIL.runparameter
       # signal and background files (depending on on-axis or cone data set)
       for ATMX in $ATM; do
-          SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$VERITAS_ANALYSIS_TYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
+          SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$ANATYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}${DISPBDT}"
           echo "Signal input directory: $SDIR"
           if [[ ! -d $SDIR ]]; then
               echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
