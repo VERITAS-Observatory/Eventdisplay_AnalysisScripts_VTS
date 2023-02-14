@@ -91,7 +91,7 @@ NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub"
 
-FSCRIPT="$LOGDIR/IRF.optimizeTMVAforGammaHadronSeparation_sub"
+FSCRIPT="$LOGDIR/IRF.optimizeTMVAforGammaHadronSeparation_sub_${EPOCH}_ATM${ATM}"
 sed -e "s|EFFFILE|$EFFFILE|"  \
     -e "s|ODIR|$PREDIR|" \
     -e "s|EEPOCH|${EPOCH}|" \
@@ -120,7 +120,7 @@ if [[ $SUBC == *qsub* ]]; then
  echo "JOBID:  $JOBID"
 elif [[ $SUBC == *condor* ]]; then
    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-#   condor_submit $FSCRIPT.sh.condor
+   condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *sbatch* ]]; then
     $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *parallel* ]]; then
