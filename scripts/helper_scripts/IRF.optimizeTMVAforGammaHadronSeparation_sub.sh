@@ -27,20 +27,33 @@ ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
 # effective area - fill path
 EFFAREA="$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA}"
 
+# epoch / ATM
+EPAT="${EPOCH}_ATM${ATM}"
+
+# output directory
+WDIR="${PREDIR}/Optimize-${CUT}/"
+mkdir -p ${WDIR}
+
+# rates files
+RATEFILE="${WDIR}/rates_${EPAT}"
+
+rm -f ${RATEFILE}.log
+
 # calculate rates from Crab Nebula and from background rates
 rm -f ${MVADIR}/rates.log
 "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
     ${EFFAREA} \
-    ${PREDIR}/${CUT}/rates_${EPOCH}_ATM${ATM}.root \
+    ${RATEFILE}.root \
     ${ETHRESH} \
     ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/TMVA.BDT.runparameter \
-    ${TEMPDIR}/anasum.list  > "${PREDIR}/${CUT}/rates_${EPOCH}_ATM${ATM}.log"
+    ${TEMPDIR}/anasum.list \
+    > ${RATEFILE}.log
 
 # optimize cuts
 echo "optimize cuts..."
-MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadron_BDTs/${EPOCH}_ATM${ATM}/${CUT}/"
+MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadron_BDTs/${EPAT}/${CUT}/"
 cd ${PREDIR}/${CUT}
-rm -f ${PREDIR}/${CUT}/${CUT}.optimised.dat
-root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"rates_${EPOCH}_ATM${ATM}.root\", \"$MVADIR\", 0, ${ENBINS}, 0, ${ZEBINS})" > ${PREDIR}/${CUT}/${CUT}_${EPOCH}_ATM${ATM}.optimised.dat
+rm -f ${WDIR}/${EPAT}.optimised.dat
+root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS})"  > ${WDIR}/${EPAT}.optimised.dat
 
 exit
