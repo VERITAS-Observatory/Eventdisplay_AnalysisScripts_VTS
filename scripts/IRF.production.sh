@@ -146,8 +146,8 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 160 200 250 )
-    #  ZENITH_ANGLES=( 20 )
+    NSB_LEVELS=( 160 )
+    ZENITH_ANGLES=( 20 )
     WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
@@ -221,18 +221,18 @@ fi
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
-#CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-SuperHard-TMVA-BDT.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
 # Cut types are used for BDT training and optimisation
-CUTTYPES="NTel2-Moderate
-          NTel2-Soft
-          NTel3-Hard"
+CUTTYPES="NTel2-PointSource-Moderate
+          NTel2-PointSource-Soft
+          NTel3-PointSource-Hard"
 # TMP
-CUTTYPES="NTel2-Moderate"
+CUTTYPES="NTel2-PointSource-Moderate"
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
@@ -310,7 +310,7 @@ for VX in $EPOCH; do
                              echo "OPTIMIZE TMVA $C"
                              ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
                                  "$BDTDIR/BackgroundRates" \
-                                 "${C}" \
+                                 "${C/PointSource-/}" \
                                  ${SIMTYPE} ${VX} "${ATM}"
                          fi
                     done
