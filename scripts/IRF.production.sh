@@ -228,9 +228,11 @@ CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
 # Cut types are used for BDT training and optimisation
-CUTTYPES="NTel2-PointSource-Moderate
-          NTel2-PointSource-Soft
-          NTel3-PointSource-Hard"
+CUTTYPES="NTel2-Moderate
+          NTel2-Soft
+          NTel3-Hard"
+# TMP
+CUTTYPES="NTel2-Moderate"
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
@@ -303,10 +305,11 @@ for VX in $EPOCH; do
                                          "${TRAINDIR}" \
                                          "$MVADIR"/BDT.runparameter \
                                          "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                         # Cut optimization
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                              echo "OPTIMIZE TMVA $C"
                              ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
-                                 "$MVADIR" \
+                                 "$BDTDIR/BackgroundRates" \
                                  "${C}" \
                                  ${SIMTYPE} ${VX} "${ATM}"
                          fi
