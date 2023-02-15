@@ -98,10 +98,30 @@ mkdir -p $ODIR
 
 #####################################
 # energy bins
-ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINS 1" | sed -e 's/* ENERGYBINS 1//' | sed -e 's/ /\n/g')
-declare -a EBINARRAY=( $ENBINS ) #convert to array
-count1=1
-NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
+if grep -q "^* ENERGYBINS" "$RUNPAR"; then
+    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
+    declare -a EBINARRAY=( $ENBINS ) #convert to array
+    count1=1
+    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
+    for (( i=0; i < $NENE; i++ ))
+    do
+        EBINMIN[$i]=${EBINARRAY[$i]}
+        EBINMAX[$i]=${EBINARRAY[$i+1]}
+    done
+else
+    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
+    declare -a EBINARRAY=( $ENBINS ) #convert to array
+    count1=1
+    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
+    z="0"
+    for (( i=0; i < $NENE; i+=2 ))
+    do
+        EBINMIN[$z]=${EBINARRAY[$i]}
+        EBINMAX[$z]=${EBINARRAY[$i+1]}
+        let "z = ${z} + 1"
+    done
+    NENE=$((${#EBINMAX[@]}))
+fi
 
 #####################################
 # zenith angle bins
@@ -129,7 +149,7 @@ for (( i=0; i < $NENE; i++ ))
 do
    echo "==========================================================================="
    echo " "
-   echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINARRAY[$i]} to ${EBINARRAY[$i+1]} (in log TeV)"
+   echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINMIN[$i]} to ${EBINMAX[$i]} (in log TeV)"
 ##############################################
 # loop over all zenith angle bins
    for (( j=0; j < $NZEW; j++ ))
@@ -145,9 +165,9 @@ do
       echo "TMVA Runparameter file: $RFIL.runparameter"
       rm -f $RFIL
       
-      echo "* ENERGYBINS 1 ${EBINARRAY[$i]} ${EBINARRAY[$i+1]}" > $RFIL.runparameter
+      echo "* ENERGYBINS ${EBINMIN[$i]} ${EBINMAX[$i]}" > $RFIL.runparameter
       echo "* ZENBINS  ${ZEBINARRAY[$j]} ${ZEBINARRAY[$j+1]}" >> $RFIL.runparameter
-      grep "*" $RUNPAR | grep -v ENERGYBINS | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
+      grep "*" $RUNPAR | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
     
       nTrainSignal=200000
       nTrainBackground=200000
