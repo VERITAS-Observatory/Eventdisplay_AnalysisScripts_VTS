@@ -66,6 +66,13 @@ RLIST=$1
 [[ "$6" ]] && FORCEDATMO=$6
 [[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
 DISPBDT="0"
+ANATYPE="AP"
+if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
+   ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
+      DISPBDT="1"
+   fi
+fi
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -145,11 +152,6 @@ do
         SIMTYPE_RUN="$SIMTYPE"
     fi
 
-    ANATYPE="AP"
-    if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
-       ANATYPE="$VERITAS_ANALYSIS_TYPE"
-    fi 
- 
     TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
     echo "TABLEFILE: $TABFILE"
     # Check that table file exists

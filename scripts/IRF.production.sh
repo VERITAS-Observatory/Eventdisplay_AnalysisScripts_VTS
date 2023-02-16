@@ -22,7 +22,8 @@ required parameters:
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
                              (ANALYSETABLES, EFFECTIVEAREAS,)
                              ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, TRAINMVANGRES, EVNDISPCOMPRESS )
+                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
+                             TRAINMVANGRES, EVNDISPCOMPRESS )
     
 optional parameters:
     
@@ -67,7 +68,6 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-DISPBDT=0
 
 # evndisplay version
 EDVERSION=$($EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//')
@@ -81,8 +81,12 @@ UUID=${DATE}-$(uuidgen)
 AUX="auxv01"
 # Analysis Type
 ANATYPE="AP"
+DISPBDT=0
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
-   ANATYPE="$VERITAS_ANALYSIS_TYPE"
+   ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
+       DISPBDT="1"
+   fi
 fi
 
 # number of events per evndisp analysis
@@ -90,11 +94,11 @@ NEVENTS="-1"
 
 # run parameter file for evndisp analysis
 ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
-if [[ $VERITAS_ANALYSIS_TYPE = "NN"* ]]; then
+if [[ $ANATYPE = "NN"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.NN.v4x"
-elif [[ $VERITAS_ANALYSIS_TYPE = "CC"* ]]; then
+elif [[ $ANATYPE = "CC"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.CC.v4x"
-elif [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
+elif [[ $ANATYPE = "TS"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
 fi
 
@@ -142,8 +146,8 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 200 )
-    ZENITH_ANGLES=( 20 )
+    # NSB_LEVELS=( 160 )
+    # ZENITH_ANGLES=( 20 )
     WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TEMPORARY
@@ -217,11 +221,20 @@ fi
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-SuperHard-TMVA-BDT.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
+
+# Cut types are used for BDT training and optimisation
+CUTTYPES="NTel2-PointSource-Moderate
+          NTel2-PointSource-Soft
+          NTel3-PointSource-Hard"
+# TMP
+CUTTYPES="NTel2-PointSource-Moderate"
+CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
+CUTTYPES=${CUTTYPES//$'\n'/}
 
 ############################################################
 # loop over complete parameter space and submit production
@@ -238,7 +251,7 @@ for VX in $EPOCH; do
                 echo "combine lookup tables"
                 $(dirname "$0")/IRF.combine_lookup_table_parts.sh \
                     "${TFIL}${ANATYPE}" "$VX" "$ATM" \
-                    "$ID" "$SIMTYPE" "$VERITAS_ANALYSIS_TYPE"
+                    "$ID" "$SIMTYPE" "$ANATYPE"
             done
             continue
        fi
@@ -250,7 +263,7 @@ for VX in $EPOCH; do
                     echo "combine effective areas $CUTS"
                    $(dirname "$0")/IRF.combine_effective_area_parts.sh \
                        "$CUTS" "$VX" "$ATM" \
-                       "$ID" "$SIMTYPE" "$AUX" "$VERITAS_ANALYSIS_TYPE" \
+                       "$ID" "$SIMTYPE" "$AUX" "$ANATYPE" \
                        "$DISPBDT"
                 done # cuts
             done
@@ -260,36 +273,46 @@ for VX in $EPOCH; do
        # MVA training
        # train per epoch and atmosphere and for each cut
        # (cut as sizesecondmax cut is applied)
-       if [[ $IRFTYPE == "TRAINTMVA" ]]
-       then
+       if [[ $IRFTYPE == "TRAINTMVA" ]] || [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
             for VX in $EPOCH; do
                 for ATM in $ATMOS; do
-                    for C in "NTel2-PointSource-Moderate" "NTel2-PointSource-Soft" "NTel3-PointSource-Hard"
-                    do
-                        echo "Training $C cuts for ${VX} ATM${ATM}"
-                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE}/BDTtraining/"
+                    for C in ${CUTTYPES[@]}; do
+                        echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
+                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining/"
                         MVADIR="${BDTDIR}/${VX}_ATM${ATM}/${C/PointSource-/}/"
-                        mkdir -p -v "${MVADIR}"
                         # list of background files
-                        # (TODO: select atmosphere / epoch file)
                         # (TODO: nominal/redHV/UVfilter)
                         TRAINDIR="${BDTDIR}/mscw/"
-                        # retrieve size cut
-                        CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
-                        echo "CUTFILE: $CUTFIL"
-                        SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
-                        if [ -z "$SIZECUT" ]
-                        then
-                            echo "No size cut found; skipping cut $C"
-                            continue
-                        fi
-                        echo "Size cut applied: $SIZECUT"
-                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
-                        sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
-                        ./IRF.trainTMVAforGammaHadronSeparation.sh \
-                                     "${TRAINDIR}" \
-                                     "$MVADIR"/BDT.runparameter \
-                                     "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                        if [[ $DISPBDT == "1" ]]; then
+                            TRAINDIR="${BDTDIR}/mscw_DISP/"
+                            MVADIR="${BDTDIR}/DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                        fi 
+                        mkdir -p -v "${MVADIR}"
+                        if [[ $IRFTYPE == "TRAINTMVA" ]]; then
+                            # retrieve size cut
+                            CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
+                            echo "CUTFILE: $CUTFIL"
+                            SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
+                            if [ -z "$SIZECUT" ]
+                            then
+                                echo "No size cut found; skipping cut $C"
+                                continue
+                            fi
+                            echo "Size cut applied: $SIZECUT"
+                            cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
+                            ./IRF.trainTMVAforGammaHadronSeparation.sh \
+                                         "${TRAINDIR}" \
+                                         "$MVADIR"/BDT.runparameter \
+                                         "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                         # Cut optimization
+                         elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
+                             echo "OPTIMIZE TMVA $C"
+                             ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
+                                 "$BDTDIR/BackgroundRates" \
+                                 "${C/PointSource-/}" \
+                                 ${SIMTYPE} ${VX} "${ATM}"
+                         fi
                     done
                 done
             done
@@ -309,7 +332,7 @@ for VX in $EPOCH; do
                fi
                $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
                    $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $VERITAS_ANALYSIS_TYPE
+                   $SIMTYPE $ANATYPE
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
@@ -325,7 +348,7 @@ for VX in $EPOCH; do
                          $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
-                             $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                             $ID $SIMTYPE $ANATYPE \
                              $DISPBDT $UUID ${EDVERSION}
                       done
                    done
@@ -344,11 +367,11 @@ for VX in $EPOCH; do
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ACUTS 1 $NEVENTS $VERITAS_ANALYSIS_TYPE $UUID
+                               $SIMTYPE $ACUTS 1 $NEVENTS $ANATYPE $UUID
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            $(dirname "$0")/IRF.compress_evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
+                               $SIMTYPE $ANATYPE $UUID
                        fi
                     ######################
                     # make tables
@@ -356,7 +379,7 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                            $(dirname "$0")/IRF.generate_lookup_table_parts.sh \
                                $VX $ATM $ZA $WOBBLE $NOISE \
-                               $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $UUID
+                               $ID $SIMTYPE $ANATYPE $UUID
                         done #recID
                     ######################
                     # analyse table files
@@ -367,7 +390,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE $DISPBDT $UUID ${EDVERSION}
+                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID ${EDVERSION}
 			            done #recID
                     ######################
                     # analyse effective areas
@@ -377,7 +400,7 @@ for VX in $EPOCH; do
                                 echo "combine effective areas $CUTS"
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
-                                   $ID $SIMTYPE $VERITAS_ANALYSIS_TYPE \
+                                   $ID $SIMTYPE $ANATYPE \
                                    $DISPBDT $UUID ${EDVERSION}
                             done # cuts
                         done #recID

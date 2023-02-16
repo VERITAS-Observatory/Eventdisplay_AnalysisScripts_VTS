@@ -254,6 +254,7 @@ compare_log_file()
     $EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root > ${DDIR}/${1}.log
     if cmp -s "${2}" "${DDIR}/${1}.log"; then
         echo "FILES ${1} ${2} are the same, removing"
+        rm -f "${2}"
     else
         touch $ODIR/$ONAME.${1}.errorlog
         echo "Error, ${1} ${2} differ" >> $ODIR/$ONAME.${1}.errorlog

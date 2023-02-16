@@ -25,7 +25,9 @@ required parameters:
                             (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel2Pre, NTel3Pre)
     
     <background model>      background model
-                            (RE = reflected region, RB = ring background, IGNOREACCEPTANCE = RE without ACCEPTANCE)
+                            (RE = reflected region, RB = ring background, 
+                            IGNOREACCEPTANCE = RE without ACCEPTANCE,
+                            IGNOREIRF = RE without ACCEPTANCE/EFFAREA)
     
 optional parameters:
 
@@ -87,7 +89,10 @@ SIMTYPE_DEFAULT_V6UV="CARE_UV_2212"
 
 ANATYPE="AP"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
-    ANATYPE="$VERITAS_ANALYSIS_TYPE"
+   ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
+      DISPBDT="1"
+   fi
 fi
 
 # cut definitions (note: VX to be replaced later in script)
@@ -146,9 +151,9 @@ elif [[ $CUT == *ExtendedSource-* ]]; then
 fi
 
 RADACC="radialAcceptance-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUTRADACC}-${ANATYPE}-VX-TX.root"
-# START TEMPORARY (TESTS, comment)
-# EFFAREA="IGNOREEFFECTIVEAREA"
-# END TEMPORARY
+if [[ "$BACKGND" == *IGNOREIRF* ]]; then
+  EFFAREA="IGNOREEFFECTIVEAREA"
+fi
 
 echo "$CUTFILE"
 echo "$EFFAREA"
@@ -166,7 +171,7 @@ if [[ "$BACKGND" == *RB* ]]; then
         echo "Specify an acceptance (external=0, runwise=1) or use RE."
         exit 1
     fi
-elif [[ "$BACKGND" == *IGNOREACCEPTANCE* ]]; then
+elif [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
     BM="RE"
     BMPARAMS="0.1 2 6"
     RADACC="IGNOREACCEPTANCE"
