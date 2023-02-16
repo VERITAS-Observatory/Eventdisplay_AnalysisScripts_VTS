@@ -9,7 +9,7 @@ source $EVNDISPSYS/setObservatory.sh VTS
 EFFAREA=EFFFILE
 PREDIR=ODIR
 CUT=CUTTYPE
-ETHRESH="1."
+DEADTIME="12."
 EPOCH=EEPOCH
 ATM=AATM
 ENBINS=EEBINS
@@ -44,7 +44,7 @@ rm -f ${MVADIR}/rates.log
 "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
     ${EFFAREA} \
     ${RATEFILE}.root \
-    ${ETHRESH} \
+    ${DEADTIME} \
     ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/TMVA.BDT.runparameter \
     ${TEMPDIR}/anasum.list \
     > ${RATEFILE}.log
