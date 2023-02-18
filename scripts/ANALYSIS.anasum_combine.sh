@@ -1,6 +1,9 @@
 #!/bin/bash
 # script to combine anasum files processed in parallel mode
 
+# qsub parameters
+h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
+
 if [[ $# -lt 3 ]]; then
 # begin help message
 echo "
@@ -54,10 +57,56 @@ if [[ "$RUNP" == `basename $RUNP` ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
-    echo "Error, anasum run parameter file not found, exiting..."
+    echo "Error, anasum run parameter file '$RUNP' not found, exiting..."
     exit 1
 fi
 
-$EVNDISPSYS/bin/anasum -i 1 -l $RUNLIST -d $DDIR -f $RUNP -o $DDIR/$OUTFILE.root 2>&1 | tee $DDIR/$OUTFILE.log
+# directory for run scripts
+DATE=`date +"%y%m%d"`
+LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.ANADATA-${DATE}-$(uuidgen)"
+mkdir -p "$LOGDIR"
+
+# Job submission script
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_combine_sub"
+
+FSCRIPT="$LOGDIR/anasum_combine-$DATE-RUN$RUN-$(date +%s)"
+echo "Run script written to $FSCRIPT"
+
+sed -e "s|RRUNLIST|$RUNLIST|" \
+    -e "s|DDDIR|$DDIR|" \
+    -e "s|RRUNP|$RUNP|" \
+    -e "s|OOUTFILE|$OUTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
+chmod u+x "$FSCRIPT.sh"
+
+# run locally or on cluster
+SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`eval "echo \"$SUBC\""`
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo "$SUBC"
+    exit
+fi
+if [[ $SUBC == *qsub* ]]; then
+    JOBID=`$SUBC $FSCRIPT.sh`
+    # account for -terse changing the job number format
+    if [[ $SUBC != *-terse* ]] ; then
+        echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
+        JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
+    fi
+elif [[ $SUBC == *condor* ]]; then
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    condor_submit $FSCRIPT.sh.condor
+echo "RUN $RUN JOBID $JOBID"
+    echo "RUN $RUN SCRIPT $FSCRIPT.sh"
+    if [[ $SUBC != */dev/null* ]] ; then
+        echo "RUN $RUN OLOG $FSCRIPT.sh.o$JOBID"
+        echo "RUN $RUN ELOG $FSCRIPT.sh.e$JOBID"
+    fi
+elif [[ $SUBC == *sbatch* ]]; then
+    $SUBC $FSCRIPT.sh
+elif [[ $SUBC == *parallel* ]]; then
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$(date +"%s").dat"
+elif [[ "$SUBC" == *simple* ]] ; then
+    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
+fi
 
 exit

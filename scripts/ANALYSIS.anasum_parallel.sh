@@ -60,7 +60,7 @@ exec 5>&1
 if [[ ! -e "$RUNP" ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
-if [ ! -f "$RUNP" ]; then
+if [[ ! -f "$RUNP" ]]; then
     echo "Error, anasum run parameter file '$RUNP' not found, exiting..."
     exit 1
 fi
