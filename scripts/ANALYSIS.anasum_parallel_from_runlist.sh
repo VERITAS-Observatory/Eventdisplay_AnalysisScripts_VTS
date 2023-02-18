@@ -79,7 +79,6 @@ BACKGND=$4
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 [[ "$9" ]] && RACC=$9 || RACC="0"
 [[ "${10}" ]] && FORCEDATMO=${10}
-DISPBDT="0"
 
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
@@ -88,12 +87,14 @@ SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
 SIMTYPE_DEFAULT_V6UV="CARE_UV_2212"
 
 ANATYPE="AP"
+DISPBDT="1"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
-      DISPBDT="1"
+   if [[ ${VERITAS_ANALYSIS_TYPE} != *"DISP"* ]]; then
+      DISPBDT="0"
    fi
 fi
+echo $VERITAS_ANALYSIS_TYPE $ANATYPE $DISPBDT
 
 # cut definitions (note: VX to be replaced later in script)
 if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
@@ -302,18 +303,20 @@ for RUN in ${RUNS[@]}; do
     EFFAREARUN=${EFFAREARUN/XX/$ATMO}
     EFFAREARUN=${EFFAREARUN/SX/$REPLACESIMTYPEEff}
 
-    if [[ ${RACC} == "1" ]]; then
-        echo "run-wise radical acceptances: "
-        RADACCRUN="$ODIR/$RUN.anasum.radialAcceptance.root"
-        echo "   $RADACCRUN"
-    elif [[ ${RACC} == "0" ]]; then
-        echo "external radial acceptances: "
-        RADACCRUN=${RADACC/VX/$MAJOREPOCH}
-        RADACCRUN=${RADACCRUN/TX/$TELTOANA}
-        RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
-    else
+    if [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
         echo "Ignore acceptances: "
         RADACCRUN="IGNOREACCEPTANCE"
+    else
+        if [[ ${RACC} == "1" ]]; then
+            echo "run-wise radical acceptances: "
+            RADACCRUN="$ODIR/$RUN.anasum.radialAcceptance.root"
+            echo "   $RADACCRUN"
+        elif [[ ${RACC} == "0" ]]; then
+            echo "external radial acceptances: "
+            RADACCRUN=${RADACC/VX/$MAJOREPOCH}
+            RADACCRUN=${RADACCRUN/TX/$TELTOANA}
+            RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
+        fi
     fi
     
     # write line to anasum input file

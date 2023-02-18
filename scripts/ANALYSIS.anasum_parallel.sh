@@ -67,13 +67,13 @@ fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIRTEMP="$VERITAS_USER_LOG_DIR/$DATE/ANASUM.ANADATA"
-mkdir -p "$LOGDIRTEMP"
+LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.ANADATA-${DATE}-$(uuidgen)"
+mkdir -p "$LOGDIR"
 
 # temporary run list
 DATECODE=`date +%Y%m%d`
 TEMPLIST=`basename "$FLIST"`
-TEMPLIST="$LOGDIRTEMP/$DATECODE.PID$$.$TEMPLIST.tmp"
+TEMPLIST="$LOGDIR/$DATECODE.PID$$.$TEMPLIST-$(uuidgen).tmp"
 rm -f "$TEMPLIST"
 cat "$FLIST" | grep "*" >> "$TEMPLIST"
 
@@ -102,10 +102,6 @@ for ((i=1; i <= $NLINES; i++)); do
     if [[ $RUN != "VERSION" ]]; then
         # output file name
         ONAME="$RUN.anasum"
-
-        # temporary log dir
-        LOGDIR="$LOGDIRTEMP/${RUN}"
-        mkdir -p "$LOGDIR"
 
         # temporary per-run file list
         RUNTEMPLIST="$LOGDIR/qsub_analyse_fileList_${ODIRBASE}_${RUN}_${DATECODE}_PID$$"
@@ -145,7 +141,7 @@ for ((i=1; i <= $NLINES; i++)); do
             fi
         elif [[ $SUBC == *condor* ]]; then
             $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-            condor_submit $FSCRIPT.sh.condor
+            # condor_submit $FSCRIPT.sh.condor
 	    echo "RUN $RUN JOBID $JOBID"
             echo "RUN $RUN SCRIPT $FSCRIPT.sh"
             if [[ $SUBC != */dev/null* ]] ; then
@@ -155,16 +151,20 @@ for ((i=1; i <= $NLINES; i++)); do
 	elif [[ $SUBC == *sbatch* ]]; then
             $SUBC $FSCRIPT.sh
         elif [[ $SUBC == *parallel* ]]; then
-            echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIRTEMP/runscripts.$TIMETAG.dat"
+            echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
         elif [[ "$SUBC" == *simple* ]] ; then
 	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 	fi
     fi
 done
+# submit all condor jobs at once
+if [[ $SUBC == *condor* ]]; then
+    $EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit
+fi
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat "$LOGDIRTEMP/runscripts.$TIMETAG.dat" | $SUBC
+    cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
 fi
 
 rm -f "$TEMPLIST"
@@ -180,8 +180,5 @@ echo "	anasumCombined.root \\"
 echo "	$RUNP"
 echo "============================================================================================"
 echo ""
-
-
-
 
 exit
