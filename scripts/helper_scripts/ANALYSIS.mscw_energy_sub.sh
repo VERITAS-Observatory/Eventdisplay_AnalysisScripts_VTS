@@ -27,7 +27,7 @@ mkdir -p $TEMPDIR
 # run analysis
 
 MSCWLOGFILE="$ODIR/$BFILE.mscw.log"
-rm -f $MSCWLOGFILE
+rm -f ${MSCWLOGFILE}
 cp -f -v $INFILE $TEMPDIR
 
 MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
@@ -54,14 +54,20 @@ $EVNDISPSYS/bin/mscw_energy         \
     -tablefile $TABFILE             \
     -arrayrecid=$RECID              \
     -inputfile $TEMPDIR/$BFILE.root \
-    -writeReconstructedEventsOnly=1 &> $MSCWLOGFILE
+    -writeReconstructedEventsOnly=1 &> ${MSCWLOGFILE}
+
+# write DISP directory into log file (as tmp directories are used)
+if [[ DISPBDT != "NOTSET" ]]; then
+    echo "" >> ${MSCWLOGFILE}
+    echo "dispBDT XML files read from ${DISPDIR}" >> ${MSCWLOGFILE}
+fi
 
 # move logfiles into output file
 if [[ -e ${INLOGDIR}/$BFILE.log ]]; then
   $EVNDISPSYS/bin/logFile evndispLog $TEMPDIR/$BFILE.mscw.root ${INLOGDIR}/$BFILE.log
 fi
-if [[ -e $MSCWLOGFILE ]]; then
-  $EVNDISPSYS/bin/logFile mscwTableLog $TEMPDIR/$BFILE.mscw.root $MSCWLOGFILE
+if [[ -e ${MSCWLOGFILE} ]]; then
+  $EVNDISPSYS/bin/logFile mscwTableLog $TEMPDIR/$BFILE.mscw.root ${MSCWLOGFILE}
 fi
 
 # move output file from scratch and clean up
@@ -70,7 +76,7 @@ rm -f $TEMPDIR/$BFILE.mscw.root
 rm -f $TEMPDIR/$BFILE.root
     
 # write info to log
-echo "RUN$BFILE MSCWLOG $MSCWLOGFILE"
+echo "RUN$BFILE MSCWLOG ${MSCWLOGFILE}"
 echo "RUN$BFILE MSCWDATA $MSCWDATAFILE"
 
 exit
