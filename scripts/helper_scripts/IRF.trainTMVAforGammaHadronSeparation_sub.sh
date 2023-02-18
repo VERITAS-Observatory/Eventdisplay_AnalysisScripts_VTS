@@ -11,6 +11,8 @@ RXPAR=RUNPARAM
 
 "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter > "$RXPAR".log
 
+"$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
+
 # remove unnecessary *.C files
 CDIR=`dirname $RXPAR`
 rm -f -v "$CDIR"/$ONAME*.C
