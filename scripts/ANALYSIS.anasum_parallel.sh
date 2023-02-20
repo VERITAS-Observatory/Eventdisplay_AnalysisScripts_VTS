@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
-if [ $# -lt 4 ]; then
+if [[ "$#" -lt 4 ]]; then
 # begin help message
 echo "
 ANASUM parallel data analysis: submit jobs from an anasum run list
@@ -40,15 +40,15 @@ bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
-FLIST=$1
+RUNLIST=$1
 INDIR=$2
 ODIR=$3
 RUNP=$4
 [[ "$5" ]] && RACC=$5 || RACC="0"
 
 # Check that run list exists
-if [ ! -f "$FLIST" ]; then
-    echo "Error, anasum runlist $FLIST not found, exiting..."
+if [[ ! -f "$RUNLIST" ]]; then
+    echo "Error, anasum runlist $RUNLIST not found, exiting..."
     exit 1
 fi
 
@@ -57,27 +57,30 @@ fi
 exec 5>&1
 
 # Check that run parameter file exists
-if [[ ! -e "$RUNP" ]]; then
+if [[ "$RUNP" == `basename $RUNP` ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
-    echo "Error, anasum run parameter file '$RUNP' not found, exiting..."
+    echo "Error, anasum run parameter file not found, exiting..."
+    echo "(searched for $RUNP)"
     exit 1
 fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.ANADATA-${DATE}-$(uuidgen)"
+echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
 # temporary run list
 DATECODE=`date +%Y%m%d`
-TEMPLIST=`basename "$FLIST"`
+TEMPLIST=`basename "$RUNLIST"`
 TEMPLIST="$LOGDIR/$DATECODE.PID$$.$TEMPLIST-$(uuidgen).tmp"
 rm -f "$TEMPLIST"
-cat "$FLIST" | grep "*" >> "$TEMPLIST"
+cat "$RUNLIST" | grep "*" >> "$TEMPLIST"
 
-# output directory
+# output directory for anasum products
+echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 ODIRBASE=`basename "$ODIR"`
 echo "Output directory base name: $ODIRBASE"
@@ -89,7 +92,6 @@ echo "Total number of runs to analyse: $NRUNS"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_sub"
-
 TIMETAG=`date +"%s"`
 
 # loop over all runs
@@ -174,7 +176,7 @@ echo "==========================================================================
 
 echo "After all runs have been analysed, combine the results by calling"
 echo $( dirname "$0" )"/ANALYSIS.anasum_combine.sh \\"
-echo "	$FLIST \\"
+echo "	$RUNLIST \\"
 echo "	$ODIR \\"
 echo "	anasumCombined.root \\"
 echo "	$RUNP"
