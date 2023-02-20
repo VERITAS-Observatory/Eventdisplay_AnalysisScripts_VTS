@@ -13,9 +13,18 @@ OUTFILE=OOUTFILE
 mkdir -p ${DDIR}
 rm -f ${DDIR}/$OUTFILE.log
 
+# determine if this is a short or long run list
+# (use VERSION string to identify long run list)
+NV=$(grep -c "VERSION" ${RUNLIST})
+if [ $NV -eq 0 ]; then
+    RUNLISTSTRING="-k ${RUNLIST}"
+else
+    RUNLISTSTRING="-l ${RUNLIST}"
+fi
+
 $EVNDISPSYS/bin/anasum \
     -i 1 \
-    -l ${RUNLIST} \
+    ${RUNLISTSTRING} \
     -d ${DDIR} \
     -f ${RUNP} \
     -o ${DDIR}/${OUTFILE}.root 2>&1 | tee ${DDIR}/${OUTFILE}.log
