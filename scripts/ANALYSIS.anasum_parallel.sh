@@ -27,7 +27,7 @@ optional parameters:
     [radial acceptance]     0=use external radial acceptance;
                             1=use run-wise radial acceptance (calculated from each data run)
 
-IMPORTANT! Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
+Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 
 --------------------------------------------------------------------------------
 "
@@ -172,7 +172,7 @@ rm -f "$TEMPLIST"
 echo ""
 echo "============================================================================================"
 
-echo "After all runs have been analysed, please combine the results, eg by calling"
+echo "After all runs have been analysed, combine the results by calling"
 echo $( dirname "$0" )"/ANALYSIS.anasum_combine.sh \\"
 echo "	$FLIST \\"
 echo "	$ODIR \\"
