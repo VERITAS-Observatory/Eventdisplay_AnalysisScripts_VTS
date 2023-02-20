@@ -20,6 +20,14 @@ $EVNDISPSYS/bin/anasum \
     -f ${RUNP} \
     -o ${DDIR}/${OUTFILE}.root 2>&1 | tee ${DDIR}/${OUTFILE}.log
 
+# for Crab runs: print sensitivity estimate
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${DDIR}/${OUTFILE}.root -runinfo)
+TMPTARGET=$(echo $RUNINFO | cut -d\  -f7- )
+if [[ ${TMPTARGET} == "Crab" ]]; then
+    root -l -q -b "$EVNDISPSYS/macros/VTS/print_sensitivity.C(\"${DDIR}/${OUTFILE}.root\", \"TITLE\" )" >> ${DDIR}/${OUTFILE}.log
+fi
+
+# log file into root file
 $EVNDISPSYS/bin/logFile \
     anasumLog \
     ${DDIR}/${OUTFILE}.root \
