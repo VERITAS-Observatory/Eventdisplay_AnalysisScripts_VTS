@@ -30,7 +30,8 @@ optional parameters:
     [epoch]                 array epoch(s) (e.g., V4, V5, V6)
                             (default: \"V4 V5 V6\")
                             (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b 
-			     V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020\")
+			     V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
+                 V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w V6_2022_2022s\")
 
     [atmosphere]            atmosphere model(s) (21 = winter, 22 = summer)
                             (default: \"21 22\")
@@ -150,15 +151,15 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # ZENITH_ANGLES=( 20 )
     WOBBLE_OFFSETS=( 0.5 )
     ######################################
-    # TEMPORARY
-    # TEST PRODUCTION
-    # NSB_LEVELS=( 160 200 250 300 400 )
-    # ZENITH_ANGLES=( 20 40 50 60 )
-    # ZENITH_ANGLES=( 00 30 35 45 55 )
-    # WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.5 )
-    # !TEST PRODUCTION
-    # NSB_LEVELS=( 50 75 100 130 350 450 )
-    # ZENITH_ANGLES=( 00 30 35 45 55 )
+    # TRAINMVANGRES production 
+    # (assume 0.5 deg wobble is done)
+    # NSB_LEVELS=( 160 200 250 )
+    # WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
+    # complete NSB bins from TRAINMVANGRES production
+    # (assume 0.5 deg wobble is done)
+    # NSB_LEVELS=( 50 75 100 130 300 350 400 450 )
+    # WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
+    # complete wobble bins after TRAINMVANGRES production
     # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
     # (END TEMPORARY)
     ######################################
