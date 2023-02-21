@@ -207,6 +207,14 @@ $EVNDISPSYS/bin/anasum   \
     -l $FLIST            \
     -d $INDIR            \
     -o $OUTPUTDATAFILE   &> $OUTPUTLOGFILE
+
+if [[ -e "$OUTPUTLOGFILE" ]]; then
+    $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$OUTPUTLOGFILE"
+fi
+if [[ -e "$OUTPUTDATAFILE" ]]; then
+    $EVNDISPSYS/bin/logFile anasumData "$OUTPUTDATAFILE" "$OUTPUTDATAFILE"
+fi
+
 echo "RUN$RUNNUM ANPARLOG log file: $OUTPUTLOGFILE"
 echo "RUN$RUNNUM ANPARDATA data file: $OUTPUTDATAFILE"
 

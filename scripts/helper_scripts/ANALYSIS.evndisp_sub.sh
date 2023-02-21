@@ -166,6 +166,15 @@ $EVNDISPSYS/bin/evndisp \
 # DST $EVNDISPSYS/bin/evndisp -runnumber=$RUN -nevents=250000 -runmode=4 -readcalibdb -dstfile $TEMPDIR/$RUN.dst.root -reconstructionparameter $ACUTS -outputfile $TEMPDIR/$RUN.root ${OPT[@]} &> "$LOGFILE"
 echo "RUN$RUN EVNDISPLOG $LOGFILE"
 
+# move log file into root file
+$EVNDISPSYS/bin/evndisp evndispLog "$TEMPDIR/$RUN.root" "$LOGFILE"
+if [[ -e "$LOGDIR/$RUN.ped.log" ]]; then
+    $EVNDISPSYS/bin/evndisp evndisppedLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.ped.log"
+fi
+if [[ -e "$LOGDIR/$RUN.tzero.log" ]]; then
+    $EVNDISPSYS/bin/evndisp evndisptzeroLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.tzero.log"
+fi
+
 # move data file from tmp dir to data dir
 DATAFILE="$ODIR/$RUN.root"
 cp -f -v "$TEMPDIR/$RUN.root" "$DATAFILE"

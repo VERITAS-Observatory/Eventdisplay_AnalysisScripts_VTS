@@ -15,7 +15,7 @@ if [[ $IRFVERSION = "v4"* ]]; then
 else
     $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root &> $ODIR/$OFILE.log 
 fi
-$EVNDISPSYS/bin/logFile makeTableLog $ODIR/$OFILE.root $ODIR/$OFILE.log
+$EVNDISPSYS/bin/logFile makeTableCombineLog $ODIR/$OFILE.root $ODIR/$OFILE.log
 $EVNDISPSYS/bin/logFile makeTableFileList $ODIR/$OFILE.root $ODIR/$FLIST
 
 # smooth lookup tables (not v4xx)
