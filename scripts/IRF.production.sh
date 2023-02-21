@@ -221,8 +221,8 @@ fi
 #          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-SuperHard-TMVA-BDT.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
@@ -285,7 +285,7 @@ for VX in $EPOCH; do
                         TRAINDIR="${BDTDIR}/mscw/"
                         if [[ $DISPBDT == "1" ]]; then
                             TRAINDIR="${BDTDIR}/mscw_DISP/"
-                            MVADIR="${BDTDIR}/DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                            MVADIR="${BDTDIR}/GammaHadronBDTs_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         fi 
                         mkdir -p -v "${MVADIR}"
                         if [[ $IRFTYPE == "TRAINTMVA" ]]; then
