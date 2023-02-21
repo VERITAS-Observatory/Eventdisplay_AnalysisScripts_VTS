@@ -88,7 +88,7 @@ do
         echo "   SKIPPING OBSTIME: $TMPOBSTIME $MINOBSTIME" 
         continue
     fi
-    TMPTARGET=$(echo $RUNINFO | cut -d\  -f7- )
+    TMPTARGET=$(echo "$RUNINFO" | cut -d\  -f7- )
     echo "TARGET $TMPTARGET"
     BRK="FALSE"
     for (( l=0; l < ${#BRIGHTSOURCES[@]}; l++ ))
