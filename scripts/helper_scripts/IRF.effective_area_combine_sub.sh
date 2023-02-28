@@ -33,4 +33,6 @@ rm -f $ODIRDL3array/$OFILE.list
 ls -1 $EAFILES > $ODIRDL3array/$OFILE.list
 $EVNDISPSYS/bin/combineEffectiveAreas "$ODIRDL3array/$OFILE.list" ${ODIRDL3array}/$OFILE DL3reduced &> ${ODIRDL3array}/$OFILE.log 
 
+$EVNDISPSYS/bin/logFile effAreaCombineLog "${ODIRDL3array}/$OFILE.root" "${ODIRDL3array}/$OFILE.log"
+
 exit

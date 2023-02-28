@@ -92,7 +92,7 @@ OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-EVNDISP-${UUID}/"
 mkdir -p "$LOGDIR"
 
 echo "Using runparameter file $ACUTS"

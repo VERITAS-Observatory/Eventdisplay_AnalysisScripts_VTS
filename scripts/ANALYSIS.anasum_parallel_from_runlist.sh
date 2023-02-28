@@ -1,17 +1,17 @@
 #!/bin/bash
 # script to analyse data files with anasum (parallel analysis) from a simple run list
-# additionally writes out script for anasum --> fits v2dl3 converter
 
-# EventDisplay version
 EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
+# qsub parameters
+h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
 if [[ "$#" -lt 4 ]]; then
 # begin help message
 echo "
-ANASUM parallel data analysis: submit jobs using a simple run list, create (optional) v2dl3 script
+ANASUM parallel data analysis: submit jobs using a simple run list
 
 ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> \
-[run parameter file] [mscw directory] [v2dl3 path] [sim type] \
+[run parameter file] [mscw directory] [sim type] \
 [radial acceptances] [force atmosphere]
 
 required parameters:
@@ -38,9 +38,6 @@ optional parameters:
     [mscw directory]        directory containing the mscw.root files.
 			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION
 
-    [v2dl3 path]            path to V2DL3 installation to be used in preparation
-                            of v2dl3 script (use "NOTSET" to disable this option)
-                        
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
 
@@ -53,6 +50,7 @@ optional parameters:
 			    Attention: Must use the same atmospere for EAs as was used for the lookup tables in the mscw_energy stage!
 
 Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -69,33 +67,27 @@ bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
-RLIST=$1
+RUNLIST=$1
 ODIR=$2
 CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
-[[ "$7" ]] && V2DL3=$7 || V2DL3="NOTSET"
-[[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
-[[ "$9" ]] && RACC=$9 || RACC="0"
-[[ "${10}" ]] && FORCEDATMO=${10}
-DISPBDT="0"
-
-SIMTYPE_DEFAULT_V4="GRISU"
-SIMTYPE_DEFAULT_V5="GRISU"
-SIMTYPE_DEFAULT_V6="CARE_June2020"
-SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
-SIMTYPE_DEFAULT_V6UV="CARE_UV_2212"
+[[ "$7" ]] && SIMTYPE=$7 || SIMTYPE="DEFAULT"
+[[ "$8" ]] && RACC=$8 || RACC="0"
+[[ "${9}" ]] && FORCEDATMO=${9}
 
 ANATYPE="AP"
+DISPBDT="1"
 if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
-      DISPBDT="1"
+   if [[ ${VERITAS_ANALYSIS_TYPE} != *"DISP"* ]]; then
+      DISPBDT="0"
    fi
 fi
+echo $VERITAS_ANALYSIS_TYPE $ANATYPE $DISPBDT
 
-# cut definitions (note: VX to be replaced later in script)
+# short-cuts for gamma/hadron cuts (note: VX to be replaced later in script)
 if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
 elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]]; then
@@ -133,11 +125,6 @@ else
     exit 1
 fi
 CUTFILE="ANASUM.GammaHadron-Cut-${CUT}.dat"
-if [[ $DISPBDT == "1" ]]; then
-    EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-DISP-VX-ATMXX-TX.root"
-else
-    EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-VX-ATMXX-TX.root"
-fi
 
 # remove PointSource and ExtendedSource string from cut file name for radial acceptances names
 if [[ $CUT == *PointSource-* ]] ; then
@@ -150,9 +137,12 @@ elif [[ $CUT == *ExtendedSource-* ]]; then
     echo $CUTRADACC
 fi
 
-RADACC="radialAcceptance-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUTRADACC}-${ANATYPE}-VX-TX.root"
-if [[ "$BACKGND" == *IGNOREIRF* ]]; then
-  EFFAREA="IGNOREEFFECTIVEAREA"
+if [[ $DISPBDT == "1" ]]; then
+    EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-DISP-VX-ATMXX-TX.root"
+    RADACC="radialAcceptance-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUTRADACC}-${ANATYPE}-DISP-VX-TX.root"
+else
+    EFFAREA="effArea-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUT}-${ANATYPE}-VX-ATMXX-TX.root"
+    RADACC="radialAcceptance-${IRFVERSION}-${AUXVERSION}-SX-Cut-${CUTRADACC}-${ANATYPE}-VX-TX.root"
 fi
 
 echo "$CUTFILE"
@@ -171,11 +161,7 @@ if [[ "$BACKGND" == *RB* ]]; then
         echo "Specify an acceptance (external=0, runwise=1) or use RE."
         exit 1
     fi
-elif [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
-    BM="RE"
-    BMPARAMS="0.1 2 6"
-    RADACC="IGNOREACCEPTANCE"
-elif [[ "$BACKGND" == *RE* ]]; then
+elif [[ "$BACKGND" == *RE* ]] || [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
     BM="RE"
     BMPARAMS="0.1 2 6"
 else
@@ -185,8 +171,8 @@ else
 fi
 
 # Check that run list exists
-if [[ ! -f "$RLIST" ]]; then
-    echo "Error, simple runlist $RLIST not found, exiting..."
+if [[ ! -f "$RUNLIST" ]]; then
+    echo "Error, simple runlist $RUNLIST not found, exiting..."
     exit 1
 fi
 
@@ -194,7 +180,7 @@ fi
 if [[ "$RUNP" == `basename $RUNP` ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
-if [ ! -f "$RUNP" ]; then
+if [[ ! -f "$RUNP" ]]; then
     echo "Error, anasum run parameter file not found, exiting..."
     echo "(searched for $RUNP)"
     exit 1
@@ -202,7 +188,7 @@ fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/ANASUM.ANADATA"
+LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.SIMPLE-${DATE}-$(uuidgen)"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -210,138 +196,72 @@ mkdir -p "$LOGDIR"
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 
-#########################################
-# make script for v2dl3
-if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
-    V2DL3SCRIPT="$ODIR/v2dl3_from_runlist_${CUTS}.sh"
-    echo "Writing V2DL3 script to ${V2DL3SCRIPT}"
-    rm -f ${V2DL3SCRIPT}
-    echo "#!/bin/sh " > ${V2DL3SCRIPT}
-    echo "" >> ${V2DL3SCRIPT}
-    echo "source activate base" >> ${V2DL3SCRIPT}
-    echo "conda activate v2dl3Eventdisplay" >> ${V2DL3SCRIPT}
-    echo "export PYTHONPATH=\$PYTHONPATH:${V2DL3}" >> ${V2DL3SCRIPT}
-    chmod u+x ${V2DL3SCRIPT}
-fi
-
-#########################################
-# make anasum run list
-ANARUNLIST="$ODIR/$CUTS.anasum.dat"
-rm -f "$ANARUNLIST"
-echo "anasum run list: $ANARUNLIST"
-
-# run list header
-if [[ $EDVERSION = "v4"* ]]; then
-    echo "* VERSION 6" >> "$ANARUNLIST"
-else
-    echo "* VERSION 7" >> "$ANARUNLIST"
-fi
-echo "" >> "$ANARUNLIST"
-
-RUNS=`cat "$RLIST"`
+# Job submission script
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_sub"
+TIMETAG=`date +"%s"`
 
 # loop over all runs
+RUNS=`cat "$RUNLIST"`
 for RUN in ${RUNS[@]}; do
-    # get array epoch, atmosphere and telescope combination for this run
     if [ ! -e "$INDIR/$RUN.mscw.root" ]; then
         echo "error: mscw file not found: $INDIR/$RUN.mscw.root"
         continue
     fi
-    RUNINFO=`"$EVNDISPSYS"/bin/printRunParameter "$INDIR/$RUN.mscw.root" -runinfo`
-    EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
-    MAJOREPOCH=`echo $RUNINFO | awk '{print $(2)}'`
-    ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
-    if [[ $ATMO == *error* ]]; then
-       echo "error finding atmosphere; skipping run $RUN"
-       continue
-    fi
-    OBSL=$(echo $RUNINFO | awk '{print $4}')
-    TELTOANA=`echo $RUNINFO | awk '{print "T"$(5)}'`
-    # V4 and V5: grisu sims with ATM21/22
-    if [[ $EPOCH == *"V4"* ]] || [[ $EPOCH == *"V5"* ]]; then
-        ATMO=${ATMO/6/2}
-    fi
-    # V6 redHV only for summer atmospheres
-    if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
-       ATMO=${ATMO/62/61}
-    fi
-    # V6 UV only for ATM 21
-    if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
-       ATMO=${ATMO/62/21}
-       ATMO=${ATMO/61/21}
-    fi
+
+    # prepare run scripts
+    FSCRIPT="$LOGDIR/qsub_analyse-$DATE-RUN$RUN-$(date +%s)"
+    echo "Run script written to $FSCRIPT"
+
+    sed -e "s|FILELIST|NOTDEFINED|" \
+        -e "s|DATADIR|$INDIR|"        \
+        -e "s|OUTDIR|$ODIR|"          \
+        -e "s|OUTNAME|$RUN.anasum|"        \
+        -e "s|RUNNNNN|$RUN|"          \
+        -e "s|RAAACCC|$RACC|"          \
+        -e "s|BBM|$BM|" \
+        -e "s|MBMPARAMS|$BMPARAMS|" \
+        -e "s|CCUTFILE|$CUTFILE|" \
+        -e "s|EEEFFAREARUN|$EFFAREA|" \
+        -e "s|RRADACCRUN|$RADACC|" \
+        -e "s|SPSIMTYPE|$SIMTYPE|" \
+        -e "s|BBACKGND|$BACKGND|" \
+        -e "s|RUNPARAM|$RUNP|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
+
+    chmod u+x "$FSCRIPT.sh"
     
-    if [[ $SIMTYPE == "DEFAULT" ]]; then
-        if [[ $EPOCH == *"V4"* ]]; then
-            REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V4}
-            REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V4}
-        elif [[ $EPOCH == *"V5"* ]]; then
-            REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V5}
-            REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V5}
-        elif [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
-            REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V6redHV}
-            REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V6}
-        elif [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
-            REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V6UV}
-            REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V6}
-        else
-            REPLACESIMTYPEEff=${SIMTYPE_DEFAULT_V6}
-            REPLACESIMTYPERad=${SIMTYPE_DEFAULT_V6}
+    # run locally or on cluster
+    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`eval "echo \"$SUBC\""`
+    if [[ $SUBC == *"ERROR"* ]]; then
+        echo "$SUBC"
+        exit
+    fi
+    if [[ $SUBC == *qsub* ]]; then
+        JOBID=`$SUBC $FSCRIPT.sh`
+        # account for -terse changing the job number format
+        if [[ $SUBC != *-terse* ]] ; then
+            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
+            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
-     else
-        REPLACESIMTYPEEff=${SIMTYPE}
-        REPLACESIMTYPERad=${SIMTYPE}
-     fi
-
-    echo "RUN $RUN at epoch $EPOCH and atmosphere $ATMO (Telescopes $TELTOANA SIMTYPE $REPLACESIMTYPEEff $REPLACESIMTYPERad)"
-    echo "File $INDIR/$RUN.mscw.root"
-
-    # do string replacements
-    EFFAREARUN=${EFFAREA/VX/$EPOCH}
-    EFFAREARUN=${EFFAREARUN/TX/$TELTOANA}
-    EFFAREARUN=${EFFAREARUN/XX/$ATMO}
-    EFFAREARUN=${EFFAREARUN/SX/$REPLACESIMTYPEEff}
-
-    if [[ ${RACC} == "1" ]]; then
-        echo "run-wise radical acceptances: "
-        RADACCRUN="$ODIR/$RUN.anasum.radialAcceptance.root"
-        echo "   $RADACCRUN"
-    elif [[ ${RACC} == "0" ]]; then
-        echo "external radial acceptances: "
-        RADACCRUN=${RADACC/VX/$MAJOREPOCH}
-        RADACCRUN=${RADACCRUN/TX/$TELTOANA}
-        RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
-    else
-        echo "Ignore acceptances: "
-        RADACCRUN="IGNOREACCEPTANCE"
-    fi
-    
-    # write line to anasum input file
-    if [[ $EDVERSION = "v4"* ]]; then
-        echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $ANARUNLIST
-        echo "* $RUN $RUN 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
-    # v5x: cuts are read from the effective area file
-    else
-        echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> "$ANARUNLIST"
-        echo "* $RUN $RUN 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN"
-    fi
-    if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
-        # write line to v2dl3 script
-        V2DL3OPT="--fuzzy_boundary 0.05"
-        echo "python  ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py ${V2DL3OPT} -f $ODIR/$RUN.anasum.root $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/$EFFAREARUN $ODIR/$RUN.anasum.fits.gz" >> ${V2DL3SCRIPT}
-    fi
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+	elif [[ $SUBC == *sbatch* ]]; then
+        $SUBC $FSCRIPT.sh
+    elif [[ $SUBC == *parallel* ]]; then
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
+    elif [[ "$SUBC" == *simple* ]] ; then
+	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
+	fi
 done
 
-if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
-    echo "conda deactivate" >> ${V2DL3SCRIPT}
+# submit all condor jobs at once
+if [[ $SUBC == *condor* ]]; then
+    $EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit
 fi
 
-# submit the job
-SUBSCRIPT=$(dirname "$0")"/ANALYSIS.anasum_parallel"
-$SUBSCRIPT.sh "$ANARUNLIST" "$INDIR" "$ODIR" "$RUNP" "${RACC}"
-
-if [[ -n "$V2DL3" && "$V2DL3" != "NOTSET" ]]; then
-   echo "V2DL3 script written to $V2DL3SCRIPT"
+# Execute all FSCRIPTs locally in parallel
+if [[ $SUBC == *parallel* ]]; then
+    cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
 fi
 
 exit

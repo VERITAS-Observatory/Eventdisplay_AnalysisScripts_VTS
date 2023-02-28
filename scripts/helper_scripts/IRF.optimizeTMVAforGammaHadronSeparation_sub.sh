@@ -51,9 +51,9 @@ rm -f ${MVADIR}/rates.log
 
 # optimize cuts
 echo "optimize cuts..."
-MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadron_BDTs/${EPAT}/${CUT}/"
+MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${EPAT}/${CUT}/"
 cd ${PREDIR}/${CUT}
 rm -f ${WDIR}/${EPAT}.optimised.dat
-root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS})"  > ${WDIR}/${EPAT}.optimised.dat
+root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, 5., 5. )"  > ${WDIR}/${EPAT}.optimised.dat
 
 exit

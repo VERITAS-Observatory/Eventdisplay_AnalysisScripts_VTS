@@ -65,4 +65,6 @@ $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -arrayrecid=$RECID \
                             -woff=$WOBBLE &> "$ODIR/$TABFILE.log"
 
+$EVNDISPSYS/bin/logFile mscwTableFillLow "$ODIR/$TABFILE.root" "$ODIR/$TABFILE.log"
+
 exit

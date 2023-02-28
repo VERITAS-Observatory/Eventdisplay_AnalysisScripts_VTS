@@ -17,4 +17,6 @@ TTA=TELTOANA
 rm -f "$ODIR/$OFILE.log"
 $EVNDISPSYS/bin/makeRadialAcceptance -s $RLIST -c $CUTS -d $DDIR -i $EPOCH -o $ODIR/$OFILE.root -t $TTA &> $ODIR/$OFILE.log
 
+$EVNDISPSYS/bin/logFile radAccLOG "$ODIR/$OFILE.root" "$ODIR/$OFILE.log"
+
 exit
