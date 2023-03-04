@@ -15,6 +15,8 @@ required parameters:
 
     <anasum run list>       full anasum run list
                             (with effective areas, file names, etc.)
+                            or short run list
+                            (run numbers only)
         
     <anasum directory>      input directory containing anasum root files
         
