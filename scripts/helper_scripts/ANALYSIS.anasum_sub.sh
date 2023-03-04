@@ -104,7 +104,7 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
     echo "RUN $RUNNUM at epoch $EPOCH and atmosphere $ATMO (Telescopes $TELTOANA SIMTYPE $REPLACESIMTYPEEff $REPLACESIMTYPERad)"
     # do string replacements
     if [[ "$BACKGND" == *IGNOREIRF* ]]; then
-        EFFAREA="IGNOREEFFECTIVEAREA"
+        EFFAREARUN="IGNOREEFFECTIVEAREA"
     else
         EFFAREARUN=${EFFAREA/VX/$EPOCH}
         EFFAREARUN=${EFFAREARUN/TX/$TELTOANA}
