@@ -24,6 +24,13 @@ echo "Temporary directory: $TEMPDIR"
 mkdir -p $TEMPDIR
 ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
 
+OBSTIME="5."
+if [[ $CUT == *"Moderate"* ]] || [[ $CUT == *"Hard"* ]]; then
+    OBSTIME="5."
+elif [[ $CUT == *"Soft"* ]]; then
+    OBSTIME="1."
+fi
+
 # effective area - fill path
 EFFAREA="$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA}"
 
@@ -54,6 +61,6 @@ echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${EPAT}/${CUT}/"
 cd ${PREDIR}/${CUT}
 rm -f ${WDIR}/${EPAT}.optimised.dat
-root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, 5., 5. )"  > ${WDIR}/${EPAT}.optimised.dat
+root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5. )"  > ${WDIR}/${EPAT}.optimised.dat
 
 exit
