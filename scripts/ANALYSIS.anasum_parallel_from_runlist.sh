@@ -198,12 +198,28 @@ mkdir -p "$ODIR"
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_sub"
 TIMETAG=`date +"%s"`
 
+# directory schema
+getNumberedDirectory()
+{
+    TRUN="$1"
+    if [[ ${TRUN} -lt 100000 ]]; then
+        ODIR="${INDIR}/${TRUN:0:1}/"
+    else
+        ODIR="${INDIR}/${TRUN:0:2}/"
+    fi
+    echo ${ODIR}
+}
+
+
 # loop over all runs
 RUNS=`cat "$RUNLIST"`
 for RUN in ${RUNS[@]}; do
     if [ ! -e "$INDIR/$RUN.mscw.root" ]; then
-        echo "error: mscw file not found: $INDIR/$RUN.mscw.root"
-        continue
+        INDIR=$(getNumberedDirectory $RUN)
+        if [ ! -e "$INDIR/$RUN.mscw.root" ]; then
+            echo "error: mscw file not found: $INDIR/$RUN.mscw.root (also not found in directory above)"
+            continue
+        fi
     fi
 
     # prepare run scripts
