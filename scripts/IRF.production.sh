@@ -193,38 +193,27 @@ if [[ $CUTSLISTFILE != "" ]]; then
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoftOpen.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "CARE_UV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoftOpen.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
 else
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
 fi
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-TMVA-BDT-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-#          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-SuperHard-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -234,6 +223,8 @@ CUTTYPES="NTel2-PointSource-Moderate
           NTel3-PointSource-Hard"
 # TMP
 CUTTYPES="NTel2-PointSource-Moderate"
+CUTTYPES="NTel2-PointSource-Soft"
+CUTTYPES="NTel3-PointSource-Hard"
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
