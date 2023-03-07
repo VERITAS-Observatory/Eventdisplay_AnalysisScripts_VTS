@@ -21,8 +21,8 @@ required parameters:
     <output directory>      anasum output files are written to this directory
                         
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard3tel)
-                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre)
+                            (i.e., moderate2tel, soft2tel, hard3tel, hard2tel)
+                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre, NTel2HardPre)
     
     <background model>      background model
                             (RE = reflected region, RB = ring background, 
@@ -96,6 +96,8 @@ elif [[ $CUTS = "soft2tel2" ]] || [[ $CUTS = "BDTsoft2tel2" ]]; then
     CUT="NTel2-PointSource-Soft2-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
+elif [[ $CUTS = "hard2tel" ]] || [[ $CUTS = "BDThard2tel" ]]; then
+    CUT="NTel2-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "moderatebox" ]]; then
     CUT="NTel2-PointSource-Moderate"
 elif [[ $CUTS = "softbox" ]]; then
@@ -110,6 +112,8 @@ elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
 elif [[ $CUTS = NTel3HardPre ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-Preselection"
+elif [[ $CUTS = NTel2HardPre ]]; then
+    CUT="NTel2-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel2Pre ]]; then
     CUT="NTel2-PointSource-TMVA-BDT-Preselection"
 elif [[ $CUTS = NTel3Pre ]]; then
@@ -159,11 +163,11 @@ if [[ "$BACKGND" == *RB* ]]; then
         echo "Specify an acceptance (external=0, runwise=1) or use RE."
         exit 1
     fi
-elif [[ "$BACKGND" == *RE* ]] || [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
+elif [[ "$BACKGND" == "RE" ]] || [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
     BM="RE"
     BMPARAMS="0.1 2 6"
     # ignore always acceptances in reflected region model
-    if [[ "$BACKGND" == *RE* ]]; then
+    if [[ "$BACKGND" == "RE" ]]; then
         BACKGND="IGNOREACCEPTANCE"
     fi
 else
