@@ -162,6 +162,10 @@ if [[ "$BACKGND" == *RB* ]]; then
 elif [[ "$BACKGND" == *RE* ]] || [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
     BM="RE"
     BMPARAMS="0.1 2 6"
+    # ignore always acceptances in reflected region model
+    if [[ "$BACKGND" == *RE* ]]; then
+        BACKGND="IGNOREACCEPTANCE"
+    fi
 else
     echo "ERROR: unknown background model: $BACKGND"
     echo "Allowed values are: RE, RB"
@@ -213,10 +217,11 @@ getNumberedDirectory()
 # loop over all runs
 RUNS=`cat "$RUNLIST"`
 for RUN in ${RUNS[@]}; do
-    if [ ! -e "$INDIR/$RUN.mscw.root" ]; then
-        INDIR=$(getNumberedDirectory $RUN)
-        if [ ! -e "$INDIR/$RUN.mscw.root" ]; then
-            echo "error: mscw file not found: $INDIR/$RUN.mscw.root (also not found in directory above)"
+    TMPINDIR="$INDIR"
+    if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
+        TMPINDIR=$(getNumberedDirectory $RUN)
+        if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
+            echo "error: mscw file not found: $TMPINDIR/$RUN.mscw.root (also not found in directory above)"
             continue
         fi
     fi
@@ -226,7 +231,7 @@ for RUN in ${RUNS[@]}; do
     echo "Run script written to $FSCRIPT"
 
     sed -e "s|FILELIST|NOTDEFINED|" \
-        -e "s|DATADIR|$INDIR|"        \
+        -e "s|DATADIR|$TMPINDIR|"        \
         -e "s|OUTDIR|$ODIR|"          \
         -e "s|OUTNAME|$RUN.anasum|"        \
         -e "s|RUNNNNN|$RUN|"          \
