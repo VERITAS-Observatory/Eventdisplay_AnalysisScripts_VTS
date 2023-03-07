@@ -210,7 +210,6 @@ getNumberedDirectory()
     echo ${ODIR}
 }
 
-
 # loop over all runs
 RUNS=`cat "$RUNLIST"`
 for RUN in ${RUNS[@]}; do
