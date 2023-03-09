@@ -13,8 +13,8 @@ IRF general production for IRFs for all epochs
 
 required parameters:
 
-    <sim type>              original VBF file simulation type
-                            (e.g. GRISU-SW6, CARE_June2020, CARE_RedHV, CARE_UV)
+    <sim type>              simulation type
+                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
