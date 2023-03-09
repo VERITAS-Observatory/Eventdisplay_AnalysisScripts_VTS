@@ -16,9 +16,9 @@ required parameters:
 
     <preselection results directory>     directory with preselection results
 
-    <cut type>               preselection cut type (e.g., NTel2-Moderate)
+    <cut type>                      preselection cut type (e.g., NTel2-Moderate)
     
-    <sim type>                      original VBF file simulation type (e.g. GRISU, CARE_June2020)
+    <sim type>                      simulation type (e.g. GRISU, CARE_June2020)
 
     <epoch>                         array epoch e.g. V4, V5, V6, V6_2012_2013a
 
