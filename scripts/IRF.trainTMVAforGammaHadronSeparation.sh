@@ -13,8 +13,7 @@ if [[ $# -lt 7 ]]; then
 echo "
 TMVA training of BDT: submit jobs from a TMVA runparameter file
 
-IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA runparameter file> <output directory> <output file name> <sim type>
- <epoch> <atmosphere>
+IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA runparameter file> <output directory> <output file name> <sim type> <epoch> <atmosphere>
 
 required parameters:
 
@@ -27,17 +26,14 @@ required parameters:
     
     <output file name>              name of output file e.g. BDT  
 
-    <sim type>                      original VBF file simulation type (e.g. GRISU, CARE)
+    <sim type>                      simulation type
+                                    (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
 
-    <epoch>                         array epoch e.g. V4, V5, V6
-                                    default: \"V6\"
+    <epoch>                         array epoch e.g. V4, V5,
+                                    V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b\"
 
     <atmosphere>                    atmosphere model(s) (61 = winter, 62 = summer)
-                                    default: \"61\"
 
-additional info:
-
-    energy and zenith angle bins should be indicated in the runparameter file with basic options
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -58,8 +54,8 @@ echo "Background file directory: $BDIR"
 echo "Runparameters: $RUNPAR"
 echo "Output dir: $ODIR"
 echo "Simulation type: $SIMTYPE"
-[[ "$6" ]] && EPOCH=$6 || EPOCH="V6"
-[[ "$7" ]] && ATM=$7 || ATM="61"
+EPOCH=$6
+ATM=$7
 RECID="0"
 PARTICLE_TYPE="gamma"
 # evndisplay version
