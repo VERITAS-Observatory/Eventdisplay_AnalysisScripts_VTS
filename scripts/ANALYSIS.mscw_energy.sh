@@ -184,7 +184,7 @@ do
     DISPDIR="NOTSET"
     if [[ $DISPBDT == "1" ]]; then
         if [ "$HVSETTINGS" == "obsLowHV" ]; then
-            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_redHV/"
+            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_${ANATYPE}_redHV/"
         elif [ "$HVSETTINGS" == "obsFilter" ]; then
             DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_UV/"
         else
