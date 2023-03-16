@@ -24,6 +24,17 @@ echo "Temporary directory: $TEMPDIR"
 mkdir -p $TEMPDIR
 ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
 
+OBSTIME="5."
+MINEVENTS="10."
+if [[ $CUT == *"Moderate"* ]]; then
+    OBSTIME="5."
+elif [[ $CUT == *"Soft"* ]]; then
+    OBSTIME="1."
+elif [[ $CUT == *"Hard"* ]]; then
+    OBSTIME="5."
+    MINEVENTS="1."
+fi
+
 # effective area - fill path
 EFFAREA="$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA}"
 
@@ -37,23 +48,28 @@ mkdir -p ${WDIR}
 # rates files
 RATEFILE="${WDIR}/rates_${EPAT}"
 
-rm -f ${RATEFILE}.log
+CALCULATERATEFILES="TRUE"
+CALCULATERATEFILES="FALSE"
+if [[ $CALCULATERATEFILES == "TRUE" ]];
+then
+    rm -f ${RATEFILE}.log
 
-# calculate rates from Crab Nebula and from background rates
-rm -f ${MVADIR}/rates.log
-"$EVNDISPSYS"/bin/calculateCrabRateFromMC \
-    ${EFFAREA} \
-    ${RATEFILE}.root \
-    ${DEADTIME} \
-    ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/TMVA.BDT.runparameter \
-    ${TEMPDIR}/anasum.list \
-    > ${RATEFILE}.log
+    # calculate rates from Crab Nebula and from background rates
+    rm -f ${MVADIR}/rates.log
+    "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
+        ${EFFAREA} \
+        ${RATEFILE}.root \
+        ${DEADTIME} \
+        ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/TMVA.BDT.runparameter \
+        ${TEMPDIR}/anasum.list \
+        > ${RATEFILE}.log
+fi
 
 # optimize cuts
 echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${EPAT}/${CUT}/"
 cd ${PREDIR}/${CUT}
 rm -f ${WDIR}/${EPAT}.optimised.dat
-root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, 5., 5. )"  > ${WDIR}/${EPAT}.optimised.dat
+root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat
 
 exit

@@ -47,10 +47,12 @@ ONAME="$RUNNUM"
 echo "Runnumber $RUNNUM"
 
 # check if output file exist
-# if [ -e "$ODIR/$ONAME.root" ]; then
-#    echo "OUTPUT $ODIR/$ONAME.root exists; skipping this job"
-#    exit
-# fi
+V4N=${ODIR/v490/v4N}
+if [ -e "$V4N/$ONAME.root.zst" ]; then
+    zstd --test $V4N/$ONAME.root.zst
+    echo "OUTPUT $V4N/$ONAME.root exists; skipping this job"
+    exit
+fi
 
 #################################
 # detector configuration and cuts

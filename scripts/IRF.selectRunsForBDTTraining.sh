@@ -40,7 +40,7 @@ echo "Zenith angle definition: $ZEBINS"
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
 NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
 
-FLIST=$(find ${1} -name "*[0-9].mscw.log"  | sed 's/\.log$//')
+FLIST=$(find ${1} -name "*[0-9].mscw.root"  | sed 's/\.root$//')
 
 mkdir -p ${2}
 
@@ -55,7 +55,7 @@ linkFile()
 
 for F in ${FLIST}
 do
-    ls -1 ${F}.log
+    echo "LINKING file ${F}.root"
     RUNZENITH=$($EVNDISPSYS/bin/printRunParameter ${F}.root -zenith | awk '{print $4}')
     ZEBIN=0
     for (( j=0; j < $NZEW; j++ ))
@@ -67,6 +67,7 @@ do
     done
     echo "   Zenith bin: ${ZEBIN}"
     RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${F}.root -runinfo)
+    echo "   RUNINFO $RUNINFO"
 
     TMPMEPOCH=$(echo $RUNINFO | awk '{print $2}')
     if [[ ${TMPMEPOCH} != ${MEPOCH} ]]; then
@@ -88,8 +89,9 @@ do
         echo "   SKIPPING OBSTIME: $TMPOBSTIME $MINOBSTIME" 
         continue
     fi
-    TMPTARGET=$(echo "$RUNINFO" | cut -d\  -f7- )
-    echo "TARGET $TMPTARGET"
+    # need to take care of target with spaces in their names
+    TMPTARGET=$(echo "$RUNINFO" | awk '{$1=$2=$3=$4=$5=$6=""; print $0}' | awk '{$1=$1;print}')
+    echo "   TARGET $TMPTARGET"
     BRK="FALSE"
     for (( l=0; l < ${#BRIGHTSOURCES[@]}; l++ ))
     do

@@ -156,11 +156,38 @@ else
    exit
 fi
 
+
+file_on_disk()
+{
+    TRUN="$1"
+    if [[ ${TRUN} -lt 100000 ]]; then
+        EDIR="${ODIR}/${TRUN:0:1}/"
+    else
+        EDIR="${ODIR}/${TRUN:0:2}/"
+    fi
+    if [[ -e "${EDIR}/${TRUN}.root" ]]; then
+        echo "TRUE"
+        return
+    fi
+    echo "FALSE"
+}
+
+
 #########################################
 # loop over all files in files loop
 for AFILE in $FILES
 do
     echo "Now starting run $AFILE"
+
+    # check if file is on disk
+    FDISK=$(file_on_disk $AFILE)
+    echo $FDISK
+    if [[ $FDISK == "TRUE" ]]; then
+        echo "RUN $AFILE already proccessed; skipping"
+        continue
+    fi
+    echo "Processing $AFILE"
+
     FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
 
     if [[ ${AFILE} -lt 100000 ]]; then

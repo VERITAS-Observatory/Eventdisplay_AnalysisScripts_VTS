@@ -106,6 +106,20 @@ SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.mscw_energy_sub"
 
 TIMETAG=`date +"%s"`
 
+
+# directory schema
+getNumberedDirectory()
+{
+    TRUN="$1"
+    if [[ ${TRUN} -lt 100000 ]]; then
+        ODIR="${INPUTDIR}/${TRUN:0:1}/"
+    else
+        ODIR="${INPUTDIR}/${TRUN:0:2}/"
+    fi
+    echo ${ODIR}
+}
+
+
 #########################################
 # loop over all files in files loop
 for AFILE in $FILES
@@ -114,8 +128,12 @@ do
     echo "Now analysing $BFILE (ID=$ID)"
 
     if [ ! -e "$BFILE" ]; then
-        echo "ERR: File $BFILE does not exist !!!" >> mscw.errors.log
-        continue
+        TMPINDIR=$(getNumberedDirectory $AFILE)
+        if [ ! -e "$TMPINDIR/$AFILE.root" ]; then
+            echo "ERR: File $BFILE does not exist !!!" >> mscw.errors.log
+            continue
+        fi
+        BFILE="$TMPINDIR/$AFILE.root"
     fi
 
     RUNINFO=$($EVNDISPSYS/bin/printRunParameter $BFILE -updated-runinfo)
@@ -166,7 +184,7 @@ do
     DISPDIR="NOTSET"
     if [[ $DISPBDT == "1" ]]; then
         if [ "$HVSETTINGS" == "obsLowHV" ]; then
-            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_redHV/"
+            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_${ANATYPE}_redHV/"
         elif [ "$HVSETTINGS" == "obsFilter" ]; then
             DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_UV/"
         else

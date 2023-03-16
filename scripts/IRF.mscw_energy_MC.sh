@@ -135,6 +135,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
     -e "s|ANALYSISTYPE|${ANALYSIS_TYPE}|" \
     -e "s|USEDISP|${DISPBDT}|" \
+    -e "s|SSIMTYPE|$SIMTYPE|" \
     -e "s|NFILES|$NROOTFILES|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \

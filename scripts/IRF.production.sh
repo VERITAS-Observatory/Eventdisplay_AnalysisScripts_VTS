@@ -15,8 +15,8 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 
 required parameters:
 
-    <sim type>              original VBF file simulation type 
-                            (e.g. GRISU-SW6, CARE_June2020, CARE_RedHV, CARE_UV)
+    <sim type>              simulation type 
+                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -30,8 +30,9 @@ optional parameters:
     [epoch]                 array epoch(s) (e.g., V4, V5, V6)
                             (default: \"V4 V5 V6\")
                             (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b 
-			     V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
-                 V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w V6_2022_2022s\")
+                             V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
+                             V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
+                             V6_2022_2022s\")
 
     [atmosphere]            atmosphere model(s) (21 = winter, 22 = summer)
                             (default: \"21 22\")
@@ -193,38 +194,27 @@ if [[ $CUTSLISTFILE != "" ]]; then
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoftOpen.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "CARE_UV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoftOpen.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
 else
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
 fi
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-TMVA-BDT-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-TMVA-BDT-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-#          ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-SuperHard-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -234,6 +224,8 @@ CUTTYPES="NTel2-PointSource-Moderate
           NTel3-PointSource-Hard"
 # TMP
 CUTTYPES="NTel2-PointSource-Moderate"
+CUTTYPES="NTel2-PointSource-Soft"
+CUTTYPES="NTel3-PointSource-Hard"
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
@@ -302,6 +294,9 @@ for VX in $EPOCH; do
                             echo "Size cut applied: $SIZECUT"
                             cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
                             sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
+                            if [[ $CUTFIL = *"NTel3"* ]]; then
+                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/BDT.runparameter
+                            fi
                             ./IRF.trainTMVAforGammaHadronSeparation.sh \
                                          "${TRAINDIR}" \
                                          "$MVADIR"/BDT.runparameter \
@@ -328,6 +323,9 @@ for VX in $EPOCH; do
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB=200
+               elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
+                   FIXEDWOBBLE="0.5"
+                   FIXEDNSB="300 600 900"
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
                    FIXEDNSB="160 200 250"
                fi

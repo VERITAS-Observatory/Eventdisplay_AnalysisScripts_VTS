@@ -14,6 +14,7 @@ WOBBLE=WOBBLEOFFSET
 ANATYPE=ANALYSISTYPE
 NROOTFILES=NFILES
 RECID="RECONSTRUCTIONID"
+SIMTYPE=SSIMTYPE
 EPOCH="ARRAYEPOCH"
 ATM="ATMOS"
 DISPBDT=USEDISP
@@ -52,7 +53,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -maxloss=0.2"
     # MOPT="$MOPT -disp_use_intersect"
     # MOPT="$MOPT -maxnevents=1000"
-    if [[ ${EPOCH} == *"redHV"* ]]; then
+    if [[ ${SIMTYPE} == *"RedHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}_redHV/"
     else
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}/"
@@ -108,6 +109,13 @@ $EVNDISPSYS/bin/mscw_energy $MOPT \
     -inputfilelist $OSUBDIR/$OFILE.list \
     -outputfile $outputfilename \
     -noise=$NOISE &> $logfile
+
+echo "READING evndisp files from ${INDIR}" >> $logfile
+# add DISP directory to log file
+# (as XML files are unpacked to tmp directory)
+if [ $DISPBDT -eq 1 ]; then
+    echo "Reading DISPBDT XML files from ${DISPDIR}" >> $logfile
+fi
 
 $EVNDISPSYS/bin/logFile mscwTableLog $outputfilename $logfile
 
