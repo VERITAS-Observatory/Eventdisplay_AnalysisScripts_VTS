@@ -264,7 +264,9 @@ compare_log_file()
 }
 
 compare_log_file evndispLog $ODIR/$ONAME.log
-compare_log_file evndisppedLog $ODIR/$ONAME.ped.log
+if [ -e $ODIR/$ONAME.ped.log ]; then
+    compare_log_file evndisppedLog $ODIR/$ONAME.ped.log
+fi
 compare_log_file evndisptzeroLog $ODIR/$ONAME.tzero.log
 
 ### compress evndisp root file
@@ -284,6 +286,4 @@ mv -f -v $DDIR/$ONAME.root.zst ${ODIR}/
 
 ### set group permissions
 chmod g+w "$ODIR/$ONAME.root.zst"
-chmod g+w "$ODIR/$ONAME.log"
-chmod g+w "$ODIR/$ONAME.tzero.log"
 chmod -R g+w $ODIR/Calibration
