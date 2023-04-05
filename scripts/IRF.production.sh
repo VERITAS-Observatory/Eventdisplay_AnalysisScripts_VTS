@@ -150,7 +150,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # TEST
     # NSB_LEVELS=( 160 )
     # ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
+    # WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TRAINMVANGRES production 
     # (assume 0.5 deg wobble is done)
@@ -208,13 +208,14 @@ else
              ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
 fi
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
