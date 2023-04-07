@@ -149,7 +149,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     ######################################
     # TEST
     # NSB_LEVELS=( 160 )
-    # ZENITH_ANGLES=( 20 )
+    # ZENITH_ANGLES=( 40 )
     # WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TRAINMVANGRES production 
@@ -205,8 +205,7 @@ else
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 fi
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
@@ -214,7 +213,7 @@ fi
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
@@ -323,7 +322,8 @@ for VX in $EPOCH; do
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                   FIXEDNSB=200
+                   FIXEDNSB="150 200 250"
+                   FIXEDWOBBLE="0.25 0.5 0.75 1.00 1.50"
                elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="300 600 900"
