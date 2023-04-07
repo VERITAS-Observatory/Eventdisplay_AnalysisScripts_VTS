@@ -16,39 +16,39 @@ ANALYSIS.evndisp.sh <runlist> [output directory] [runparameter file] [calibratio
 
 required parameters:
 
-    <runlist>               simple run list with one run number per line
+    <runlist>              simple run list with one run number per line
     
 optional parameters:
     
     [output directory]     directory where output ROOT files will be stored.
-			   Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
+                           Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
 
 None of the following options are usually required:
-	 
+     
     [runparameter file]    file with integration window size and reconstruction cuts/methods,
                            expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
+                           Default: EVNDISP.reconstruction.runparameter.AP.v4x
 
-			               Default: EVNDISP.reconstruction.runparameter.v4x
-                           (for v5x versions: EVNDISP.reconstruction.runparameter)
-
-    [calibration]	   
-          0		   neither tzero nor pedestal calculation is performed, must have the calibration results
-			   already in $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?
-          1                pedestal & average tzero calculation (default)
-          2                pedestal calculation only
-          3                average tzero calculation only
-          4                pedestal & average tzero calculation are performed;
+    [calibration]      
+          0                run analysis only; neither tzero nor pedestal calculation are performed, 
+                           must have the calibration results available in
+                           $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?
+          1                run analysis & pedestal & average tzero calculation (default)
+          2                run analysis & pedestal calculation only
+          3                run analysis & average tzero calculation only
+          4                run analysis & pedestal & average tzero calculation are performed;
                            laser run number is taken from calibration file,
                            gains taken from $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?/<laserrun>.gain.root 
+          5                run pedestal & average tzero calculation only (no analysis step)
 
 
     [teltoana]             restrict telescope combination to be analyzed:
                            e.g.: teltoana=123 (for tel. 1,2,3), 234, ...
                            Default is to use the telescope combination from the DB. Telescopes that were not in the array
-			   or have been cut by DQM are not analysed.
+                           or have been cut by DQM are not analysed.
 
     [calibration file name] only used with calibration=4 option
-			   to specify a which runs should be used for pedestal/tzero/gain calibration.
+                           to specify a which runs should be used for pedestal/tzero/gain calibration.
                            Default is calibrationlist.dat
                            file is expected in $VERITAS_EVNDISP_AUX_DIR/Calibration
 
@@ -227,9 +227,9 @@ do
     fi  
 
     if [[ $TELTOANA == "1234" ]]; then
-	echo "Telescope combination saved in the DB is analyzed (default)"
+        echo "Telescope combination saved in the DB is analyzed (default)"
     else
-	echo "Analyzed telescopes: $TELTOANA"
+        echo "Analyzed telescopes: $TELTOANA"
     fi 
     if [[ $CALIB == "4" ]]; then
             echo "read calibration from calibration file $CALIBFILE"
@@ -245,7 +245,7 @@ do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
         
-		echo "RUN $AFILE JOBID $JOBID"
+        echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
             echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
@@ -264,12 +264,12 @@ do
             echo
         fi
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh	
+        $SUBC $FSCRIPT.sh   
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log" 
     elif [[ "$SUBC" == *test* ]]; then
         echo "TESTING SCRIPT $FSCRIPT.sh"
     fi

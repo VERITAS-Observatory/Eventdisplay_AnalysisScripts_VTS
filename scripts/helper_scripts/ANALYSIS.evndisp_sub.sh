@@ -83,7 +83,7 @@ fi
         
 #########################################
 # pedestal calculation
-if [[ $CALIB == "1" || ( $CALIB == "2" || $CALIB == "4" ) ]]; then
+if [[ $CALIB == "1" || $CALIB == "2" || $CALIB == "4" || $CALIB == "5" ]]; then
     rm -f $LOGDIR/$RUN.ped.log
     $EVNDISPSYS/bin/evndisp \
         -runmode=1 -runnumber="$RUN" \
@@ -124,7 +124,7 @@ fi
 
 #########################################
 # average tzero calculation
-if [[ $CALIB == "1" || ( $CALIB == "3" || $CALIB == "4" ) ]]; then
+if [[ $CALIB == "1" || $CALIB == "3" || $CALIB == "4" || $CALIB == "5" ]]; then
     rm -f $LOGDIR/$RUN.tzero.log
     $EVNDISPSYS/bin/evndisp \
         -runnumber=$RUN -runmode=7 \
@@ -155,19 +155,23 @@ fi
 
 #########################################
 # run eventdisplay
+if [[ $CALIB != "5" ]]; then
 LOGFILE="$LOGDIR/$RUN.log"
-rm -f "$LOGDIR/$RUN.log"
-$EVNDISPSYS/bin/evndisp \
-    -runnumber="$RUN" \
-    -reconstructionparameter "$ACUTS" \
-    -outputfile "$TEMPDIR/$RUN.root" \
-    "${OPT[@]}" \
-    -calibrationdirectory "$CALDIR" &> "$LOGFILE"
-# DST $EVNDISPSYS/bin/evndisp -runnumber=$RUN -nevents=250000 -runmode=4 -readcalibdb -dstfile $TEMPDIR/$RUN.dst.root -reconstructionparameter $ACUTS -outputfile $TEMPDIR/$RUN.root ${OPT[@]} &> "$LOGFILE"
-echo "RUN$RUN EVNDISPLOG $LOGFILE"
+    rm -f "$LOGDIR/$RUN.log"
+    $EVNDISPSYS/bin/evndisp \
+        -runnumber="$RUN" \
+        -reconstructionparameter "$ACUTS" \
+        -outputfile "$TEMPDIR/$RUN.root" \
+        "${OPT[@]}" \
+        -calibrationdirectory "$CALDIR" &> "$LOGFILE"
+    # DST $EVNDISPSYS/bin/evndisp -runnumber=$RUN -nevents=250000 -runmode=4 -readcalibdb -dstfile $TEMPDIR/$RUN.dst.root -reconstructionparameter $ACUTS -outputfile $TEMPDIR/$RUN.root ${OPT[@]} &> "$LOGFILE"
+    echo "RUN$RUN EVNDISPLOG $LOGFILE"
+fi
 
 # move log file into root file
-$EVNDISPSYS/bin/evndisp evndispLog "$TEMPDIR/$RUN.root" "$LOGFILE"
+if [[ -e "$LOGFILE" ]]; then
+    $EVNDISPSYS/bin/evndisp evndispLog "$TEMPDIR/$RUN.root" "$LOGFILE"
+fi
 if [[ -e "$LOGDIR/$RUN.ped.log" ]]; then
     $EVNDISPSYS/bin/evndisp evndisppedLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.ped.log"
 fi
@@ -176,14 +180,16 @@ if [[ -e "$LOGDIR/$RUN.tzero.log" ]]; then
 fi
 
 # move data file from tmp dir to data dir
-DATAFILE="$ODIR/$RUN.root"
-cp -f -v "$TEMPDIR/$RUN.root" "$DATAFILE"
-if [[ -f "$TEMPDIR/$RUN.IPR.root" ]]; then
-    cp -f -v "$TEMPDIR/$RUN.IPR.root" "$ODIR/$RUN.IPR.root"
-fi
-echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
-rm -f "$TEMPDIR/$RUN.root"
-# DST cp -f -v $TEMPDIR/$RUN.dst.root $DATAFILE
+if [[ $CALIB != "5" ]]; then
+    DATAFILE="$ODIR/$RUN.root"
+    cp -f -v "$TEMPDIR/$RUN.root" "$DATAFILE"
+    if [[ -f "$TEMPDIR/$RUN.IPR.root" ]]; then
+        cp -f -v "$TEMPDIR/$RUN.IPR.root" "$ODIR/$RUN.IPR.root"
+    fi
+    echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
+    rm -f "$TEMPDIR/$RUN.root"
+    # DST cp -f -v $TEMPDIR/$RUN.dst.root $DATAFILE
+fi  
 
 ########################################
 # cleanup raw data (if downloaded)
