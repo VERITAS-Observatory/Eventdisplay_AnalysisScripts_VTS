@@ -9,19 +9,18 @@
 #
 #
 
-if [ $# -ne 3 ]; then
-     echo "./IRF.selectRunsForBDTTraining.sh <source mscw directory> <target mscw directory> <TMVA run parameter file>"
+if [ $# -ne 4 ]; then
+     echo "./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file>"
      echo 
      echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
      exit
 fi
 
-TARGETDIR="${2}"
-RUNPAR="${3}"
+MEPOCH="${1}"
+TARGETDIR="${3}"
+RUNPAR="${4}"
 
-# MAJOR EPOCH
-MEPOCH="V6"
 # Observing mode
 OBSMODE="observing"
 # Multiplicity
@@ -40,7 +39,13 @@ echo "Zenith angle definition: $ZEBINS"
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
 NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
 
-FLIST=$(find ${1} -name "*[0-9].mscw.root"  | sed 's/\.root$//')
+if [[ $MEPOCH == "V4" ]]; then
+    FLIST=$(find ${2} -name "[3,4]*[0-9].mscw.root"  | sed 's/\.root$//')
+elif [[ $MEPOCH == "V5" ]]; then
+    FLIST=$(find ${2} -name "[4,5,6]*[0-9].mscw.root"  | sed 's/\.root$//')
+else
+    FLIST=$(find ${2} -name "[6-9, 10]*[0-9].mscw.root"  | sed 's/\.root$//')
+fi
 
 mkdir -p ${2}
 
