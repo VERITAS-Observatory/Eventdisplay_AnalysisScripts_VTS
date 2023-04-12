@@ -222,10 +222,9 @@ CUTLIST=${CUTLIST//$'\n'/}
 CUTTYPES="NTel2-PointSource-Moderate
           NTel2-PointSource-Soft
           NTel3-PointSource-Hard"
-# TMP
-CUTTYPES="NTel2-PointSource-Moderate"
-CUTTYPES="NTel2-PointSource-Soft"
-CUTTYPES="NTel3-PointSource-Hard"
+# CUTTYPES="NTel2-PointSource-Moderate"
+# CUTTYPES="NTel2-PointSource-Soft"
+# CUTTYPES="NTel3-PointSource-Hard"
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
@@ -272,13 +271,12 @@ for VX in $EPOCH; do
                     for C in ${CUTTYPES[@]}; do
                         echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
                         BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining/"
-                        MVADIR="${BDTDIR}/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                        MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         # list of background files
-                        # (TODO: nominal/redHV/UVfilter)
-                        TRAINDIR="${BDTDIR}/mscw/"
+                        TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
                         if [[ $DISPBDT == "1" ]]; then
-                            TRAINDIR="${BDTDIR}/mscw_DISP/"
-                            MVADIR="${BDTDIR}/GammaHadronBDTs_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                            TRAINDIR="${BDTDIR}/mscw_${VX:0:2}_DISP/"
+                            MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         fi 
                         mkdir -p -v "${MVADIR}"
                         if [[ $IRFTYPE == "TRAINTMVA" ]]; then
