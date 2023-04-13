@@ -204,7 +204,14 @@ do
         echo "DISPDIR (Elevation is $ZA deg): " $DISPDIR
     fi
 
-    FSCRIPT="$LOGDIR/MSCW.data-ID$ID-$AFILE"
+    TMPLOGDIR=${LOGDIR}
+    # avoid reaching limits of number of files per
+    # directory (e.g., on afs)
+    if [[ ${NRUNS} > 5000 ]]; then
+        TMPLOGDIR=${LOGDIR}-${AFILE:0:1}
+        mkdir -p ${TMPLOGDIR}
+    fi
+    FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$AFILE"
     rm -f $FSCRIPT.sh
 
     sed -e "s|TABLEFILE|$TABFILE|" \
@@ -240,13 +247,13 @@ do
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit"
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh      
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
         "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
@@ -255,5 +262,5 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat $LOGDIR/runscripts.$TIMETAG.dat | $SUBC
+    cat $TMPLOGDIR/runscripts.$TIMETAG.dat | $SUBC
 fi
