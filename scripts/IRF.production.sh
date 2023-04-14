@@ -148,9 +148,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 160 )
-    # ZENITH_ANGLES=( 40 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    NSB_LEVELS=( 160 )
+    ZENITH_ANGLES=( 40 )
+    WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TRAINMVANGRES production 
     # (assume 0.5 deg wobble is done)

@@ -39,10 +39,6 @@ prepare_atmo_string()
     if [[ $EPOCH == *"V4"* ]] || [[ $EPOCH == *"V5"* ]]; then
         ATMO=${ATMO/6/2}
     fi
-    # V6 redHV only for summer atmospheres
-    if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
-       ATMO=${ATMO/62/61}
-    fi
     # V6 UV only for ATM 21
     if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
        ATMO=${ATMO/62/21}

@@ -54,11 +54,9 @@ process_irfs()
     done
 }
 
-if [[ ${SIMTYPE} == "CARE_June2020" ]]; then
+if [[ ${SIMTYPE} == "CARE_June2020" ]] || [[ ${SIMTYPE} == "CARE_RedHV" ]]; then
     process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_WINTER.dat
     process_irfs ${IRFTYPE} ${SIMTYPE} 62 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_SUMMER.dat
-elif [[ ${SIMTYPE} == "CARE_RedHV" ]]; then
-    process_irfs ${IRFTYPE} ${SIMTYPE} 61 "$VERITAS_EVNDISP_AUX_DIR/IRF_EPOC*.dat"
 elif [[ ${SIMTYPE} == "GRISU" ]]; then
     ./IRF.production.sh GRISU ${IRFTYPE} V5 21 0
     ./IRF.production.sh GRISU ${IRFTYPE} V5 22 0
