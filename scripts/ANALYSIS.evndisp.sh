@@ -94,6 +94,8 @@ VPM=1
 DOWNLOAD=0
 # directory with DB text
 DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/DBTEXT"
+# TODO
+DBTEXTDIRECTORY="/lustre/fs23/group/veritas/users/maierg/DBTEXT"
 
 echo "Using runparameter file $ACUTS ($EDVERSION, $VERITAS_ANALYSIS_TYPE)"
 
@@ -191,12 +193,12 @@ do
     FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
 
     if [[ ${AFILE} -lt 100000 ]]; then
-        DBRUNDIR="${DBTEXTDIRECTORY}/${AFILE:0:1}/${AFILE}"
+        DBRUNFIL="${DBTEXTDIRECTORY}/${AFILE:0:1}/${AFILE}.tar.gz"
     else
-        DBRUNDIR="${DBTEXTDIRECTORY}/${AFILE:0:2}/${AFILE}"
+        DBRUNFIL="${DBTEXTDIRECTORY}/${AFILE:0:2}/${AFILE}.tar.gz"
     fi
 
-    if [[ -d ${DBRUNDIR} ]] && [[ ${EDVERSION} != "v487" ]]; then
+    if [[ -e ${DBRUNFIL} ]] && [[ ${EDVERSION} != "v487" ]]; then
         DBTEXTDIR="${DBTEXTDIRECTORY}"
     else
         DBTEXTDIR="0"
@@ -274,8 +276,8 @@ do
         echo "TESTING SCRIPT $FSCRIPT.sh"
     fi
 
-    if [[ ! -d ${DBRUNDIR} ]] || [[ ${DBTEXTDIR} == "0" ]]; then
-        echo "SLEEPING (${SLEEPABIT}) ${DBRUNDIR}/$AFILE"
+    if [[ ! -e ${DBRUNFIL} ]] || [[ ${DBTEXTDIR} == "0" ]]; then
+        echo "SLEEPING (${SLEEPABIT}) ${DBRUNFIL} $AFILE"
         sleep ${SLEEPABIT}
     fi
 done

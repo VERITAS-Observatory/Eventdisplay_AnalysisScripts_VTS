@@ -27,20 +27,44 @@ OVERWRITE="0"
 [[ "$2" ]] && OVERWRITE=$2 || OVERWRITE=0
 NTEL="4"
 
-DBDIR="$VERITAS_DATA_DIR/DBTEXT/"
+# DBDIR="$VERITAS_DATA_DIR/DBTEXT/"
+DBDIR="$VERITAS_USER_DATA_DIR/DBTEST"
 mkdir -p ${DBDIR}
 
 getDBTextFileDirectory()
 {
     TRUN="$1"
-    TTOL="$2"
     if [[ ${TRUN} -lt 100000 ]]; then
         ODIR="${DBDIR}/${TRUN:0:1}/${TRUN}"
     else
         ODIR="${DBDIR}/${TRUN:0:2}/${TRUN}"
     fi
-    mkdir -p ${ODIR}
     echo ${ODIR}
+}
+
+get_file_status()
+{
+    TRUN="$1"
+    TFIL="$2"
+
+    if [[ ${OVERWRITE} == 1 ]]; then
+        echo "0"
+    elif [[ -e ${TFIL} ]]; then
+        echo "2"
+    else
+        TARF="$(getDBTextFileDirectory ${RRUN}).tar.gz"
+        if [[ -e ${TARF} ]]; then
+            FFIL="${RRUN}/$(basename ${TFIL})"
+            CFIL=$(tar -tzf ${TARF} ${FFIL} 2>/dev/null)
+            if [[ "${CFIL}" == "${FFIL}" ]]; then
+                echo "1"
+            else
+                echo "0"
+            fi
+         else
+             echo "0"
+         fi
+     fi
 }
 
 get_start_time()
@@ -170,7 +194,9 @@ read_run_from_DB()
     else
         OFIL="$(getDBTextFileDirectory ${RRUN})/${RRUN}.${TTOOL}_TEL${TELID}"
     fi
-    if [[ ! -e ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
+    FILESTATUS="$(get_file_status ${RRUN} ${OFIL})"
+    if [[ ${FILESTATUS} == 0 ]]; then
+        mkdir -p "$(getDBTextFileDirectory ${RRUN})"
         rm -f ${OFIL}
         if [[ $USETIME -eq "0" ]]; then
             cmd="./db_${TTOOL}.sh ${RRUN} ${TELID}"
@@ -179,6 +205,8 @@ read_run_from_DB()
         fi
         eval "$cmd" > ${OFIL}
         echo "${TTOOL} file (written): ${OFIL}"
+    elif [[ ${FILESTATUS} == 1 ]]; then
+        echo "${TTOOL} file (in tar package): ${OFIL}"
     else
         echo "${TTOOL} file (found): ${OFIL}"
     fi
@@ -200,9 +228,12 @@ read_target()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.target"
     source_id=$(get_source_id)
-    if [[ ! -e ${OFIL} ]] || [[ ${OVERWRITE} == 1 ]]; then
+    FILESTATUS="$(get_file_status ${RUN} ${OFIL})"
+    if [[ ${FILESTATUS} == 0 ]]; then
         ./db_target.sh "${source_id}" > ${OFIL}
         echo "target file (written): ${OFIL}"
+    elif [[ ${FILESTATUS} == 1 ]]; then
+        echo "target file (in tar package): ${OFIL}"
     else
         echo "target file (found): ${OFIL}"
     fi
