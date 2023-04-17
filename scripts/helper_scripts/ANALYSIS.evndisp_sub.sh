@@ -76,11 +76,39 @@ if [[ $DOWNLOAD == "1" ]] || [[ $DOWNLOAD == "2" ]]; then
    echo "DOWNLOAD STATUS $DOWNLOAD"
 fi
 
+unpack_db_textdirectory()
+{
+    RRUN=${1}
+    TMP_DBTEXTDIRECTORY=${2}
+    if [[ ${RRUN} -lt 100000 ]]; then
+        SRUN=${RRUN:0:1}
+    else
+        SRUN=${RRUN:0:2}
+    fi
+    DBRUNFIL="${DBTEXTDIRECTORY}/${SRUN}/${RRUN}.tar.gz"
+    if [[ -e ${DBRUNFIL} ]]; then
+        mkdir -p ${TMP_DBTEXTDIRECTORY}/${SRUN}
+        tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/${SRUN}/
+    fi
+    echo "${TMP_DBTEXTDIRECTORY}/${SRUN}/${RRUN}/${RRUN}.laserrun"
+}
+
+# Unpack DBText information (replacement to DB calls)
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
-    OPT=( -dbtextdirectory ${DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter )
+    TMP_DBTEXTDIRECTORY="${TEMPDIR}/DBTEXT"
+    TMP_LASERRUN=$(unpack_db_textdirectory $RUN $TMP_DBTEXTDIRECTORY)
+    LRUNID=$(cat ${TMP_LASERRUN} | grep -v run_id | awk -F "|" '{print $1}')
+    for LL in ${LRUNID}
+    do
+        echo "unpacking $LL"
+        unpack_db_textdirectory $LL $TMP_DBTEXTDIRECTORY
+    done
+    ls -l ${TMP_DBTEXTDIRECTORY}/6
+
+    OPT=( -dbtextdirectory ${TMP_DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter )
+    echo "${OPT[@]}"
 fi
 
-        
 #########################################
 # pedestal calculation
 if [[ $CALIB == "1" || $CALIB == "2" || $CALIB == "4" || $CALIB == "5" ]]; then
