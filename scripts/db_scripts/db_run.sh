@@ -27,8 +27,7 @@ OVERWRITE="0"
 [[ "$2" ]] && OVERWRITE=$2 || OVERWRITE=0
 NTEL="4"
 
-# DBDIR="$VERITAS_DATA_DIR/DBTEXT/"
-DBDIR="$VERITAS_USER_DATA_DIR/DBTEST"
+DBDIR="$VERITAS_DATA_DIR/DBTEXT/"
 mkdir -p ${DBDIR}
 
 getDBTextFileDirectory()
@@ -285,8 +284,12 @@ read_pointing()
 
 read_run_from_DB runinfo
 read_run_from_DB rundqm
-read_laser_run_and_dqm
-read_laser_calibration
+# don't test and read if tar file exists
+# (implementation of testing missing)
+if [[ ! -e $(getDBTextFileDirectory ${RUN}).tar.gz ]]; then
+    read_laser_run_and_dqm
+    read_laser_calibration
+fi
 read_target
 read_camera_rotation
 read_pixel_data
