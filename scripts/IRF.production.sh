@@ -136,10 +136,10 @@ elif [ "${SIMTYPE}" = "CARE_UV_2212" ]; then
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/
+    SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=( 0.5 ) 
+    WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
@@ -148,8 +148,8 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 160 )
-    # ZENITH_ANGLES=( 20 )
+    NSB_LEVELS=( 160 )
+    ZENITH_ANGLES=( 40 )
     WOBBLE_OFFSETS=( 0.5 )
     ######################################
     # TRAINMVANGRES production 
@@ -205,16 +205,16 @@ else
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-Extended025-Moderate-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-Extended050-Moderate-TMVA-BDT.dat"
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 fi
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -222,10 +222,9 @@ CUTLIST=${CUTLIST//$'\n'/}
 CUTTYPES="NTel2-PointSource-Moderate
           NTel2-PointSource-Soft
           NTel3-PointSource-Hard"
-# TMP
-CUTTYPES="NTel2-PointSource-Moderate"
-CUTTYPES="NTel2-PointSource-Soft"
-CUTTYPES="NTel3-PointSource-Hard"
+# CUTTYPES="NTel2-PointSource-Moderate"
+# CUTTYPES="NTel2-PointSource-Soft"
+# CUTTYPES="NTel3-PointSource-Hard"
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
@@ -272,13 +271,12 @@ for VX in $EPOCH; do
                     for C in ${CUTTYPES[@]}; do
                         echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
                         BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining/"
-                        MVADIR="${BDTDIR}/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                        MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         # list of background files
-                        # (TODO: nominal/redHV/UVfilter)
-                        TRAINDIR="${BDTDIR}/mscw/"
+                        TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
                         if [[ $DISPBDT == "1" ]]; then
-                            TRAINDIR="${BDTDIR}/mscw_DISP/"
-                            MVADIR="${BDTDIR}/GammaHadronBDTs_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                            TRAINDIR="${BDTDIR}/mscw_${VX:0:2}_DISP/"
+                            MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         fi 
                         mkdir -p -v "${MVADIR}"
                         if [[ $IRFTYPE == "TRAINTMVA" ]]; then
@@ -322,7 +320,8 @@ for VX in $EPOCH; do
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                   FIXEDNSB=200
+                   FIXEDNSB="150 200 250"
+                   FIXEDWOBBLE="0.25 0.5 0.75 1.00 1.50"
                elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="300 600 900"

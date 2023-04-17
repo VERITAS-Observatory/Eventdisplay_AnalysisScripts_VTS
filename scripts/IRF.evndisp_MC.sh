@@ -172,8 +172,13 @@ elif [ ${SIMTYPE} == "CARE_UV_2212" ]; then
 #######################################################
 elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
-    WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
-    LBL="PMTUpgrade_RHV_CARE_v1.6.2_12"
+    if [[ ${ATM} == 61 ]]; then
+        LBL="PMTUpgrade_RHV_CARE_v1.6.2_12"
+        WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
+    else
+        LBL="RHV_CARE_v1.6.2_12"
+        WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%02d",10*WB) }')
+    fi
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
 #######################################################
 elif [ ${SIMTYPE} == "CARE_June2020" ]; then
