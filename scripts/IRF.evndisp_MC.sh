@@ -10,7 +10,7 @@ if [ $# -lt 7 ]; then
 echo "
 IRF generation: analyze simulation VBF files using evndisp 
 
-IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [events] [analysis type] [uuid]
+IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [analysis type] [uuid]
 
 required parameters:
 
@@ -40,9 +40,6 @@ optional parameters:
     [particle]              type of particle used in simulation:
                             gamma = 1, electron = 2, proton = 14, helium = 402
                             (default = 1  -->  gamma)
-
-    [events]                number of events per division
-                            (default: -1)
 
     [analysis type]         type of analysis (default="")
 
@@ -75,9 +72,8 @@ NOISE=$6
 SIMTYPE=$7
 [[ "$8" ]] && ACUTS=$8 || ACUTS=EVNDISP.reconstruction.runparameter
 [[ "$9" ]] && PARTICLE=$9 || PARTICLE=1
-[[ "${10}" ]] && NEVENTS=${10}  || NEVENTS=-1
-[[ "${11}" ]] && ANALYSIS_TYPE=${11} || ANALYSIS_TYPE=""
-[[ "${12}" ]] && UUID=${12} || UUID=${DATE}-$(uuidgen)
+[[ "${10}" ]] && ANALYSIS_TYPE=${10} || ANALYSIS_TYPE=""
+[[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
 
 # Particle names
 PARTICLE_NAMES=( [1]=gamma [2]=electron [14]=proton [402]=alpha )
@@ -249,12 +245,6 @@ do
     TMUNI=$(echo "${FF: -1}")
     tmpdir_size=${TMSF%.*}$TMUNI
     echo "Setting TMPDIR_SIZE to $tmpdir_size"
-    # determine number of jobs required
-    # (avoid many empty jobs)
-    if [[ ${TMSF%.*} -lt 40 ]]; then
-       NEVENTS="-1"
-    fi
-    echo "Number of events per job: $NEVENTS"
 
     # Job submission script
     SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.evndisp_MC_sub"
@@ -270,7 +260,6 @@ do
         -e "s|INTEGERWOBBLE|$INT_WOBBLE|" \
         -e "s|NOISELEVEL|$NOISE|" \
         -e "s|ARRAYEPOCH|$EPOCH|" \
-        -e "s|NENEVENT|$NEVENTS|" \
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|SIMULATIONTYPE|$SIMTYPE|" \
         -e "s|VBFFFILE|$V|" \
@@ -288,18 +277,10 @@ do
     SUBC=`eval "echo \"$SUBC\""`
     echo "$SUBC"
     if [[ $SUBC == *qsub* ]]; then
-        if [[ $NEVENTS -gt 0 ]]; then
-            JOBID=`$SUBC -t 1-10 $FSCRIPT.sh`
-        elif [[ $NEVENTS -lt 0 ]]; then
-            JOBID=`$SUBC $FSCRIPT.sh`
-        fi      
+        JOBID=`$SUBC $FSCRIPT.sh`
         echo "RUN $RUNNUM: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
-        if [[ $NEVENTS -gt 0 ]]; then
-            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size 10
-        else
-            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        fi
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"

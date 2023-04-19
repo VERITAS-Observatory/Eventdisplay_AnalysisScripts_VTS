@@ -234,11 +234,7 @@ do
         JOBID=`$SUBC $FSCRIPT.sh`
         echo "RUN $RUNNUM: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
-        if [[ $NEVENTS -gt 0 ]]; then
-            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size 10
-        else
-            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        fi
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"

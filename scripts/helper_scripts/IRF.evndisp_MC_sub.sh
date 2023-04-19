@@ -17,7 +17,6 @@ ATM=ATMOSPHERE
 ACUTS="RECONSTRUCTIONRUNPARAMETERFILE"
 SIMTYPE=SIMULATIONTYPE
 ODIR=OUTPUTDIR
-NEVENTS=NENEVENT
 TELTOANA="1234"
 VBFNAME=VBFFFILE
 NOISEFILE=NOISEFFILE
@@ -30,17 +29,6 @@ TZERONEVENTS="10000"
 
 echo "PROCESS ID ${Process}"
 echo "SGE_ID ${SGE_TASK_ID}"
-if [[ $NEVENTS -gt 0 ]]; then
-    if [[ -z $SGE_TASK_ID ]]; then
-        ITER=$((SGE_TASK_ID - 1))
-    else
-        ITER=$((Process - 1))
-    fi
-    FIRSTEVENT=$(($ITER * $NEVENTS))
-    # increase run number
-    RUNNUM=$((RUNNUM + $ITER))
-    echo -e "ITER $ITER NEVENTS $NEVENTS FIRSTEVENT $FIRSTEVENT"
-fi
 
 # Output file name
 ONAME="$RUNNUM"
@@ -209,10 +197,6 @@ ANAOPT="$ANAOPT -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE} -lowgainpedest
 ## options for GRISU (handling of low-gain values)
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
-fi
-# first event for analysis
-if [[ $NEVENTS -gt 0 ]]; then
-	 ANAOPT="-nevents=$NEVENTS -firstevent=$FIRSTEVENT $ANAOPT"
 fi
 #################################################################################
 # run evndisp
