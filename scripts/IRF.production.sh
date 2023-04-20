@@ -91,9 +91,6 @@ if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
    fi
 fi
 
-# number of events per evndisp analysis
-NEVENTS="-1"
-
 # run parameter file for evndisp analysis
 ACUTS="EVNDISP.reconstruction.runparameter.AP.v4x"
 if [[ $ANATYPE = "NN"* ]]; then
@@ -124,7 +121,6 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     fi
     NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
     WOBBLE_OFFSETS=( 0.5 )
-    NEVENTS="15000000"
 elif [ "${SIMTYPE}" = "CARE_UV_June1409" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
@@ -140,6 +136,8 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
+    ZENITH_ANGLES=( 20 )
+    NSB_LEVELS=( 150 )
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
@@ -164,7 +162,6 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
     # (END TEMPORARY)
     ######################################
-    NEVENTS="-1"
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
@@ -210,6 +207,12 @@ fi
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
 #         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
 #         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+#          ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
+         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 # CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
@@ -223,8 +226,8 @@ CUTLIST=${CUTLIST//$'\n'/}
 
 # Cut types are used for BDT training and optimisation
 CUTTYPES="NTel2-PointSource-Moderate
-          NTel2-PointSource-Soft
-          NTel3-PointSource-Hard"
+          NTel2-PointSource-Soft"
+#          NTel3-PointSource-Hard"
 # CUTTYPES="NTel2-PointSource-Moderate"
 # CUTTYPES="NTel2-PointSource-Soft"
 # CUTTYPES="NTel3-PointSource-Hard"
@@ -356,7 +359,7 @@ for VX in $EPOCH; do
                    continue
                 fi
                 for WOBBLE in ${WOBBLE_OFFSETS[@]}; do
-                    echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE, NEVENTS $NEVENTS"
+                    echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
                     ######################
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
@@ -368,7 +371,7 @@ for VX in $EPOCH; do
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ACUTS 1 $NEVENTS $ANATYPE $UUID
+                               $SIMTYPE $ACUTS 1 $ANATYPE $UUID
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            $(dirname "$0")/IRF.compress_evndisp_MC.sh \
                                $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
