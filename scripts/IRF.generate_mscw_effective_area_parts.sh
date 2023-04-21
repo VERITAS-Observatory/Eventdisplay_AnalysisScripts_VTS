@@ -147,8 +147,6 @@ sed -e "s|ZENITHANGLE|$ZA|" \
 chmod u+x "$FSCRIPT.sh"
 echo "Run script written to: $FSCRIPT"
 
-exit
-
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
