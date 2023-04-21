@@ -81,10 +81,6 @@ PARTICLE_TYPE="gamma"
 [[ "${13}" ]] && EDVERSION=${13} || EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//')
 EVNIRFVERSION="v4N"
 
-CUTS_NAME=`basename $CUTSFILE`
-CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-CUTS_NAME=${CUTS_NAME%%.dat}
-
 # Check that table file exists
 if [[ "$TABFILE" == `basename "$TABFILE"` ]]; then
     TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
@@ -119,7 +115,7 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-MSCWEFF-${UUID}"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -133,7 +129,7 @@ echo "Now processing zenith angle $ZA, wobble ${WOFFS}, noise level ${NOISS}"
 EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg"
 
 # make run script
-FSCRIPT="$LOGDIR/MSCWEFFAREA-ARRAY-$EPOCH-$ZA-$PARTICLE-${NOISE[0]}-${CUTS_NAME}-$DISPBDT-$DATE.MC_$(date +%s)"
+FSCRIPT="$LOGDIR/MSCWEFFAREA-ARRAY-$EPOCH-$ZA-$PARTICLE-${NOISE[0]}-CUTS-$DISPBDT-$DATE.MC_$(date +%s)"
 rm -f "$FSCRIPT.sh"
 sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISS|" \
@@ -150,6 +146,8 @@ sed -e "s|ZENITHANGLE|$ZA|" \
 
 chmod u+x "$FSCRIPT.sh"
 echo "Run script written to: $FSCRIPT"
+
+exit
 
 # run locally or on cluster
 SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
@@ -169,6 +167,8 @@ elif [[ $SUBC == *condor* ]]; then
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
     echo
+elif [[ $SUBC == *sbatch* ]]; then
+    $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then

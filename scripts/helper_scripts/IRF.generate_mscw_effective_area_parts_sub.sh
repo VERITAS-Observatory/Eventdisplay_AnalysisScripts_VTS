@@ -54,7 +54,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -maxloss=0.2"
     # MOPT="$MOPT -disp_use_intersect"
     # MOPT="$MOPT -maxnevents=1000"
-    if [[ ${EPOCH} == *"redHV"* ]]; then
+    if [[ ${SIMTYPE} == *"RedHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}_redHV/"
     else
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}/"
@@ -166,7 +166,6 @@ for NOISE in ${NNOISE[@]}; do
         echo "EFFFILE $EFFAREAFILE"
         echo "CUTSFILE: $CUTSFILE"
 
-# parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
         PARAMFILE="
         * OBSERVATORY 1
         * FILLINGMODE 0
@@ -180,9 +179,7 @@ for NOISE in ${NNOISE[@]}; do
         * FILLMONTECARLOHISTOS 0
         * ENERGYSPECTRUMINDEX 20 1.6 0.2
         * FILLMONTECARLOHISTOS 0
-        ESPECTRUM_FOR_WEIGHTING $VERITAS_EVNDISP_AUX_DIR/AstroData/TeV_data/EnergySpectrum_literatureValues_CrabNebula.dat 5
         * CUTFILE $CUTSFILE
-         IGNOREFRACTIONOFEVENTS 0.5        
         * SIMULATIONFILE_DATA $outputfilename"
 
         # create makeEffectiveArea parameter file
