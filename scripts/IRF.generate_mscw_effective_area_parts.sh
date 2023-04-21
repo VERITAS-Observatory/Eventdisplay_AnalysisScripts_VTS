@@ -8,10 +8,10 @@ h_cpu=11:29:00; h_vmem=15000M; tmpdir_size=100G
 if [[ $# -lt 10 ]]; then
 # begin help message
 echo "
-IRF generation: analyze simulation evndisp ROOT files using mscw_energy (analyse all NSB and offset angles simulatenously)
+IRF generation: analyze simulation evndisp files using mscw_energy (analyse all NSB and offset angles simulatenously)
                 create partial effective area files from MC ROOT files
 
-IRF.generate_mscw_effective_area_parts.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
+IRF.generate_mscw_effective_area_parts.sh <table file> <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
 
 required parameters:
 
