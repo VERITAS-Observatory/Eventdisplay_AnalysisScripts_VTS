@@ -27,9 +27,9 @@ ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
 OBSTIME="5."
 MINEVENTS="10."
 if [[ $CUT == *"Moderate"* ]]; then
-    OBSTIME="5."
+    OBSTIME="1.0"
 elif [[ $CUT == *"Soft"* ]]; then
-    OBSTIME="1."
+    OBSTIME="0.2"
 elif [[ $CUT == *"Hard"* ]]; then
     OBSTIME="5."
     MINEVENTS="1."

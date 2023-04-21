@@ -3,7 +3,7 @@
 
 if [ "$1" = "-h" ]; then
 echo "
-UTILITY.condorSubmission.sh [submission script] [memory request] [disk request] <optional: array jobs>
+UTILITY.condorSubmission.sh [submission script] [memory request] [disk request]
 
 --------------------------------------------------------------------------------
 "
@@ -14,20 +14,17 @@ SUBSCRIPT=$(readlink -f ${1})
 SUBFIL=${SUBSCRIPT}.condor
 
 rm -f ${SUBFIL}
-echo "JobBatchName = ${SUBSCRIPT}" > ${SUBFIL}
-echo "Executable = ${SUBSCRIPT}" > ${SUBFIL}
-echo "Log = ${SUBSCRIPT}.\$(Cluster)_\$(Process).log" >> ${SUBFIL}
-echo "Output = ${SUBSCRIPT}.\$(Cluster)_\$(Process).output" >> ${SUBFIL}
-echo "Error = ${SUBSCRIPT}.\$(Cluster)_\$(Process).error" >> ${SUBFIL}
-echo "Log = ${SUBSCRIPT}.\$(Cluster)_\$(Process).log" >> ${SUBFIL}
-echo "request_memory = ${2}" >> ${SUBFIL}
-echo "request_disk = ${3}" >> ${SUBFIL}
-echo "getenv = True" >> ${SUBFIL}
-echo "max_materialize = 50" >> ${SUBFIL}
-# allow to prioritize jobs
-# echo "priority = 15" >> ${SUBFIL}
-if [ ! -z "$4" ]; then
-    echo "queue ${4}" >> ${SUBFIL}
-else
-    echo "queue 1" >> ${SUBFIL}
-fi
+
+cat > ${SUBFIL} <<EOL
+Executable = ${SUBSCRIPT}
+Log = ${SUBSCRIPT}.\$(Cluster)_\$(Process).log
+Output = ${SUBSCRIPT}.\$(Cluster)_\$(Process).output
+Error = ${SUBSCRIPT}.\$(Cluster)_\$(Process).error
+Log = ${SUBSCRIPT}.\$(Cluster)_\$(Process).log
+request_memory = ${2}
+request_disk = ${3}
+getenv = True
+max_materialize = 50
+queue 1
+EOL
+# priority = 15

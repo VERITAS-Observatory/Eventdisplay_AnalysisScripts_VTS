@@ -8,10 +8,10 @@ h_cpu=11:29:00; h_vmem=15000M; tmpdir_size=100G
 if [[ $# -lt 10 ]]; then
 # begin help message
 echo "
-IRF generation: analyze simulation evndisp ROOT files using mscw_energy (analyse all NSB and offset angles simulatenously)
+IRF generation: analyze simulation evndisp files using mscw_energy (analyse all NSB and offset angles simulatenously)
                 create partial effective area files from MC ROOT files
 
-IRF.generate_mscw_effective_area_parts.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
+IRF.generate_mscw_effective_area_parts.sh <table file> <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
 
 required parameters:
 
@@ -81,10 +81,6 @@ PARTICLE_TYPE="gamma"
 [[ "${13}" ]] && EDVERSION=${13} || EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//')
 EVNIRFVERSION="v4N"
 
-CUTS_NAME=`basename $CUTSFILE`
-CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-CUTS_NAME=${CUTS_NAME%%.dat}
-
 # Check that table file exists
 if [[ "$TABFILE" == `basename "$TABFILE"` ]]; then
     TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
@@ -94,9 +90,6 @@ if [[ ! -f "$TABFILE" ]]; then
     echo "$TABFILE"
     exit 1
 fi
-
-_sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
-EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
 # input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
@@ -116,13 +109,13 @@ echo "Input file directory: $INDIR"
 
 # Output file directory
 if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-${UUID}/"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-MSCWEFF-${UUID}"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -136,7 +129,7 @@ echo "Now processing zenith angle $ZA, wobble ${WOFFS}, noise level ${NOISS}"
 EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg"
 
 # make run script
-FSCRIPT="$LOGDIR/MSCWEFFAREA-ARRAY-$EPOCH-$ZA-$PARTICLE-${NOISE[0]}-${CUTS_NAME}-$DISPBDT-$DATE.MC_$(date +%s)"
+FSCRIPT="$LOGDIR/MSCWEFFAREA-ARRAY-$EPOCH-$ZA-$PARTICLE-${NOISE[0]}-CUTS-$DISPBDT-$DATE.MC_$(date +%s)"
 rm -f "$FSCRIPT.sh"
 sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISS|" \
@@ -172,6 +165,8 @@ elif [[ $SUBC == *condor* ]]; then
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
     echo
+elif [[ $SUBC == *sbatch* ]]; then
+    $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
