@@ -78,7 +78,7 @@ for CUTSFILE in $CUTSLIST; do
     rm -f $OSUBDIR/$OFILE.root 
     $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
-    chmod g+w $OSUBDIR/$EAPARAMS.root
+    chmod g+w $DDIR/$EAPARAMS.root
     if [[ -f $EVNDISPSYS/bin/logFile ]]; then
         echo "Filling log file into root file"
         $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.log
