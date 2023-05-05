@@ -14,6 +14,7 @@ EPOCH=EEPOCH
 ATM=AATM
 ENBINS=EEBINS
 ZEBINS=ZZBINS
+TMVAPARFILES=TMVARUNPARA
 
 if [[ -n $TMPDIR ]]; then
     TEMPDIR=$TMPDIR/${CUT}
@@ -48,8 +49,8 @@ mkdir -p ${WDIR}
 # rates files
 RATEFILE="${WDIR}/rates_${EPAT}"
 
-CALCULATERATEFILES="TRUE"
 CALCULATERATEFILES="FALSE"
+CALCULATERATEFILES="TRUE"
 if [[ $CALCULATERATEFILES == "TRUE" ]];
 then
     rm -f ${RATEFILE}.log
@@ -60,7 +61,7 @@ then
         ${EFFAREA} \
         ${RATEFILE}.root \
         ${DEADTIME} \
-        ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/TMVA.BDT.runparameter \
+        ${TMVAPARFILES} \
         ${TEMPDIR}/anasum.list \
         > ${RATEFILE}.log
 fi
