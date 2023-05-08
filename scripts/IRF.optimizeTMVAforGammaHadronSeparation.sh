@@ -77,8 +77,11 @@ fi
 if [[ ! -e $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFFILE} ]]; then
     echo "Error - effective area file not found ${EFFFILE}"
 fi
-
-RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/TMVA.BDT.runparameter"
+if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
+    RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/TMVA.BDT.V4.runparameter"
+else
+    RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/TMVA.BDT.runparameter"
+fi
 #####################################
 # energy bins
 if grep -q "^* ENERGYBINS" "$RUNPAR"; then
@@ -122,6 +125,7 @@ sed -e "s|EFFFILE|$EFFFILE|"  \
     -e "s|AATM|${ATM}|" \
     -e "s|EEBINS|${NENE}|" \
     -e "s|ZZBINS|${NZEW}|" \
+    -e "s|TMVARUNPARA|${RUNPAR}|" \
     -e "s|CUTTYPE|${CUTTYPE}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
 chmod u+x $FSCRIPT.sh
