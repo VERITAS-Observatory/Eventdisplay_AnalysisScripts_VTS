@@ -208,8 +208,8 @@ CUTLIST=${CUTLIST//$'\n'/}
 
 # Cut types are used for BDT training and optimisation
 CUTTYPES="NTel2-PointSource-Moderate
-          NTel2-PointSource-Soft"
-#          NTel3-PointSource-Hard"
+          NTel2-PointSource-Soft
+          NTel3-PointSource-Hard"
 # CUTTYPES="NTel2-PointSource-Moderate"
 # CUTTYPES="NTel2-PointSource-Soft"
 # CUTTYPES="NTel3-PointSource-Hard"
@@ -278,7 +278,11 @@ for VX in $EPOCH; do
                                 continue
                             fi
                             echo "Size cut applied: $SIZECUT"
-                            cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                            if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/BDT.runparameter
+                            else
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                            fi
                             sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
                             if [[ $CUTFIL = *"NTel3"* ]]; then
                                 sed -i "s/NImages>1/NImages>2/" "$MVADIR"/BDT.runparameter
@@ -291,7 +295,7 @@ for VX in $EPOCH; do
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                              echo "OPTIMIZE TMVA $C"
                              ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
-                                 "$BDTDIR/BackgroundRates" \
+                                 "$BDTDIR/BackgroundRates/${VX:0:2}" \
                                  "${C/PointSource-/}" \
                                  ${SIMTYPE} ${VX} "${ATM}"
                          fi
