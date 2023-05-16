@@ -93,14 +93,15 @@ do
         echo $DQMSTRING
         # data category
         RCAT=$(echo "${DQMSTRING}" | cut -d '|' -f 2 ${RDQM} | grep -v data_category)
-        if [[ ${RCAT} != "science" ]]; then
-            echo "   RUN $R $RCAT"
+        # (especially early runs do not have a science category)
+        if [[ ${RCAT} != "science" ]] && [[ ${RCAT} != "NULL" ]]; then
+            echo "   RUN $R $RCAT (CATEGORY CUT APPLIED)"
             continue
         fi
         # DQM status
         RSTATUS=$(echo "${DQMSTRING}" | cut -d '|' -f 3 ${RDQM} | grep -v status)
         if [[ ${RSTATUS} == "do_not_use" ]] || [[ ${RSTATUS} == "NULL" ]]; then
-            echo "   RUN $R $RSTATUS"
+            echo "   RUN $R $RSTATUS (STATUS CUT APPLIED)"
             continue
         fi
         # usable duration
