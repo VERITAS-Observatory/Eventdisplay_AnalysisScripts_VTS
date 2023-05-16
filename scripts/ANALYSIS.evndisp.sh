@@ -181,7 +181,6 @@ do
 
     # check if file is on disk
     FDISK=$(file_on_disk $AFILE)
-    echo $FDISK
     if [[ $FDISK == "TRUE" ]]; then
         echo "RUN $AFILE already proccessed; skipping"
         continue
@@ -200,6 +199,7 @@ do
         DBTEXTDIR="${DBTEXTDIRECTORY}"
     else
         DBTEXTDIR="0"
+        echo "INFO $DBTEXTDIR not found for ${AFILE}"
     fi
 
     sed -e "s|RUNFILE|$AFILE|"              \

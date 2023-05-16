@@ -195,37 +195,21 @@ elif [ "${SIMTYPE}" = "CARE_UV" ]; then
 elif [ "${SIMTYPE}" = "GRISU" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
+             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 else
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 fi
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-#          ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
-         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-         ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
 # Cut types are used for BDT training and optimisation
 CUTTYPES="NTel2-PointSource-Moderate
-          NTel2-PointSource-Soft"
-#          NTel3-PointSource-Hard"
+          NTel2-PointSource-Soft
+          NTel3-PointSource-Hard"
 # CUTTYPES="NTel2-PointSource-Moderate"
 # CUTTYPES="NTel2-PointSource-Soft"
 # CUTTYPES="NTel3-PointSource-Hard"
@@ -294,7 +278,11 @@ for VX in $EPOCH; do
                                 continue
                             fi
                             echo "Size cut applied: $SIZECUT"
-                            cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                            if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/BDT.runparameter
+                            else
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                            fi
                             sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
                             if [[ $CUTFIL = *"NTel3"* ]]; then
                                 sed -i "s/NImages>1/NImages>2/" "$MVADIR"/BDT.runparameter
@@ -307,7 +295,7 @@ for VX in $EPOCH; do
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                              echo "OPTIMIZE TMVA $C"
                              ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
-                                 "$BDTDIR/BackgroundRates" \
+                                 "$BDTDIR/BackgroundRates/${VX:0:2}" \
                                  "${C/PointSource-/}" \
                                  ${SIMTYPE} ${VX} "${ATM}"
                          fi
