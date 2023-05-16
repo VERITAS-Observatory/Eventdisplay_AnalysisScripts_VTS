@@ -11,13 +11,13 @@
 # - run lists per epoch
 # - time masks per epoch
 
-if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
+if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
 echo "
 Prepare run lists for different epochs from files in a given directory.
 
-./prepare_runlist_after_dqm.sh <directory> <file type>
+./prepare_runlist_after_dqm.sh <directory> <file type> <suffix>
 
-file type: e.g., "*.root"
+file type: e.g., "8*.root"
 
 "
 exit
@@ -25,6 +25,7 @@ fi
 
 FILEDIR="${1}"
 FILETYPE="${2}"
+FILESUFFIX="${3}"
 
 # DQM files are read this directory
 DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
@@ -82,7 +83,7 @@ RUNS=$(find ${FILEDIR} -name "$FILETYPE")
 
 for RF in $RUNS
 do
-    R=$(basename "$RF" .root)
+    R=$(basename "$RF" "$FILESUFFIX")
     echo "RUN $R"
     DBTEXTFILE=$(get_db_text_tar_file ${R})
     DQMFILE="${R}/${R}.rundqm"
