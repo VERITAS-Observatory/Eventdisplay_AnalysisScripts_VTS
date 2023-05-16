@@ -10,12 +10,11 @@ DDIR=INPUTDIR
 CUTS=CUTSFILE
 ODIR=OUTPUTDIR
 OFILE=OUTPUTFILE
-EPOCH=IEPO
 TTA=TELTOANA
 
 # create radial acceptance
 rm -f "$ODIR/$OFILE.log"
-$EVNDISPSYS/bin/makeRadialAcceptance -s $RLIST -c $CUTS -d $DDIR -i $EPOCH -o $ODIR/$OFILE.root -t $TTA &> $ODIR/$OFILE.log
+$EVNDISPSYS/bin/makeRadialAcceptance -l $RLIST -c $CUTS -d $DDIR -o $ODIR/$OFILE.root -t $TTA &> $ODIR/$OFILE.log
 
 $EVNDISPSYS/bin/logFile radAccLOG "$ODIR/$OFILE.root" "$ODIR/$OFILE.log"
 
