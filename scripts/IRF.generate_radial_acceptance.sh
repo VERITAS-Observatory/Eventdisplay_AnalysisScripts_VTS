@@ -139,7 +139,7 @@ for CUTS in ${CUTLIST[@]}; do
             
             FSCRIPT="$LOGDIR/RADIAL-$CUTSNAME-$VX-$ID"
             sed -e "s|RUNLIST|$RLIST|"     \
-                -e "s|INPUTDIR|$MSCWDIR/RecID$ID|"  \
+                -e "s|INPUTDIR|$MSCWDIR|"  \
                 -e "s|CUTSFILE|$CUTSFILE|" \
                 -e "s|OUTPUTDIR|$ODIR|"    \
 		        -e "s|TELTOANA|$TELES|" \
