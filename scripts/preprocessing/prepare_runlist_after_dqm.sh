@@ -15,13 +15,16 @@ if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
 Prepare run lists for different epochs from files in a given directory.
 
-./prepare_runlist_after_dqm.sh <directory>
+./prepare_runlist_after_dqm.sh <directory> <file type>
+
+file type: e.g., "*.root"
 
 "
 exit
 fi
 
 FILEDIR="${1}"
+FILETYPE="${2}"
 
 # DQM files are read this directory
 DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
@@ -65,7 +68,9 @@ fill_run()
 fill_timemask()
 {
     TMASK_1=$(echo $2 | cut -d '/' -f 1)
+    TMASK_1=$(printf "%.0f" "$TMASK_1")
     TMASK_2=$(echo $2 | cut -d '/' -f 2)
+    TMASK_2=$(printf "%.0f" "$TMASK_2")
     TMASK="* $1 $TMASK_1 $((TMASK_2 - TMASK_1)) 0"
     echo "$TMASK" >> timemask.dat
     echo "$TMASK" >> timemask$(get_epoch $1).dat
@@ -73,7 +78,7 @@ fill_timemask()
 
 prepare_output_files
 
-RUNS=$(find ${FILEDIR} -name "[0-9]*.root")
+RUNS=$(find ${FILEDIR} -name "$FILETYPE")
 
 for RF in $RUNS
 do
@@ -84,6 +89,7 @@ do
     if [[ -e ${DBTEXTFILE} ]]; then
         # DQM string
         DQMSTRING=$(tar -axf ${DBTEXTFILE} ${DQMFILE} -O)
+        echo $DQMSTRING
         # data category
         RCAT=$(echo "${DQMSTRING}" | cut -d '|' -f 2 ${RDQM} | grep -v data_category)
         if [[ ${RCAT} != "science" ]]; then
