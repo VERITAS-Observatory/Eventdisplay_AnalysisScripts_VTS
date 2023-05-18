@@ -47,6 +47,8 @@ prepare_output_files()
         echo -n "" > runlist${E}.dat
         echo -n "" > timemask${E}.dat
     done
+    echo -n "" > runlist_V6_redHV.dat
+    echo -n "" > runlist_V6_UV.dat
 }
 
 get_epoch()
@@ -63,7 +65,13 @@ get_epoch()
 fill_run()
 {
     echo "$1" >> runlist.dat
-    echo "$1" >> runlist$(get_epoch $1).dat
+    if [[ "$2" == "moonfilter" ]]; then
+        echo "$1" >> runlist$(get_epoch $1)_UV.dat
+    elif [[ "$2" == "reducedhv" ]]; then
+        echo "$1" >> runlist$(get_epoch $1)_redHV.dat
+    else
+        echo "$1" >> runlist$(get_epoch $1).dat
+    fi
 }
 
 fill_timemask()
@@ -94,7 +102,7 @@ do
         # data category
         RCAT=$(echo "${DQMSTRING}" | cut -d '|' -f 2 ${RDQM} | grep -v data_category)
         # (especially early runs do not have a science category)
-        if [[ ${RCAT} != "science" ]] && [[ ${RCAT} != "NULL" ]]; then
+        if [[ ${RCAT} != "science" ]] && [[ ${RCAT} != "reducedhv" ]] && [[ ${RCAT} != "moonfilter" ]] && [[ ${RCAT} != "NULL" ]]; then
             echo "   RUN $R $RCAT (CATEGORY CUT APPLIED)"
             continue
         fi
@@ -130,5 +138,5 @@ do
         RCUTMASK="NULL"
     fi
     echo "   $R $RSTATUS $RUSABLE $RCUTMASK"
-    fill_run $R
+    fill_run $R $RCAT
 done
