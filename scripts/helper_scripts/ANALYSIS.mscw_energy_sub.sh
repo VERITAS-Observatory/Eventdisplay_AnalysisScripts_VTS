@@ -49,11 +49,9 @@ fi
 if [ "$EPOCH" == "V4" ]
 then
     SIMTYPE_RUN="$SIMTYPE_DEFAULT_V4"
-    ATMO=$[${ATMO}-40]
 elif [ "$EPOCH" == "V5" ]
 then
     SIMTYPE_RUN="$SIMTYPE_DEFAULT_V5"
-    ATMO=$[${ATMO}-40]
 else
     if [ "$HVSETTINGS" == "obsLowHV" ]; then
         SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6_REDHV"
