@@ -117,7 +117,7 @@ do
         RSTATUS=$(echo "${DQMSTRING}" | cut -d '|' -f 3 ${RDQM} | grep -v status)
         if [[ ${RSTATUS} == "do_not_use" ]] || [[ ${RSTATUS} == "NULL" ]]; then
             echo "   RUN $R $RSTATUS (STATUS CUT APPLIED)"
-            if [[ ${RSTATUS} == "NULL" ]]; then
+            if [[ ${RSTATUS} == "NULL" ]] && [[ ${RCAT} != "NULL" ]]; then
                 echo $R >> runlist_NULL.dat
             fi
             continue
