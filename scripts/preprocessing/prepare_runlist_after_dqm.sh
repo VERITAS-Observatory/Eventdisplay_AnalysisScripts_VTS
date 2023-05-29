@@ -49,6 +49,8 @@ prepare_output_files()
     done
     echo -n "" > runlist_V6_redHV.dat
     echo -n "" > runlist_V6_UV.dat
+    echo -n "" > runlist_NULL.dat
+    echo -n "" > runlist_NODQM.dat
 }
 
 get_epoch()
@@ -96,6 +98,11 @@ do
     DBTEXTFILE=$(get_db_text_tar_file ${R})
     DQMFILE="${R}/${R}.rundqm"
     if [[ -e ${DBTEXTFILE} ]]; then
+        if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${DQMFILE}") ]]; then
+            echo "   RUN $R no DQM file ${DQMFILE} found (NODQMFILE CUT APPLIED)"
+            echo ${R} >> runlist_NODQM.dat
+            continue
+        fi
         # DQM string
         DQMSTRING=$(tar -axf ${DBTEXTFILE} ${DQMFILE} -O)
         echo $DQMSTRING
@@ -110,6 +117,9 @@ do
         RSTATUS=$(echo "${DQMSTRING}" | cut -d '|' -f 3 ${RDQM} | grep -v status)
         if [[ ${RSTATUS} == "do_not_use" ]] || [[ ${RSTATUS} == "NULL" ]]; then
             echo "   RUN $R $RSTATUS (STATUS CUT APPLIED)"
+            if [[ ${RSTATUS} == "NULL" ]]; then
+                echo $R >> runlist_NULL.dat
+            fi
             continue
         fi
         # usable duration
