@@ -89,11 +89,16 @@ fill_timemask()
 
 prepare_output_files
 
-RUNS=$(find ${FILEDIR} -name "$FILETYPE")
+RUNS=$(find ${FILEDIR} -name "$FILETYPE" | head -n 5)
 
 for RF in $RUNS
 do
     R=$(basename "$RF" "$FILESUFFIX")
+    # make sure this is a valid runnumber
+    if [[ ${#R} -ne 5 ]] && [[ ${#R} -ne 6 ]]; then
+        continue
+    fi
+    echo
     echo "RUN $R"
     DBTEXTFILE=$(get_db_text_tar_file ${R})
     DQMFILE="${R}/${R}.rundqm"
@@ -109,7 +114,10 @@ do
         # data category
         RCAT=$(echo "${DQMSTRING}" | cut -d '|' -f 2 ${RDQM} | grep -v data_category)
         # (especially early runs do not have a science category)
-        if [[ ${RCAT} != "science" ]] && [[ ${RCAT} != "reducedhv" ]] && [[ ${RCAT} != "moonfilter" ]] && [[ ${RCAT} != "NULL" ]]; then
+        if [[ ${RCAT} != "science" ]] \
+            && [[ ${RCAT} != "reducedhv" ]] \
+            && [[ ${RCAT} != "moonfilter" ]] \
+            && [[ ${RCAT} != "NULL" ]]; then
             echo "   RUN $R $RCAT (CATEGORY CUT APPLIED)"
             continue
         fi
