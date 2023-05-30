@@ -291,7 +291,7 @@ read_run_from_DB runinfo
 read_run_from_DB rundqm
 # don't test and read if tar file exists
 # (implementation of testing missing)
-if [[ ! -e $(getDBTextFileDirectory ${RUN}).tar.gz ]]; then
+if [[ ! -e $(getDBTextFileDirectory ${RUN}).tar.gz ]] || [[ ${OVERWRITE} == "1" ]]; then
     read_laser_run_and_dqm
     read_laser_calibration
 fi
