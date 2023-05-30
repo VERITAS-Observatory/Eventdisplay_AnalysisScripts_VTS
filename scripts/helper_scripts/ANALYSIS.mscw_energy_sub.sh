@@ -30,9 +30,9 @@ BFILE=`basename $INFILE .root`
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR
+    TEMPDIR=${TMPDIR}/MSCWDISP-$(uuidgen)
 else
-    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
+    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
 fi
 mkdir -p $TEMPDIR
 
@@ -156,5 +156,8 @@ rm -f $TEMPDIR/$BFILE.root
 # write info to log
 echo "RUN$BFILE MSCWLOG ${MSCWLOGFILE}"
 echo "RUN$BFILE MSCWDATA $MSCWDATAFILE"
+
+# remove files in TEMPDIR
+rm -rf $TEMPDIR
 
 exit
