@@ -5,7 +5,7 @@
 h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .`
+EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
 
 if [ $# -lt 2 ]; then
 # begin help message
@@ -206,7 +206,7 @@ do
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
     # directory (e.g., on afs)
-    if [[ ${NRUNS} > 5000 ]]; then
+    if [[ ${NRUNS} -gt 5000 ]]; then
         TMPLOGDIR=${LOGDIR}-${AFILE:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
