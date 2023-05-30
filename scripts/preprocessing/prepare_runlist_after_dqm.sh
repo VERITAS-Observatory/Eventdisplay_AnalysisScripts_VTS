@@ -89,7 +89,7 @@ fill_timemask()
 
 prepare_output_files
 
-RUNS=$(find ${FILEDIR} -name "$FILETYPE" | head -n 5)
+RUNS=$(find ${FILEDIR} -name "$FILETYPE")
 
 for RF in $RUNS
 do
