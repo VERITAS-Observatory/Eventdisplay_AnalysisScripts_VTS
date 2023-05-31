@@ -11,11 +11,11 @@
 # - run lists per epoch
 # - time masks per epoch
 
-if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
+if [ ! -n "$4" ] || [ "$1" = "-h" ]; then
 echo "
 Prepare run lists for different epochs from files in a given directory.
 
-./prepare_runlist_after_dqm.sh <directory> <file type> <suffix>
+./prepare_runlist_after_dqm.sh <directory> <file type> <suffix> <list of broken runs>
 
 file type: e.g., "8*.root"
 
@@ -29,6 +29,10 @@ FILESUFFIX="${3}"
 
 # DQM files are read this directory
 DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
+
+# List of broken runs
+# (not caught with the logic below)
+BROKENRUNS=$(cut -d ' ' -f 1 ${4})
 
 get_db_text_tar_file()
 {
@@ -100,6 +104,11 @@ do
     fi
     echo
     echo "RUN $R"
+    # check if this is in the list of broken runs
+    if [[ $BROKENRUNS = *"$R"* ]]; then
+        echo "   RUN $R broken (BROKENCUT APPLIED)"
+        continue
+    fi
     DBTEXTFILE=$(get_db_text_tar_file ${R})
     DQMFILE="${R}/${R}.rundqm"
     if [[ -e ${DBTEXTFILE} ]]; then
@@ -124,22 +133,26 @@ do
         # DQM status
         RSTATUS=$(echo "${DQMSTRING}" | cut -d '|' -f 3 ${RDQM} | grep -v status)
         if [[ ${RSTATUS} == "do_not_use" ]] || [[ ${RSTATUS} == "NULL" ]]; then
-            echo "   RUN $R $RSTATUS (STATUS CUT APPLIED)"
-            if [[ ${RSTATUS} == "NULL" ]] && [[ ${RCAT} != "NULL" ]]; then
-                echo $R >> runlist_NULL.dat
+            # early V4 runs without DQM
+            if [[ ${RSTATUS} == "do_not_use" ]] || [[ $R -gt 46642 ]]; then
+                echo "   RUN $R $RSTATUS (STATUS CUT APPLIED)"
+                if [[ ${RSTATUS} == "NULL" ]] && [[ ${RCAT} != "NULL" ]]; then
+                    echo $R >> runlist_NULL.dat
+                fi
+                continue
             fi
-            continue
         fi
         # usable duration
         RUSABLE=$(echo "${DQMSTRING}" | cut -d '|' -f 6 ${RDQM} | grep -v usable_duration)
         if [[ $RUSABLE != "NULL" ]]; then
             RTUSABLE=$(echo $RUSABLE | awk 'NR==1 {split($1, arr, "[:]"); print arr[2]}')
             if [[ $((10#$RTUSABLE)) -lt 5 ]]; then
-                echo "   $R $RSTATUS $RTUSABLE (TIME CUT APPLIED; $RUSABLE)"
+                echo "   RUN $R $RSTATUS $RTUSABLE (TIME CUT APPLIED; $RUSABLE)"
                 continue
             fi
-        else
-            echo "$R $RSTATUS $RUSABLE (NO TIME CUTS DEFINED)"
+        # V4 runs partly withtout DQM
+        elif [[ $R -gt 46642 ]]; then
+            echo "   RUN $R $RSTATUS $RUSABLE (NO TIME CUTS DEFINED)"
             continue
         fi
         # time mask
