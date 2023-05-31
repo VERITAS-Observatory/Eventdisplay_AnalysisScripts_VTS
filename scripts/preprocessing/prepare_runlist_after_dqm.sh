@@ -55,6 +55,7 @@ prepare_output_files()
     echo -n "" > runlist_V6_UV.dat
     echo -n "" > runlist_NULL.dat
     echo -n "" > runlist_NODQM.dat
+    echo -n "" > runlist_NOTARGET.dat
 }
 
 get_epoch()
@@ -110,6 +111,9 @@ do
         continue
     fi
     DBTEXTFILE=$(get_db_text_tar_file ${R})
+    # Target file
+    TARGETFILE="${R}/${R}.target"
+    # DQM File
     DQMFILE="${R}/${R}.rundqm"
     if [[ -e ${DBTEXTFILE} ]]; then
         if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${DQMFILE}") ]]; then
@@ -163,6 +167,21 @@ do
             do
                 fill_timemask $R $TCUT
             done
+        fi
+        if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${TARGETFILE}") ]]; then
+            echo "   RUN $R no target file ${TARGETFILE} found (NOTARGETFILE CUT APPLIED)"
+            echo ${R} >> runlist_NOTARGETFILE.dat
+            continue
+        fi
+        # TARGET string
+        TARGETSTRING=$(tar -axf ${DBTEXTFILE} ${TARGETFILE} -O)
+        echo $TARGETSTRING
+        # skip targets DARK...
+        RTARGET=$(echo "${TARGETSTRING}" | cut -d '|' -f 1 | grep -v source_id)
+        echo "   RUN $R  $RTARGET"
+        if [[ $RTARGET == "DARK_"* ]]; then
+            echo "   RUN $R DARK_ target (DARKTARGET CUT APPLIED)"
+            continue
         fi
     else
         RSTATUS="NODQMFILE"
