@@ -61,7 +61,7 @@ do
     echo "FOUND ${F}"
     SRUN=$(get_suffix ${R})
     mkdir -p ${TMPDATADIR}/${SRUN}
-    cp -f ${F} ${TMPDATADIR}/${SRUN}
+    cp -f -v ${F} ${TMPDATADIR}/${SRUN}
 done
 
 DTOPACK=$(find ${TMPDATADIR}  -mindepth 1 -name "[0-9]*" -type d)
