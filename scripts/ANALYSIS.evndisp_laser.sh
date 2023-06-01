@@ -63,52 +63,52 @@ SUBSCRIPT=$(dirname "$0")"/helper_scripts/ANALYSIS.evndisp_laser_sub"
 # loop over all files in files loop
 for RUN in $RUNNUMS; do
     # check if laser file exists
-    DFILE=`find -L $VERITAS_DATA_DIR/data/ -name "$RUN.cvbf"`
-    if [ -z "$DFILE" ]; then
-        echo "Error: laser vbf file not found for run $RUN"
-    else
-        echo "Now starting laser run $RUN"
+    #DFILE=`find -L $VERITAS_DATA_DIR/data/ -name "$RUN.cvbf"`
+    #if [ -z "$DFILE" ]; then
+    #    echo "Error: laser vbf file not found for run $RUN"
+    #    continue
+    #fi
+    echo "Now starting laser run $RUN"
 
-        # output selected input during submission:
-        if [[ $TELTOANA == "1234" ]]; then
-        echo "Analyzed telescopes: $TELTOANA (default, all telescopes)"
-        else
-        echo "Analyzed telescopes: $TELTOANA"
+    # output selected input during submission:
+    if [[ $TELTOANA == "1234" ]]; then
+    echo "Analyzed telescopes: $TELTOANA (default, all telescopes)"
+    else
+    echo "Analyzed telescopes: $TELTOANA"
+    fi
+    
+    FSCRIPT="$LOGDIR/EVN.laser-$RUN"
+
+    sed -e "s|RUNFILE|$RUN|" \
+        -e "s|TELTOANACOMB|$TELTOANA|" \
+        -e "s|CURRENTDIR|$CDIR|" \
+        -e "s|LOGDIRECTORY|$LOGDIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+
+    chmod u+x $FSCRIPT.sh
+    echo $FSCRIPT.sh
+
+    # run locally or on cluster
+    SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`eval "echo \"$SUBC\""`
+    if [[ $SUBC == *qsub* ]]; then
+        JOBID=`$SUBC $FSCRIPT.sh`
+        
+        # account for -terse changing the job number format
+        if [[ $SUBC != *-terse* ]] ; then
+            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
+            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
         
-        FSCRIPT="$LOGDIR/EVN.laser-$RUN"
-
-        sed -e "s|RUNFILE|$RUN|" \
-            -e "s|TELTOANACOMB|$TELTOANA|" \
-            -e "s|CURRENTDIR|$CDIR|" \
-            -e "s|LOGDIRECTORY|$LOGDIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
-
-        chmod u+x $FSCRIPT.sh
-        echo $FSCRIPT.sh
-
-        # run locally or on cluster
-        SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-        SUBC=`eval "echo \"$SUBC\""`
-        if [[ $SUBC == *qsub* ]]; then
-            JOBID=`$SUBC $FSCRIPT.sh`
-            
-            # account for -terse changing the job number format
-            if [[ $SUBC != *-terse* ]] ; then
-                echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-                JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
-            fi
-            
-            echo "RUN $RUN: JOBID $JOBID"
-        elif [[ $SUBC == *condor* ]]; then
-            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-            condor_submit $FSCRIPT.sh.condor
-	elif [[ $SUBC == *sbatch* ]]; then
-            $SUBC $FSCRIPT.sh
-        elif [[ $SUBC == *parallel* ]]; then
-            echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
-        elif [[ "$SUBC" == *simple* ]] ; then
-	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
-        fi
+        echo "RUN $RUN: JOBID $JOBID"
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        condor_submit $FSCRIPT.sh.condor
+    elif [[ $SUBC == *sbatch* ]]; then
+        $SUBC $FSCRIPT.sh
+    elif [[ $SUBC == *parallel* ]]; then
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+    elif [[ "$SUBC" == *simple* ]] ; then
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log" 
     fi
 done
 
