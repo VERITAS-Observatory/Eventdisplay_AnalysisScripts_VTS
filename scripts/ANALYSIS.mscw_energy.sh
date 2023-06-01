@@ -110,7 +110,7 @@ getNumberedDirectory()
 # loop over all files in files loop
 for AFILE in $FILES
 do
-    BFILE="${INPUTDIR%/}$AFILE.root"
+    BFILE="${INPUTDIR%/}/$AFILE.root"
     echo "Now analysing $BFILE (ID=$ID)"
 
     if [ ! -e "$BFILE" ]; then
