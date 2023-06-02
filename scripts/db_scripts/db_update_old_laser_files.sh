@@ -7,14 +7,17 @@
 
 if [ $# -lt 2 ] || [ "$1" = "-h" ]; then
 echo "
-./db_update_old_laser_files.sh <run number> <laser run list>
+./db_update_old_laser_files.sh <run number> <laser run list> [calibdir]
 
 <laser run list> is a file with the following rows:
-
 e.g. 20070113 33341
+
+[calibdir] - calibration directory to copy gain and toffsets
 "
 exit
 fi
+
+[[ "$3" ]] && CALIBDIR=$3 || CALIBDIR="NOTSET"
 
 # DQM files are read this directory
 DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
@@ -52,6 +55,24 @@ fill_laser_run()
     cd ..
 }
 
+fill_gain_or_toff()
+{
+    LRUN=${1}
+    LRUN="33725"
+    mkdir -p tmp_update_laser_run
+    cd tmp_update_laser_run
+    mkdir -p ${LRUN}
+    if [[ -e ${CALIBDIR}/Tel_${2}/${LRUN}.${3/set/} ]]; then
+        cp -v ${CALIBDIR}/Tel_${2}/${LRUN}.${3/set/} ${LRUN}/${LRUN}_${3}_${2}
+        sed -i "1s/^/channel_id|${3}_mean|${3}_var\n/" ${LRUN}/${LRUN}_${3}_${2}
+        sed -i "s/ /|/g" ${LRUN}/${LRUN}_${3}_${2}
+    else
+        echo "No calibration found for ${LRUN} ${2}"
+        echo "${CALIBDIR}/Tel_${2}/${LRUN}.${3}"
+    fi
+    cd ..
+}    
+
 DBTEXTFILE=$(get_db_text_tar_file ${1})
 if [[ ! -e ${DBTEXTFILE} ]]; then
     echo "Error: db tar file nout found: ${DBTEXTFILE}"
@@ -60,13 +81,20 @@ fi
 
 echo "checking for laser runs for run ${1}"
 LASERSTRING=$(tar -axf ${DBTEXTFILE} ${1}/${1}.laserrun -O)
-if [ -z ${LASERSTRING}]; then
+if [ !  -z "${LASERSTRING}" ]; then
     OBSDATE=$(get_date ${1} ${DBTEXTFILE})
     echo "   Observation date is: ${OBSDATE} found in  ${2}"
     LASERRUN=$(grep ${OBSDATE} ${2})
     if [ -n "${LASERRUN}" ]; then
         echo "   FOUND ${LASERRUN} ${OBSDATE}"
-        fill_laser_run ${1} ${DBTEXTFILE} $(echo "$LASERRUN" | cut -d ' ' -f 2)
+        # fill_laser_run ${1} ${DBTEXTFILE} $(echo "$LASERRUN" | cut -d ' ' -f 2)
+        if [ ${CALIBDIR} != "NOTSET" ]; then
+            for T in 1 2 3 4
+            do
+                fill_gain_or_toff $(echo "$LASERRUN" | cut -d ' ' -f 2) ${T} gain
+                fill_gain_or_toff $(echo "$LASERRUN" | cut -d ' ' -f 2) ${T} toffset
+            done
+        fi
     else
         echo "   NOT FOUND ${OBSDATE}"
     fi
