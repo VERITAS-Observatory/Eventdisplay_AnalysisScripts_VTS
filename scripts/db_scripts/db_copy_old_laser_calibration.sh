@@ -6,7 +6,7 @@
 
 if [ $# -lt 2 ] || [ "$1" = "-h" ]; then
 echo "
-./db_copy_old_laser_calibration.sh  <laser run number> <calibdir>
+./db_copy_old_laser_calibration.sh <laser run number> <calibdir>
 
 <calibdir> - calibration directory to copy gain and toffsets
 "
@@ -33,10 +33,6 @@ get_db_text_tar_file()
 fill_gain_or_toff()
 {
     LRUN=${1}
-    # TMPTMP
-    LRUN="33725"
-    mkdir -p ${LRUN}
-    # TMPTMP
     if [[ -e ${CALIBDIR}/Tel_${2}/${LRUN}.${3/set/} ]]; then
         cp -v ${CALIBDIR}/Tel_${2}/${LRUN}.${3/set/} ${LRUN}/${LRUN}.${3}_TEL${2}
         sed -i "1s/^/channel_id|${3}_mean|${3}_var\n/" ${LRUN}/${LRUN}.${3}_TEL${2}
@@ -59,8 +55,14 @@ tar -xzf ${DBTEXTFILE}
 
 for T in 1 2 3 4
 do
-    fill_gain_or_toff $LASERRUN ${T} gain
-    fill_gain_or_toff $LASERRUN ${T} toffset
+    for C in gain toffset
+    do
+#        if [[ ! -e ${LRUN}/${LASERRUN}.${C}_TEL${T} ]]; then
+            fill_gain_or_toff $LASERRUN ${T} $C
+#        else
+#            echo "Calibration files $C exists for run $LASERRUN"
+#        fi
+    done
 done
 
 cd ..
