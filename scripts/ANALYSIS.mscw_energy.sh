@@ -6,6 +6,7 @@ h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
 
 # EventDisplay version
 EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
+IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 
 if [ $# -lt 2 ]; then
 # begin help message
@@ -18,8 +19,6 @@ required parameters:
 			
     <runlist>               simple run list with one run number per line.    
     
-    
-
 optional parameters:
 
     [evndisp directory]     directory containing evndisp output ROOT files.
@@ -40,14 +39,9 @@ optional parameters:
 
 --------------------------------------------------------------------------------
 "
-
 #end help message
 exit
 fi
-
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .`
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 
 # Run init script
 bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
@@ -154,7 +148,7 @@ do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
         
-		echo "RUN $AFILE JOBID $JOBID"
+        echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
             echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
@@ -169,7 +163,7 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh      
+        $SUBC $FSCRIPT.sh   
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
