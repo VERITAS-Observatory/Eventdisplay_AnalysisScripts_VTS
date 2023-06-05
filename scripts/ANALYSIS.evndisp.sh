@@ -178,7 +178,7 @@ file_on_disk()
 # loop over all files in files loop
 for AFILE in $FILES
 do
-    echo "Now anaylsing run $AFILE"
+    echo "Now analysing run $AFILE"
 
     # check if file is on disk
     FDISK=$(file_on_disk $AFILE)
