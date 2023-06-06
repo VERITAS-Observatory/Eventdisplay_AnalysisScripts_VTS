@@ -119,7 +119,7 @@ for CUTS in ${CUTLIST[@]}; do
             fi
             
             METH="GEO"
-	    CUTSNAME=`basename $CUTSFILE`
+	        CUTSNAME=`basename $CUTSFILE`
             # Generate base file name based on cuts file, extended and point source radial acceptances are the same
             CUTSNAME=${CUTSNAME##ANASUM.GammaHadron-}
             CUTSNAME=${CUTSNAME%%.dat}
@@ -139,11 +139,10 @@ for CUTS in ${CUTLIST[@]}; do
             
             FSCRIPT="$LOGDIR/RADIAL-$CUTSNAME-$VX-$ID"
             sed -e "s|RUNLIST|$RLIST|"     \
-                -e "s|INPUTDIR|$MSCWDIR/RecID$ID|"  \
+                -e "s|INPUTDIR|$MSCWDIR|"  \
                 -e "s|CUTSFILE|$CUTSFILE|" \
                 -e "s|OUTPUTDIR|$ODIR|"    \
-                -e "s|IEPO|$VX|" \
-		-e "s|TELTOANA|$TELES|" \
+		        -e "s|TELTOANA|$TELES|" \
                 -e "s|OUTPUTFILE|$OFILE|" $SUBSCRIPT > $FSCRIPT.sh
             
             chmod u+x $FSCRIPT.sh
@@ -164,8 +163,8 @@ for CUTS in ${CUTLIST[@]}; do
             elif [[ $SUBC == *condor* ]]; then
                 $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
                 condor_submit $FSCRIPT.sh.condor
-	    elif [[ $SUBC == *sbatch* ]]; then
-		$SUBC $FSCRIPT.sh
+	        elif [[ $SUBC == *sbatch* ]]; then
+	         	$SUBC $FSCRIPT.sh
             elif [[ $SUBC == *parallel* ]]; then
                 echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
             fi

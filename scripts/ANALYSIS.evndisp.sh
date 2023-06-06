@@ -15,12 +15,12 @@ EVNDISP data analysis: submit jobs from a simple run list
 ANALYSIS.evndisp.sh <runlist> [output directory] [runparameter file] [calibration] [teltoana] [calibration file name]
 
 required parameters:
-
-    <runlist>              simple run list with one run number per line
+			
+    <runlist>               simple run list with one run number per line.    
     
 optional parameters:
     
-    [output directory]     directory where output ROOT files will be stored.
+    [output directory]     directory where output evndisp files will be stored.
                            Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
 
 None of the following options are usually required:
@@ -159,11 +159,12 @@ fi
 
 file_on_disk()
 {
+    ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_$EDVERSION/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
     TRUN="$1"
     if [[ ${TRUN} -lt 100000 ]]; then
-        EDIR="${ODIR}/${TRUN:0:1}/"
+        EDIR="${ARCHIVEDIR}/${TRUN:0:1}/"
     else
-        EDIR="${ODIR}/${TRUN:0:2}/"
+        EDIR="${ARCHIVEDIR}/${TRUN:0:2}/"
     fi
     if [[ -e "${EDIR}/${TRUN}.root" ]]; then
         echo "TRUE"
@@ -177,7 +178,7 @@ file_on_disk()
 # loop over all files in files loop
 for AFILE in $FILES
 do
-    echo "Now starting run $AFILE"
+    echo "Now analysing run $AFILE"
 
     # check if file is on disk
     FDISK=$(file_on_disk $AFILE)

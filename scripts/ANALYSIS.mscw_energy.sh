@@ -6,20 +6,19 @@ h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
 
 # EventDisplay version
 EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
+IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 
 if [ $# -lt 2 ]; then
 # begin help message
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [evndisp directory] [output directory] [Rec ID] [sim type] [ATM] [evndisp log file directory]
+ANALYSIS.mscw_energy.sh <runlist> [evndisp directory] [output directory] [Rec ID] [ATM] [evndisp log file directory]
 
 required parameters:
 			
     <runlist>               simple run list with one run number per line.    
     
-    
-
 optional parameters:
 
     [evndisp directory]     directory containing evndisp output ROOT files.
@@ -40,14 +39,9 @@ optional parameters:
 
 --------------------------------------------------------------------------------
 "
-
 #end help message
 exit
 fi
-
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .`
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 
 # Run init script
 bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
@@ -62,23 +56,9 @@ RLIST=$1
 [[ "$2" ]] && INPUTDIR=$2 || INPUTDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
 [[ "$3" ]] && ODIR=$3 || ODIR=${INPUTDIR}
 [[ "$4" ]] && ID=$4 || ID=0
-[[ "$5" ]] && SIMTYPE=$5 || SIMTYPE=""
-[[ "$6" ]] && FORCEDATMO=$6
-[[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
+[[ "$5" ]] && FORCEDATMO=$5
+[[ "$6" ]] && INPUTLOGDIR=$6 || INPUTLOGDIR=${INPUTDIR}
 DISPBDT="1"
-ANATYPE="AP"
-if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
-   ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-   if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
-      DISPBDT="1"
-   fi
-fi
-
-SIMTYPE_DEFAULT_V4="GRISU"
-SIMTYPE_DEFAULT_V5="GRISU"
-SIMTYPE_DEFAULT_V6="CARE_June2020"
-SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV"
-SIMTYPE_DEFAULT_V6_UV="CARE_UV_2212"
 
 # Read runlist
 if [ ! -f "$RLIST" ] ; then
@@ -124,7 +104,7 @@ getNumberedDirectory()
 # loop over all files in files loop
 for AFILE in $FILES
 do
-    BFILE="$INPUTDIR/$AFILE.root"
+    BFILE="${INPUTDIR%/}/$AFILE.root"
     echo "Now analysing $BFILE (ID=$ID)"
 
     if [ ! -e "$BFILE" ]; then
@@ -134,73 +114,6 @@ do
             continue
         fi
         BFILE="$TMPINDIR/$AFILE.root"
-    fi
-
-    RUNINFO=$($EVNDISPSYS/bin/printRunParameter $BFILE -updated-runinfo)
-    EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
-    ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
-    HVSETTINGS=`echo $RUNINFO | awk '{print $(4)}'`
-    if [[ $ATMO == *error* ]]; then
-        echo "error finding atmosphere; skipping run $BFILE"
-        continue
-    fi
-
-    if [ "$SIMTYPE" == "" ]
-    then
-        if [ "$EPOCH" == "V4" ]
-        then
-            SIMTYPE_RUN="$SIMTYPE_DEFAULT_V4"
-            ATMO=$[${ATMO}-40]
-        elif [ "$EPOCH" == "V5" ]
-        then
-            SIMTYPE_RUN="$SIMTYPE_DEFAULT_V5"
-            ATMO=$[${ATMO}-40]
-        else
-            if [ "$HVSETTINGS" == "obsLowHV" ]; then
-                SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6_REDHV"
-            elif [ "$HVSETTINGS" == "obsFilter" ]; then
-                SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6_UV"
-                ATMO="21"
-            else
-                SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6"
-            fi
-        fi
-    else
-        SIMTYPE_RUN="$SIMTYPE"
-    fi
-
-    TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
-    echo "TABLEFILE: $TABFILE"
-    # Check that table file exists
-    if [[ "$TABFILE" == `basename $TABFILE` ]]; then
-        TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
-    fi
-    if [ ! -f "$TABFILE" ]; then
-        echo "Error, table file '$TABFILE' not found, exiting..."
-        continue
-#        exit 1
-    fi
-    DISPDIR="NOTSET"
-    if [[ $DISPBDT == "1" ]]; then
-        if [ "$HVSETTINGS" == "obsLowHV" ]; then
-            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_${ANATYPE}_redHV/"
-        elif [ "$HVSETTINGS" == "obsFilter" ]; then
-            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_UV/"
-        else
-            DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_${ANATYPE}/"
-        fi
-        ZA=$($EVNDISPSYS/bin/printRunParameter $BFILE -elevation | awk '{print $3}')
-        if (( $(echo "90.-$ZA < 38" |bc -l) )); then
-            DISPDIR="${DISPDIR}/SZE/"
-        elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
-            DISPDIR="${DISPDIR}/MZE/"
-        elif (( $(echo "90.-$ZA < 58" |bc -l) )); then
-            DISPDIR="${DISPDIR}/LZE/"
-        else
-            DISPDIR="${DISPDIR}/XZE/"
-        fi
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/${DISPDIR}/"
-        echo "DISPDIR (Elevation is $ZA deg): " $DISPDIR
     fi
 
     TMPLOGDIR=${LOGDIR}
@@ -213,11 +126,11 @@ do
     FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$AFILE"
     rm -f $FSCRIPT.sh
 
-    sed -e "s|TABLEFILE|$TABFILE|" \
-        -e "s|RECONSTRUCTIONID|$ID|" \
+    sed -e "s|RECONSTRUCTIONID|$ID|" \
         -e "s|OUTPUTDIRECTORY|$ODIR|" \
         -e "s|INPUTLOGDIR|${INPUTLOGDIR}|" \
-        -e "s|DISPBDT|${DISPDIR}|" \
+        -e "s|BDTDISP|${DISPBDT}|" \
+        -e "s|VERSIONIRF|${IRFVERSION}|" \
         -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x $FSCRIPT.sh
@@ -235,7 +148,7 @@ do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
         
-		echo "RUN $AFILE JOBID $JOBID"
+        echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
             echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
@@ -250,7 +163,7 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh      
+        $SUBC $FSCRIPT.sh   
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"

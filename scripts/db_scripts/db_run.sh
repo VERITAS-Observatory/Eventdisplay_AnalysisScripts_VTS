@@ -27,16 +27,16 @@ OVERWRITE="0"
 [[ "$2" ]] && OVERWRITE=$2 || OVERWRITE=0
 NTEL="4"
 
-DBDIR="$VERITAS_DATA_DIR/DBTEXT/"
+DBDIR="${VERITAS_DATA_DIR%/}/DBTEXT/"
 mkdir -p ${DBDIR}
 
 getDBTextFileDirectory()
 {
     TRUN="$1"
     if [[ ${TRUN} -lt 100000 ]]; then
-        ODIR="${DBDIR}/${TRUN:0:1}/${TRUN}"
+        ODIR="${DBDIR%/}/${TRUN:0:1}/${TRUN}"
     else
-        ODIR="${DBDIR}/${TRUN:0:2}/${TRUN}"
+        ODIR="${DBDIR%/}/${TRUN:0:2}/${TRUN}"
     fi
     echo ${ODIR}
 }
@@ -165,6 +165,11 @@ hasbitset()
 get_source_id()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
+    if [[ ! -e ${OFIL} ]] && [[ -e $(getDBTextFileDirectory ${RUN}).tar.gz ]]; then
+        OFIL=$(tar -xzf $(getDBTextFileDirectory ${RUN}).tar.gz ${RUN}/${RUN}.runinfo -O)
+    else
+        OFIL=$(cat $OFIL)
+    fi
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ )); 
@@ -176,7 +181,7 @@ get_source_id()
             done
         fi
         source_id="${a[$source_index]}"
-    done < ${OFIL}
+    done <<< "$OFIL"
     echo ${source_id}
 }
 
@@ -286,7 +291,7 @@ read_run_from_DB runinfo
 read_run_from_DB rundqm
 # don't test and read if tar file exists
 # (implementation of testing missing)
-if [[ ! -e $(getDBTextFileDirectory ${RUN}).tar.gz ]]; then
+if [[ ! -e $(getDBTextFileDirectory ${RUN}).tar.gz ]] || [[ ${OVERWRITE} == "1" ]]; then
     read_laser_run_and_dqm
     read_laser_calibration
 fi

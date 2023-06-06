@@ -4,6 +4,7 @@
 NOTFLAG=false # flag for if the -n flag was used
 DATFLAG=false # flat to print full date of run
 HELPFLAG=false # if true, print help text and exit
+PRINTPATH=false # if true, print full path of file on disl
 #echo "INP:'`basename $0`' '$1' '$2' '$3'"
 
 ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
@@ -13,6 +14,9 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pi
 	elif [ "$#" -eq "2" ] ; then # format is "exe -flag <fname>"
 		if [ "$1" = "-n" ] ; then
 			NOTFLAG=true
+			RUNFILE=$2
+        elif [ "$1" = "-p" ] ; then
+			PRINTPATH=true
 			RUNFILE=$2
 		else
 			echo " Error: `basename $0` doesn't understand flag $1.  Only acceptable flag is -n"
@@ -29,8 +33,11 @@ else # it is a pipe
 		if [ "$1" = "-n" ] ; then
 			NOTFLAG=true
 			RUNFILE=$2
-                elif [ "$1" = "-d" ] ; then
-                        DATFLAG=true
+        elif [ "$1" = "-p" ] ; then
+			PRINTPATH=true
+			RUNFILE=$2
+        elif [ "$1" = "-d" ] ; then
+            DATFLAG=true
 			RUNFILE=$2
 		else
 			echo " Error: `basename $0` doesn't understand flag $1.  Only acceptable flag is -n"
@@ -46,7 +53,9 @@ if $HELPFLAG ; then
 	echo
 	echo "Prints the run numbers that ARE stored on disk." ; echo
 	echo " $ `basename $0` <file of runs>" ; echo
-	echo "Or, prints the run numbers that are NOT stored on disk" ; echo
+	echo "Prints the full path of runs that ARE stored on disk." ; echo
+	echo " $ `basename $0` -p <file of runs>" ; echo
+	echo "Prints the run numbers that are NOT stored on disk" ; echo
 	echo " $ `basename $0` -n <file of runs>" ; echo
 	echo " $ cat <file of runs> | `basename $0`" ; echo
 	echo " $ cat <file of runs> | `basename $0` -n" ; echo
@@ -113,13 +122,17 @@ while read -r RUNID RUNDATE ; do
 		#echo "  Does file exist: $TARGFILE"
 		if [ -e $TARGFILE ] ; then # file exists
 			if ! $NOTFLAG ; then # $NOTFLAG is false, and we should print the runnumber
-				echo "$RUNID"
+                if $PRINTPATH ; then
+                    echo "$TARGFILE"
+                else
+                    echo "$RUNID"
+                fi
 			fi
 		else # file does not exist
 			if $NOTFLAG ; then # $NOTFLAG is true, and we should print the runnumber
 				echo "$RUNID"
-                        elif $DATFLAG ; then
-                                echo "file not found - date: $YY$MM$DD"
+            elif $DATFLAG ; then
+                echo "file not found - date: $YY$MM$DD"
 			fi
 		fi
 	fi

@@ -22,10 +22,9 @@ for L in ${LDIR}
 do
     RUN=$(basename $L)
     TDIR=$(get_run_directory $RUN)
-    echo $RUN $TDIR
+    echo $RUN $TDIR/$RUN
     cd $TDIR
     tar -czf ${RUN}.tar.gz ${RUN}
 done
 
 cd ${PDIR}
-
