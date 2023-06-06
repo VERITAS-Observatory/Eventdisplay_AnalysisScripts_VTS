@@ -13,7 +13,7 @@ Pack Eventdisplay data products from run list
 
 data type: evndisp, mscw
 
-Note! Copies files to local temporary diretory ./tmp_packing/<outputdirectoryname>
+Note! Copies files to temporary diretory $VERITAS_USER_DATA_DIR/tmp_packing/<outputdirectoryname>
 
 "
 exit
@@ -27,7 +27,7 @@ VERSION="v490"
 
 RUNS=$(cat $RUNLIST)
 
-TMPDATADIR="./tmp_packing/${3}/${DATATYPE}"
+TMPDATADIR="$VERITAS_USER_DATA_DIR/tmp_packing/${3}/${DATATYPE}"
 mkdir -p ${TMPDATADIR}
 
 get_suffix()
