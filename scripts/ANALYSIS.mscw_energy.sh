@@ -91,10 +91,11 @@ TIMETAG=`date +"%s"`
 getNumberedDirectory()
 {
     TRUN="$1"
+    IDIR="$2"
     if [[ ${TRUN} -lt 100000 ]]; then
-        ODIR="${INPUTDIR}/${TRUN:0:1}/"
+        ODIR="${IDIR}/${TRUN:0:1}/"
     else
-        ODIR="${INPUTDIR}/${TRUN:0:2}/"
+        ODIR="${IDIR}/${TRUN:0:2}/"
     fi
     echo ${ODIR}
 }
@@ -105,16 +106,26 @@ getNumberedDirectory()
 for AFILE in $FILES
 do
     BFILE="${INPUTDIR%/}/$AFILE.root"
-    echo "Now analysing $BFILE (ID=$ID)"
 
+    # check if file exists
+    TMPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+    if [[ -d "$TMPDIR" ]]; then
+        TMPMDIR=$(getNumberedDirectory $AFILE "$TMPDIR")
+        if [ -e "$TMPMDIR/$AFILE.mscw.root" ]; then
+            echo "RUN $AFILE already processed; skipping"
+            continue
+        fi    
+    fi
+    # EVNDISP file
     if [ ! -e "$BFILE" ]; then
-        TMPINDIR=$(getNumberedDirectory $AFILE)
+        TMPINDIR=$(getNumberedDirectory $AFILE ${INPUTDIR})
         if [ ! -e "$TMPINDIR/$AFILE.root" ]; then
             echo "ERR: File $BFILE does not exist !!!" >> mscw.errors.log
             continue
         fi
         BFILE="$TMPINDIR/$AFILE.root"
     fi
+    echo "Now analysing $BFILE (ID=$ID)"
 
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
