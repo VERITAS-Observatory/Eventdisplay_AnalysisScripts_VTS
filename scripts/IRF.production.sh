@@ -203,6 +203,10 @@ else
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 fi
+# NN cuts for soft only
+if [[ $ANATYPE = "NN"* ]]; then
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
+fi
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -210,9 +214,10 @@ CUTLIST=${CUTLIST//$'\n'/}
 CUTTYPES="NTel2-PointSource-Moderate
           NTel2-PointSource-Soft
           NTel3-PointSource-Hard"
-# CUTTYPES="NTel2-PointSource-Moderate"
-# CUTTYPES="NTel2-PointSource-Soft"
-# CUTTYPES="NTel3-PointSource-Hard"
+# NN cuts for soft only
+if [[ $ANATYPE = "NN"* ]]; then
+    CUTTYPES="NTel2-PointSource-Soft"
+fi
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
