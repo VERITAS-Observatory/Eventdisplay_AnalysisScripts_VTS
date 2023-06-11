@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copy gain and toff files and adapt them
-# according to the DBtext stanadard
+# according to the DBtext standard
 # Required for old V4 files with no entries
 # for the laser analysis in the database
 
