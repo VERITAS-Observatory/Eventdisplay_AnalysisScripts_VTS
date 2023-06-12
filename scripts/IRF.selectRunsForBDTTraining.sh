@@ -109,7 +109,13 @@ do
         echo "   SKIPPING $TMPTARGET"
         continue
     fi
-    echo "   found $TMPTARGET $TMPOBSMODE $TMPMEPOCH $MINOREPOCH $TMPMULT $TMPOBSTIME $RUNZENITH (ZE bin ${ZEBIN})"
+    # ignore runs with zero wobble offsets
+    RUNWOBBLE=$($EVNDISPSYS/bin/printRunParameter ${F}.root -wobbleInt | awk '{print $3}')
+    if [[ $RUNWOBBLE == "0" ]]; then
+        echo "   SKIPPING WOBBLE $RUNWOBBLE"
+        continue
+    fi
+    echo "   found $TMPTARGET $TMPOBSMODE $TMPMEPOCH $MINOREPOCH $TMPMULT $TMPOBSTIME $RUNZENITH (ZE bin ${ZEBIN}, W ${RUNWOBBLE})"
     BNAME=$(basename ${F}.root)
 
     ## linking
