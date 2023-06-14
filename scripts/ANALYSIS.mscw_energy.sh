@@ -7,13 +7,15 @@ h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
 # EventDisplay version
 EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
 IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
+# Directory with preprocessed data
+DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
 
 if [ $# -lt 2 ]; then
 # begin help message
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [evndisp directory] [output directory] [Rec ID] [ATM] [evndisp log file directory]
+ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output directory] [Rec ID] [ATM] [evndisp log file directory]
 
 required parameters:
 			
@@ -21,11 +23,11 @@ required parameters:
     
 optional parameters:
 
-    [evndisp directory]     directory containing evndisp output ROOT files.
-			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
-
     [output directory]      directory where mscw.root files are written
                             default: <evndisp directory>
+
+    [evndisp directory]     directory containing evndisp output ROOT files.
+			    Default: $DEFEVNDISPDIR
 
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
@@ -53,8 +55,8 @@ exec 5>&1
 
 # Parse command line arguments
 RLIST=$1
-[[ "$2" ]] && INPUTDIR=$2 || INPUTDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
-[[ "$3" ]] && ODIR=$3 || ODIR=${INPUTDIR}
+[[ "$2" ]] && ODIR=$2
+[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$DEFEVNDISPDIR"
 [[ "$4" ]] && ID=$4 || ID=0
 [[ "$5" ]] && FORCEDATMO=$5
 [[ "$6" ]] && INPUTLOGDIR=$6 || INPUTLOGDIR=${INPUTDIR}
