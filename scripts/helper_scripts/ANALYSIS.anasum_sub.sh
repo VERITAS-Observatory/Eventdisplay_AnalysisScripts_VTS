@@ -144,8 +144,6 @@ if [[ ${RACC} == "1" ]]; then
 
    # get run information
    RUNINFO=`"$EVNDISPSYS"/bin/printRunParameter "$INDIR/$RUNNUM.mscw.root" -runinfo`
-   # get instrument epoch
-   EPOCH=`echo "$RUNINFO" | awk '{print $(2)}'`
    # get teltoana
    TELTOANA=`echo "$RUNINFO" | awk '{print $(5)}'`
 
@@ -169,7 +167,6 @@ if [[ ${RACC} == "1" ]]; then
    # calculate radial acceptance
    "$EVNDISPSYS"/bin/makeRadialAcceptance -l "$FLIST"  \
                                         -d "$INDIR"  \
-                                        -i "$EPOCH"  \
                                         -t "$TELTOANA" \
                                         -c "$RCUT" $EXCLUSIONREGION \
                                         -o "${OUTPUTRACC}.root" &> "${OUTPUTRACC}.log"
