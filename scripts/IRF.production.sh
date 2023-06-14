@@ -144,8 +144,8 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 130 350 )
-    # ZENITH_ANGLES=( 00 )
+    # NSB_LEVELS=( 250 )
+    # ZENITH_ANGLES=( 40 )
     # WOBBLE_OFFSETS=( 1.25 )
     ######################################
     # TRAINMVANGRES production 
@@ -207,6 +207,7 @@ fi
 if [[ $ANATYPE = "NN"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat"
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-NNSoft-TMVA-BDT.dat"
 fi
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}

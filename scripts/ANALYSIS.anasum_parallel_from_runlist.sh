@@ -21,7 +21,7 @@ required parameters:
     <output directory>      anasum output files are written to this directory
                         
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard3tel)
+                            (i.e., moderate2tel, soft2tel, hard3tel, softNN2tel)
                             (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre)
     
     <background model>      background model
@@ -92,8 +92,8 @@ if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
 elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
-elif [[ $CUTS = "soft2tel2" ]] || [[ $CUTS = "BDTsoft2tel2" ]]; then
-    CUT="NTel2-PointSource-Soft2-TMVA-BDT"
+elif [[ $CUTS = "softNN2tel" ]] || [[ $CUTS = "BDTsoftNN2tel" ]]; then
+    CUT="NTel2-PointSource-NNSoft-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "moderatebox" ]]; then
