@@ -123,6 +123,14 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
             RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
         fi
     fi
+    # hardwired setting for redHV: no BDT cuts available, use soft box
+    if [[ $OBSL == "obsLowHV" ]] && [[ $EFFAREARUN == *"Soft"* ]]; then
+        echo "RedHV runs - change soft BDT to soft box cuts"
+        EFFAREARUN=${EFFAREARUN/NNSoft-TMVA-BDT/Soft}
+        EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/Soft}
+        RADACCRUN=${RADACCRUN/NNSoft-TMVA-BDT/Soft}
+        RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/Soft}
+    fi
     
     echo "EFFAREA $EFFAREARUN"
     echo "RADACCEPTANCE $RADACCRUN"
