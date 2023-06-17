@@ -11,8 +11,7 @@ echo "
 ANASUM parallel data analysis: submit jobs using a simple run list
 
 ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> \
-[run parameter file] [mscw directory] [sim type] \
-[radial acceptances] [force atmosphere]
+[run parameter file] [mscw directory] [sim type]
 
 required parameters:
 
@@ -41,14 +40,6 @@ optional parameters:
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
 
-    [radial acceptance]     0=use external radial acceptance;
-                            1=use run-wise radial acceptance (calculated from data run);
-                            2=ignore radial acceptances (only for reflected region);
-
-    [force atmosphere]	    use EAs generated with this atmospheric model (61 or 62).
-			    Default: Atmosphere determined from run date for each run.				
-			    Attention: Must use the same atmospere for EAs as was used for the lookup tables in the mscw_energy stage!
-
 Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 
 --------------------------------------------------------------------------------
@@ -74,8 +65,6 @@ BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
 [[ "$7" ]] && SIMTYPE=$7 || SIMTYPE="DEFAULT"
-[[ "$8" ]] && RACC=$8 || RACC="0"
-[[ "${9}" ]] && FORCEDATMO=${9}
 
 ANATYPE="AP"
 DISPBDT="1"
@@ -154,11 +143,6 @@ if [[ "$BACKGND" == *RB* ]]; then
     if [[ $CUT == *"Extended"* ]]; then
         BMPARAMS="1.0 3"
     fi
-    if [[ "$RACC" == "2" ]]; then
-        echo "Error, Cannot use RB without radial acceptances:"
-        echo "Specify an acceptance (external=0, runwise=1) or use RE."
-        exit 1
-    fi
 elif [[ "$BACKGND" == "RE" ]] || [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
     BM="RE"
     BMPARAMS="0.1 2 6"
@@ -235,7 +219,6 @@ for RUN in ${RUNS[@]}; do
         -e "s|OUTDIR|$ODIR|"          \
         -e "s|OUTNAME|$RUN.anasum|"        \
         -e "s|RUNNNNN|$RUN|"          \
-        -e "s|RAAACCC|$RACC|"          \
         -e "s|BBM|$BM|" \
         -e "s|MBMPARAMS|$BMPARAMS|" \
         -e "s|CCUTFILE|$CUTFILE|" \
