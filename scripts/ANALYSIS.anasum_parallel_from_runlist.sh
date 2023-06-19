@@ -2,6 +2,7 @@
 # script to analyse data files with anasum (parallel analysis) from a simple run list
 
 EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
+IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 # qsub parameters
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
@@ -20,7 +21,7 @@ required parameters:
     <output directory>      anasum output files are written to this directory
                         
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard3tel, softNN2tel)
+                            (i.e., moderate2tel, soft2tel, hard3tel, softNN2tel, supersoft, supersoftNN2tel)
                             (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre)
     
     <background model>      background model
@@ -35,7 +36,7 @@ optional parameters:
                             default is ANASUM.runparameter)
 
     [mscw directory]        directory containing the mscw.root files.
-			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION
+			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
 
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
@@ -50,7 +51,6 @@ fi
 
 ###########################
 # IRFs
-IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 AUXVERSION="auxv01"
 
 # Run init script
@@ -63,7 +63,7 @@ ODIR=$2
 CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
-[[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
+[[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 [[ "$7" ]] && SIMTYPE=$7 || SIMTYPE="DEFAULT"
 
 ANATYPE="AP"
@@ -81,8 +81,8 @@ if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
 elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
-elif [[ $CUTS = "softNN2tel" ]] || [[ $CUTS = "BDTsoftNN2tel" ]]; then
-    CUT="NTel2-PointSource-NNSoft-TMVA-BDT"
+elif [[ $CUTS = "supersoftNN2tel" ]] || [[ $CUTS = "BDTsoftNN2tel" ]]; then
+    CUT="NTel2-PointSource-NN-SuperSoft-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "moderatebox" ]]; then
@@ -97,6 +97,8 @@ elif [[ $CUTS = NTel2ModeratePre ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-Preselection"
 elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
+elif [[ $CUTS = NTel2SuperSoftPre ]]; then
+    CUT="NTel2-PointSource-SuperSoft-TMVA-Preselection"
 elif [[ $CUTS = NTel3HardPre ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel2Pre ]]; then
