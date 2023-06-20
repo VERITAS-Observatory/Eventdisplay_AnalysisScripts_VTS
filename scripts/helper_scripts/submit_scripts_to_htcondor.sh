@@ -26,18 +26,22 @@ touch ${SUBMITF}
 
 echo "Writing HTCondor job submission file ${SUBMITF}"
 
+mkdir -p ${JDIR}/log
+mkdir -p ${JDIR}/output
+mkdir -p ${JDIR}/error
+
 echo "executable = \$(file)" >>  ${SUBMITF}
-echo "log = \$(file).log" >>  ${SUBMITF}
-echo "output = \$(file).output" >>  ${SUBMITF}
-echo "error = \$(file).error" >>  ${SUBMITF}
+echo "log = log/\$(file).log" >>  ${SUBMITF}
+echo "output = output/\$(file).output" >>  ${SUBMITF}
+echo "error = error/\$(file).error" >>  ${SUBMITF}
 
 # assume that all condor files have similar requests
 CONDORFILE=$(find ${JDIR} -name "*.condor" | head -n 1)
 echo "$(grep -h request_memory $CONDORFILE)"  >>  ${SUBMITF}
 echo "$(grep -h request_disk $CONDORFILE)"  >>  ${SUBMITF}
 echo "getenv = True" >>  ${SUBMITF}
-echo "max_materialize = 500" >>  ${SUBMITF}
-# echo "priority = 50" >> ${SUBMITF}
+echo "max_materialize = 250" >>  ${SUBMITF}
+# echo "priority = 150" >> ${SUBMITF}
 echo "queue file matching files *.sh" >> ${SUBMITF}
 
 PDIR=$(pwd)
