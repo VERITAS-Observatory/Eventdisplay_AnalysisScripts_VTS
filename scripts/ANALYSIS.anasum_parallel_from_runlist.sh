@@ -22,7 +22,7 @@ required parameters:
                         
     <cut set>               hardcoded cut sets predefined in the script
                             (i.e., moderate2tel, soft2tel, hard3tel, softNN2tel, supersoft, supersoftNN2tel)
-                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre)
+                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre, NTel2SuperSoftPre)
     
     <background model>      background model
                             (RE = reflected region, RB = ring background, 
@@ -82,7 +82,7 @@ if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
 elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
 elif [[ $CUTS = "supersoftNN2tel" ]] || [[ $CUTS = "BDTsoftNN2tel" ]]; then
-    CUT="NTel2-PointSource-NN-SuperSoft-TMVA-BDT"
+    CUT="NTel2-PointSource-SuperSoft-NN-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "moderatebox" ]]; then
@@ -176,7 +176,7 @@ fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.SIMPLE-${DATE}-$(uuidgen)"
+LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.${CUTS}-${DATE}-$(uuidgen)"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
