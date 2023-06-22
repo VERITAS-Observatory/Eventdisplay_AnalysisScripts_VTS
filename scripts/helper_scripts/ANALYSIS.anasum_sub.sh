@@ -116,15 +116,20 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
         RADACCRUN=${RADACCRUN/TX/$TELTOANA}
         RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
     fi
-    # hardwired setting for redHV: no BDT cuts available, use soft box
-    if [[ $OBSL == "obsLowHV" ]] && [[ $EFFAREARUN == *"Soft"* ]]; then
-        echo "RedHV runs - change soft BDT to soft box cuts"
-        EFFAREARUN=${EFFAREARUN/NNSoft-TMVA-BDT/Soft}
-        EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/Soft}
-        RADACCRUN=${RADACCRUN/NNSoft-TMVA-BDT/Soft}
-        RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/Soft}
-        CUTFILE=${CUTFILE/NNSoft-TMVA-BDT/Soft}
-        CUTFILE=${CUTFILE/Soft-TMVA-BDT/Soft}
+    # hardwired setting for redHV: no BDT cuts available,
+    # use box cuts for soft and supersoft cuts
+    if [[ $OBSL == "obsLowHV" ]]; then
+        if [[ $EFFAREARUN == *"SuperSoft"* ]]; then
+            echo "RedHV runs - change super soft BDT to super soft box cuts"
+            EFFAREARUN=${EFFAREARUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
+            RADACCRUN=${RADACCRUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
+            CUTFILE=${CUTFILE/SuperSoft-NN-TMVA-BDT/SuperSoft}
+        elif [[ $EFFAREARUN == *"Soft"* ]]; then
+            echo "RedHV runs - change soft BDT to soft box cuts"
+            EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/Soft}
+            RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/Soft}
+            CUTFILE=${CUTFILE/Soft-TMVA-BDT/Soft}
+        fi
     fi
     
     echo "EFFAREA $EFFAREARUN"
