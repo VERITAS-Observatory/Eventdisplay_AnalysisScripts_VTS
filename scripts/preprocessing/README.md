@@ -9,6 +9,9 @@ Obtain run list from files on disk with a very simple selection of runs using th
 ./prepare_runlist_after_dqm.sh $VERITAS_DATA_DIR/DBTEXT/ "*.tar.gz" .tar.gz \
         $EVNDISPSYS/../EventDisplay_Release_v490/preprocessing/runlists_good_observation_runs/removed_runs.dat
 ```
+This will take some time.
+
+To get all runs with `do_not_use` flag: `grep "do_not_use (STATUS CUT APPLIED)" dqm.log`.
 
 
 ## Data product packing
