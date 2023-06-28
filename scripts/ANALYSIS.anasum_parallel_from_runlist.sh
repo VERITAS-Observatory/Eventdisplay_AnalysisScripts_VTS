@@ -176,7 +176,7 @@ fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.${CUTS}-${DATE}-$(uuidgen)"
+LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM-${DATE}/submit.ANASUM.${CUTS}-${DATE}-$(uuidgen)"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
