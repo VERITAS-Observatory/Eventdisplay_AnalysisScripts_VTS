@@ -183,6 +183,11 @@ do
             echo "   RUN $R DARK_ target (DARKTARGET CUT APPLIED)"
             continue
         fi
+        # skip laser and flasher runs
+        if [[ $RTARGET == "laser" ]] || [[ $RTARGET == "flasher" ]]; then
+            echo "   RUN $R $TARGET target (FLASHER CUT APPLIED)"
+            continue
+        fi
     else
         RSTATUS="NODQMFILE"
         RCUTMASK="NULL"
