@@ -124,11 +124,17 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
             EFFAREARUN=${EFFAREARUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
             RADACCRUN=${RADACCRUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
             CUTFILE=${CUTFILE/SuperSoft-NN-TMVA-BDT/SuperSoft}
-        elif [[ $EFFAREARUN == *"Soft"* ]]; then
-            echo "RedHV runs - change soft BDT to soft box cuts"
+        else
+            echo "RedHV runs - change soft/moderate/hard BDT to soft box cuts"
             EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/Soft}
             RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/Soft}
             CUTFILE=${CUTFILE/Soft-TMVA-BDT/Soft}
+            EFFAREARUN=${EFFAREARUN/Moderate-TMVA-BDT/Soft}
+            RADACCRUN=${RADACCRUN/Moderate-TMVA-BDT/Soft}
+            CUTFILE=${CUTFILE/Moderate-TMVA-BDT/Soft}
+            EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/Soft}
+            RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/Soft}
+            CUTFILE=${CUTFILE/Hard-TMVA-BDT/Soft}
         fi
     fi
     
