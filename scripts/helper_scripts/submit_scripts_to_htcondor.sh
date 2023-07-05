@@ -35,18 +35,22 @@ echo "log = log/\$(file).log" >>  ${SUBMITF}
 echo "output = output/\$(file).output" >>  ${SUBMITF}
 echo "error = error/\$(file).error" >>  ${SUBMITF}
 
-# assume that all condor files have similar requests
-CONDORFILE=$(find ${JDIR} -name "*.condor" | head -n 1)
-echo "$(grep -h request_memory $CONDORFILE)"  >>  ${SUBMITF}
-echo "$(grep -h request_disk $CONDORFILE)"  >>  ${SUBMITF}
-echo "getenv = True" >>  ${SUBMITF}
-echo "max_materialize = 250" >>  ${SUBMITF}
-# echo "priority = 150" >> ${SUBMITF}
-echo "queue file matching files *.sh" >> ${SUBMITF}
+if ls ${JDIR}/*.condor 1> /dev/null 2>&1; then
+    # assume that all condor files have similar requests
+    CONDORFILE=$(find ${JDIR} -name "*.condor" | head -n 1)
+    echo "$(grep -h request_memory $CONDORFILE)"  >>  ${SUBMITF}
+    echo "$(grep -h request_disk $CONDORFILE)"  >>  ${SUBMITF}
+    echo "getenv = True" >>  ${SUBMITF}
+    echo "max_materialize = 250" >>  ${SUBMITF}
+    # echo "priority = 150" >> ${SUBMITF}
+    echo "queue file matching files *.sh" >> ${SUBMITF}
 
-PDIR=$(pwd)
-if [[ ${2} == "submit" ]]; then
-    cd ${JDIR}
-    condor_submit submit.txt
-    cd ${PDIR}
+    PDIR=$(pwd)
+    if [[ ${2} == "submit" ]]; then
+        cd ${JDIR}
+        condor_submit submit.txt
+        cd ${PDIR}
+    fi
+else
+    echo "Error: no condor files found in ${JDIR}"
 fi
