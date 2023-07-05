@@ -81,11 +81,20 @@ file_directory()
     echo "$EDIR"
 }
 
+get_file_suffix()
+{
+    FSUFF="root"
+    if [[ $1 == "mscw" ]]; then
+        FSUFF="mscw.root"
+    fi
+    echo "$FSUFF"
+}
+
 
 RUNS=$(cat $RLIST | sort -u -n)
 for R in $RUNS
 do
-    echo "${DESYPATH}/processed_data_${EDVERSION}/${ATYPE}/${FTYPE}/$(file_directory $R)/$R" >> "$OLIST"
+    echo "${DESYPATH}/processed_data_${EDVERSION}/${ATYPE}/${FTYPE}/$(file_directory $R)/$R.$(get_file_suffix $FTYPE)" >> "$OLIST"
 done
 
 echo ""
