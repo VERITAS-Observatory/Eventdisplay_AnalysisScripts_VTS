@@ -258,7 +258,7 @@ for RUN in ${RUNS[@]}; do
 done
 
 # submit all condor jobs at once
-if [[ $SUBC == *condor* ]]; then
+if [[ $SUBC == "condor_submit" ]]; then
     $EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit
 fi
 
