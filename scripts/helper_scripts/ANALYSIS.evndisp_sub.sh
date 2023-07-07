@@ -103,7 +103,6 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
         echo "unpacking $LL"
         unpack_db_textdirectory $LL $TMP_DBTEXTDIRECTORY
     done
-    ls -l ${TMP_DBTEXTDIRECTORY}/6
 
     OPT=( -dbtextdirectory ${TMP_DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter )
     echo "${OPT[@]}"
@@ -198,13 +197,13 @@ fi
 
 # move log file into root file
 if [[ -e "$LOGFILE" ]]; then
-    $EVNDISPSYS/bin/evndisp evndispLog "$TEMPDIR/$RUN.root" "$LOGFILE"
+    $EVNDISPSYS/bin/logFile evndispLog "$TEMPDIR/$RUN.root" "$LOGFILE"
 fi
 if [[ -e "$LOGDIR/$RUN.ped.log" ]]; then
-    $EVNDISPSYS/bin/evndisp evndisppedLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.ped.log"
+    $EVNDISPSYS/bin/logFile evndisppedLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.ped.log"
 fi
 if [[ -e "$LOGDIR/$RUN.tzero.log" ]]; then
-    $EVNDISPSYS/bin/evndisp evndisptzeroLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.tzero.log"
+    $EVNDISPSYS/bin/logFile evndisptzeroLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.tzero.log"
 fi
 
 # move data file from tmp dir to data dir
