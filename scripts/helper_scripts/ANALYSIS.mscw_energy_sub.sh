@@ -143,6 +143,8 @@ fi
 # move logfiles into output file
 if [[ -e ${INLOGDIR}/$BFILE.log ]]; then
   $EVNDISPSYS/bin/logFile evndispLog $TEMPDIR/$BFILE.mscw.root ${INLOGDIR}/$BFILE.log
+else
+    echo "No evndisp log file: ${INLOGDIR}/$BFILE.log"
 fi
 if [[ -e ${MSCWLOGFILE} ]]; then
   $EVNDISPSYS/bin/logFile mscwTableLog $TEMPDIR/$BFILE.mscw.root ${MSCWLOGFILE}
