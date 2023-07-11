@@ -135,6 +135,9 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
             EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/Soft}
             RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/Soft}
             CUTFILE=${CUTFILE/Hard-TMVA-BDT/Soft}
+            EFFAREARUN=${EFFAREARUN/NTel3/NTel2}
+            RADACCRUN=${RADACCRUN/NTel3/NTel2}
+            CUTFILE=${CUTFILE/NTel3/NTel2}
         fi
     fi
     
