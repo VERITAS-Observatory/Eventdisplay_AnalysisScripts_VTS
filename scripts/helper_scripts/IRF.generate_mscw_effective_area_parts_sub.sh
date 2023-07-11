@@ -55,9 +55,9 @@ if [ $DISPBDT -eq 1 ]; then
     # MOPT="$MOPT -disp_use_intersect"
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${SIMTYPE} == *"RedHV"* ]]; then
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}_redHV/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}_redHV/"
     else
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${EPOCH}_ATM${ATM}_${ANATYPE}/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}/"
     fi
     if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
@@ -84,17 +84,6 @@ for NOISE in ${NNOISE[@]}; do
 
     # file names
     OFILE="${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
-
-    # echo "CHECKING FOR ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root"
-    # if [[ -e ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root ]]; then
-    #    filesize=$(du -h ${OSUBDIR}/${EEFFAREAFILE}-${WOBBLE}wob-${NOISE}-Cut-NTel2-PointSource-Moderate.root | cut -f 1)
-    #    echo "FOUND with size $filesize"
-    #    if [[ $filesize -ge 800 ]]; then
-    #        continue
-    #    fi
-    # else
-    #     echo "NOT FOUND"
-    # fi
 
     # temporary directory
     if [[ -n "$TMPDIR" ]]; then 

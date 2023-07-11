@@ -20,3 +20,16 @@ with the script:
 db_pack_new_directories.sh
 ```
 (new directories need to be deleted by hand after packing)
+
+## Old (V4) laser runs without database entries
+
+Very old (V4) observations don't have laser runs assigned in the DB entries.
+Use this script to find the corresponding laser run for an observation run and
+write a `.laserrun` file:
+```
+./db_update_old_laser_files.sh 32987 laser_runs
+```
+
+The file `laser_runs` is the same as used for loggen and contains for each observation
+night the corresponding laser run.
+

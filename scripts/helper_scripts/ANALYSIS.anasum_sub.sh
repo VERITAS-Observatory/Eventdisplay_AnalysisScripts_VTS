@@ -11,7 +11,6 @@ ODIR=OUTDIR
 ONAME=OUTNAME
 RUNP=RUNPARAM
 RUNNUM=RUNNNNN
-RACC=RAAACCC
 # values used for simple run list
 CUTFILE=CCUTFILE
 BM=BBM
@@ -112,82 +111,43 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
         echo "Ignore acceptances: "
         RADACCRUN="IGNOREACCEPTANCE"
     else
-        if [[ ${RACC} == "1" ]]; then
-            echo "run-wise radical acceptances: "
-            RADACCRUN="$ODIR/$RUNNUM.anasum.radialAcceptance.root"
-            echo "   $RADACCRUN"
-        elif [[ ${RACC} == "0" ]]; then
-            echo "external radial acceptances: "
-            RADACCRUN=${RADACC/VX/$MAJOREPOCH}
-            RADACCRUN=${RADACCRUN/TX/$TELTOANA}
-            RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
+        echo "external radial acceptances: "
+        RADACCRUN=${RADACC/VX/$MAJOREPOCH}
+        RADACCRUN=${RADACCRUN/TX/$TELTOANA}
+        RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
+    fi
+    # hardwired setting for redHV: no BDT cuts available,
+    # use box cuts for soft and supersoft cuts
+    if [[ $OBSL == "obsLowHV" ]]; then
+        if [[ $EFFAREARUN == *"SuperSoft"* ]]; then
+            echo "RedHV runs - change super soft BDT to super soft box cuts"
+            EFFAREARUN=${EFFAREARUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
+            RADACCRUN=${RADACCRUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
+            CUTFILE=${CUTFILE/SuperSoft-NN-TMVA-BDT/SuperSoft}
+        else
+            echo "RedHV runs - change soft/moderate/hard BDT to soft box cuts"
+            EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/Soft}
+            RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/Soft}
+            CUTFILE=${CUTFILE/Soft-TMVA-BDT/Soft}
+            EFFAREARUN=${EFFAREARUN/Moderate-TMVA-BDT/Soft}
+            RADACCRUN=${RADACCRUN/Moderate-TMVA-BDT/Soft}
+            CUTFILE=${CUTFILE/Moderate-TMVA-BDT/Soft}
+            EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/Soft}
+            RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/Soft}
+            CUTFILE=${CUTFILE/Hard-TMVA-BDT/Soft}
+            EFFAREARUN=${EFFAREARUN/NTel3/NTel2}
+            RADACCRUN=${RADACCRUN/NTel3/NTel2}
+            CUTFILE=${CUTFILE/NTel3/NTel2}
         fi
     fi
     
     echo "EFFAREA $EFFAREARUN"
     echo "RADACCEPTANCE $RADACCRUN"
+    echo "CUTFILE $CUTFILE"
 
     # writing run list
     echo $FLIST
-    if [[ $EDVERSION = "v4"* ]]; then
-        echo "* $RUNNUM $RUNNUM 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $FLIST
-    else
-        echo "* $RUNNUM $RUNNUM 0 $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $FLIST
-    fi
-fi
-
-#################################
-# run-wise radial acceptances 
-# (if requested)
-if [[ ${RACC} == "1" ]]; then
-   OUTPUTRACC="$ODIR/$ONAME.radialAcceptance"
-
-   # get run information
-   RUNINFO=`"$EVNDISPSYS"/bin/printRunParameter "$INDIR/$RUNNUM.mscw.root" -runinfo`
-   # get instrument epoch
-   EPOCH=`echo "$RUNINFO" | awk '{print $(2)}'`
-   # get teltoana
-   TELTOANA=`echo "$RUNINFO" | awk '{print $(5)}'`
-
-   echo "$RUNINFO"
-   echo "$EPOCH"
-   echo "$TELTOANA"
-
-   # get gamma/hadron cut from run list
-   # (depend on cut file version)
-   VERS=`cat "$FLIST" | grep '\*' | grep VERSION | awk '{print $3}'`
-   if [[ ${VERS} == "7" ]]; then
-       # cut file is an effective area file
-       RCUT=`cat "$FLIST" | grep '\*' | grep "$RUNNUM" | awk '{print $6}'`
-   else
-       RCUT=`cat "$FLIST" | grep '\*' | grep "$RUNNUM" | awk '{print $5}'`
-   fi
-   if [[ $EDVERSION != "v4"* ]]; then
-       EXCLUSIONREGION="-f $RUNP"
-   fi
-
-   # calculate radial acceptance
-   "$EVNDISPSYS"/bin/makeRadialAcceptance -l "$FLIST"  \
-                                        -d "$INDIR"  \
-                                        -i "$EPOCH"  \
-                                        -t "$TELTOANA" \
-                                        -c "$RCUT" $EXCLUSIONREGION \
-                                        -o "${OUTPUTRACC}.root" &> "${OUTPUTRACC}.log"
-
-   # check statistics
-   NEVENTS=$(cat "${OUTPUTRACC}.log" | grep "entries after cuts" | awk -F ": " '{print $2}')
-   # check status
-   STATUS=$(cat "${OUTPUTRACC}.log" | grep "STATUS=" | tail -n 1 | awk -F "=" '{print $3}' | awk -F " " '{print $1}')
-   STATUS=$(grep "RADACC" "${OUTPUTRACC}.log" | wc -l)
-   if [ "$NEVENTS" -lt 500 ]; then
-     echo "Number of EVENTS ($NEVENTS) below the threshold (500), using averaged radial acceptances" >> ${OUTPUTRACC}.log
-     mv ${OUTPUTRACC}.root ${OUTPUTRACC}.lowstatistics.root
-   fi
-   # check that run-wise raidal acceptance step was successfull
-   if [ "$STATUS" < 1 ]; then
-     echo 'Fit status is not SUCCESSFUL, using averaged radial acceptances' >> ${OUTPUTRACC}.log
-     mv ${OUTPUTRACC}.root ${OUTPUTRACC}.notsuccessful.root
-   fi
+    echo "* $RUNNUM $RUNNUM 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $FLIST
 fi
 
 # introduce a random sleep to prevent many jobs starting at exactly the same time

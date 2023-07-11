@@ -115,6 +115,8 @@ do
     TARGETFILE="${R}/${R}.target"
     # DQM File
     DQMFILE="${R}/${R}.rundqm"
+    # RUNINFO file
+    INFOFILE="${R}/${R}.runinfo"
     if [[ -e ${DBTEXTFILE} ]]; then
         if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${DQMFILE}") ]]; then
             echo "   RUN $R no DQM file ${DQMFILE} found (NODQMFILE CUT APPLIED)"
@@ -159,6 +161,20 @@ do
             echo "   RUN $R $RSTATUS $RUSABLE (NO TIME CUTS DEFINED)"
             continue
         fi
+        # data duration frum run info
+        INFOSTRING=$(tar -axf ${DBTEXTFILE} ${INFOFILE} -O)
+        echo $INFOSTRING
+        RDATAT1=$(echo "${INFOSTRING}" | cut -d '|' -f 7 ${RDQM} | grep -v data_start_time)
+        RDATAT2=$(echo "${INFOSTRING}" | cut -d '|' -f 8 ${RDQM} | grep -v data_end_time)
+        echo "  RUN $R $RDATAT1 $RDATAT2"
+        RDATAT1=$(date -d "$RDATAT1" +%s)
+        RDATAT2=$(date -d "$RDATAT2" +%s)
+        DATADURATION=$((RDATAT2 - RDATAT1))
+        echo "  RUN $R DURATION $DATADURATION"
+        if [ $DATADURATION -lt  120 ]; then
+            echo "   RUN $R short (<2 min) duration $DATADURATION s (DATADURATION CUT APPLIED)"
+            continue
+        fi
         # time mask
         RCUTMASK=$(echo "${DQMSTRING}" | cut -d '|' -f 7 ${RDQM} | grep -v time_cut_mask)
         if [[ $RCUTMASK != "NULL" ]]; then
@@ -181,6 +197,11 @@ do
         echo "   RUN $R  $RTARGET"
         if [[ $RTARGET == "DARK_"* ]]; then
             echo "   RUN $R DARK_ target (DARKTARGET CUT APPLIED)"
+            continue
+        fi
+        # skip laser and flasher runs
+        if [[ $RTARGET == "laser" ]] || [[ $RTARGET == "flasher" ]]; then
+            echo "   RUN $R $TARGET target (FLASHER CUT APPLIED)"
             continue
         fi
     else

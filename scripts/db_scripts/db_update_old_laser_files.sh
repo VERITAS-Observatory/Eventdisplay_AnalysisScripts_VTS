@@ -1,5 +1,5 @@
 #!/bin/bash
-# Update a lase rfiles for very early V4 runs
+# Update a laser rfiles for very early V4 runs
 # Some of these runs have no entries for the
 # laser file in the database
 # Loggen uses a lit based on date for the laser

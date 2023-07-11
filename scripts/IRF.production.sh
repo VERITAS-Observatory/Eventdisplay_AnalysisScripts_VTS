@@ -144,9 +144,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 160 )
+    # NSB_LEVELS=( 250 )
     # ZENITH_ANGLES=( 40 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    # WOBBLE_OFFSETS=( 1.25 )
     ######################################
     # TRAINMVANGRES production 
     # (assume 0.5 deg wobble is done)
@@ -203,6 +203,14 @@ else
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 fi
+# NN cuts for soft only
+if [[ $ANATYPE = "NN"* ]]; then
+#    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+fi
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -210,9 +218,10 @@ CUTLIST=${CUTLIST//$'\n'/}
 CUTTYPES="NTel2-PointSource-Moderate
           NTel2-PointSource-Soft
           NTel3-PointSource-Hard"
-# CUTTYPES="NTel2-PointSource-Moderate"
-# CUTTYPES="NTel2-PointSource-Soft"
-# CUTTYPES="NTel3-PointSource-Hard"
+# NN cuts for soft only
+if [[ $ANATYPE = "NN"* ]]; then
+    CUTTYPES="NTel2-PointSource-SuperSoft"
+fi
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 

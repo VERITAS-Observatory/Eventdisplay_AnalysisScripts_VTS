@@ -77,11 +77,11 @@ fi
 get_disp_dir()
 {
     if [ "$HVSETTINGS" == "obsLowHV" ]; then
-        DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_${ANATYPE}_redHV/"
+        DISPDIR="DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATMO}_redHV/"
     elif [ "$HVSETTINGS" == "obsFilter" ]; then
-        DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_UV/"
+        DISPDIR="DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATMO}_UV/"
     else
-        DISPDIR="DispBDTs/${EPOCH}_ATM${ATMO}_${ANATYPE}/"
+        DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
     fi
     ZA=$($EVNDISPSYS/bin/printRunParameter $INFILE -elevation | awk '{print $3}')
     if (( $(echo "90.-$ZA < 38" |bc -l) )); then
@@ -141,8 +141,10 @@ if [[ DISPBDT != "NOTSET" ]]; then
 fi
 
 # move logfiles into output file
-if [[ -e ${INLOGDIR}/$BFILE.log ]]; then
-  $EVNDISPSYS/bin/logFile evndispLog $TEMPDIR/$BFILE.mscw.root ${INLOGDIR}/$BFILE.log
+if [[ -e ${INDIR}/$BFILE.log ]]; then
+  $EVNDISPSYS/bin/logFile evndispLog $TEMPDIR/$BFILE.mscw.root ${INDIR}/$BFILE.log
+else
+    echo "No evndisp log file: ${INDIR}/$BFILE.log"
 fi
 if [[ -e ${MSCWLOGFILE} ]]; then
   $EVNDISPSYS/bin/logFile mscwTableLog $TEMPDIR/$BFILE.mscw.root ${MSCWLOGFILE}

@@ -23,10 +23,6 @@ required parameters:
                             (in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
                              see ANASUM.runparameter for an example)
 
-optional parameters:
-    [radial acceptance]     0=use external radial acceptance;
-                            1=use run-wise radial acceptance (calculated from each data run)
-
 Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 
 --------------------------------------------------------------------------------
@@ -44,7 +40,6 @@ RUNLIST=$1
 INDIR=$2
 ODIR=$3
 RUNP=$4
-[[ "$5" ]] && RACC=$5 || RACC="0"
 
 # Check that run list exists
 if [[ ! -f "$RUNLIST" ]]; then
@@ -121,7 +116,6 @@ for ((i=1; i <= $NLINES; i++)); do
             -e "s|OUTDIR|$ODIR|"          \
             -e "s|OUTNAME|$ONAME|"        \
             -e "s|RUNNNNN|$RUN|"          \
-            -e "s|RAAACCC|$RACC|"          \
             -e "s|RUNPARAM|$RUNP|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
         chmod u+x "$FSCRIPT.sh"

@@ -2,6 +2,7 @@
 # script to analyse data files with anasum (parallel analysis) from a simple run list
 
 EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
+IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 # qsub parameters
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
@@ -11,8 +12,7 @@ echo "
 ANASUM parallel data analysis: submit jobs using a simple run list
 
 ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> \
-[run parameter file] [mscw directory] [sim type] \
-[radial acceptances] [force atmosphere]
+[run parameter file] [mscw directory] [sim type]
 
 required parameters:
 
@@ -21,8 +21,8 @@ required parameters:
     <output directory>      anasum output files are written to this directory
                         
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard3tel)
-                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre)
+                            (i.e., moderate2tel, soft2tel, hard3tel, softNN2tel, supersoft, supersoftNN2tel)
+                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre, NTel2SuperSoftPre)
     
     <background model>      background model
                             (RE = reflected region, RB = ring background, 
@@ -36,18 +36,10 @@ optional parameters:
                             default is ANASUM.runparameter)
 
     [mscw directory]        directory containing the mscw.root files.
-			    Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION
+			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
 
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
-
-    [radial acceptance]     0=use external radial acceptance;
-                            1=use run-wise radial acceptance (calculated from data run);
-                            2=ignore radial acceptances (only for reflected region);
-
-    [force atmosphere]	    use EAs generated with this atmospheric model (61 or 62).
-			    Default: Atmosphere determined from run date for each run.				
-			    Attention: Must use the same atmospere for EAs as was used for the lookup tables in the mscw_energy stage!
 
 Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 
@@ -59,7 +51,6 @@ fi
 
 ###########################
 # IRFs
-IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 AUXVERSION="auxv01"
 
 # Run init script
@@ -72,10 +63,8 @@ ODIR=$2
 CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
-[[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
+[[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 [[ "$7" ]] && SIMTYPE=$7 || SIMTYPE="DEFAULT"
-[[ "$8" ]] && RACC=$8 || RACC="0"
-[[ "${9}" ]] && FORCEDATMO=${9}
 
 ANATYPE="AP"
 DISPBDT="1"
@@ -92,8 +81,8 @@ if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-BDT"
 elif [[ $CUTS = "soft2tel" ]] || [[ $CUTS = "BDTsoft2tel" ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-BDT"
-elif [[ $CUTS = "soft2tel2" ]] || [[ $CUTS = "BDTsoft2tel2" ]]; then
-    CUT="NTel2-PointSource-Soft2-TMVA-BDT"
+elif [[ $CUTS = "supersoftNN2tel" ]] || [[ $CUTS = "BDTsoftNN2tel" ]]; then
+    CUT="NTel2-PointSource-SuperSoft-NN-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "moderatebox" ]]; then
@@ -108,6 +97,8 @@ elif [[ $CUTS = NTel2ModeratePre ]]; then
     CUT="NTel2-PointSource-Moderate-TMVA-Preselection"
 elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
+elif [[ $CUTS = NTel2SuperSoftPre ]]; then
+    CUT="NTel2-PointSource-SuperSoft-TMVA-Preselection"
 elif [[ $CUTS = NTel3HardPre ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel2Pre ]]; then
@@ -154,11 +145,6 @@ if [[ "$BACKGND" == *RB* ]]; then
     if [[ $CUT == *"Extended"* ]]; then
         BMPARAMS="1.0 3"
     fi
-    if [[ "$RACC" == "2" ]]; then
-        echo "Error, Cannot use RB without radial acceptances:"
-        echo "Specify an acceptance (external=0, runwise=1) or use RE."
-        exit 1
-    fi
 elif [[ "$BACKGND" == "RE" ]] || [[ "$BACKGND" == *IGNOREACCEPTANCE* ]] || [[ "$BACKGND" == *IGNOREIRF* ]]; then
     BM="RE"
     BMPARAMS="0.1 2 6"
@@ -190,7 +176,7 @@ fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.SIMPLE-${DATE}-$(uuidgen)"
+LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM-${DATE}/submit.ANASUM.${CUTS}-${DATE}-$(uuidgen)"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -235,7 +221,6 @@ for RUN in ${RUNS[@]}; do
         -e "s|OUTDIR|$ODIR|"          \
         -e "s|OUTNAME|$RUN.anasum|"        \
         -e "s|RUNNNNN|$RUN|"          \
-        -e "s|RAAACCC|$RACC|"          \
         -e "s|BBM|$BM|" \
         -e "s|MBMPARAMS|$BMPARAMS|" \
         -e "s|CCUTFILE|$CUTFILE|" \
@@ -273,7 +258,7 @@ for RUN in ${RUNS[@]}; do
 done
 
 # submit all condor jobs at once
-if [[ $SUBC == *condor* ]]; then
+if [[ $SUBC == "condor_submit" ]]; then
     $EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit
 fi
 
