@@ -156,7 +156,7 @@ do
                 echo "   RUN $R $RSTATUS $RTUSABLE (TIME CUT APPLIED; $RUSABLE)"
                 continue
             fi
-        # V4 runs partly withtout DQM
+        # V4 runs partly without DQM
         elif [[ $R -gt 46642 ]]; then
             echo "   RUN $R $RSTATUS $RUSABLE (NO TIME CUTS DEFINED)"
             continue
