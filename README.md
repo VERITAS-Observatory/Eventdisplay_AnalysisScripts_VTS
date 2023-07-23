@@ -11,5 +11,6 @@ In version v483 and earlier, these scripts were part of the Eventdisplay package
 Expected environmental variables:
 - `$EVNDISPSYS` - pointing to Eventdisplay installation ([here](https://github.com/VERITAS-Observatory/EventDisplay_v4))
 - `$EVNDISPSCRIPT` - pointing to the `./scripts` directory of this repository ([here](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/tree/main/scripts))
+- `$VERITAS_ANALYSIS_TYPE` (recommended) - indicating the reconstruction methods applied; e.g., AP\_DISP, NN\_DISP).
 
 Submission commands for a range of different batch systems can be found in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify according to your local needs.

@@ -41,6 +41,9 @@ optional parameters:
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
 
+The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
+variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
+
 Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 
 --------------------------------------------------------------------------------
