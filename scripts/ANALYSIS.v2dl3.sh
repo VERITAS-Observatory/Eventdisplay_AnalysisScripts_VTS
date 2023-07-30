@@ -84,7 +84,7 @@ source activate base
 conda activate v2dl3Eventdisplay
 export PYTHONPATH=\$PYTHONPATH:${V2DL3}
 
-V2DL3OPT="--fuzzy_boundary 0.05"
+V2DL3OPT="--fuzzy_boundary 0.05 --save_multiplicity"
 
 for RUN in $FILES
 do
