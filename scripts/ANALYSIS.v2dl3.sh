@@ -100,12 +100,15 @@ do
     for m in "point-like" "full-enclosure"
     do
         echo "   Converting (${m}, ${V2DL3OPT})"
+
+        mkdir -p ${ODIR}/${m}
+
         python ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py \
             --${m} \
             ${V2DL3OPT} \
             --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
-            --logfile ${ODIR}/${RUN}.${m}.log \
-            ${ODIR}/${RUN}.${m}.fits.gz
+            --logfile ${ODIR}/${m}/${RUN}.log \
+            ${ODIR}/${m}/${RUN}.fits.gz
     done
 
 done
