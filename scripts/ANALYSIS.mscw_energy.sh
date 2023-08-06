@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to analyse VTS data files with lookup tables
+# script to analyse data files with lookup tables
 
 # qsub parameters
 h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
@@ -18,7 +18,7 @@ MSCW_ENERGY data analysis: submit jobs from a simple run list
 ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output directory] [Rec ID] [ATM] [evndisp log file directory]
 
 required parameters:
-			
+
     <runlist>               simple run list with one run number per line.    
     
 optional parameters:
