@@ -11,7 +11,6 @@ IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]
 DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
 
 if [ $# -lt 2 ]; then
-# begin help message
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
@@ -19,7 +18,7 @@ ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output
 
 required parameters:
 
-    <runlist>               simple run list with one run number per line.    
+    <runlist>               simple run list with one run number per line.
     
 optional parameters:
 
@@ -44,7 +43,6 @@ variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 

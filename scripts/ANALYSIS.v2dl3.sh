@@ -1,10 +1,12 @@
 #!/bin/bash
 # script to run V2DL3 
-# (convert anasum output to FITS-DL3
+# (convert anasum output to FITS-DL3)
 # run point-like and full-enclosure analysis
 #
 # local execution, not using farm
 
+# EventDisplay version
+EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
 # Directory with preprocessed data
 DEFANASUMDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum/"
 V2DL3="$EVNDISPSYS/../V2DL3/"
@@ -16,15 +18,16 @@ Convert to FITS-DL3
 ANALYSIS.v2dl3.sh <run list> <output directory>
 
 required parameters:
-			
-    <runlist>               simple run list with one run number per line.    
+
+    <runlist>               simple run list with one run number per line.
     
     <output directory>      directory where fits.gz files are written
 
 optional parameters:
 
-    [anasum directory]     directory containing anasum output ROOT files.
-                           Default: $DEFANASUMDIR
+    [anasum directory]      directory containing anasum output ROOT files.
+                            (or cut name to search pre-processing directories)
+                            Default: $DEFANASUMDIR
 
 Expect installation of V2DL3 (https://github.com/VERITAS-Observatory/V2DL3) and
 corresponding conda installation (v2dl3Eventdisplay)
@@ -85,15 +88,34 @@ conda activate v2dl3Eventdisplay
 export PYTHONPATH=\$PYTHONPATH:${V2DL3}
 
 V2DL3OPT="--fuzzy_boundary 0.05 --save_multiplicity"
+ 
+# directory schema for preprocessed files
+getNumberedDirectory()
+{
+    TRUN="$1"
+    IDIR="$2"
+    if [[ ${TRUN} -lt 100000 ]]; then
+        ODIR="${IDIR}/${TRUN:0:1}/"
+    else
+        ODIR="${IDIR}/${TRUN:0:2}/"
+    fi
+    echo ${ODIR}
+}
 
 for RUN in $FILES
 do
     echo $RUN
     ANASUMFILE=${INPUTDIR}/${RUN}.anasum.root
     if [[ ! -e ${ANASUMFILE} ]]; then
-        echo "File ${ANASUMFILE} not found"
-        continue
+        TMPANASUMFILE="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${INPUTDIR})/${RUN}.anasum.root"
+        if [[ ! -e ${TMPANASUMFILE} ]]; then
+            echo "File ${ANASUMFILE} not found (also searched in preprocessing directories)"
+            continue
+        else
+            ANASUMFILE=${TMPANASUMFILE}
+        fi
     fi
+    echo "   ANASUM file: ${ANASUMFILE}"
     EFFAREA=$($EVNDISPSYS/bin/printAnasumRunParameter ${ANASUMFILE} ${RUN} -effareafile)
     echo "   Effective area file: $EFFAREA"
 
@@ -110,5 +132,4 @@ do
             --logfile ${ODIR}/${m}/${RUN}.log \
             ${ODIR}/${m}/${RUN}.fits.gz
     done
-
 done
