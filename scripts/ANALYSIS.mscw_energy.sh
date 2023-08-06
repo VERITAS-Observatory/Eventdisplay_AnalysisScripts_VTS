@@ -88,9 +88,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.mscw_energy_sub"
-
 TIMETAG=`date +"%s"`
-
 
 # directory schema
 getNumberedDirectory()
