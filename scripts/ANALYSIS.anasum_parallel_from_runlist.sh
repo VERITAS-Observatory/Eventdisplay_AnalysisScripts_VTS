@@ -1,10 +1,13 @@
 #!/bin/bash
 # script to analyse data files with anasum (parallel analysis) from a simple run list
 
-EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
-IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
 # qsub parameters
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
+
+# EventDisplay version
+EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
+IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
+AUXVERSION="auxv01"
 
 if [[ "$#" -lt 4 ]]; then
 # begin help message
@@ -16,12 +19,12 @@ ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set>
 
 required parameters:
 
-    <run list>              simple runlist with a single run number per line
+    <runlist>               simple run list with one run number per line.
         
     <output directory>      anasum output files are written to this directory
                         
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard3tel, softNN2tel, supersoft, supersoftNN2tel)
+                            (i.e., moderate2tel, soft2tel, hard3tel, supersoft, supersoftNN2tel)
                             (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre, NTel2SuperSoftPre)
     
     <background model>      background model
@@ -41,6 +44,9 @@ optional parameters:
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
 
+The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
+variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
+
 Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 
 --------------------------------------------------------------------------------
@@ -49,12 +55,8 @@ Run ANALYSIS.anasum_combine.sh once all parallel jobs have finished!
 exit
 fi
 
-###########################
-# IRFs
-AUXVERSION="auxv01"
-
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -174,11 +176,11 @@ if [[ ! -f "$RUNP" ]]; then
     exit 1
 fi
 
-# directory for run scripts
+# run scripts are written into this directory
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM-${DATE}/submit.ANASUM.${CUTS}-${DATE}-$(uuidgen)"
-echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
+echo -e "Log files will be written to:\n $LOGDIR"
 
 # output directory for anasum products
 echo -e "Output files will be written to:\n $ODIR"
@@ -192,28 +194,49 @@ TIMETAG=`date +"%s"`
 getNumberedDirectory()
 {
     TRUN="$1"
+    IDIR="$2"
     if [[ ${TRUN} -lt 100000 ]]; then
-        ODIR="${INDIR}/${TRUN:0:1}/"
+        ODIR="${IDIR}/${TRUN:0:1}/"
     else
-        ODIR="${INDIR}/${TRUN:0:2}/"
+        ODIR="${IDIR}/${TRUN:0:2}/"
     fi
     echo ${ODIR}
 }
 
-# loop over all runs
 RUNS=`cat "$RUNLIST"`
+NRUNS=`cat "$RUNLIST" | wc -l `
+echo "total number of runs to analyze: $NRUNS"
+# loop over all runs
 for RUN in ${RUNS[@]}; do
+
+    # check if file already has been processed
+    ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
+    if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
+        echo "$RUN already processed (${ARCHIVEDIR}/${RUN}.anasum.root)"
+        echo "skipping run"
+        continue
+    fi
+    continue
+
     TMPINDIR="$INDIR"
+    # check for mscw file
     if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
-        TMPINDIR=$(getNumberedDirectory $RUN)
+        TMPINDIR=$(getNumberedDirectory $RUN $INDIR)
         if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
             echo "error: mscw file not found: $TMPINDIR/$RUN.mscw.root (also not found in directory above)"
             continue
         fi
     fi
 
-    # prepare run scripts
-    FSCRIPT="$LOGDIR/qsub_analyse-$DATE-RUN$RUN-$(date +%s)"
+    TMPLOGDIR=${LOGDIR}
+    # avoid reaching limits of number of files per
+    # directory (e.g., on afs)
+    if [[ ${NRUNS} -gt 5000 ]]; then
+        TMPLOGDIR=${LOGDIR}-${RUN:0:1}
+        mkdir -p ${TMPLOGDIR}
+    fi
+    FSCRIPT="$TMPLOGDIR/qsub_analyse-$DATE-RUN$RUN-$(date +%s)"
+    rm -f $FSCRIPT.sh
     echo "Run script written to $FSCRIPT"
 
     sed -e "s|FILELIST|NOTDEFINED|" \
@@ -266,5 +289,3 @@ fi
 if [[ $SUBC == *parallel* ]]; then
     cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
 fi
-
-exit

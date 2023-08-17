@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to analyse VTS data files with lookup tables
+# script to analyse data files with lookup tables
 
 # qsub parameters
 h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
@@ -11,15 +11,14 @@ IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]
 DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
 
 if [ $# -lt 2 ]; then
-# begin help message
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
 ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output directory] [Rec ID] [ATM] [evndisp log file directory]
 
 required parameters:
-			
-    <runlist>               simple run list with one run number per line.    
+
+    <runlist>               simple run list with one run number per line.
     
 optional parameters:
 
@@ -39,9 +38,11 @@ optional parameters:
     [evndisp log file directory] directory with evndisplay log files (default: assume same 
                             as evndisp output ROOT files)
 
+The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
+variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
+
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
@@ -85,9 +86,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.mscw_energy_sub"
-
 TIMETAG=`date +"%s"`
-
 
 # directory schema
 getNumberedDirectory()

@@ -52,6 +52,9 @@ None of the following options are usually required:
                            Default is calibrationlist.dat
                            file is expected in $VERITAS_EVNDISP_AUX_DIR/Calibration
 
+The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
+variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
+
 --------------------------------------------------------------------------------
 "
 #end help message
