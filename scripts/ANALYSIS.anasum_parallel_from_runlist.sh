@@ -216,7 +216,6 @@ for RUN in ${RUNS[@]}; do
         echo "skipping run"
         continue
     fi
-    continue
 
     TMPINDIR="$INDIR"
     # check for mscw file
