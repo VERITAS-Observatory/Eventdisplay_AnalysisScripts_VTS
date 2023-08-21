@@ -15,7 +15,7 @@ if [ $# -lt 2 ]; then
 echo "
 Convert to FITS-DL3
 
-ANALYSIS.v2dl3.sh <run list> <output directory>
+ANALYSIS.v2dl3.sh <run list> <output directory> [cut name/anasum directory]
 
 required parameters:
 
@@ -25,8 +25,9 @@ required parameters:
 
 optional parameters:
 
-    [anasum directory]      directory containing anasum output ROOT files.
-                            (or cut name to search pre-processing directories)
+    [cut name / anasum directory]
+                            cut name to search pre-processing directories or
+                            directory containing anasum output ROOT files.
                             Default: $DEFANASUMDIR
 
 Expect installation of V2DL3 (https://github.com/VERITAS-Observatory/V2DL3) and
