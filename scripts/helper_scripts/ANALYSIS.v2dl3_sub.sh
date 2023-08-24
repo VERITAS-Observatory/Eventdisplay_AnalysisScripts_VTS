@@ -63,7 +63,7 @@ source activate base
 conda activate v2dl3Eventdisplay
 export PYTHONPATH=\$PYTHONPATH:${V2DL3}
 
-V2DL3OPT=" --fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.25 --save_multiplicity"
+V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.25 --save_multiplicity"
  
 # directory schema for preprocessed files
 getNumberedDirectory()
