@@ -15,7 +15,7 @@ if [ $# -lt 3 ]; then
 echo "
 Convert anasum to FITS-DL3
 
-ANALYSIS.v2dl3.sh <run list> <output directory> <cut name>
+ANALYSIS.v2dl3.sh <run list> <output directory> <cut name> [nruns per job]
 
 required parameters:
 
@@ -24,6 +24,8 @@ required parameters:
     <output directory>      directory where fits.gz files are written
 
     <cut name>              cut name to search pre-processing directories
+
+    [nruns per job]        number of runs per job (default: 100)
 
 Expect installation of V2DL3 (https://github.com/VERITAS-Observatory/V2DL3) and
 corresponding conda installation (v2dl3Eventdisplay)
@@ -35,6 +37,7 @@ fi
 RLIST=$1
 ODIR=$2
 CUT=$3
+[[ "$4" ]] && SPLITRUN=$4 || SPLITRUN=100
 
 # Read runlist
 if [ ! -f "$RLIST" ] ; then
@@ -59,7 +62,7 @@ rm -f ${LOGIDR}/x* 2>/dev/null
 
 # split run list into smaller run lists
 cp -f ${RLIST} ${LOGDIR}/
-(cd "${LOGDIR}" && split -l 100 "${LOGDIR}/$(basename ${RLIST})")
+(cd "${LOGDIR}" && split -l $SPLITRUN "${LOGDIR}/$(basename ${RLIST})")
 
 FILELISTS=$(ls ${LOGDIR}/x*)
 NFILELISTS=$(ls ${LOGDIR}/x* | wc -l)
