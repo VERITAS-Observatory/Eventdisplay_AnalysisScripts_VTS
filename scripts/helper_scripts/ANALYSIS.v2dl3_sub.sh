@@ -96,6 +96,7 @@ do
         echo "   Converting (${m}, ${V2DL3OPT})"
 
         mkdir -p ${ODIR}/${m}
+        rm -f ${ODIR}/${m}/${RUN}.log
 
         python ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py \
             --${m} \
