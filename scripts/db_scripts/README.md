@@ -17,7 +17,7 @@ Query information for a list of run (simple format with one column of run number
 Files are downloaded and saved in individual small files. They should be tar-packaged 
 with the script:
 ```
-db_pack_new_directories.sh
+./db_pack_new_directories.sh
 ```
 (new directories need to be deleted by hand after packing)
 
