@@ -5,7 +5,7 @@ if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
 echo "
 db_rawpointing: read positioner data from VTS database
 
-./db_rawpointing.sh <tel id> <start date> <stop date>
+./db_rawpointing.sh <start date> <stop date> <tel id>
 
 "
 exit

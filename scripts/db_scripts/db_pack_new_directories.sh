@@ -1,4 +1,4 @@
-# pack newly written directories extacted from the DB
+# pack newly written directories extracted from the DB
 # with query_run_list.sh
 #
 

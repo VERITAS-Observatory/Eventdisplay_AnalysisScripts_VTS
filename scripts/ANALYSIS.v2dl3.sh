@@ -11,11 +11,11 @@ EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
 DEFANASUMDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum/"
 V2DL3="$EVNDISPSYS/../V2DL3/"
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 3 ]; then
 echo "
-Convert to FITS-DL3
+Convert anasum to FITS-DL3
 
-ANALYSIS.v2dl3.sh <run list> <output directory>
+ANALYSIS.v2dl3.sh <run list> <output directory> <cut name> [nruns per job]
 
 required parameters:
 
@@ -23,11 +23,9 @@ required parameters:
     
     <output directory>      directory where fits.gz files are written
 
-optional parameters:
+    <cut name>              cut name to search pre-processing directories
 
-    [anasum directory]      directory containing anasum output ROOT files.
-                            (or cut name to search pre-processing directories)
-                            Default: $DEFANASUMDIR
+    [nruns per job]        number of runs per job (default: 100)
 
 Expect installation of V2DL3 (https://github.com/VERITAS-Observatory/V2DL3) and
 corresponding conda installation (v2dl3Eventdisplay)
@@ -38,14 +36,14 @@ fi
 # Parse command line arguments
 RLIST=$1
 ODIR=$2
-[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$DEFANASUMDIR"
+CUT=$3
+[[ "$4" ]] && SPLITRUN=$4 || SPLITRUN=100
 
 # Read runlist
 if [ ! -f "$RLIST" ] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-FILES=`cat "$RLIST"`
 
 NRUNS=`cat "$RLIST" | wc -l ` 
 echo "total number of runs to analyze: $NRUNS"
@@ -60,76 +58,71 @@ DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/V2DL3"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
+rm -f ${LOGIDR}/x* 2>/dev/null
 
-check_conda_installation()
-{
-    if command -v conda &> /dev/null; then
-        echo "Found conda installation."
-    else
-        echo "Error: found no conda installation."
-        echo "exiting..."
-        exit
-    fi
-    env_info=$(conda info --envs)
-    env_name="v2dl3Eventdisplay"
-    if [[ "$env_info" == *"$env_name"* ]]; then
-        echo "Found conda environment '$env_name'"
-    else
-        echo "Error: the conda environment '$env_name' does not exist."
-        echo "exiting..."
-        exit
-    fi
-}
+# split run list into smaller run lists
+cp -f ${RLIST} ${LOGDIR}/
+(cd "${LOGDIR}" && split -l $SPLITRUN "${LOGDIR}/$(basename ${RLIST})")
 
-check_conda_installation
+FILELISTS=$(ls ${LOGDIR}/x*)
+NFILELISTS=$(ls ${LOGDIR}/x* | wc -l)
 
-source activate base
-conda activate v2dl3Eventdisplay
-export PYTHONPATH=\$PYTHONPATH:${V2DL3}
+echo -e "Processing $NFILELISTS file lists (equal to number of jobs)"
 
-V2DL3OPT="--fuzzy_boundary 0.05 --save_multiplicity"
- 
-# directory schema for preprocessed files
-getNumberedDirectory()
-{
-    TRUN="$1"
-    IDIR="$2"
-    if [[ ${TRUN} -lt 100000 ]]; then
-        ODIR="${IDIR}/${TRUN:0:1}/"
-    else
-        ODIR="${IDIR}/${TRUN:0:2}/"
-    fi
-    echo ${ODIR}
-}
+# Job submission script
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.v2dl3_sub"
+TIMETAG=`date +"%s"`
 
-for RUN in $FILES
+for J in ${FILELISTS}
 do
-    echo $RUN
-    ANASUMFILE=${INPUTDIR}/${RUN}.anasum.root
-    if [[ ! -e ${ANASUMFILE} ]]; then
-        TMPANASUMFILE="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${INPUTDIR})/${RUN}.anasum.root"
-        if [[ ! -e ${TMPANASUMFILE} ]]; then
-            echo "File ${ANASUMFILE} not found (also searched in preprocessing directories)"
-            continue
-        else
-            ANASUMFILE=${TMPANASUMFILE}
+    echo "Submitting analysis for file list $J"
+
+    FSCRIPT="${LOGDIR}/V2DL3-$(basename $J)"
+    rm -f $FSCRIPT.sh
+
+    sed -e "s|RRUNLIST|$J|" \
+        -e "s|OODIR|$ODIR|" \
+        -e "s|CCUT|$CUT|" $SUBSCRIPT.sh > $FSCRIPT.sh
+
+    chmod u+x $FSCRIPT.sh
+
+    # run locally or on cluster
+    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=`eval "echo \"$SUBC\""`
+    echo "Submission command: $SUBC"
+    if [[ $SUBC == *qsub* ]]; then
+        JOBID=`$SUBC $FSCRIPT.sh`
+        # account for -terse changing the job number format
+        if [[ $SUBC != *-terse* ]] ; then
+            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
+            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
+        
+        echo "RUN $AFILE JOBID $JOBID"
+        echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
+        if [[ $SUBC != */dev/null* ]] ; then
+            echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
+            echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
+        fi
+    elif [[ $SUBC == *condor* ]]; then
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        echo
+        echo "-------------------------------------------------------------------------------"
+        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+        echo "./helper_scripts/submit_scripts_to_htcondor.sh $LOGDIR submit"
+        echo "-------------------------------------------------------------------------------"
+        echo
+    elif [[ $SUBC == *sbatch* ]]; then
+        $SUBC $FSCRIPT.sh   
+    elif [[ $SUBC == *parallel* ]]; then
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${LOGDIR}/runscripts.$TIMETAG.dat
+        echo "RUN $AFILE OLOG $FSCRIPT.log"
+    elif [[ "$SUBC" == *simple* ]] ; then
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
     fi
-    echo "   ANASUM file: ${ANASUMFILE}"
-    EFFAREA=$($EVNDISPSYS/bin/printAnasumRunParameter ${ANASUMFILE} ${RUN} -effareafile)
-    echo "   Effective area file: $EFFAREA"
-
-    for m in "point-like" "full-enclosure"
-    do
-        echo "   Converting (${m}, ${V2DL3OPT})"
-
-        mkdir -p ${ODIR}/${m}
-
-        python ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py \
-            --${m} \
-            ${V2DL3OPT} \
-            --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
-            --logfile ${ODIR}/${m}/${RUN}.log \
-            ${ODIR}/${m}/${RUN}.fits.gz
-    done
 done
+
+# Execute all FSCRIPTs locally in parallel
+if [[ $SUBC == *parallel* ]]; then
+    cat $LOGDIR/runscripts.$TIMETAG.dat | $SUBC
+fi
