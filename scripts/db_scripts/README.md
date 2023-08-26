@@ -1,24 +1,28 @@
-# DB scripts to save run-wise information 
+# DB scripts to save run-wise information
 
 Information is saved in in comma-separated files in `$VERITAS_DATA_DIR/DBTEXT/`.
 
 Usages:
 
 Query information for a single run:
-```
+
+```bash
 ./db_run.sh <run number>
 ```
 
 Query information for a list of run (simple format with one column of run numbers):
-```
+
+```bash
 ./query_run_list.sh <run list>
 ```
 
-Files are downloaded and saved in individual small files. They should be tar-packaged 
+Files are downloaded and saved in individual small files. They should be tar-packaged
 with the script:
-```
+
+```bash
 ./db_pack_new_directories.sh
 ```
+
 (new directories need to be deleted by hand after packing)
 
 ## Old (V4) laser runs without database entries
@@ -26,10 +30,10 @@ with the script:
 Very old (V4) observations don't have laser runs assigned in the DB entries.
 Use this script to find the corresponding laser run for an observation run and
 write a `.laserrun` file:
-```
+
+```bash
 ./db_update_old_laser_files.sh 32987 laser_runs
 ```
 
 The file `laser_runs` is the same as used for loggen and contains for each observation
 night the corresponding laser run.
-
