@@ -15,5 +15,4 @@ STARTDATE="$1"
 ENDDATE="$2"
 
 QUERY="SELECT * FROM tblLIDAR_Info WHERE timestamp >= \"${STARTDATE}\" AND timestamp < \"${ENDDATE}\""
-echo "QUERY"
 $($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}"  | sed 's/\t/|/g'
