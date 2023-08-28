@@ -287,25 +287,7 @@ read_pointing()
     done
 }
 
-read_fir()
-{
-    read_run_from_DB fir ${RUN} "" 1
-}
-
-read_weather()
-{
-    read_run_from_DB weather ${RUN} "" 1
-}
-
-read_l3()
-{
-    read_run_from_DB L3 ${RUN} "" 1
-}
-
 read_run_from_DB runinfo
-read_l3
-read_weather
-read_fir
 read_run_from_DB rundqm
 # don't test and read if tar file exists
 # (implementation of testing missing)
@@ -317,3 +299,7 @@ read_target
 read_camera_rotation
 read_pixel_data
 read_pointing
+read_run_from_DB lidar ${RUN} "" 1
+read_run_from_DB L3 ${RUN} "" 1
+read_run_from_DB weather ${RUN} "" 1
+read_run_from_DB fir ${RUN} "" 1
