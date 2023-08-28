@@ -32,7 +32,7 @@ PDIR=$(pwd)
 
 FILES=$(cat $FLIST)
 
-for RUN in "$FILES"
+for RUN in $FILES
 do
     SUBDIR=$(get_run_directory $RUN)
 
@@ -54,6 +54,8 @@ do
 
     # pack again with all files
     tar -cvzf ${RUN}.tar.gz ${RUN}
+
+    cd ${PDIR}
 done
 
 cd ${PDIR}
