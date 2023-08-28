@@ -51,7 +51,7 @@ do
     cd ${NEWDIR}/${SUBDIR}/
     cp ${ORG_FILE} .
     tar -xvzf ${RUN}.tar.gz
-
+    rm -f ${RUN}.tar.gz
     # pack again with all files
     tar -cvzf ${RUN}.tar.gz ${RUN}
 
