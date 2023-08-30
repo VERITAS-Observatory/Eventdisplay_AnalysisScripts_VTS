@@ -6,7 +6,7 @@
 # local execution, not using farm
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
+EDVERSION=$($EVNDISPSYS/bin/anasum --version | tr -d .)
 # Directory with preprocessed data
 DEFANASUMDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum/"
 V2DL3="$EVNDISPSYS/../V2DL3/"
@@ -45,7 +45,7 @@ if [ ! -f "$RLIST" ] ; then
     exit 1
 fi
 
-NRUNS=`cat "$RLIST" | wc -l ` 
+NRUNS=$(cat "$RLIST" | wc -l)
 echo "total number of runs to analyze: $NRUNS"
 echo
 
