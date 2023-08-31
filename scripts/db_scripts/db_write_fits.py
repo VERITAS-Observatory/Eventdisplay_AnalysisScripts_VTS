@@ -13,9 +13,10 @@ Example:
 
 import argparse
 import logging
-import numpy as np
 import os
 import tarfile
+
+import numpy as np
 from astropy.table import Table
 
 
@@ -53,11 +54,10 @@ def read_args():
 def read_file(file_path):
     """
     Read DB file (in sql format) and return as astropy table
-    
+
     """
 
-    table = Table.read(
-        file_path, format='ascii.basic', delimiter='|', comment='#')
+    table = Table.read(file_path, format="ascii.basic", delimiter="|", comment="#")
 
     return table
 
@@ -78,10 +78,10 @@ def extract_l3_rate(run, temp_run_dir):
     """
 
     table = read_file(os.path.join(temp_run_dir, f"{run}.L3"))
-    condition = table['run_id'] == run
+    condition = table["run_id"] == run
     table = table[condition]
-    time_diffs = np.diff(np.array(table['timestamp'])) / 1000.0
-    l3_values = np.diff(np.array(table['L3'], dtype=float))
+    time_diffs = np.diff(np.array(table["timestamp"])) / 1000.0
+    l3_values = np.diff(np.array(table["L3"], dtype=float))
     l3_values /= time_diffs
 
     l3_mean = np.mean(l3_values)
@@ -89,11 +89,9 @@ def extract_l3_rate(run, temp_run_dir):
     l3_std = np.std(l3_values[np.abs(l3_values - np.mean(l3_values)) < 3 * np.std(l3_values)])
 
     # (exclude first value, as for l3_values)
-    time_since_run_start = (
-        np.array(table['timestamp'][1:]) - table['timestamp'][0]
-    ) / 1000.0
+    time_since_run_start = (np.array(table["timestamp"][1:]) - table["timestamp"][0]) / 1000.0
 
-    l3_table = Table([time_since_run_start, l3_values], names=('time', 'l3_rate'))
+    l3_table = Table([time_since_run_start, l3_values], names=("time", "l3_rate"))
 
     return l3_mean, l3_std, l3_table
 
@@ -101,7 +99,7 @@ def extract_l3_rate(run, temp_run_dir):
 def extract_fir(run, temp_run_dir):
     """
     Extract mean and std of FIR values for the three different FIRS
-    
+
     """
 
     table = read_file(os.path.join(temp_run_dir, f"{run}.fir"))
@@ -111,13 +109,19 @@ def extract_fir(run, temp_run_dir):
     fir_std = []
 
     for tel in tel_ids:
-        condition = table['telescope_id'] == tel
+        condition = table["telescope_id"] == tel
         table_tel = table[condition]
-        fir_mean.append(table_tel['radiant_sky_temp'].mean())
-        fir_std.append(table_tel['radiant_sky_temp'].std())
+        fir_mean.append(table_tel["radiant_sky_temp"].mean())
+        fir_std.append(table_tel["radiant_sky_temp"].std())
 
-    return {'fir_mean_0': fir_mean[0], 'fir_mean_1': fir_mean[1], 'fir_mean_3': fir_mean[2],
-            'fir_std_0': fir_std[0], 'fir_std_1': fir_std[1], 'fir_std_3': fir_std[2]}
+    return {
+        "fir_mean_0": fir_mean[0],
+        "fir_mean_1": fir_mean[1],
+        "fir_mean_3": fir_mean[2],
+        "fir_std_0": fir_std[0],
+        "fir_std_1": fir_std[1],
+        "fir_std_3": fir_std[2],
+    }
 
 
 def extract_weather(run, temp_run_dir):
@@ -130,12 +134,12 @@ def extract_weather(run, temp_run_dir):
 
     weather = {}
 
-    weather['wind_speed_mean'] = table['WS_mph_Avg'].mean()
-    weather['wind_speed_max'] = table['WS_mph_Max'].mean()
-    weather['wind_speed_min'] = table['WS_mph_Min'].mean()
-    weather['wind_speed_dir'] = table['WindDir'].mean()
-    weather['air_temperature'] = table['AirTF_Avg'].mean()
-    weather['relative_humidity'] = table['RH'].mean()
+    weather["wind_speed_mean"] = table["WS_mph_Avg"].mean()
+    weather["wind_speed_max"] = table["WS_mph_Max"].mean()
+    weather["wind_speed_min"] = table["WS_mph_Min"].mean()
+    weather["wind_speed_dir"] = table["WindDir"].mean()
+    weather["air_temperature"] = table["AirTF_Avg"].mean()
+    weather["relative_humidity"] = table["RH"].mean()
 
     return weather
 
@@ -153,7 +157,7 @@ def extract_nsb(run, temp_run_dir, config_mask):
     for i in range(0, 4):
         if config_mask & (1 << i):
             table = read_file(os.path.join(temp_run_dir, f"{run}.HVsettings_TEL{i}"))
-            current = np.array(table['current_meas'], dtype=float)
+            current = np.array(table["current_meas"], dtype=float)
             current = current[current > 0.5]
             nsb_mean.append(current.mean())
             nsb_median.append(np.median(current))
@@ -174,29 +178,30 @@ def extract_dqm_table(run, temp_run_dir):
 
     # run info
     run_info = read_file(os.path.join(temp_run_dir, f"{run}.runinfo"))
-    row['run_id'] = run_info['run_id'][0]
-    row['run_type'] = run_info['run_type'][0]
-    row['observing_mode'] = run_info['observing_mode'][0]
-    row['run_status'] = run_info['run_status'][0]
-    row['weather'] = run_info['weather'][0]
-    row['config_mask'] = run_info['config_mask'][0]
-    row['trigger_config'] = run_info['trigger_config'][0]
+    row["run_id"] = run_info["run_id"][0]
+    row["run_type"] = run_info["run_type"][0]
+    row["observing_mode"] = run_info["observing_mode"][0]
+    row["run_status"] = run_info["run_status"][0]
+    row["weather"] = run_info["weather"][0]
+    row["config_mask"] = run_info["config_mask"][0]
+    row["trigger_config"] = run_info["trigger_config"][0]
 
     # run dqm
     run_dqm = read_file(os.path.join(temp_run_dir, f"{run}.rundqm"))
-    row['data_category'] = run_dqm['data_category'][0]
-    row['dqm_status'] = run_dqm['status'][0]
-    row['dqm_status_reason'] = run_dqm['status_reason'][0]
-    row['dqm_tel_cut_mask'] = run_dqm['tel_cut_mask'][0]
-    row['light_level'] = run_dqm['light_level'][0]
-    row['dqm_comment'] = run_dqm['comment'][0]
+    row["data_category"] = run_dqm["data_category"][0]
+    row["dqm_status"] = run_dqm["status"][0]
+    row["dqm_status_reason"] = run_dqm["status_reason"][0]
+    row["dqm_tel_cut_mask"] = run_dqm["tel_cut_mask"][0]
+    row["light_level"] = run_dqm["light_level"][0]
+    row["dqm_comment"] = run_dqm["comment"][0]
 
     # L3 rate
-    row['l3_rate_mean'], row['l3_rate_std'], l3_table = extract_l3_rate(run, temp_run_dir)
+    row["l3_rate_mean"], row["l3_rate_std"], l3_table = extract_l3_rate(run, temp_run_dir)
 
     # currents (nsb)
-    row['nsb_mean'], row['nsb_median'], row['nsb_std'] = extract_nsb(
-        run, temp_run_dir, row['config_mask'])
+    row["nsb_mean"], row["nsb_median"], row["nsb_std"] = extract_nsb(
+        run, temp_run_dir, row["config_mask"]
+    )
 
     # weather
     row.update(extract_weather(run, temp_run_dir))
@@ -212,7 +217,8 @@ def extract_dqm_table(run, temp_run_dir):
 def get_tar_file_name(run, input_path):
     """
     Get name of tar file for given run
-    
+    (preprocessing directory type)
+
     """
 
     subdir = str(run)[0]
@@ -245,18 +251,20 @@ def main():
 
         dqm_table, l3_table = extract_dqm_table(parse.run, temp_run_files)
 
-        dqm_table.write(fits_file, format='fits', overwrite=True)
-        l3_table.write(fits_file, format='fits', overwrite=True)
+        dqm_table.write(fits_file, format="fits", overwrite=True)
+        l3_table.write(fits_file, format="fits", overwrite=True)
 
         for file_name in os.listdir(temp_run_files):
             file_path = os.path.join(temp_run_files, file_name)
             logging.info("Converting %s", file_path)
             table = read_file(file_path)
-            table.write(fits_file, format='fits', append=True)
+            table.write(fits_file, format="fits", append=True)
 
     finally:
         # Delete the temporary directory and its contents
         logging.info("Deleting %s", temp_dir)
+
+
 #        shutil.rmtree(temp_dir)
 
 
