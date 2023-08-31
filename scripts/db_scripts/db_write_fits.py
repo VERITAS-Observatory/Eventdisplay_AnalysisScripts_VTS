@@ -140,6 +140,30 @@ def extract_weather(run, temp_run_dir):
     return weather
 
 
+def extract_nsb(run, temp_run_dir, config_mask):
+    """
+    Extract mean and std of NSB values from participating telescopes
+
+    """
+
+    nsb_mean = []
+    nsb_median = []
+    nsb_std = []
+
+    for i in range(0, 4):
+        if config_mask & (1 << i):
+            table = read_file(os.path.join(temp_run_dir, f"{run}.HVsettings_TEL{i}"))
+            current = np.array(table['current_meas'], dtype=float)
+            current = current[current > 0.5]
+            nsb_mean.append(current.mean())
+            nsb_median.append(np.median(current))
+            nsb_std.append(current.std())
+
+    if len(nsb_mean) > 0:
+        return np.mean(nsb_mean), np.mean(nsb_median), np.mean(nsb_std)
+    return None, None
+
+
 def extract_dqm_table(run, temp_run_dir):
     """
     Extract DQM row and return as astropy table
@@ -148,7 +172,7 @@ def extract_dqm_table(run, temp_run_dir):
 
     row = {}
 
-    # read run info
+    # run info
     run_info = read_file(os.path.join(temp_run_dir, f"{run}.runinfo"))
     row['run_id'] = run_info['run_id'][0]
     row['run_type'] = run_info['run_type'][0]
@@ -158,7 +182,7 @@ def extract_dqm_table(run, temp_run_dir):
     row['config_mask'] = run_info['config_mask'][0]
     row['trigger_config'] = run_info['trigger_config'][0]
 
-    # read run dqm
+    # run dqm
     run_dqm = read_file(os.path.join(temp_run_dir, f"{run}.rundqm"))
     row['data_category'] = run_dqm['data_category'][0]
     row['dqm_status'] = run_dqm['status'][0]
@@ -167,15 +191,17 @@ def extract_dqm_table(run, temp_run_dir):
     row['light_level'] = run_dqm['light_level'][0]
     row['dqm_comment'] = run_dqm['comment'][0]
 
-    # read L3 rate
-    l3_mean, l3_std, l3_table = extract_l3_rate(run, temp_run_dir)
-    row['l3_rate_mean'] = l3_mean
-    row['l3_rate_std'] = l3_std
+    # L3 rate
+    row['l3_rate_mean'], row['l3_rate_std'], l3_table = extract_l3_rate(run, temp_run_dir)
 
-    # read weather
+    # currents (nsb)
+    row['nsb_mean'], row['nsb_median'], row['nsb_std'] = extract_nsb(
+        run, temp_run_dir, row['config_mask'])
+
+    # weather
     row.update(extract_weather(run, temp_run_dir))
 
-    # read FIR temperature
+    # FIR temperature
     row.update(extract_fir(run, temp_run_dir))
 
     print("DQM row: ", row)
@@ -183,12 +209,24 @@ def extract_dqm_table(run, temp_run_dir):
     return Table([row]), l3_table
 
 
+def get_tar_file_name(run, input_path):
+    """
+    Get name of tar file for given run
+    
+    """
+
+    subdir = str(run)[0]
+    if run > 99999:
+        subdir = str(run)[0:2]
+    return f"{input_path}/{subdir}/{run}.tar.gz"
+
+
 def main():
     logging.basicConfig(level=logging.INFO)
 
     parse = read_args()
 
-    tar_file = f"{parse.input_path}/6/{parse.run}.tar.gz"
+    tar_file = get_tar_file_name(parse.run, parse.input_path)
     logging.info(f"Reading run {parse.run} from {tar_file}")
 
     # Create a temporary directory
