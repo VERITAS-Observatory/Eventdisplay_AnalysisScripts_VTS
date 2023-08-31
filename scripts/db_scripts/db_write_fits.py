@@ -64,7 +64,7 @@ def read_file(file_path):
 
 def extract_l3_rate(run, temp_run_dir):
     """
-    Calculate L3 rate
+    Calculate L3 rate and dead times
 
     Returns
     -------
@@ -74,6 +74,10 @@ def extract_l3_rate(run, temp_run_dir):
         Standard deviation of L3 rate (excluding outliers)
     l3_table: astropy.table.Table
         Table of L3 rate values
+    dead_time: float
+        Mean dead time
+    dead_time_std: float
+        Standard deviation of dead time (excluding outliers)
 
     """
 
@@ -93,7 +97,13 @@ def extract_l3_rate(run, temp_run_dir):
 
     l3_table = Table([time_since_run_start, l3_values], names=("time", "l3_rate"))
 
-    return l3_mean, l3_std, l3_table
+    # dead time
+    busy = np.diff(np.array(table["L3orVDAQBusyScaler"]))
+    ten_mhz = np.diff(np.array(table["TenMHzScaler"]))
+    dead_time = np.mean(busy / ten_mhz)
+    dead_time_std = np.std(busy / ten_mhz)
+
+    return l3_mean, l3_std, l3_table, dead_time, dead_time_std
 
 
 def extract_fir(run, temp_run_dir):
@@ -196,7 +206,13 @@ def extract_dqm_table(run, temp_run_dir):
     row["dqm_comment"] = run_dqm["comment"][0]
 
     # L3 rate
-    row["l3_rate_mean"], row["l3_rate_std"], l3_table = extract_l3_rate(run, temp_run_dir)
+    (
+        row["l3_rate_mean"],
+        row["l3_rate_std"],
+        l3_table,
+        row["dead_time"],
+        row["dead_time_std"],
+    ) = extract_l3_rate(run, temp_run_dir)
 
     # currents (nsb)
     row["nsb_mean"], row["nsb_median"], row["nsb_std"] = extract_nsb(
