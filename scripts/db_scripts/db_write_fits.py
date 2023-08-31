@@ -16,7 +16,9 @@ import logging
 import os
 import tarfile
 
+import astropy
 import numpy as np
+from astropy.io import fits
 from astropy.table import Table
 
 
@@ -57,7 +59,16 @@ def read_file(file_path):
 
     """
 
-    table = Table.read(file_path, format="ascii.basic", delimiter="|", comment="#")
+    # check if file size is zero
+    if os.path.getsize(file_path) == 0:
+        logging.info("File %s is empty", file_path)
+        return None
+
+    try:
+        table = Table.read(file_path, format="ascii.basic", delimiter="|", comment="#")
+    except astropy.io.ascii.core.InconsistentTableError:
+        logging.error("Error reading %s", file_path)
+        return None
 
     return table
 
@@ -106,7 +117,47 @@ def extract_l3_rate(run, temp_run_dir):
     return l3_mean, l3_std, l3_table, dead_time, dead_time_std
 
 
-def extract_fir(run, temp_run_dir):
+def extract_elevation(run, temp_run_dir, config_mask):
+    """
+    return mean elevation of a run
+    (assuming that all telescopes point in the same direction)
+
+    """
+
+    elevation_tel = []
+
+    for i in range(0, 4):
+        if config_mask & (1 << i):
+            table = read_file(os.path.join(temp_run_dir, f"{run}.rawpointing_TEL0"))
+            meas_el = np.array(table["elevation_meas"], dtype=float)
+            elevation_tel.append(meas_el.mean())
+
+    return np.mean(elevation_tel) * 180.0 / np.pi
+
+
+def fir_correction(elevation, temp):
+    """
+    Correct FIR for ambient temperature
+
+    """
+
+    return -0.0026 * elevation**2 + 0.434 * elevation - 0.65 * temp
+
+
+def extract_corrected_fir(fir_mean, ambient_temp, run, temp_run_dir, config_mask):
+    """
+    Correct FIR for ambient temperature
+
+    """
+
+    if fir_mean is None:
+        return np.nan
+
+    elevation = extract_elevation(run, temp_run_dir, config_mask)
+    return fir_mean + (fir_correction(elevation, ambient_temp) - fir_correction(90.0, 20.0))
+
+
+def extract_fir(run, temp_run_dir, config_mask):
     """
     Extract mean and std of FIR values for the three different FIRS
 
@@ -117,12 +168,19 @@ def extract_fir(run, temp_run_dir):
     tel_ids = (0, 1, 3)
     fir_mean = []
     fir_std = []
+    fir_ambient_temp = []
 
     for tel in tel_ids:
         condition = table["telescope_id"] == tel
         table_tel = table[condition]
-        fir_mean.append(table_tel["radiant_sky_temp"].mean())
-        fir_std.append(table_tel["radiant_sky_temp"].std())
+        if len(table_tel) > 0:
+            fir_mean.append(table_tel["radiant_sky_temp"].mean())
+            fir_std.append(table_tel["radiant_sky_temp"].std())
+            fir_ambient_temp.append(table_tel["ambient_temp"].mean())
+        else:
+            fir_mean.append(np.nan)
+            fir_std.append(np.nan)
+            fir_ambient_temp.append(np.nan)
 
     return {
         "fir_mean_0": fir_mean[0],
@@ -131,6 +189,15 @@ def extract_fir(run, temp_run_dir):
         "fir_std_0": fir_std[0],
         "fir_std_1": fir_std[1],
         "fir_std_3": fir_std[2],
+        "fir_mean_corrected_0": extract_corrected_fir(
+            fir_mean[0], fir_ambient_temp[0], run, temp_run_dir, config_mask
+        ),
+        "fir_mean_corrected_1": extract_corrected_fir(
+            fir_mean[1], fir_ambient_temp[1], run, temp_run_dir, config_mask
+        ),
+        "fir_mean_corrected_3": extract_corrected_fir(
+            fir_mean[2], fir_ambient_temp[2], run, temp_run_dir, config_mask
+        ),
     }
 
 
@@ -223,7 +290,7 @@ def extract_dqm_table(run, temp_run_dir):
     row.update(extract_weather(run, temp_run_dir))
 
     # FIR temperature
-    row.update(extract_fir(run, temp_run_dir))
+    row.update(extract_fir(run, temp_run_dir, row["config_mask"]))
 
     print("DQM row: ", row)
 
@@ -256,25 +323,39 @@ def main():
     logging.info("Temporary directory: %s", temp_dir)
 
     # open fits file to write all tables to
-    fits_file = os.path.join(parse.output_path, f"{parse.run}.db.fits")
+    fits_file = os.path.join(parse.output_path, f"{parse.run}.db.fits.gz")
     logging.info("Writing to %s", fits_file)
 
     try:
         # Extract the tar archive into the temporary directory
-        with tarfile.open(tar_file, "r") as tar:
-            tar.extractall(temp_dir)
+        try:
+            with tarfile.open(tar_file, "r") as tar:
+                tar.extractall(temp_dir)
+        except FileNotFoundError:
+            logging.error("File %s not found", tar_file)
+            return
         temp_run_files = os.path.join(temp_dir, str(parse.run))
 
         dqm_table, l3_table = extract_dqm_table(parse.run, temp_run_files)
 
-        dqm_table.write(fits_file, format="fits", overwrite=True)
-        l3_table.write(fits_file, format="fits", overwrite=True)
+        hdu = []
+        hdu.append(fits.PrimaryHDU())
+
+        hdu.append(fits.BinTableHDU(dqm_table))
+        hdu[-1].name = "DQM"
+        hdu.append(fits.BinTableHDU(l3_table))
+        hdu[-1].name = "L3"
 
         for file_name in os.listdir(temp_run_files):
             file_path = os.path.join(temp_run_files, file_name)
             logging.info("Converting %s", file_path)
             table = read_file(file_path)
-            table.write(fits_file, format="fits", append=True)
+            if table is not None:
+                hdu.append(fits.BinTableHDU(table))
+                hdu[-1].name = file_name.split(".")[1]
+
+        hdul = fits.HDUList(hdu)
+        hdul.writeto(fits_file, overwrite=True)
 
     finally:
         # Delete the temporary directory and its contents
