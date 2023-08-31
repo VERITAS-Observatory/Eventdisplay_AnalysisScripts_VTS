@@ -1,6 +1,6 @@
 # DB scripts to save run-wise information
 
-Information is saved in in comma-separated files in `$VERITAS_DATA_DIR/DBTEXT/`.
+Information is saved in in a tar file of comma-separated files in `$VERITAS_DATA_DIR/DBTEXT/`.
 
 Usages:
 
@@ -37,3 +37,11 @@ write a `.laserrun` file:
 
 The file `laser_runs` is the same as used for loggen and contains for each observation
 night the corresponding laser run.
+
+## DQM Information for DL3
+
+The python script `db_write_fits.py` allows to read the DB text files and write it in form of tables into a FITS file.
+This script also summarizes basic data quality information for each run and writes it into a separate FITS tables named `DQM`.
+The script `db_combine_dqm_fits.py` allows to combine a large number of DQM tables into one single table.
+
+Observe that these python scripts require the packages installed as outlined in the environment file `./environment.yml`.
