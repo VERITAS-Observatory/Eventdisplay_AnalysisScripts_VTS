@@ -20,6 +20,7 @@ import astropy
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from unidecode import unidecode
 
 
 def read_args():
@@ -35,17 +36,17 @@ def read_args():
     )
 
     parser.add_argument(
-        "--output_path",
-        type=str,
-        required=True,
-        help="Output path for FITS file",
-    )
-
-    parser.add_argument(
         "--input_path",
         type=str,
         required=True,
         help="Path to DBTEXT files",
+    )
+
+    parser.add_argument(
+        "--output_path",
+        type=str,
+        required=True,
+        help="Output path for FITS file",
     )
 
     args = parser.parse_args()
@@ -99,20 +100,32 @@ def extract_l3_rate(run, temp_run_dir):
     l3_values = np.diff(np.array(table["L3"], dtype=float))
     l3_values /= time_diffs
 
-    l3_mean = np.mean(l3_values)
-    # standard deviation excluding outliers (>3 sigma)
-    l3_std = np.std(l3_values[np.abs(l3_values - np.mean(l3_values)) < 3 * np.std(l3_values)])
+    if len(l3_values) > 0:
+        l3_mean = np.mean(l3_values)
+        # standard deviation excluding outliers (>3 sigma)
+        l3_std = np.std(l3_values[np.abs(l3_values - np.mean(l3_values)) < 3 * np.std(l3_values)])
+    else:
+        l3_mean = np.nan
+        l3_std = np.nan
 
     # (exclude first value, as for l3_values)
-    time_since_run_start = (np.array(table["timestamp"][1:]) - table["timestamp"][0]) / 1000.0
+    try:
+        time_since_run_start = (np.array(table["timestamp"][1:]) - table["timestamp"][0]) / 1000.0
+    except IndexError:
+        time_since_run_start = np.array([])
 
     l3_table = Table([time_since_run_start, l3_values], names=("time", "l3_rate"))
 
     # dead time
-    busy = np.diff(np.array(table["L3orVDAQBusyScaler"]))
-    ten_mhz = np.diff(np.array(table["TenMHzScaler"]))
-    dead_time = np.mean(busy / ten_mhz)
-    dead_time_std = np.std(busy / ten_mhz)
+    try:
+        l3_busy = np.array(table["L3orVDAQBusyScaler"], dtype=float)
+        busy = np.diff(l3_busy)
+        ten_mhz = np.diff(np.array(table["TenMHzScaler"]))
+        dead_time = np.mean(busy / ten_mhz)
+        dead_time_std = np.std(busy / ten_mhz)
+    except ValueError:
+        dead_time = np.nan
+        dead_time_std = np.nan
 
     return l3_mean, l3_std, l3_table, dead_time, dead_time_std
 
@@ -164,6 +177,18 @@ def extract_fir(run, temp_run_dir, config_mask):
     """
 
     table = read_file(os.path.join(temp_run_dir, f"{run}.fir"))
+    if table is None:
+        return {
+            "fir_mean_0": np.nan,
+            "fir_mean_1": np.nan,
+            "fir_mean_3": np.nan,
+            "fir_std_0": np.nan,
+            "fir_std_1": np.nan,
+            "fir_std_3": np.nan,
+            "fir_mean_corrected_0": np.nan,
+            "fir_mean_corrected_1": np.nan,
+            "fir_mean_corrected_3": np.nan,
+        }
 
     tel_ids = (0, 1, 3)
     fir_mean = []
@@ -208,15 +233,15 @@ def extract_weather(run, temp_run_dir):
     """
 
     table = read_file(os.path.join(temp_run_dir, f"{run}.weather"))
-
     weather = {}
 
-    weather["wind_speed_mean"] = table["WS_mph_Avg"].mean()
-    weather["wind_speed_max"] = table["WS_mph_Max"].mean()
-    weather["wind_speed_min"] = table["WS_mph_Min"].mean()
-    weather["wind_speed_dir"] = table["WindDir"].mean()
-    weather["air_temperature"] = table["AirTF_Avg"].mean()
-    weather["relative_humidity"] = table["RH"].mean()
+    if table is not None:
+        weather["wind_speed_mean"] = table["WS_mph_Avg"].mean()
+        weather["wind_speed_max"] = table["WS_mph_Max"].mean()
+        weather["wind_speed_min"] = table["WS_mph_Min"].mean()
+        weather["wind_speed_dir"] = table["WindDir"].mean()
+        weather["air_temperature"] = table["AirTF_Avg"].mean()
+        weather["relative_humidity"] = table["RH"].mean()
 
     return weather
 
@@ -270,7 +295,7 @@ def extract_dqm_table(run, temp_run_dir):
     row["dqm_status_reason"] = run_dqm["status_reason"][0]
     row["dqm_tel_cut_mask"] = run_dqm["tel_cut_mask"][0]
     row["light_level"] = run_dqm["light_level"][0]
-    row["dqm_comment"] = run_dqm["comment"][0]
+    row["dqm_comment"] = convert_to_ascii(run_dqm["comment"][0])
 
     # L3 rate
     (
@@ -308,6 +333,27 @@ def get_tar_file_name(run, input_path):
     if run > 99999:
         subdir = str(run)[0:2]
     return f"{input_path}/{subdir}/{run}.tar.gz"
+
+
+def convert_to_ascii(text):
+    """
+    Convert to ascii
+
+    """
+    return unidecode(text)
+
+
+def convert_table_comment_to_ascii(table):
+    """
+    Convert comment column to ascii
+
+    """
+
+    column_name = "comment"
+
+    if column_name in table.colnames:
+        for i, row in enumerate(table):
+            table[i][column_name] = convert_to_ascii(row[column_name])
 
 
 def main():
@@ -350,6 +396,8 @@ def main():
             file_path = os.path.join(temp_run_files, file_name)
             logging.info("Converting %s", file_path)
             table = read_file(file_path)
+            if "dqm" in file_name.lower():
+                convert_table_comment_to_ascii(table)
             if table is not None:
                 hdu.append(fits.BinTableHDU(table))
                 hdu[-1].name = file_name.split(".")[1]

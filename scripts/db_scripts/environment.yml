@@ -9,3 +9,4 @@ dependencies:
   - astropy
   - numpy
   - python=3.10
+  - unidecode
