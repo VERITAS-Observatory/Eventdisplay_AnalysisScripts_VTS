@@ -297,7 +297,7 @@ def extract_dqm_table(run, temp_run_dir):
         row["dqm_tel_cut_mask"] = run_dqm["tel_cut_mask"][0]
         row["vpm_config_mask"] = run_dqm["vpm_config_mask"][0]
         row["light_level"] = run_dqm["light_level"][0]
-        row["dqm_comment"] = convert_to_ascii(run_dqm["comment"][0])
+        row["dqm_comment"] = convert_to_ascii(str(run_dqm["comment"][0]))
     else:
         row["data_category"] = ""
         row["dqm_status"] = ""
@@ -422,7 +422,6 @@ def main():
     finally:
         # Delete the temporary directory and its contents
         logging.info("Deleting %s", temp_dir)
-
 
 #        shutil.rmtree(temp_dir)
 
