@@ -141,7 +141,7 @@ def extract_elevation(run, temp_run_dir, config_mask):
 
     for i in range(0, 4):
         if config_mask & (1 << i):
-            table = read_file(os.path.join(temp_run_dir, f"{run}.rawpointing_TEL0"))
+            table = read_file(os.path.join(temp_run_dir, f"{run}.rawpointing_TEL{i}"))
             meas_el = np.array(table["elevation_meas"], dtype=float)
             elevation_tel.append(meas_el.mean())
 
@@ -290,12 +290,23 @@ def extract_dqm_table(run, temp_run_dir):
 
     # run dqm
     run_dqm = read_file(os.path.join(temp_run_dir, f"{run}.rundqm"))
-    row["data_category"] = run_dqm["data_category"][0]
-    row["dqm_status"] = run_dqm["status"][0]
-    row["dqm_status_reason"] = run_dqm["status_reason"][0]
-    row["dqm_tel_cut_mask"] = run_dqm["tel_cut_mask"][0]
-    row["light_level"] = run_dqm["light_level"][0]
-    row["dqm_comment"] = convert_to_ascii(run_dqm["comment"][0])
+    if run_dqm is not None:
+        row["data_category"] = run_dqm["data_category"][0]
+        row["dqm_status"] = run_dqm["status"][0]
+        row["dqm_status_reason"] = run_dqm["status_reason"][0]
+        row["dqm_tel_cut_mask"] = run_dqm["tel_cut_mask"][0]
+        row["vpm_config_mask"] = run_dqm["vpm_config_mask"][0]
+        row["light_level"] = run_dqm["light_level"][0]
+        row["dqm_comment"] = convert_to_ascii(run_dqm["comment"][0])
+    else:
+        row["data_category"] = ""
+        row["dqm_status"] = ""
+        row["dqm_status_reason"] = ""
+        row["dqm_tel_cut_mask"] = np.nan
+        row["vpm_config_mask"] = np.nan
+        row["light_level"] = np.nan
+        row["dqm_comment"] = ""
+
 
     # L3 rate
     (
@@ -351,9 +362,12 @@ def convert_table_comment_to_ascii(table):
 
     column_name = "comment"
 
-    if column_name in table.colnames:
-        for i, row in enumerate(table):
-            table[i][column_name] = convert_to_ascii(row[column_name])
+    try:
+        if column_name in table.colnames:
+            for i, row in enumerate(table):
+                table[i][column_name] = convert_to_ascii(row[column_name])
+    except AttributeError:
+        pass
 
 
 def main():
