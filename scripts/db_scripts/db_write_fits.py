@@ -94,6 +94,9 @@ def extract_l3_rate(run, temp_run_dir):
     """
 
     table = read_file(os.path.join(temp_run_dir, f"{run}.L3"))
+    if table is None:
+        return np.nan, np.nan, None, np.nan, np.nan
+
     condition = table["run_id"] == run
     table = table[condition]
     time_diffs = np.diff(np.array(table["timestamp"])) / 1000.0
@@ -259,11 +262,12 @@ def extract_nsb(run, temp_run_dir, config_mask):
     for i in range(0, 4):
         if config_mask & (1 << i):
             table = read_file(os.path.join(temp_run_dir, f"{run}.HVsettings_TEL{i}"))
-            current = np.array(table["current_meas"], dtype=float)
-            current = current[current > 0.5]
-            nsb_mean.append(current.mean())
-            nsb_median.append(np.median(current))
-            nsb_std.append(current.std())
+            if table is not None:
+                current = np.array(table["current_meas"], dtype=float)
+                current = current[current > 0.5]
+                nsb_mean.append(current.mean())
+                nsb_median.append(np.median(current))
+                nsb_std.append(current.std())
 
     if len(nsb_mean) > 0:
         return np.mean(nsb_mean), np.mean(nsb_median), np.mean(nsb_std)
