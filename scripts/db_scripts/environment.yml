@@ -1,6 +1,6 @@
 # installation:
 # create: mamba env create -f environment.yml
-# activate: mamba activate Eventdisplay-dbscripts
+# activate: conda activate Eventdisplay-dbscripts
 #
 name: Eventdisplay-dbscripts
 channels:
