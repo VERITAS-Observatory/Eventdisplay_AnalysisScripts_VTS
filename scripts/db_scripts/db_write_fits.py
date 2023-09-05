@@ -271,7 +271,7 @@ def extract_nsb(run, temp_run_dir, config_mask):
 
     if len(nsb_mean) > 0:
         return np.mean(nsb_mean), np.mean(nsb_median), np.mean(nsb_std)
-    return None, None
+    return np.nan, np.nan, np.nan
 
 
 def extract_dqm_table(run, temp_run_dir):
