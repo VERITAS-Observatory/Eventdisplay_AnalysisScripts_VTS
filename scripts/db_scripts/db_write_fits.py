@@ -145,8 +145,9 @@ def extract_elevation(run, temp_run_dir, config_mask):
     for i in range(0, 4):
         if config_mask & (1 << i):
             table = read_file(os.path.join(temp_run_dir, f"{run}.rawpointing_TEL{i}"))
-            meas_el = np.array(table["elevation_meas"], dtype=float)
-            elevation_tel.append(meas_el.mean())
+            if table is not None:
+                meas_el = np.array(table["elevation_meas"], dtype=float)
+                elevation_tel.append(meas_el.mean())
 
     return np.mean(elevation_tel) * 180.0 / np.pi
 
@@ -265,9 +266,10 @@ def extract_nsb(run, temp_run_dir, config_mask):
             if table is not None:
                 current = np.array(table["current_meas"], dtype=float)
                 current = current[current > 0.5]
-                nsb_mean.append(current.mean())
-                nsb_median.append(np.median(current))
-                nsb_std.append(current.std())
+                if len(current) > 0:
+                    nsb_mean.append(current.mean())
+                    nsb_median.append(np.median(current))
+                    nsb_std.append(current.std())
 
     if len(nsb_mean) > 0:
         return np.mean(nsb_mean), np.mean(nsb_median), np.mean(nsb_std)
@@ -364,12 +366,15 @@ def convert_table_comment_to_ascii(table):
 
     """
 
-    column_name = "comment"
+    column_name = ["comment", "authors"]
 
     try:
-        if column_name in table.colnames:
-            for i, row in enumerate(table):
-                table[i][column_name] = convert_to_ascii(row[column_name])
+        for name in column_name:
+            if name in table.colnames:
+                for i, row in enumerate(table):
+                    old_length = len(row[name])
+                    new_string = convert_to_ascii(row[name])
+                    table[i][name] = new_string[:old_length]
     except AttributeError:
         pass
 
