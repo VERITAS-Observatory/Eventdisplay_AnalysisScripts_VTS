@@ -90,6 +90,13 @@ do
     echo "   ANASUM file: ${ANASUMFILE}"
     EFFAREA=$($EVNDISPSYS/bin/printAnasumRunParameter ${ANASUMFILE} ${RUN} -effareafile)
     echo "   Effective area file: $EFFAREA"
+    EPOCH=$($EVNDISPSYS/bin/printRunParameter ${ANASUMFILE} -epoch)
+    DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
+    if [[ ! -e ${DBFITSFILE} ]]; then
+        echo "DB File ${DBFITSFILE} not found"
+        echo "Skipping run $RUN"
+        continue
+    fi
 
     for m in "point-like" "full-enclosure"
     do
@@ -103,6 +110,8 @@ do
             ${V2DL3OPT} \
             --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
             --logfile ${ODIR}/${m}/${RUN}.log \
+            --instrument_epoch ${EPOCH} \
+            --db_fits_file ${DBFITSFILE} \
             ${ODIR}/${m}/${RUN}.fits.gz
     done
 done
