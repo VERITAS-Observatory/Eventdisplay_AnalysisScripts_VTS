@@ -1,6 +1,8 @@
 # DB scripts to save run-wise information
 
-Information is saved in in a tar file of comma-separated files in `$VERITAS_DATA_DIR/DBTEXT/`.
+Scripts to query the VERITAS database for run-wise information and save it in a tar file.
+Information is saved in a tar file of comma-separated files in `$VERITAS_DATA_DIR/DBTEXT/`.
+Allows also to convert the csv files into FITS tables.
 
 Usages:
 
