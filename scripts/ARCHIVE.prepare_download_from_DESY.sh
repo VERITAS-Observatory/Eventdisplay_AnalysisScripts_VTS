@@ -3,8 +3,8 @@
 # preprocessed Eventdisplay data products
 #
 
-DESYPATH="http://styx.zeuthen.desy.de/veritas/"
 EDVERSION="v490"
+DESYPATH="http://styx.zeuthen.desy.de/veritas/"
 
 if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
 echo "
@@ -24,6 +24,27 @@ required parameters:
                     Available file types:
                     - evndisp (output of evndisp)
                     - mscw (output of mscw_energy)
+
+                    File types available for AP cleaning only:
+                    - anasum_soft2tel (output of anasum, soft2tel cuts)
+                    - anasum_moderate2tel (output of anasum, moderate2tel cuts)
+                    - anasum_hard3tel (output of anasum, hard3tel cuts)
+
+                    DL3 files for AP cleaning with gamma-hadron separation cuts applied:
+                    - dl3_pointlike_moderate2tel (output of V2DL3, moderate2tel cuts, pointlike)
+                    - dl3_pointlike_soft2tel (output of V2DL3, soft2tel cuts, pointlike)
+                    - dl3_pointlike_hard3tel (output of V2DL3, hard3tel, cuts, pointlike)
+                    - dl3_fullenclosure_moderate2tel (output of V2DL3, moderate2tel cuts, full enclosure)
+                    - dl3_fullenclosure_soft2tel (output of V2DL3, soft2tel cuts, full enclosure)
+                    - dl3_fullenclosure_hard3tel (output of V2DL3, hard3tel, cuts, full enclosure)
+
+                    DL3 files for AP cleaning with no gamma-hadron separation cuts applied:
+                    - dl3_pointlike-all-events_moderate2tel (output of V2DL3, moderate2tel cuts, pointlike)
+                    - dl3_pointlike-all-events_soft2tel (output of V2DL3, soft2tel cuts, pointlike)
+                    - dl3_pointlike-all-events_hard3tel (output of V2DL3, hard3tel, cuts, pointlike)
+                    - dl3_fullenclosure-all-events_moderate2tel (output of V2DL3, moderate2tel cuts, full enclosure)
+                    - dl3_fullenclosure-all-events_soft2tel (output of V2DL3, soft2tel cuts, full enclosure)
+                    - dl3_fullenclosure-all-events_hard3tel (output of V2DL3, hard3tel, cuts, full enclosure)
 
 optional parameters:
 
@@ -48,7 +69,7 @@ if [[ ! -e "$RLIST" ]]; then
     exit
 fi
 
-FTYPES="evndisp mscw"
+FTYPES="evndisp mscw anasum_soft2tel anasum_moderate2tel anasum_hard3tel dl3_pointlike_moderate2tel dl3_pointlike_soft2tel dl3_pointlike_hard3tel dl3_fullenclosure_moderate2tel dl3_fullenclosure_soft2tel dl3_fullenclosure_hard3tel dl3_pointlike-all-events_moderate2tel dl3_pointlike-all-events_soft2tel dl3_pointlike-all-events_hard3tel dl3_fullenclosure-all-events_moderate2tel dl3_fullenclosure-all-events_soft2tel dl3_fullenclosure-all-events_hard3tel"
 if [[ ! $(echo $FTYPES | grep -w $FTYPE) ]]; then
     echo "Error: invalid Eventdisplay file type $FTYPE"
     echo "(allowed values: $FTYPES)"
@@ -86,6 +107,10 @@ get_file_suffix()
     FSUFF="root"
     if [[ $1 == "mscw" ]]; then
         FSUFF="mscw.root"
+    elif [[ $1 == "anasum"* ]]; then
+        FSUFF="anasum.root"
+    elif [[ $1 == "dl3"* ]]; then
+        FSUFF="fits.gz"
     fi
     echo "$FSUFF"
 }
