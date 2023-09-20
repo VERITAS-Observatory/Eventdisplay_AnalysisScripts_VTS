@@ -1,0 +1,12 @@
+# installation:
+# create: mamba env create -f environment.yml
+# activate: conda activate Eventdisplay-dbscripts
+#
+name: Eventdisplay-dbscripts
+channels:
+  - conda-forge
+dependencies:
+  - astropy
+  - numpy
+  - python=3.10
+  - unidecode
