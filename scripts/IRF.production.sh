@@ -326,6 +326,9 @@ for VX in $EPOCH; do
                elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="300 600 900"
+               elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
+                   FIXEDWOBBLE="0.5"
+                   FIXEDNSB="160 200 300"
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
                    FIXEDNSB="160 200 250"
                fi
