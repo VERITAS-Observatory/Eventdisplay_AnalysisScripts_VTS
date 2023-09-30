@@ -38,10 +38,9 @@ prepare_atmo_string()
     if [[ $EPOCH == *"V4"* ]] || [[ $EPOCH == *"V5"* ]]; then
         ATMO=${ATMO/6/2}
     fi
-    # V6 UV only for ATM 21
+    # V6 UV only for ATM 61
     if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
-       ATMO=${ATMO/62/21}
-       ATMO=${ATMO/61/21}
+       ATMO=${ATMO/62/61}
     fi
     echo "$ATMO"
 }
@@ -116,9 +115,9 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
         RADACCRUN=${RADACCRUN/TX/$TELTOANA}
         RADACCRUN=${RADACCRUN/SX/$REPLACESIMTYPERad}
     fi
-    # hardwired setting for redHV: no BDT cuts available,
+    # hardwired setting for redHV and UV: no BDT cuts available,
     # use box cuts for soft and supersoft cuts
-    if [[ $OBSL == "obsLowHV" ]]; then
+    if [[ $OBSL == "obsLowHV" ]] || [[ $OBSL == "obsFilter" ]]; then
         if [[ $EFFAREARUN == *"SuperSoft"* ]]; then
             echo "RedHV runs - change super soft BDT to super soft box cuts"
             EFFAREARUN=${EFFAREARUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
