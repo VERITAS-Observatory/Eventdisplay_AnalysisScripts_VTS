@@ -15,6 +15,7 @@ required parameters:
     <anasum run list>       short run list (run numbers only)
         
     <anasum directory>      input directory containing anasum root files
+                            (usually directory with pre-processed files)
 
     <output directory>      directory with links to pre-processed files
         
