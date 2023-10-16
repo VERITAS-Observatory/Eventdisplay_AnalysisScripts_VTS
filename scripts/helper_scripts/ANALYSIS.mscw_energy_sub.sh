@@ -57,7 +57,7 @@ else
         SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6_REDHV"
     elif [ "$HVSETTINGS" == "obsFilter" ]; then
         SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6_UV"
-        ATMO="21"
+        ATMO="61"
     else
         SIMTYPE_RUN="$SIMTYPE_DEFAULT_V6"
     fi

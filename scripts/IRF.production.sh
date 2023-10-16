@@ -190,7 +190,7 @@ if [[ $CUTSLISTFILE != "" ]]; then
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
-elif [ "${SIMTYPE}" = "CARE_UV" ]; then
+elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
@@ -326,6 +326,9 @@ for VX in $EPOCH; do
                elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="300 600 900"
+               elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
+                   FIXEDWOBBLE="0.5"
+                   FIXEDNSB="160 200 300"
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
                    FIXEDNSB="160 200 250"
                fi
