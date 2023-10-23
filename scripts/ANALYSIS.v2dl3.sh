@@ -57,7 +57,7 @@ echo -e "Output files will be written to:\n $ODIR"
 
 # run scripts are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/V2DL3"
+LOGDIR="$VERITAS_USER_LOG_DIR/V2DL3-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGIDR}/x* 2>/dev/null
