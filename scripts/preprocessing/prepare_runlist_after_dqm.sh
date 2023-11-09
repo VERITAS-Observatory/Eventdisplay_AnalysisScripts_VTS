@@ -106,7 +106,7 @@ fill_timemask()
 
 prepare_output_files
 
-RUNS=$(find ${FILEDIR} -name "$FILETYPE")
+RUNS=$(find ${FILEDIR} -type f -name "$FILETYPE" | sort -n)
 
 for RF in $RUNS
 do
