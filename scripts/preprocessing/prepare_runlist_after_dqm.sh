@@ -179,8 +179,8 @@ do
         RDATAT1=$(echo "${INFOSTRING}" | cut -d '|' -f 7 ${RDQM} | grep -v data_start_time)
         RDATAT2=$(echo "${INFOSTRING}" | cut -d '|' -f 8 ${RDQM} | grep -v data_end_time)
         echo "  RUN $R $RDATAT1 $RDATAT2"
-        RDATAT1=$(date -d "$RDATAT1" +%s)
-        RDATAT2=$(date -d "$RDATAT2" +%s)
+        RDATAT1=$(date -u -d "$RDATAT1" +%s)
+        RDATAT2=$(date -u -d "$RDATAT2" +%s)
         DATADURATION=$((RDATAT2 - RDATAT1))
         echo "  RUN $R DURATION $DATADURATION"
         if [ $DATADURATION -lt  120 ]; then
