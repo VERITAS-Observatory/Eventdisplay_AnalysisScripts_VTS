@@ -203,6 +203,9 @@ else
              ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 fi
+# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
+#         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
 #    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
