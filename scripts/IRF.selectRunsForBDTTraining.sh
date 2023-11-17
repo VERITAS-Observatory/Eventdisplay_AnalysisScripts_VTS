@@ -47,7 +47,7 @@ else
     FLIST=$(find ${2} -name "[6-9, 10]*[0-9].mscw.root"  | sed 's/\.root$//')
 fi
 
-mkdir -p ${2}
+mkdir -p ${3}
 
 linkFile()
 {
