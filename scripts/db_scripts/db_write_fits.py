@@ -61,8 +61,12 @@ def read_file(file_path):
     """
 
     # check if file size is zero
-    if os.path.getsize(file_path) == 0:
-        logging.info("File %s is empty", file_path)
+    try:
+        if os.path.getsize(file_path) == 0:
+            logging.info("File %s is empty", file_path)
+            return None
+    except FileNotFoundError:
+        logging.error("Error reading %s", file_path)
         return None
 
     try:
