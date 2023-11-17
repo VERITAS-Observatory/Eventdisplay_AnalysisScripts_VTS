@@ -129,6 +129,7 @@ fi
 
 $EVNDISPSYS/bin/mscw_energy         \
     ${MOPT} \
+    -updateEpoch=1 \
     -tablefile $TABFILE             \
     -arrayrecid=$RECID              \
     -inputfile $TEMPDIR/$BFILE.root \
