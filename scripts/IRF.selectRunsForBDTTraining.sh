@@ -1,3 +1,4 @@
+#!/bin/bash
 # select mscw files for BDT training
 # 
 # selection is based on 
