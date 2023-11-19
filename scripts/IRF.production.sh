@@ -20,7 +20,7 @@ required parameters:
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, EFFECTIVEAREAS,)
+                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,)
                              ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
                              TRAINMVANGRES, EVNDISPCOMPRESS )
@@ -193,27 +193,37 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
 elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   if [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+   else
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   fi
 else
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   if [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+   else
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   fi
 fi
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-#         ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
-#         ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
-#    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+   if [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
+       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
+   else
+       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+   fi
 fi
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
