@@ -409,7 +409,7 @@ for VX in $EPOCH; do
 			            done #recID
                     ######################
                     # analyse effective areas
-                    elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]]; then
+                    elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
                         for ID in $RECID; do
                             for CUTS in ${CUTLIST[@]}; do
                                 echo "combine effective areas $CUTS"
