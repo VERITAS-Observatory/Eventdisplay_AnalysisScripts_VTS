@@ -20,7 +20,6 @@ RUNPARAMETER="$EVNDISPSYS/../EventDisplay_Release_v490/preprocessing/parameter_f
 
 if [[ ${ANATYPE} == "AP" ]]; then
     CUTLIST=(NTel2-Moderate NTel2-Soft NTel3-Hard)
-    CUTLIST=(NTel2-Moderate)
 else
     CUTLIST=(NTel2-SuperSoft)
 fi
@@ -34,7 +33,7 @@ do
     # anasum run list
     RUNLIST="${ODIR}/${CUT}/anasum.runlist"
     rm -f ${RUNLIST}
-    find ${IDIR}/  -maxdepth 1 -name "101*.mscw.root" -exec basename {} .mscw.root \; > ${RUNLIST}
+    find ${IDIR}/  -maxdepth 1 -name "[0-9]*.mscw.root" -exec basename {} .mscw.root \; > ${RUNLIST}
     sort -n -o ${RUNLIST} ${RUNLIST}
     echo "Found $(wc -l ${RUNLIST}) runs"
 
@@ -45,6 +44,6 @@ do
         ${RUNLIST} \
         ${ODIR}/${CUT} \
         ${ACUT} \
-        IGNOREACCEPTANCE \
+        IGNOREIRF \
         ${RUNPARAMETER}
 done
