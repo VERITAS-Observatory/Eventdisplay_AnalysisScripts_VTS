@@ -18,7 +18,7 @@ required parameters:
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, EFFECTIVEAREAS,)
+                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,)
                              ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
                              TRAINMVANGRES, EVNDISPCOMPRESS )
@@ -39,6 +39,7 @@ IRFTYPE=$2
 process_irfs()
 {
     EPOCHS=$(cat $4 | sort -u)
+#    EPOCHS="V6_2022_2023w"
     for E in $EPOCHS
     do
         if [[ $2 != "CARE_UV_2212" ]]; then
@@ -50,7 +51,11 @@ process_irfs()
             fi
         fi
         echo $E $1 $2 $3
-        ./IRF.production.sh $2 $1 $E $3
+        # for ID in 2 3 4 5
+        for ID in 0
+        do
+            ./IRF.production.sh $2 $1 $E $3 $ID
+        done
     done
 }
 
