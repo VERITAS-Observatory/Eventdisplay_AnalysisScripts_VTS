@@ -193,7 +193,7 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
 elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
-   if [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
+   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
         CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
                  ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
                  ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
@@ -204,7 +204,7 @@ elif [ "${SIMTYPE}" = "GRISU" ]; then
                  ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
    fi
 else
-   if [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
+   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
         CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
                  ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
                  ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
@@ -217,7 +217,7 @@ else
 fi
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
-   if [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
+   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
    else
        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
@@ -259,7 +259,7 @@ for VX in $EPOCH; do
        fi
        ######################
        # combine effective areas
-       if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]]; then
+       if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]] || [[ $IRFTYPE == "COMBINEPRESELECTEFFECTIVEAREAS" ]]; then
             for ID in $RECID; do
                 for CUTS in ${CUTLIST[@]}; do
                     echo "combine effective areas $CUTS"
