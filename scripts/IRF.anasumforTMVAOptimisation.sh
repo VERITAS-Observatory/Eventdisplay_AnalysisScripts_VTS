@@ -19,9 +19,9 @@ ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 RUNPARAMETER="$EVNDISPSYS/../EventDisplay_Release_v490/preprocessing/parameter_files/anasum.runparameter.dat"
 
 if [[ ${ANATYPE} == "AP" ]]; then
-    CUTLIST=(NTel2-Moderate NTel2-Soft NTel3-Hard)
+    CUTLIST="NTel2-Moderate NTel2-Soft NTel3-Hard"
 else
-    CUTLIST=(NTel2-SuperSoft)
+    CUTLIST="NTel2-SuperSoft"
 fi
 
 for CUT in ${CUTLIST}
