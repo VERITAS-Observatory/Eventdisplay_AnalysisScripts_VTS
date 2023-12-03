@@ -15,15 +15,15 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 
 required parameters:
 
-    <sim type>              simulation type 
+    <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,)
-                             ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
+                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
+                             ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
-                             TRAINMVANGRES, EVNDISPCOMPRESS )
+                             TRAINMVANGRES, EVNDISPCOMPRESS)
     
 optional parameters:
     
@@ -280,7 +280,7 @@ for VX in $EPOCH; do
                 for ATM in $ATMOS; do
                     for C in ${CUTTYPES[@]}; do
                         echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
-                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining/"
+                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining"
                         MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         # list of background files
                         TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
@@ -317,7 +317,7 @@ for VX in $EPOCH; do
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                              echo "OPTIMIZE TMVA $C"
                              ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
-                                 "$BDTDIR/BackgroundRates/${VX:0:2}" \
+                                 "${BDTDIR}/BackgroundRates/${VX:0:2}" \
                                  "${C/PointSource-/}" \
                                  ${SIMTYPE} ${VX} "${ATM}"
                          fi
