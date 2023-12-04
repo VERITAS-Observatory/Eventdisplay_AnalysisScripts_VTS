@@ -61,13 +61,13 @@ prepare_output_files()
 sort_output_files()
 {
     for E in "" _V4 _V5 _V6; do
-        sort -o runlist${E}.dat runlist${E}.dat
+        sort -n -o runlist${E}.dat runlist${E}.dat
     done            
-    sort -o runlist_V6_redHV.dat runlist_V6_redHV.dat
-    sort -o runlist_V6_UV.dat runlist_V6_UV.dat
-    sort -o runlist_NULL.dat runlist_NULL.dat
-    sort -o runlist_NODQM.dat runlist_NODQM.dat
-    sort -o runlist_NOTARGET.dat runlist_NOTARGET.dat
+    sort -n -o runlist_V6_redHV.dat runlist_V6_redHV.dat
+    sort -n -o runlist_V6_UV.dat runlist_V6_UV.dat
+    sort -n -o runlist_NULL.dat runlist_NULL.dat
+    sort -n -o runlist_NODQM.dat runlist_NODQM.dat
+    sort -n -o runlist_NOTARGET.dat runlist_NOTARGET.dat
 }
 
 get_epoch()
