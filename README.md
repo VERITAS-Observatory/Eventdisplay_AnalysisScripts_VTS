@@ -2,9 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/307321978.svg)](https://zenodo.org/badge/latestdoi/307321978)
 
-Run scripts for VERITAS.
-
-In version v483 and earlier, these scripts were part of the Eventdisplay package and in the scripts/VTS directory (e.g., [v483 script](https://github.com/VERITAS-Observatory/EventDisplay_v4/tree/v483/scripts/VTS)).
+Run scripts for the analysis of VERITAS data.
 
 ## Usage
 
@@ -20,6 +18,36 @@ Submission commands for a range of different batch systems can be found in [subm
 
 Instrument response functions (IRFs) are provided for each release of Eventdisplay.
 The following instructions are intended for use by the IRF processing team.
+
+### Adding a new IRF Epochs
+
+VERITAS IRFs are divided into epochs (summer/winter; throughput epochs; stages of the instrument like V4, V5, V6).
+Epochs are defined in [ParameterFiles/VERITAS.Epochs.runparameter](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/ParameterFiles/VERITAS.Epochs.runparameter) and should be aligned with the effort to derive calibration throughput corrections (see [internal VERITAS wiki page](https://veritas.sao.arizona.edu/wiki/Flux_Calibration_/_Energy_scale_2020)).
+
+Throughput corrections are defined in [ParameterFiles/ThroughputCorrection.runparameter](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/ParameterFiles/ThroughputCorrection.runparameter).
+
+Analysis scripts require a list of all V6 summer and winter periods, which are listed in [IRF_EPOCHS_WINTER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_WINTER.dat) and [IRF_EPOCHS_SUMMER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_SUMMER.dat).
+UV Filter IRF periods are defined in [IRF_EPOCHS_obsfilter.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_obsfilter.dat).
+No changes to the analysis scripts are required, with the exception of the update of the help message (list of epochs) in [./IRF.production.sh](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/scripts/IRF.production.sh).
+
+### MC Analysis - evndisp stage
+
+This is the stage requiring most computing resources and usually takes several days.
+
+Run for all analysis types (`AP`, `NN`) the following steps:
+
+```bash
+./IRF.generalproduction.sh CARE_RedHV EVNDISP
+./IRF.generalproduction.sh CARE_June2020 EVNDISP
+```
+
+Results are stored in `$VERITAS_IRFPRODUCTION_DIR/v490/AP/CARE_June2020/V6_2022_2023w_ATM61_gamma/`. For DESY productions, the evndisp files should be moved to `$VERITAS_IRFPRODUCTION_DIR/v4N/AP/CARE_June2020/V6_2022_2023w_ATM61_gamma/`.
+
+### MC Analysis - Lookup table filling
+
+### MC Analysis - DispBDT Angular Reconstruction training
+
+---
 
 ### BDT Training Preparation
 
@@ -46,4 +74,6 @@ The `$EVNDISPSYS"/bin/calculateCrabRateFromMC` tool is used to calculate rates a
 1. Generate effective ares for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS`.
 2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/IRF.anasumforTMVAOptimisation.sh` to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training).
 
-### IRF generation
+## Notes
+
+In version v483 and earlier, these scripts were part of the Eventdisplay package and in the scripts/VTS directory (e.g., [v483 script](https://github.com/VERITAS-Observatory/EventDisplay_v4/tree/v483/scripts/VTS)).
