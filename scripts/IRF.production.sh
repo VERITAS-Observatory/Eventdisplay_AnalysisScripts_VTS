@@ -30,8 +30,8 @@ optional parameters:
                              V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
                              V6_2022_2022s, V6_2022_2023w, V6_2023_2023s\")
 
-    [atmosphere]            atmosphere model(s) (21 = winter, 22 = summer)
-                            (default: \"21 22\")
+    [atmosphere]            atmosphere model(s) (21/61 = winter, 22/62 = summer)
+                            (default: \"61 62\")
                             
     [Rec ID]                reconstruction ID(s) (default: \"0 2 3 4 5\")
                             (see EVNDISP.reconstruction.runparameter)
@@ -140,9 +140,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 250 )
-    # ZENITH_ANGLES=( 40 )
-    # WOBBLE_OFFSETS=( 1.25 )
+    # NSB_LEVELS=( 75 )
+    # ZENITH_ANGLES=( 60 )
+    # WOBBLE_OFFSETS=( 2.0 )
     ######################################
     # TRAINMVANGRES production 
     # (assume 0.5 deg wobble is done)
