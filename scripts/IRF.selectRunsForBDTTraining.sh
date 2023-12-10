@@ -11,7 +11,7 @@
 #
 
 if [ $# -ne 4 ]; then
-     echo "./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file>"
+    echo "./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>"
      echo 
      echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
