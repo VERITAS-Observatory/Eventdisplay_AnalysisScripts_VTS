@@ -9,6 +9,9 @@ echo "
     Run anasum with pre-selection cuts to be used for MVA cut optimisation.
    
     This script has several hardwired parameters
+
+    Output directory is e.g.,
+    $VERITAS_USER_DATA_DIR/analysis/Results/v490/${VERITAS_ANALYSIS_TYPE:0:2}/BDTtraining/BackgroundRates/V6
 "    
 exit
 fi
