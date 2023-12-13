@@ -39,8 +39,7 @@ IRFTYPE=$2
 process_irfs()
 {
     EPOCHS=$(cat $4 | sort -u)
-# FIXEPOCH    EPOCHS="V6_2022_2023w"
-# FIXEPOCH    EPOCHS="V6_2023_2023s"
+    # FIX EPOCHS="V6_2023_2023s"
     for E in $EPOCHS
     do
         if [[ $2 != "CARE_UV_2212" ]]; then
@@ -52,12 +51,17 @@ process_irfs()
             fi
         fi
         echo $E $1 $2 $3
-        # for ID in 0 2 3 4 5
-        # for ID in 2 3 4 5
-        for ID in 0
-        do
-            ./IRF.production.sh $2 $1 $E $3 $ID
-        done
+        if [[ "$1" == "ANALYSETABLES" ]] || [[ "$1" == "EFFECTIVEAREAS" ]] || [[ "$1" == "COMBINEEFFECTIVEAREAS" ]]; then
+            for ID in 0 2 3 4 5
+            do
+                ./IRF.production.sh $2 $1 $E $3 $ID
+            done
+        else
+            for ID in 0
+            do
+                ./IRF.production.sh $2 $1 $E $3 $ID
+            done
+        fi
     done
 }
 
