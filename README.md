@@ -45,16 +45,41 @@ Results are stored in `$VERITAS_IRFPRODUCTION_DIR/v490/AP/CARE_June2020/V6_2022_
 
 ### MC Analysis - Lookup table filling
 
+Look up table filling per bin:
+
+```bash
+./IRF.generalproduction.sh CARE_June2020 MAKETABLES
+```
+
+following by combining the tables with
+
+```bash
+./IRF.generalproduction.sh CARE_June2020 COMBINETABLES
+```
+
+Tables need to be moved from `$VERITAS_IRFPRODUCTION_DIR/v490/${VERITAS_ANALYSIS_TYPE:0:2}/Tables` to `$VERITAS_EVNDISP_AUX_DIR/Tables`.
+
 ### MC Analysis - DispBDT Angular Reconstruction training
 
----
+```bash
+./IRF.generalproduction.sh CARE_June2020 TRAINMVANGRES
+```
+
+Files are copied and zipped to `$VERITAS_EVNDISP_AUX_DIR/DispBDTs` by:
+
+```bash
+cd $VERITAS_EVNDISP_AUX_DIR/DispBDTs
+./copy_DispBDT.sh
+```
+
+(take care for any errors printed to the screen)
 
 ### BDT Training Preparation
 
 Generate background training events using:
 
 ```bash
-./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file>
+./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
 ```
 
 Use e.g. `$VERITAS_DATA_DIR/processed_data_v490/AP/mscw/` for the source directory.
@@ -63,8 +88,10 @@ This script links mscw files from the archive to a target directory sorted by ep
 
 ### BDT Training
 
+(only for regular HV)
+
 - use `TRAINTMVA` in `./IRF.generalproduction.sh`.
-- copy TMVA BDT files to `$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs` using `$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/copy_GammaHadron_V6_BDTs.sh`.
+- copy TMVA BDT files to `$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs` using `$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/copy_GammaHadron_V6_BDTs.sh` (XML files are not zipped)
 
 ### Optimize Cuts
 
@@ -73,6 +100,10 @@ The `$EVNDISPSYS"/bin/calculateCrabRateFromMC` tool is used to calculate rates a
 
 1. Generate effective ares for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS`.
 2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/IRF.anasumforTMVAOptimisation.sh` to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training).
+
+### Effective area generation
+
+
 
 ## Notes
 
