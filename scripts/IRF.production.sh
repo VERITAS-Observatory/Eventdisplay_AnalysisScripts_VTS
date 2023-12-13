@@ -216,8 +216,12 @@ if [[ $ANATYPE = "NN"* ]]; then
    if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
    else
-       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+       if [ "${SIMTYPE}" = "CARE_RedHV" ]; then
+           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+       else
+           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+                     ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+       fi
    fi
 fi
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
