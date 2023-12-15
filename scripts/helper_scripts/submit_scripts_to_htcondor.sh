@@ -41,7 +41,7 @@ if ls ${JDIR}/*.condor 1> /dev/null 2>&1; then
     echo "$(grep -h request_memory $CONDORFILE)"  >>  ${SUBMITF}
     echo "$(grep -h request_disk $CONDORFILE)"  >>  ${SUBMITF}
     echo "getenv = True" >>  ${SUBMITF}
-    echo "max_materialize = 250" >>  ${SUBMITF}
+    echo "max_materialize = 500" >>  ${SUBMITF}
     # echo "priority = 150" >> ${SUBMITF}
     echo "queue file matching files *.sh" >> ${SUBMITF}
 

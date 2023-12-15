@@ -1,10 +1,6 @@
 #!/bin/bash
 # IRF production script (VERITAS)
 #
-# full list of epochs:
-# V6_2012_2013 V6_2013_2014 V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6
-#
-#
 
 if [ $# -lt 2 ]; then
 # begin help message
@@ -15,15 +11,15 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 
 required parameters:
 
-    <sim type>              simulation type 
+    <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
     
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, EFFECTIVEAREAS,)
-                             ANATABLESEFFAREAS, COMBINEEFFECTIVEAREAS,
+                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
+                             ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
-                             TRAINMVANGRES, EVNDISPCOMPRESS )
+                             TRAINMVANGRES, EVNDISPCOMPRESS)
     
 optional parameters:
     
@@ -32,10 +28,10 @@ optional parameters:
                             (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b 
                              V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
                              V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
-                             V6_2022_2022s\")
+                             V6_2022_2022s, V6_2022_2023w, V6_2023_2023s\")
 
-    [atmosphere]            atmosphere model(s) (21 = winter, 22 = summer)
-                            (default: \"21 22\")
+    [atmosphere]            atmosphere model(s) (21/61 = winter, 22/62 = summer)
+                            (default: \"61 62\")
                             
     [Rec ID]                reconstruction ID(s) (default: \"0 2 3 4 5\")
                             (see EVNDISP.reconstruction.runparameter)
@@ -144,9 +140,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 250 )
-    # ZENITH_ANGLES=( 40 )
-    # WOBBLE_OFFSETS=( 1.25 )
+    # NSB_LEVELS=( 75 )
+    # ZENITH_ANGLES=( 60 )
+    # WOBBLE_OFFSETS=( 2.0 )
     ######################################
     # TRAINMVANGRES production 
     # (assume 0.5 deg wobble is done)
@@ -193,24 +189,41 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
 elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [ "${SIMTYPE}" = "GRISU" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+   else
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   fi
 else
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
-             ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+   else
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+   fi
 fi
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
-#    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
+       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
+   else
+       if [ "${SIMTYPE}" = "CARE_RedHV" ]; then
+           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
+       else
+           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
+                     ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+       fi
+   fi
 fi
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
-# CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
 CUTLIST=`echo $CUTLIST |tr '\r' ' '`
 CUTLIST=${CUTLIST//$'\n'/}
 
@@ -246,7 +259,7 @@ for VX in $EPOCH; do
        fi
        ######################
        # combine effective areas
-       if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]]; then
+       if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]] || [[ $IRFTYPE == "COMBINEPRESELECTEFFECTIVEAREAS" ]]; then
             for ID in $RECID; do
                 for CUTS in ${CUTLIST[@]}; do
                     echo "combine effective areas $CUTS"
@@ -267,7 +280,7 @@ for VX in $EPOCH; do
                 for ATM in $ATMOS; do
                     for C in ${CUTTYPES[@]}; do
                         echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
-                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining/"
+                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining"
                         MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         # list of background files
                         TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
@@ -304,7 +317,7 @@ for VX in $EPOCH; do
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                              echo "OPTIMIZE TMVA $C"
                              ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
-                                 "$BDTDIR/BackgroundRates/${VX:0:2}" \
+                                 "${BDTDIR}/BackgroundRates/${VX:0:2}" \
                                  "${C/PointSource-/}" \
                                  ${SIMTYPE} ${VX} "${ATM}"
                          fi
@@ -396,7 +409,7 @@ for VX in $EPOCH; do
 			            done #recID
                     ######################
                     # analyse effective areas
-                    elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]]; then
+                    elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
                         for ID in $RECID; do
                             for CUTS in ${CUTLIST[@]}; do
                                 echo "combine effective areas $CUTS"

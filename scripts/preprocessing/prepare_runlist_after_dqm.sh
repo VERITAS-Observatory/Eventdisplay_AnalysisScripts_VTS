@@ -58,6 +58,18 @@ prepare_output_files()
     echo -n "" > runlist_NOTARGET.dat
 }
 
+sort_output_files()
+{
+    for E in "" _V4 _V5 _V6; do
+        sort -n -o runlist${E}.dat runlist${E}.dat
+    done            
+    sort -n -o runlist_V6_redHV.dat runlist_V6_redHV.dat
+    sort -n -o runlist_V6_UV.dat runlist_V6_UV.dat
+    sort -n -o runlist_NULL.dat runlist_NULL.dat
+    sort -n -o runlist_NODQM.dat runlist_NODQM.dat
+    sort -n -o runlist_NOTARGET.dat runlist_NOTARGET.dat
+}
+
 get_epoch()
 {
     E="_V6"
@@ -94,7 +106,7 @@ fill_timemask()
 
 prepare_output_files
 
-RUNS=$(find ${FILEDIR} -name "$FILETYPE")
+RUNS=$(find ${FILEDIR} -type f -name "$FILETYPE" | sort -n)
 
 for RF in $RUNS
 do
@@ -118,11 +130,40 @@ do
     # RUNINFO file
     INFOFILE="${R}/${R}.runinfo"
     if [[ -e ${DBTEXTFILE} ]]; then
+        #####
+        # Check target
+        if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${TARGETFILE}") ]]; then
+            echo "   RUN $R no target file ${TARGETFILE} found (NOTARGETFILE CUT APPLIED)"
+            echo ${R} >> runlist_NOTARGETFILE.dat
+            continue
+        fi
+        # TARGET string
+        TARGETSTRING=$(tar -axf ${DBTEXTFILE} ${TARGETFILE} -O)
+        echo $TARGETSTRING
+        # skip targets DARK...
+        RTARGET=$(echo "${TARGETSTRING}" | cut -d '|' -f 1 | grep -v source_id)
+        echo "   RUN $R  $RTARGET"
+        if [[ $RTARGET == "DARK_"* ]]; then
+            echo "   RUN $R DARK_ target (DARKTARGET CUT APPLIED)"
+            continue
+        fi
+        # skip targets bias curves
+        if [[ $RTARGET == "biasC"* ]]; then
+            echo "   RUN $R biasCurve target (BIASCURVETARGET CUT APPLIED)"
+            continue
+        fi
+        # skip laser and flasher runs
+        if [[ $RTARGET == "laser" ]] || [[ $RTARGET == "flasher" ]]; then
+            echo "   RUN $R $TARGET target (FLASHER CUT APPLIED)"
+            continue
+        fi
         if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${DQMFILE}") ]]; then
             echo "   RUN $R no DQM file ${DQMFILE} found (NODQMFILE CUT APPLIED)"
             echo ${R} >> runlist_NODQM.dat
             continue
         fi
+        #####
+        # Check DQM
         # DQM string
         DQMSTRING=$(tar -axf ${DBTEXTFILE} ${DQMFILE} -O)
         echo $DQMSTRING
@@ -148,6 +189,8 @@ do
                 continue
             fi
         fi
+        INFOSTRING=$(tar -axf ${DBTEXTFILE} ${INFOFILE} -O)
+        echo $INFOSTRING
         # usable duration
         RUSABLE=$(echo "${DQMSTRING}" | cut -d '|' -f 6 ${RDQM} | grep -v usable_duration)
         if [[ $RUSABLE != "NULL" ]]; then
@@ -162,13 +205,11 @@ do
             continue
         fi
         # data duration frum run info
-        INFOSTRING=$(tar -axf ${DBTEXTFILE} ${INFOFILE} -O)
-        echo $INFOSTRING
         RDATAT1=$(echo "${INFOSTRING}" | cut -d '|' -f 7 ${RDQM} | grep -v data_start_time)
         RDATAT2=$(echo "${INFOSTRING}" | cut -d '|' -f 8 ${RDQM} | grep -v data_end_time)
         echo "  RUN $R $RDATAT1 $RDATAT2"
-        RDATAT1=$(date -d "$RDATAT1" +%s)
-        RDATAT2=$(date -d "$RDATAT2" +%s)
+        RDATAT1=$(date -u -d "$RDATAT1" +%s)
+        RDATAT2=$(date -u -d "$RDATAT2" +%s)
         DATADURATION=$((RDATAT2 - RDATAT1))
         echo "  RUN $R DURATION $DATADURATION"
         if [ $DATADURATION -lt  120 ]; then
@@ -184,26 +225,6 @@ do
                 fill_timemask $R $TCUT
             done
         fi
-        if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${TARGETFILE}") ]]; then
-            echo "   RUN $R no target file ${TARGETFILE} found (NOTARGETFILE CUT APPLIED)"
-            echo ${R} >> runlist_NOTARGETFILE.dat
-            continue
-        fi
-        # TARGET string
-        TARGETSTRING=$(tar -axf ${DBTEXTFILE} ${TARGETFILE} -O)
-        echo $TARGETSTRING
-        # skip targets DARK...
-        RTARGET=$(echo "${TARGETSTRING}" | cut -d '|' -f 1 | grep -v source_id)
-        echo "   RUN $R  $RTARGET"
-        if [[ $RTARGET == "DARK_"* ]]; then
-            echo "   RUN $R DARK_ target (DARKTARGET CUT APPLIED)"
-            continue
-        fi
-        # skip laser and flasher runs
-        if [[ $RTARGET == "laser" ]] || [[ $RTARGET == "flasher" ]]; then
-            echo "   RUN $R $TARGET target (FLASHER CUT APPLIED)"
-            continue
-        fi
     else
         RSTATUS="NODQMFILE"
         RCUTMASK="NULL"
@@ -211,3 +232,5 @@ do
     echo "   $R $RSTATUS $RUSABLE $RCUTMASK"
     fill_run $R $RCAT
 done
+
+sort_output_files

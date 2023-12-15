@@ -68,6 +68,8 @@ mkdir -p $LOGDIR
 # EffAreaFile
 if [[ $CUTTYPE == *"Moderate"* ]]; then
     EFFFILE=effArea-v490-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Moderate-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
+elif [[ $CUTTYPE == *"SuperSoft"* ]]; then
+    EFFFILE=effArea-v490-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
 elif [[ $CUTTYPE == *"Soft"* ]]; then
     EFFFILE=effArea-v490-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Soft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
 elif [[ $CUTTYPE == *"Hard"* ]]; then

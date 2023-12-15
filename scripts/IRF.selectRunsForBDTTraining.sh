@@ -1,3 +1,4 @@
+#!/bin/bash
 # select mscw files for BDT training
 # 
 # selection is based on 
@@ -10,7 +11,7 @@
 #
 
 if [ $# -ne 4 ]; then
-     echo "./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file>"
+    echo "./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>"
      echo 
      echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
@@ -47,7 +48,7 @@ else
     FLIST=$(find ${2} -name "[6-9, 10]*[0-9].mscw.root"  | sed 's/\.root$//')
 fi
 
-mkdir -p ${2}
+mkdir -p ${3}
 
 linkFile()
 {
