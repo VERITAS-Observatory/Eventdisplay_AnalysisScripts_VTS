@@ -39,12 +39,6 @@ echo
 mkdir -p ${ODIR}
 echo -e "Output files will be written to:\n ${ODIR}"
 
-# run scripts are written into this directory
-DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/V2DL3"
-mkdir -p "$LOGDIR"
-echo -e "Log files will be written to:\n $LOGDIR"
-
 check_conda_installation()
 {
     if command -v conda &> /dev/null; then
