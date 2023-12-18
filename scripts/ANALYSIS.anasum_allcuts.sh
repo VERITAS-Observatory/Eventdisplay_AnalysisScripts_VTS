@@ -39,9 +39,9 @@ do
             $EVNDISPSYS/../EventDisplay_Release_${EDVERSION}/preprocessing/parameter_files/anasum.runparameter.dat 
     else
         CF=${C/NN/}
-        mkdir -p $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${C}
+        mkdir -p $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${CF}
          ./ANALYSIS.v2dl3.sh ${RUNL} \
-             $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${C} \
-             ${C}
+             $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${CF} \
+             ${CF}
     fi
 done
