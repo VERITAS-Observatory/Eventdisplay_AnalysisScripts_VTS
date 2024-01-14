@@ -41,6 +41,9 @@ mkdir -p ${ODIR}
 chmod g+w ${ODIR}
 rm -f "$ODIR/$ONAME*"
 
+# quality cuts
+QUALITYCUTS="size>1.&&ntubes>log10(4.)&&width>0.&&width<2.&&length>0.&&length<10.&&tgrad_x<100.*100.&&loss<0.20&&cross<20.0&&Rcore<2000."
+
 # fraction of events to use for training,
 # remaining events will be used for testing
 TRAINTESTFRACTION=0.5
@@ -51,7 +54,8 @@ TRAINTESTFRACTION=0.5
     "$TRAINTESTFRACTION" \
     "$RECID" \
     "$TELTYPE" \
-    "${BDT}" > "$ODIR/$ONAME-$BDT.log"
+    "${BDT}" \
+    "${QUALITYCUTS}" > "$ODIR/$ONAME-$BDT.log"
 
 cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
 cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/
