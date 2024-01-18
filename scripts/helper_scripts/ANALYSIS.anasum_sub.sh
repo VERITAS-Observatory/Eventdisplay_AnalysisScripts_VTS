@@ -77,8 +77,8 @@ prepare_irf_string()
 }
 
 if [[ $FLIST == "NOTDEFINED" ]]; then
-    echo "Preparing run list"
     FLIST="$ODIR/$ONAME.runlist"
+    echo "Preparing run list $FLIST"
     rm -f $FLIST
     echo "* VERSION 6" > $FLIST
     echo "" >> $FLIST
