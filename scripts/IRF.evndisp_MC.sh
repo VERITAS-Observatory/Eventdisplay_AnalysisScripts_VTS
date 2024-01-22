@@ -177,20 +177,20 @@ elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     fi
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
 #######################################################
-elif [ ${SIMTYPE} == "CARE_June2020" ]; then
+elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     VBFNAME=$(find ${SIMDIR} -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
     echo _${WOFFSET}wob_${NOISE}MHz
     echo $SIMDIR/Zd${ZA}/merged/Data/
 #######################################################
-elif [ ${SIMTYPE:0:4} == "CARE" ]; then
-    # input files (observe that these might need some adjustments)
-    if [[ $PARTICLE == "1" ]]; then
-       VBFNAME=$(find ${SIMDIR}/ -name "gamma_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
-    elif [[ $PARTICLE == "2" ]]; then
-       VBFNAME=$(find ${SIMDIR} -name "electron_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
-    elif [[ $PARTICLE == "14" ]]; then
-       VBFNAME=$(find ${SIMDIR} -name "proton_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
-    fi
+# elif [ ${SIMTYPE:0:4} == "CARE" ]; then
+#    # input files (observe that these might need some adjustments)
+#    if [[ $PARTICLE == "1" ]]; then
+#       VBFNAME=$(find ${SIMDIR}/ -name "gamma_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
+#    elif [[ $PARTICLE == "2" ]]; then
+#       VBFNAME=$(find ${SIMDIR} -name "electron_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
+#    elif [[ $PARTICLE == "14" ]]; then
+#       VBFNAME=$(find ${SIMDIR} -name "proton_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
+#    fi
 fi
 #######################################################
 
