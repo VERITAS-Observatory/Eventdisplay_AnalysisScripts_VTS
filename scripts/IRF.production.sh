@@ -158,7 +158,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # (END TEMPORARY)
     ######################################
 elif [[ "${SIMTYPE:0:12}" = "CARE_Jan2024" ]]; then
-    SIMDIR="/lustre/fs23/group/veritas/users/maierg/simpipe_test/data_2/ATM${ATMOS}"
+    SIMDIR="${VERITAS_USER_DATA_DIR}/simpipe_test/data_2/ATM${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     OBSTYPE=${SIMTYPE:13}
     echo $OBSTYPE "${SIMTYPE:0:12}"
@@ -166,10 +166,6 @@ elif [[ "${SIMTYPE:0:12}" = "CARE_Jan2024" ]]; then
     echo $SIMDIR
     NSB_LEVELS=$(find ${SIMDIR}/Zd${ZENITH_ANGLES[0]}/MERGEVBF_${OBSTYPE}/ -type f -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort | uniq | paste -sd ' ')
     WOBBLE_OFFSETS=$(find ${SIMDIR}/Zd${ZENITH_ANGLES[0]}/MERGEVBF_${OBSTYPE}/ -type f -name "*.zst" -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}'| sort | uniq | paste -sd ' ')
-#    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/*.vbf.zst | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
-#    NSB_LEVELS=( 200 )
-#    ZENITH_ANGLES=( 20 )
-#    WOBBLE_OFFSETS=( 0.5 )
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
@@ -394,7 +390,7 @@ for VX in $EPOCH; do
                           SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
                        elif [[ ${SIMTYPE:0:12} = "CARE_Jan2024" ]]; then
                           OBSTYPE=${SIMTYPE:13}
-                          SIMDIR="/lustre/fs23/group/veritas/users/maierg/simpipe_test/data/ATM${ATM}/Zd${ZA}/MERGEVBF_${OBSTYPE}/"
+                          SIMDIR="${VERITAS_USER_DATA_DIR}/simpipe_test/data/ATM${ATM}/Zd${ZA}/MERGEVBF_${OBSTYPE}/"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
