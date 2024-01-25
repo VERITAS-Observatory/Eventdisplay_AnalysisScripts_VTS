@@ -118,7 +118,7 @@ for CUTS in ${CUTLIST[@]}; do
                 exit 1
             fi
             
-            METH="GEO"
+            METH="${VERITAS_ANALYSIS_TYPE/_/-}"
 	        CUTSNAME=`basename $CUTSFILE`
             # Generate base file name based on cuts file, extended and point source radial acceptances are the same
             CUTSNAME=${CUTSNAME##ANASUM.GammaHadron-}
@@ -131,7 +131,7 @@ for CUTS in ${CUTLIST[@]}; do
                 echo $CUTSNAME
             fi
             OFILE="radialAcceptance-${IRFVERSION}-${AUX}-${SIM}-$CUTSNAME-${METH}-$VX-T$TELES"
-            ODIR="$VERITAS_IRFPRODUCTION_DIR/${IRFVERSION}/RadialAcceptances"
+            ODIR="$VERITAS_IRFPRODUCTION_DIR/${IRFVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/RadialAcceptances"
             mkdir -p "$ODIR"
             chmod g+w "$ODIR"
             echo -e "Output files will be written to:\n$ODIR"

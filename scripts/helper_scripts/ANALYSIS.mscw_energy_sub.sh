@@ -117,6 +117,10 @@ if [[ DISPBDT != "0" ]]; then
     MOPT="$MOPT -tmva_disperror_weight 50"
     # note: loss cuts needs to be equivalent to that used in training
     MOPT="$MOPT -maxloss=0.2"
+    # looser cuts in mscw
+    # MOPT="$MOPT -maxloss=0.5"
+    # MOPT="$MOPT -use_evndisp_selected_images=0"
+    # # use interset
     # MOPT="$MOPT -disp_use_intersect"
     # unzip xml files
     cp -v -f ${DISPDIR}/*.xml.gz ${TEMPDIR}/
