@@ -3,11 +3,11 @@
 # individual tar ball depending on the data level
 #
 
-if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
+if [ ! -n "$2" ] || [ "$1" = "-h" ]; then
 echo "
 Pack Eventdisplay log files for each data level.
 
-./pack_log_files.sh <production directory>
+./pack_log_files.sh <production directory> <sub dir list>
 
 Production directory is e.g., $VERITAS_DATA_DIR/processed_data_v490/AP/
 
@@ -17,7 +17,7 @@ fi
 
 
 PDIR="${1}"
-DLIST="pack_log_files_sub_dir.dat"
+DLIST="${2}"
 
 DDIRS=$(cat "$DLIST")
 
