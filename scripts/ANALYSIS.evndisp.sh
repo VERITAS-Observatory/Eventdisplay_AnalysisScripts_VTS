@@ -12,25 +12,28 @@ if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
 EVNDISP data analysis: submit jobs from a simple run list
 
-ANALYSIS.evndisp.sh <runlist> [output directory] [runparameter file] [calibration] [teltoana] [calibration file name]
+ANALYSIS.evndisp.sh <runlist> [output directory] [runparameter file] [preprocessing skip] [calibration] [teltoana] [calibration file name]
 
 required parameters:
-			
-    <runlist>               simple run list with one run number per line.    
-    
+
+    <runlist>               simple run list with one run number per line.
+
 optional parameters:
-    
+
     [output directory]     directory where output evndisp files will be stored.
                            Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
 
 None of the following options are usually required:
-     
+
     [runparameter file]    file with integration window size and reconstruction cuts/methods,
                            expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
                            Default: EVNDISP.reconstruction.runparameter.AP.v4x
 
-    [calibration]      
-          0                run analysis only; neither tzero nor pedestal calculation are performed, 
+   [preprocessing skip]    Skip if run is already processed and found in the preprocessing
+                           directory (1=skip, 0=run the analysis; default 0)
+
+    [calibration]
+          0                run analysis only; neither tzero nor pedestal calculation are performed,
                            must have the calibration results available in
                            $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?
           1                run analysis & pedestal & average tzero calculation (default)
@@ -38,7 +41,7 @@ None of the following options are usually required:
           3                run analysis & average tzero calculation only
           4                run analysis & pedestal & average tzero calculation are performed;
                            laser run number is taken from calibration file,
-                           gains taken from $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?/<laserrun>.gain.root 
+                           gains taken from $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?/<laserrun>.gain.root
           5                run pedestal & average tzero calculation only (no analysis step)
 
 
@@ -88,9 +91,10 @@ if [[ $EDVERSION == "v487" ]]; then
     ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v48x"
 fi
 [[ "$3" ]] && ACUTS=$3 || ACUTS=${ACUTS_AUTO}
-[[ "$4" ]] && CALIB=$4 || CALIB=1
-[[ "$5" ]] && TELTOANA=$5 || TELTOANA=1234
-[[ "$6" ]] && CALIBFILE=$6 || CALIBFILE=calibrationlist.dat
+[[ "$4" ]] && SKIP=$4 || SKIP=0
+[[ "$5" ]] && CALIB=$5 || CALIB=1
+[[ "$6" ]] && TELTOANA=$6 || TELTOANA=1234
+[[ "$7" ]] && CALIBFILE=$7 || CALIBFILE=calibrationlist.dat
 # VPM is on by default
 VPM=1
 # Download file to disk (if not available)
@@ -107,12 +111,12 @@ if [ ! -f "$RLIST" ] ; then
 fi
 FILES=`cat "$RLIST"`
 
-NRUNS=`cat "$RLIST" | wc -l ` 
+NRUNS=`cat "$RLIST" | wc -l `
 echo "total number of runs to analyze: $NRUNS"
 echo
 # run scripts are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/EVNDISP.ANADATA"
+LOGDIR="$VERITAS_USER_LOG_DIR/EVN.${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
@@ -122,10 +126,7 @@ SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
 SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
 SUBC=`eval "echo \"$SUBC\""`
 
-TIMETAG=`date +"%s"`
-TIMESUFF="-$(date +%s)"
 if [[ $SUBC == *parallel* ]]; then
-   TIMESUFF=""
    touch $LOGDIR/runscripts.sh
 fi
 
@@ -184,14 +185,16 @@ do
     echo "Now analysing run $AFILE"
 
     # check if file is on disk
-    FDISK=$(file_on_disk $AFILE)
-    if [[ $FDISK == "TRUE" ]]; then
-        echo "RUN $AFILE already proccessed; skipping"
-        continue
+    if [[ $SKIP == "1" ]]; then
+        FDISK=$(file_on_disk $AFILE)
+        if [[ $FDISK == "TRUE" ]]; then
+            echo "RUN $AFILE already proccessed; skipping"
+            continue
+        fi
     fi
     echo "Processing $AFILE"
 
-    FSCRIPT="$LOGDIR/EVN.data-${AFILE}${TIMESUFF}"
+    FSCRIPT="${LOGDIR}/EVN.run${AFILE}"
 
     if [[ ${AFILE} -lt 100000 ]]; then
         DBRUNFIL="${DBTEXTDIRECTORY}/${AFILE:0:1}/${AFILE}.tar.gz"
@@ -228,18 +231,18 @@ do
         echo "VPM is switched on (default)"
     else
         echo "VPM bool is set to $VPM (switched off)"
-    fi  
+    fi
 
     if [[ $TELTOANA == "1234" ]]; then
         echo "Telescope combination saved in the DB is analyzed (default)"
     else
         echo "Analyzed telescopes: $TELTOANA"
-    fi 
+    fi
     if [[ $CALIB == "4" ]]; then
             echo "read calibration from calibration file $CALIBFILE"
     else
             echo "read calibration from VOffline DB (default)"
-    fi 
+    fi
 
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
@@ -248,7 +251,7 @@ do
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
-        
+
         echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
@@ -268,12 +271,12 @@ do
             echo
         fi
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh   
+        $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log" 
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     elif [[ "$SUBC" == *test* ]]; then
         echo "TESTING SCRIPT $FSCRIPT.sh"
     fi
