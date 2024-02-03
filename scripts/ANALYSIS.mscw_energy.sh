@@ -113,7 +113,7 @@ for AFILE in $FILES
 do
     BFILE="${INPUTDIR%/}/$AFILE.root"
 
-    # check if file is on disk
+    # check if file already has been processed
     if [[ $SKIP == "1" ]]; then
         TMPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
         if [[ -d "$TMPDIR" ]]; then

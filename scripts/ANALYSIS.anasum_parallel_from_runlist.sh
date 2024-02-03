@@ -15,31 +15,34 @@ echo "
 ANASUM parallel data analysis: submit jobs using a simple run list
 
 ANALYSIS.anasum_parallel_from_runlist.sh <run list> <output directory> <cut set> <background model> \
-[run parameter file] [mscw directory] [sim type]
+[run parameter file] [mscw directory] [preprocessing skip] [sim type]
 
 required parameters:
 
     <runlist>               simple run list with one run number per line.
-        
+
     <output directory>      anasum output files are written to this directory
-                        
+
     <cut set>               hardcoded cut sets predefined in the script
                             (i.e., moderate2tel, soft2tel, hard3tel, supersoft, supersoftNN2tel)
                             (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre, NTel2SuperSoftPre)
-    
+
     <background model>      background model
-                            (RE = reflected region, RB = ring background, 
+                            (RE = reflected region, RB = ring background,
                             IGNOREACCEPTANCE = RE without ACCEPTANCE,
                             IGNOREIRF = RE without ACCEPTANCE/EFFAREA)
-    
+
 optional parameters:
 
-    [run parameter file]    anasum run parameter file (located in 
+    [run parameter file]    anasum run parameter file (located in
                             \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
                             default is ANASUM.runparameter)
 
     [mscw directory]        directory containing the mscw.root files.
 			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
+
+    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
+                            directory (1=skip, 0=run the analysis; default 0)
 
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
@@ -66,7 +69,8 @@ CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
-[[ "$7" ]] && SIMTYPE=$7 || SIMTYPE="DEFAULT"
+[[ "$7" ]] && SKIP=$7 || SKIP=0
+[[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 
 ANATYPE="AP"
 DISPBDT="1"
@@ -178,7 +182,7 @@ fi
 
 # run scripts are written into this directory
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM-${DATE}/submit.ANASUM.${CUTS}-${DATE}-$(uuidgen)"
+LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
@@ -210,12 +214,15 @@ echo "total number of runs to analyze: $NRUNS"
 for RUN in ${RUNS[@]}; do
 
     # check if file already has been processed
-    ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
-    if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
-        echo "$RUN already processed (${ARCHIVEDIR}/${RUN}.anasum.root)"
-        echo "skipping run"
-        continue
+    if [[ $SKIP == "1" ]]; then
+        ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
+        if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
+            echo "$RUN already processed (${ARCHIVEDIR}/${RUN}.anasum.root)"
+            echo "skipping run"
+            continue
+        fi
     fi
+    echo "Processing $RUN"
 
     TMPINDIR="$INDIR"
     # check for mscw file
@@ -253,7 +260,7 @@ for RUN in ${RUNS[@]}; do
         -e "s|RUNPARAM|$RUNP|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
-    
+
     # run locally or on cluster
     SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
     SUBC=`eval "echo \"$SUBC\""`
