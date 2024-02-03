@@ -161,6 +161,7 @@ else
 fi
 
 
+# directory schema
 file_on_disk()
 {
     ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_$EDVERSION/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
@@ -260,18 +261,14 @@ do
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        if [[ ${EDVERSION} == "v487" ]]; then
-           condor_submit $FSCRIPT.sh.condor
-        else
-            echo
-            echo "-------------------------------------------------------------------------------"
-            echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-            echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-            echo "-------------------------------------------------------------------------------"
-            echo
-        fi
-    elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        echo
+        echo "-------------------------------------------------------------------------------"
+        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "-------------------------------------------------------------------------------"
+        echo
+elif [[ $SUBC == *sbatch* ]]; then
+    $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
