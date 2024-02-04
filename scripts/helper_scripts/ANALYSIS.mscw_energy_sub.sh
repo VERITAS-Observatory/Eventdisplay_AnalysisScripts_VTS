@@ -117,6 +117,9 @@ if [[ DISPBDT != "0" ]]; then
     MOPT="$MOPT -tmva_disperror_weight 50"
     # note: loss cuts needs to be equivalent to that used in training
     MOPT="$MOPT -maxloss=0.2"
+    # MOPT="$MOPT -minwidth=0.02"
+    MOPT="$MOPT -minfui=0.2"
+    # MOPT="$MOPT -minfitstat=3"
     # looser cuts in mscw
     # MOPT="$MOPT -maxloss=0.5"
     # MOPT="$MOPT -use_evndisp_selected_images=0"
@@ -159,7 +162,7 @@ fi
 cp -f -v $TEMPDIR/$BFILE.mscw.root $MSCWDATAFILE
 rm -f $TEMPDIR/$BFILE.mscw.root
 rm -f $TEMPDIR/$BFILE.root
-    
+
 # write info to log
 echo "RUN$BFILE MSCWLOG ${MSCWLOGFILE}"
 echo "RUN$BFILE MSCWDATA $MSCWDATAFILE"
