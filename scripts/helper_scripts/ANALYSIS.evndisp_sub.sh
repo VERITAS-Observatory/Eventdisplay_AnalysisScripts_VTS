@@ -97,15 +97,19 @@ unpack_db_textdirectory()
         SRUN=${RRUN:0:2}
     fi
     DBRUNFIL="${DBTEXTDIRECTORY}/${SRUN}/${RRUN}.tar.gz"
+    echo "DBTEXT FILE for $RRUN $DBRUNFIL" >&2
     if [[ -e ${DBRUNFIL} ]]; then
         mkdir -p ${TMP_DBTEXTDIRECTORY}/${SRUN}
         tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/${SRUN}/
+    else
+        echo "DBTEXT FILE not found ($DBRUNFIL)" >&2
     fi
     echo "${TMP_DBTEXTDIRECTORY}/${SRUN}/${RRUN}/${RRUN}.laserrun"
 }
 
 # Unpack DBText information (replacement to DB calls)
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
+    echo "UNPACKING DBTEXT from ${DBTEXTDIRECTORY}"
     TMP_DBTEXTDIRECTORY="${TEMPDIR}/DBTEXT"
     TMP_LASERRUN=$(unpack_db_textdirectory $RUN $TMP_DBTEXTDIRECTORY)
     LRUNID=$(cat ${TMP_LASERRUN} | grep -v run_id | awk -F "|" '{print $1}')
@@ -114,6 +118,7 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
         echo "unpacking $LL"
         unpack_db_textdirectory $LL $TMP_DBTEXTDIRECTORY
     done
+    echo "DBTEXT directory $(ls -l $TMP_DBTEXTDIRECTORY)"
 
     OPT=( -dbtextdirectory ${TMP_DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter )
     echo "${OPT[@]}"
@@ -191,7 +196,9 @@ fi
 
 ## double pass correction
 # OPT+=( -nodp2005 )
-# OPT+=( -writeimagepixellist )
+
+# write image pixel list (increase file size by 30%)
+OPT+=( -writeimagepixellist )
 
 #########################################
 # run eventdisplay
