@@ -2,7 +2,9 @@
 # script to analyse VTS raw files (VBF) with eventdisplay
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source $EVNDISPSYS/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
 RUN=RUNFILE
