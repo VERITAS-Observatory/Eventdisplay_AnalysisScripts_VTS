@@ -2,7 +2,9 @@
 # script to combine anasum runs
 #
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source $EVNDISPSYS/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
 RUNLIST=RRUNLIST
@@ -22,6 +24,15 @@ else
     RUNLISTSTRING="-l ${RUNLIST}"
 fi
 
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/anasum
+    fi
+}
+
 $EVNDISPSYS/bin/anasum \
     -i 1 \
     ${RUNLISTSTRING} \
@@ -35,6 +46,8 @@ TMPTARGET=$(echo $RUNINFO | cut -d\  -f7- )
 if [[ ${TMPTARGET} == "Crab" ]]; then
     root -l -q -b "$EVNDISPSYS/macros/VTS/print_sensitivity.C(\"${DDIR}/${OUTFILE}.root\", \"TITLE\" )" >> ${DDIR}/${OUTFILE}.log
 fi
+
+echo "$(inspect_executables)" >> ${DDIR}/${OUTFILE}.log
 
 # log file into root file
 $EVNDISPSYS/bin/logFile \

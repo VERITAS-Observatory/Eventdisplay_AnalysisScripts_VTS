@@ -2,7 +2,9 @@
 # script to analyse files with lookup tables
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source $EVNDISPSYS/setObservatory.sh VTS
+fi
 set -e
 
 # parameters replaced by parent script using sed
@@ -74,6 +76,16 @@ if [ ! -f "$TABFILE" ]; then
     exit 1
 fi
 
+
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/mscw_energy
+    fi
+}
+
 get_disp_dir()
 {
     if [ "$HVSETTINGS" == "obsLowHV" ]; then
@@ -141,6 +153,8 @@ $EVNDISPSYS/bin/mscw_energy         \
     -arrayrecid=$RECID              \
     -inputfile $TEMPDIR/$BFILE.root \
     -writeReconstructedEventsOnly=1 &> ${MSCWLOGFILE}
+
+echo "$(inspect_executables)" >> ${MSCWLOGFILE}
 
 # write DISP directory into log file (as tmp directories are used)
 if [[ DISPBDT != "NOTSET" ]]; then

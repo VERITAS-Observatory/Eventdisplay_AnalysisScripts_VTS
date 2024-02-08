@@ -2,7 +2,9 @@
 # script to analyse one run with anasum
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source $EVNDISPSYS/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
 FLIST=FILELIST
@@ -43,6 +45,15 @@ prepare_atmo_string()
        ATMO=${ATMO/62/61}
     fi
     echo "$ATMO"
+}
+
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/anasum
+    fi
 }
 
 prepare_irf_string()
@@ -94,7 +105,7 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
 
     REPLACESIMTYPEEff=$(prepare_irf_string $EPOCH $OBSL $SIMTYPE 0)
     REPLACESIMTYPERad=$(prepare_irf_string $EPOCH $OBSL $SIMTYPE 1)
-    
+
     echo "RUN $RUNNUM at epoch $EPOCH and atmosphere $ATMO (Telescopes $TELTOANA SIMTYPE $REPLACESIMTYPEEff $REPLACESIMTYPERad)"
     # do string replacements
     if [[ "$BACKGND" == *IGNOREIRF* ]]; then
@@ -139,7 +150,7 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
             CUTFILE=${CUTFILE/NTel3/NTel2}
         fi
     fi
-    
+
     echo "EFFAREA $EFFAREARUN"
     echo "RADACCEPTANCE $RADACCRUN"
     echo "CUTFILE $CUTFILE"
@@ -162,6 +173,8 @@ $EVNDISPSYS/bin/anasum   \
     -l $FLIST            \
     -d $INDIR            \
     -o $OUTPUTDATAFILE   &> $OUTPUTLOGFILE
+
+echo "$(inspect_executables)" >> ${OUTPUTLOGFILE}
 
 if [[ -e "$OUTPUTLOGFILE" ]]; then
     $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$OUTPUTLOGFILE"

@@ -17,16 +17,16 @@ required parameters:
                             (with effective areas, file names, etc.)
                             or short run list
                             (run numbers only)
-        
+
     <anasum directory>      input directory containing anasum root files
-        
+
 optional parameters:
 
     [output file name]      name of combined anasum file
                             (written to same location as anasum files)
                             default: anasum.combined
 
-    [run parameter file]    anasum run parameter file (located in 
+    [run parameter file]    anasum run parameter file (located in
                             \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
                             default is ANASUM.runparameter)
 
@@ -50,7 +50,7 @@ OUTFILE=${OUTFILE%%.root}
 [[ "$4" ]] && RUNP=$4 || RUNP="ANASUM.runparameter"
 
 # Check that run list exists
-if [ ! -f "$RUNLIST" ]; then
+if [[ ! -f "$RUNLIST" ]]; then
     echo "Error, anasum runlist $RUNLIST not found, exiting..."
     exit 1
 fi
@@ -66,8 +66,9 @@ fi
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/submit.ANASUM.ANADATA-${DATE}-$(uuidgen)"
+LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.COMBINE-${DATE}-$(uuidgen)"
 mkdir -p "$LOGDIR"
+echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_combine_sub"
