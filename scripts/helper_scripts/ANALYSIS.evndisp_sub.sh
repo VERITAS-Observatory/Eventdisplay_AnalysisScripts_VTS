@@ -158,7 +158,7 @@ fi
 
 # None of the following command line options is needed for the standard analysis!
 
-## Read gain and toff from VOFFLINE DB requiring a special version of analysis 
+## Read gain and toff from VOFFLINE DB requiring a special version of analysis
 # OPT+=( -readCalibDB version_number )
 ## Warning: this version must already exist in the DB
 
@@ -175,7 +175,7 @@ if [[ $CALIB == "1" || $CALIB == "3" || $CALIB == "4" || $CALIB == "5" ]]; then
         -calibrationsummin=50 \
         -reconstructionparameter "$ACUTS" \
         "${OPT[@]}" \
-        -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log" 
+        -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log"
     echo "$(inspect_executables)" >> "$LOGDIR/$RUN.tzero.log"
     echo "RUN$RUN TZEROLOG $LOGDIR/$RUN.tzero.log"
 fi
@@ -197,8 +197,8 @@ fi
 ## double pass correction
 # OPT+=( -nodp2005 )
 
-# write image pixel list (increase file size by 30%)
-OPT+=( -writeimagepixellist )
+# write image pixel list (increase file size by 40%)
+# OPT+=( -writeimagepixellist )
 
 #########################################
 # run eventdisplay
@@ -237,7 +237,7 @@ if [[ $CALIB != "5" ]]; then
     echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
     rm -f "$TEMPDIR/$RUN.root"
     # DST cp -f -v $TEMPDIR/$RUN.dst.root $DATAFILE
-fi  
+fi
 
 ########################################
 # cleanup raw data (if downloaded)
