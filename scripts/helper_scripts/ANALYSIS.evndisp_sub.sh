@@ -117,9 +117,18 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     RUNINFO=$(sub_dir ${TMP_DBTEXTDIRECTORY} ${RUN})/${RUN}/${RUN}.runinfo
     RUNDATE=$(get_run_date ${RUNINFO})
     if [[ ! -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
-        RUNONDISK="file not found"
+        # TMP for preprocessing
+        if [[ ! -e /lustre/fs23/group/veritas/data/data/${RUNDATE}/${RUN}.cvbf ]]; then
+            RUNONDISK="file not found"
+        else
+            if [ -n "$EVNDISP_APPTAINER" ]; then
+                OPT+=( -sourcefile /lustre/fs23/group/veritas/data/data/${RUNDATE}/${RUN}.cvbf )
+            fi
+        fi
+        # END TMP
     fi
 else
+    # original way accessing the VERITAS DB
     RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
 fi
 if [[ ${RUNONDISK} == *"file not found"** ]]; then
@@ -130,7 +139,7 @@ else
   rm -f "$LOGDIR/$RUN.NOTONDISK"
 fi
 
-echo "CVBF FILE FOUND"
+echo "CVBF FILE FOUND - data dir: $VERITAS_DATA_DIR"
 
 #########################################
 # pedestal calculation
