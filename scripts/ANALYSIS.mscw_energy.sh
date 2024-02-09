@@ -111,6 +111,7 @@ getNumberedDirectory()
 # loop over all files in files loop
 for AFILE in $FILES
 do
+    echo "Looking at run $AFILE"
     BFILE="${INPUTDIR%/}/$AFILE.root"
 
     # check if file is on disk
