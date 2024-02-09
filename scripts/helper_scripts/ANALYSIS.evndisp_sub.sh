@@ -17,7 +17,6 @@ LOGDIR="$ODIR"
 CALDIR="$ODIR"
 ACUTS=RECONSTRUCTIONRUNPARAMETERFILE
 EDVERSION=VVERSION
-DOWNLOAD=DOWNLOADVBF
 DBTEXTDIRECTORY=DATABASETEXT
 
 # temporary (scratch) directory
@@ -41,52 +40,6 @@ inspect_executables()
     fi
 }
 
-#################################
-# check if run is on disk
-RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
-if [[ ${RUNONDISK} == *"file not found"** ]]; then
-  echo "$RUN not on disk"
-  if [[ $DOWNLOAD == "0" ]]; then
-      touch "$LOGDIR/$RUN.NOTONDISK"
-      exit
-  fi
-else
-    rm -f "$LOGDIR/$RUN.NOTONDISK"
-fi
-
-#################################
-# Download raw data (vbf) file
-# (note that download is not working on DESY cluster)
-# 1 = download to tmp disk (remove vbf file after analysis)
-# 2 = download to $VERITAS_DATA_DIR (keep vbf file after analysis)
-if [[ $DOWNLOAD == "1" ]] || [[ $DOWNLOAD == "2" ]]; then
-   # check that bbftp exists
-   BBFTP=$(which bbftp)
-   if [[ $BBFTP == *"not found"* ]]; then
-        echo "error: bbftp not installed; exiting"
-        exit
-   fi
-   if [[ ! -e $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh ]]; then
-        echo "error: $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh script not installed; exiting"
-        exit
-   fi
-   # check if run is on disk
-   RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
-   if [[ ${RUNONDISK} == *"file not found"** ]]; then
-      echo "$RUN not on disk; try downloading to $TEMPDIR"
-      if [[ $DOWNLOAD == "1" ]]; then
-          VERITAS_DATA_DIR=${TEMPDIR}
-      fi
-      RAWDATE=$(echo $RUNONDISK | awk '{print $NF}')
-      VTSRAWDATA=$(grep VTSRAWDATA $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep "*" | awk '{print $NF}')
-      echo "DOWNLOAD FILE $VERITAS_DATA_DIR/d$RAWDATE/$RUN.cvbf"
-      ${BBFTP} -V -S -p 4 -u bbftp -e "get /veritas/data/d$RAWDATE/$RUN.cvbf $VERITAS_DATA_DIR/d$RAWDATE/$RUN.cvbf" $VTSRAWDATA
-   else
-        DOWNLOAD="0"
-   fi
-   echo "DOWNLOAD STATUS $DOWNLOAD"
-fi
-
 unpack_db_textdirectory()
 {
     RRUN=${1}
@@ -107,6 +60,18 @@ unpack_db_textdirectory()
     echo "${TMP_DBTEXTDIRECTORY}/${SRUN}/${RRUN}/${RRUN}.laserrun"
 }
 
+sub_dir()
+{
+    TDIR="$1"
+    TRUN="$2"
+    if [[ ${TRUN} -lt 100000 ]]; then
+        echo "${TDIR}/${TRUN:0:1}/"
+    else
+        echo "${TDIR}/${TRUN:0:2}/"
+    fi
+}
+
+
 # Unpack DBText information (replacement to DB calls)
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     echo "UNPACKING DBTEXT from ${DBTEXTDIRECTORY}"
@@ -123,6 +88,49 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     OPT=( -dbtextdirectory ${TMP_DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter )
     echo "${OPT[@]}"
 fi
+
+get_run_date()
+{
+    OFIL="$1"
+    while IFS="|" read -ra a; do
+        if [[ ${a[0]} == "run_id" ]]; then
+            for (( j=0; j<${#a[@]}; j++ ));
+            do
+                if [[ ${a[$j]} == "data_start_time" ]]; then
+                    start_time_index=$j
+                    break;
+                fi
+            done
+        fi
+        start_time="${a[$start_time_index]}"
+    done < ${OFIL}
+    year=$(date -d "$start_time" +%Y)
+    month=$(date -d "$start_time" +%m)
+    day=$(date -d "$start_time" +%d)
+    echo "d${year}${month}${day}"
+}
+
+
+#################################
+# check if run is on disk
+if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
+    RUNINFO=$(sub_dir ${TMP_DBTEXTDIRECTORY} ${RUN})/${RUN}/${RUN}.runinfo
+    RUNDATE=$(get_run_date ${RUNINFO})
+    if [[ ! -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
+        RUNONDISK="file not found"
+    fi
+else
+    RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
+fi
+if [[ ${RUNONDISK} == *"file not found"** ]]; then
+  echo "$RUN not on disk"
+  touch "$LOGDIR/$RUN.NOTONDISK"
+  exit
+else
+  rm -f "$LOGDIR/$RUN.NOTONDISK"
+fi
+
+echo "CVBF FILE FOUND"
 
 #########################################
 # pedestal calculation
@@ -237,12 +245,6 @@ if [[ $CALIB != "5" ]]; then
     echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
     rm -f "$TEMPDIR/$RUN.root"
     # DST cp -f -v $TEMPDIR/$RUN.dst.root $DATAFILE
-fi
-
-########################################
-# cleanup raw data (if downloaded)
-if [[ $DOWNLOAD == "1" ]]; then
-   rm -f -v $VERITAS_DATA_DIR/d$RAWDATE/$RUN.cvbf
 fi
 
 exit

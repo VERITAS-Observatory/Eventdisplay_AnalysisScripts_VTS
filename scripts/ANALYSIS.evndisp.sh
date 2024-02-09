@@ -97,8 +97,6 @@ fi
 [[ "$7" ]] && CALIBFILE=$7 || CALIBFILE=calibrationlist.dat
 # VPM is on by default
 VPM=1
-# Download file to disk (if not available)
-DOWNLOAD=0
 # directory with DB text
 DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/DBTEXT"
 
@@ -216,7 +214,6 @@ do
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|VVERSION|$EDVERSION|" \
-        -e "s|DOWNLOADVBF|$DOWNLOAD|" \
         -e "s|DATABASETEXT|${DBTEXTDIR}|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
