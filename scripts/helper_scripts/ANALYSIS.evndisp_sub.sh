@@ -21,7 +21,7 @@ DBTEXTDIRECTORY=DATABASETEXT
 VERITAS_DATA_DIR=VTS_DATA_DIR
 VERITAS_DATA_DIR_2=VTS_2DATA_DIR
 VERITAS_USER_DATA_DIR=VTS_USER_DATA_DIR
-
+#
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
     TEMPDIR=$TMPDIR/$RUN
@@ -30,6 +30,23 @@ else
 fi
 echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
+
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR_2}:/opt/VERITAS_DATA_DIR_2 "
+    APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${DBTEXTDIRECTORY}:/opt/DBTEXT "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT+=" --bind ${TEMPDIR}:/opt/TEMPDIR"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,TEMPDIR=/opt/TEMPDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    # path used by EVNDISPSYS needs to be reset
+    CALDIR="/opt/ODIR"
+fi
 
 #################################
 echo "Using run parameter file $ACUTS"
@@ -78,6 +95,7 @@ sub_dir()
 # Unpack DBText information (replacement to DB calls)
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     echo "UNPACKING DBTEXT from ${DBTEXTDIRECTORY}"
+    ls -l ${DBTEXTDIRECTORY}
     TMP_DBTEXTDIRECTORY="${TEMPDIR}/DBTEXT"
     TMP_LASERRUN=$(unpack_db_textdirectory $RUN $TMP_DBTEXTDIRECTORY)
     LRUNID=$(cat ${TMP_LASERRUN} | grep -v run_id | awk -F "|" '{print $1}')
@@ -119,6 +137,8 @@ get_run_date()
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     RUNINFO=$(sub_dir ${TMP_DBTEXTDIRECTORY} ${RUN})/${RUN}/${RUN}.runinfo
     RUNDATE=$(get_run_date ${RUNINFO})
+    echo "RUN $RUN $RUNINFO $RUNDATE"
+    ls -l ${TMP_DBTEXTDIRECTORY}
     if [[ ! -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
         # TMP for preprocessing
         if [[ ! -e ${VERITAS_DATA_DIR_2}/data/data/${RUNDATE}/${RUN}.cvbf ]]; then
@@ -232,7 +252,6 @@ LOGFILE="$LOGDIR/$RUN.log"
         "${OPT[@]}" \
         -calibrationdirectory "$CALDIR" &> "$LOGFILE"
     echo "$(inspect_executables)" >> "$LOGFILE"
-    # DST $EVNDISPSYS/bin/evndisp -runnumber=$RUN -nevents=250000 -runmode=4 -readcalibdb -dstfile $TEMPDIR/$RUN.dst.root -reconstructionparameter $ACUTS -outputfile $TEMPDIR/$RUN.root ${OPT[@]} &> "$LOGFILE"
     echo "RUN$RUN EVNDISPLOG $LOGFILE"
 fi
 

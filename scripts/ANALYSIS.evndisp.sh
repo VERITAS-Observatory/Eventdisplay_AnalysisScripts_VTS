@@ -5,7 +5,7 @@
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 # begin help message
