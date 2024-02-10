@@ -6,7 +6,7 @@ h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 
 # EventDisplay version
 EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
-IRFVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//')
+IRFVERSION="$EDVERSION"
 # Directory with preprocessed data
 DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
 
