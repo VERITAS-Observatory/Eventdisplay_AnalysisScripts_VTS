@@ -23,14 +23,17 @@ check_evndisp_log_files()
     TNLOG=$(ls -1 ${1}/*.tzero.log | wc -l)
     ANLOG=$(ls -1 ${1}/*[0-9].log | wc -l)
     echo "Number of log files: ped $PNLOG tzero $TNLOG evndisp $ANLOG"
-    echo "Errors in ped files: "
+    echo "Ped files: "
     echo "--------------------"
+    echo "   Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*.ped.log | sort -u)"
     echo "$(grep -i error ${1}/*.ped.log)"
-    echo "Errors in tzero files: "
+    echo "Tzero files: "
     echo "--------------------"
+    echo "   Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*.tzero.log | sort -u)"
     echo "$(grep -i error ${1}/*.tzero.log)"
-    echo "Errors in evndisp files: "
+    echo "Evndisp files: "
     echo "--------------------"
+    echo "   Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*[0-9].log | sort -u)"
     echo "$(grep -i error ${1}/*[0-9].log)"
     echo "Zero average pulse in evndisp files: "
     echo "--------------------"
@@ -40,7 +43,17 @@ check_evndisp_log_files()
     echo "$(grep -i warning ${1}/*[0-9].log | grep -v "warning: setlocale")"
 }
 
+check_mscw_log_files()
+{
+    NFIL=$(ls -1 ${1}/*.mscw.root | wc -l)
+    echo "Number of mscw file: $NFIL"
+    echo "Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*.mscw.log | sort -u)"
+    echo "Errors in mscw log files:"
+    echo "$(grep -i error ${1}/*.mscw.log |  grep -v "error weighting parameter" | grep -v BDTDispError | grep -v "disp error")"
+}
+
 if [[ $DTYPE == "evndisp" ]]; then
     check_evndisp_log_files $FDIR
+elif [[ $DTYPE == "mscw" ]]; then
+    check_mscw_log_files $FDIR
 fi
-

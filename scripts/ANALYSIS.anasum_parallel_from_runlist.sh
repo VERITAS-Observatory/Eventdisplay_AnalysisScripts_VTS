@@ -240,7 +240,7 @@ for RUN in ${RUNS[@]}; do
         TMPLOGDIR=${LOGDIR}-${RUN:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
-    FSCRIPT="$TMPLOGDIR/qsub_analyse-$DATE-RUN$RUN-$(date +%s)"
+    FSCRIPT="$TMPLOGDIR/RUN$RUN-$(date +%s)"
     rm -f $FSCRIPT.sh
     echo "Run script written to $FSCRIPT"
 
@@ -276,6 +276,13 @@ for RUN in ${RUNS[@]}; do
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        echo
+        echo "-------------------------------------------------------------------------------"
+        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "-------------------------------------------------------------------------------"
+        echo
+    elif [[ $SUBC == *sbatch* ]]; then
 	elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
