@@ -18,6 +18,9 @@ CALDIR="$ODIR"
 ACUTS=RECONSTRUCTIONRUNPARAMETERFILE
 EDVERSION=VVERSION
 DBTEXTDIRECTORY=DATABASETEXT
+VERITAS_DATA_DIR=VTS_DATA_DIR
+VERITAS_DATA_DIR_2=VTS_2DATA_DIR
+VERITAS_USER_DATA_DIR=VTS_USER_DATA_DIR
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -118,11 +121,11 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     RUNDATE=$(get_run_date ${RUNINFO})
     if [[ ! -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
         # TMP for preprocessing
-        if [[ ! -e /lustre/fs23/group/veritas/data/data/${RUNDATE}/${RUN}.cvbf ]]; then
+        if [[ ! -e ${VERITAS_DATA_DIR_2}/data/data/${RUNDATE}/${RUN}.cvbf ]]; then
             RUNONDISK="file not found"
         else
             if [ -n "$EVNDISP_APPTAINER" ]; then
-                OPT+=( -sourcefile /lustre/fs23/group/veritas/data/data/${RUNDATE}/${RUN}.cvbf )
+                OPT+=( -sourcefile ${VERITAS_DATA_DIR_2}/data/data/${RUNDATE}/${RUN}.cvbf )
             fi
         fi
         # END TMP
