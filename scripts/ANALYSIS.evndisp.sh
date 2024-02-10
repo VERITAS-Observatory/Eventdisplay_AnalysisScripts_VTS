@@ -65,7 +65,9 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # create extra stdout for duplication of command output
@@ -215,6 +217,9 @@ do
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|VVERSION|$EDVERSION|" \
         -e "s|DATABASETEXT|${DBTEXTDIR}|" \
+        -e "s|VTS_DATA_DIR|${VERITAS_DATA_DIR}|" \
+        -e "s|VTS_2DATA_DIR|/lustre/fs23/group/veritas|" \
+        -e "s|VTS_USER_DATA_DIR|${VERITAS_USER_DATA_DIR}|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
