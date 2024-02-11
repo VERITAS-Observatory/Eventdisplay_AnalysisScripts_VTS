@@ -145,6 +145,8 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
             RUNONDISK="file not found"
         else
             if [ -n "$EVNDISP_APPTAINER" ]; then
+                OPT+=( -sourcefile /opt/VERITAS_DATA_DIR_2/data/data/${RUNDATE}/${RUN}.cvbf )
+            else
                 OPT+=( -sourcefile ${VERITAS_DATA_DIR_2}/data/data/${RUNDATE}/${RUN}.cvbf )
             fi
         fi
@@ -257,13 +259,19 @@ fi
 
 # move log file into root file
 if [[ -e "$LOGFILE" ]]; then
-    $EVNDISPSYS/bin/logFile evndispLog "$TEMPDIR/$RUN.root" "$LOGFILE"
+    cp -v $LOGFILE $TEMPDIR
+    LLF="${TEMPDIR}/$RUN.log"
+    $EVNDISPSYS/bin/logFile evndispLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 if [[ -e "$LOGDIR/$RUN.ped.log" ]]; then
-    $EVNDISPSYS/bin/logFile evndisppedLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.ped.log"
+    cp -v $LOGDIR/$RUN.ped.log $TEMPDIR
+    LLF="${TEMPDIR}/$RUN.ped.log"
+    $EVNDISPSYS/bin/logFile evndisppedLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 if [[ -e "$LOGDIR/$RUN.tzero.log" ]]; then
-    $EVNDISPSYS/bin/logFile evndisptzeroLog "$TEMPDIR/$RUN.root" "$LOGDIR/$RUN.tzero.log"
+    cp -v $LOGDIR/$RUN.tzero.log $TEMPDIR
+    LLF="${TEMPDIR}/$RUN.tzero.log"
+    $EVNDISPSYS/bin/logFile evndisptzeroLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 
 # move data file from tmp dir to data dir
@@ -275,7 +283,6 @@ if [[ $CALIB != "5" ]]; then
     fi
     echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
     rm -f "$TEMPDIR/$RUN.root"
-    # DST cp -f -v $TEMPDIR/$RUN.dst.root $DATAFILE
 fi
 
 exit
