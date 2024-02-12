@@ -8,7 +8,6 @@ h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
-# begin help message
 echo "
 EVNDISP data analysis: submit jobs from a simple run list
 
@@ -60,7 +59,6 @@ variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 

@@ -5,7 +5,7 @@
 h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 
 # EventDisplay version
-EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 IRFVERSION="$EDVERSION"
 # Directory with preprocessed data
 DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
@@ -14,7 +14,7 @@ if [ $# -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output directory]  [preprocessing skip] [Rec ID] [ATM] [evndisp log file directory]
+ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output directory]  [preprocessing skip] [Rec ID] [ATM]
 
 required parameters:
 
@@ -38,20 +38,19 @@ optional parameters:
 
     [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
 
-    [evndisp log file directory] directory with evndisplay log files (default: assume same
-                            as evndisp output ROOT files)
 
 The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
 variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # create extra stdout for duplication of command output
@@ -65,7 +64,6 @@ RLIST=$1
 [[ "$4" ]] && SKIP=$4 || SKIP=0
 [[ "$5" ]] && ID=$5 || ID=0
 [[ "$6" ]] && FORCEDATMO=$6
-[[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
 DISPBDT="1"
 
 # Read runlist
@@ -111,7 +109,7 @@ getNumberedDirectory()
 # loop over all files in files loop
 for AFILE in $FILES
 do
-    echo "Looking at run $AFILE"
+    echo "Now analysing run $AFILE"
     BFILE="${INPUTDIR%/}/$AFILE.root"
 
     # check if file is on disk
@@ -134,7 +132,7 @@ do
         fi
         BFILE="$TMPINDIR/$AFILE.root"
     fi
-    echo "Now analysing $BFILE (ID=$ID)"
+    echo "Processing $BFILE (ID=$ID)"
 
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
@@ -148,7 +146,6 @@ do
 
     sed -e "s|RECONSTRUCTIONID|$ID|" \
         -e "s|OUTPUTDIRECTORY|$ODIR|" \
-        -e "s|INPUTLOGDIR|${INPUTLOGDIR}|" \
         -e "s|BDTDISP|${DISPBDT}|" \
         -e "s|VERSIONIRF|${IRFVERSION}|" \
         -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh

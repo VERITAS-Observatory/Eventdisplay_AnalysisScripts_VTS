@@ -11,7 +11,6 @@ set -e
 RECID=RECONSTRUCTIONID
 ODIR=OUTPUTDIRECTORY
 INFILE=EVNDISPFILE
-INLOGDIR=INPUTLOGDIR
 DISPBDT=BDTDISP
 IRFVERSION=VERSIONIRF
 
@@ -29,6 +28,7 @@ fi
 
 INDIR=`dirname $INFILE`
 BFILE=`basename $INFILE .root`
+INFILEPATH="$INFILE"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -37,8 +37,24 @@ else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
 fi
 mkdir -p $TEMPDIR
+#
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT+=" --bind ${INDIR}:/opt/INDIR "
+    APPTAINER_MOUNT+=" --bind ${TEMPDIR}:/opt/TEMPDIR"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,TEMPDIR=/opt/TEMPDIR,LOGDIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    INFILEPATH="/opt/INDIR/$BFILE.root"
+fi
 
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter $INFILE -updated-runinfo)
+echo "READING RUNINFO from $INFILEPATH"
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH updated-runinfo)
 EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
 ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
 HVSETTINGS=`echo $RUNINFO | awk '{print $(4)}'`
@@ -46,6 +62,7 @@ if [[ $ATMO == *error* ]]; then
     echo "error finding atmosphere; skipping run $BFILE"
     exit
 fi
+echo "RUNINFO $EPOCH $ATMO $HVSETTINGS"
 
 # simulation type
 if [ "$EPOCH" == "V4" ]
@@ -68,14 +85,17 @@ fi
 TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
 echo "TABLEFILE: $TABFILE"
 # Check that table file exists
-if [[ "$TABFILE" == `basename $TABFILE` ]]; then
+if [[ "$TABFILE" == $(basename $TABFILE) ]]; then
     TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
 fi
+echo "TABLEFILE $TABFILE"
 if [ ! -f "$TABFILE" ]; then
     echo "Error, table file '$TABFILE' not found, exiting..."
     exit 1
 fi
-
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
+fi
 
 inspect_executables()
 {
@@ -95,7 +115,7 @@ get_disp_dir()
     else
         DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
     fi
-    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILE -elevation | awk '{print $3}')
+    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -elevation | awk '{print $3}')
     if (( $(echo "90.-$ZA < 38" |bc -l) )); then
         DISPDIR="${DISPDIR}/SZE/"
     elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
@@ -121,6 +141,7 @@ rm -f ${MSCWLOGFILE}
 cp -f -v $INFILE $TEMPDIR
 
 MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
+echo "MSCWDATAFILE $MSCWDATAFILE"
 
 MOPT=""
 if [[ DISPBDT != "0" ]]; then
@@ -169,7 +190,9 @@ else
     echo "No evndisp log file: ${INDIR}/$BFILE.log"
 fi
 if [[ -e ${MSCWLOGFILE} ]]; then
-  $EVNDISPSYS/bin/logFile mscwTableLog $TEMPDIR/$BFILE.mscw.root ${MSCWLOGFILE}
+  cp -v ${MSCWLOGFILE} $TEMPDIR/
+  LLF="${TEMPDIR}/$(basename ${MSCWLOGFILE})"
+  $EVNDISPSYS/bin/logFile mscwTableLog "$TEMPDIR/$BFILE.mscw.root" "$LLF"
 fi
 
 # move output file from scratch and clean up
