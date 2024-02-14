@@ -40,7 +40,7 @@ check_evndisp_log_files()
     echo "$(grep "average pulse timing for this telescope is 0" ${1}/*[0-9].log)"
     echo "Warnings in evndisp files: "
     echo "--------------------"
-    echo "$(grep -i warning ${1}/*[0-9].log | grep -v "warning: setlocale")"
+    echo "$(grep -i warning ${1}/*[0-9].log | grep -v "WARNING: Skipping mount")"
 }
 
 check_mscw_log_files()
