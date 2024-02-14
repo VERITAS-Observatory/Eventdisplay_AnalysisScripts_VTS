@@ -95,7 +95,6 @@ sub_dir()
 # Unpack DBText information (replacement to DB calls)
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     echo "UNPACKING DBTEXT from ${DBTEXTDIRECTORY}"
-    ls -l ${DBTEXTDIRECTORY}
     TMP_DBTEXTDIRECTORY="${TEMPDIR}/DBTEXT"
     TMP_LASERRUN=$(unpack_db_textdirectory $RUN $TMP_DBTEXTDIRECTORY)
     LRUNID=$(cat ${TMP_LASERRUN} | grep -v run_id | awk -F "|" '{print $1}')
