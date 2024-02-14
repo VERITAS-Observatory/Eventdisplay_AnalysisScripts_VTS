@@ -14,7 +14,7 @@ if [ $# -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output directory]  [preprocessing skip] [Rec ID] [ATM]
+ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [preprocessing skip] [Rec ID] [ATM]
 
 required parameters:
 
