@@ -125,9 +125,9 @@ get_run_date()
         fi
         start_time="${a[$start_time_index]}"
     done < ${OFIL}
-    year=$(date -d "$start_time" +%Y)
-    month=$(date -d "$start_time" +%m)
-    day=$(date -d "$start_time" +%d)
+    year=$(date --utc -d "$start_time" +%Y)
+    month=$(date --utc -d "$start_time" +%m)
+    day=$(date --utc -d "$start_time" +%d)
     echo "d${year}${month}${day}"
 }
 
