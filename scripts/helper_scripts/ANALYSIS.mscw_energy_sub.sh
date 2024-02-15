@@ -37,7 +37,7 @@ else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
 fi
 mkdir -p $TEMPDIR
-#
+
 # explicit binding for apptainers
 if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
@@ -51,6 +51,7 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     INFILEPATH="/opt/INDIR/$BFILE.root"
+    echo "APPTAINER INFILEPATH: $INFILEPATH"
 fi
 
 echo "READING RUNINFO from $INFILEPATH"
@@ -184,11 +185,6 @@ if [[ DISPBDT != "NOTSET" ]]; then
 fi
 
 # move logfiles into output file
-if [[ -e ${INDIR}/$BFILE.log ]]; then
-  $EVNDISPSYS/bin/logFile evndispLog $TEMPDIR/$BFILE.mscw.root ${INDIR}/$BFILE.log
-else
-    echo "No evndisp log file: ${INDIR}/$BFILE.log"
-fi
 if [[ -e ${MSCWLOGFILE} ]]; then
   cp -v ${MSCWLOGFILE} $TEMPDIR/
   LLF="${TEMPDIR}/$(basename ${MSCWLOGFILE})"

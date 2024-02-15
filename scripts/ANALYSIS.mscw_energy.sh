@@ -81,7 +81,7 @@ echo
 mkdir -p $ODIR
 echo -e "Output files will be written to:\n $ODIR"
 
-# run scripts are written into this directory
+# directory for run scripts
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/MSCW.${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
