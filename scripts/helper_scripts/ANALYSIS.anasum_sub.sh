@@ -5,6 +5,7 @@
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     source $EVNDISPSYS/setObservatory.sh VTS
 fi
+set -e
 
 # parameters replaced by parent script using sed
 FLIST=FILELIST
@@ -29,7 +30,41 @@ SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
 SIMTYPE_DEFAULT_V6UV="CARE_UV_2212"
 
-EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
+INFILEPATH="$INDIR/$RUNNUM.mscw.root"
+OUTPUTDATAFILE="$ODIR/$ONAME.root"
+OUTPUTLOGFILE="$ODIR/$ONAME.log"
+
+# temporary (scratch) directory
+if [[ -n $TMPDIR ]]; then
+    TEMPDIR=${TMPDIR}/MSCWDISP-$(uuidgen)
+else
+    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
+fi
+mkdir -p $TEMPDIR
+
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${INDIR}:/opt/INDIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${TEMPDIR}:/opt/TEMPDIR"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,TEMPDIR=/opt/TEMPDIR,LOGDIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    INFILEPATH="/opt/INDIR/$RUNNUM.mscw.root"
+    echo "APPTAINER INFILEPATH: $INFILEPATH"
+    INDIR="/opt/INDIR/"
+    echo "APPTAINER INDIR: $INDIR"
+    OUTPUTDATAFILE="/opt/ODIR/$ONAME.root"
+    echo "APPTAINER ODIR: $OUTPUTDATAFILE $OUTPUTLOGFILE"
+fi
+
+rm -f $OUTPUTLOGFILE
+touch $OUTPUTLOGFILE
+
 
 prepare_atmo_string()
 {
@@ -89,12 +124,12 @@ prepare_irf_string()
 
 if [[ $FLIST == "NOTDEFINED" ]]; then
     FLIST="$ODIR/$ONAME.runlist"
-    echo "Preparing run list $FLIST"
+    echo "Preparing run list $FLIST using $INFILEPATH"
     rm -f $FLIST
     echo "* VERSION 6" > $FLIST
     echo "" >> $FLIST
     # preparing effective area and radial acceptance names
-    RUNINFO=`"$EVNDISPSYS"/bin/printRunParameter "$INDIR/$RUNNUM.mscw.root" -runinfo`
+    RUNINFO=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" -runinfo)
     EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
     MAJOREPOCH=`echo $RUNINFO | awk '{print $(2)}'`
     ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
@@ -160,14 +195,15 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
     echo "* $RUNNUM $RUNNUM 0 $CUTFILE $BM $EFFAREARUN $BMPARAMS $RADACCRUN" >> $FLIST
 fi
 
-# introduce a random sleep to prevent many jobs starting at exactly the same time
-NS=$(( ( RANDOM % 10 )  + 1 ))
-sleep $NS
+# copy file list, runparameter and time masks file to tmp disk
+cp -v "$FLIST" "$TEMPDIR"
+FLIST="${TEMPDIR}/$(basename $FLIST)"
+cp -v "$RUNP" "$TEMPDIR"
+cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
+RUNP="${TEMPDIR}/$(basename $RUNP)"
 
 #################################
 # run anasum
-OUTPUTDATAFILE="$ODIR/$ONAME.root"
-OUTPUTLOGFILE="$ODIR/$ONAME.log"
 $EVNDISPSYS/bin/anasum   \
     -f $RUNP             \
     -l $FLIST            \
@@ -177,10 +213,7 @@ $EVNDISPSYS/bin/anasum   \
 echo "$(inspect_executables)" >> ${OUTPUTLOGFILE}
 
 if [[ -e "$OUTPUTLOGFILE" ]]; then
-    $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$OUTPUTLOGFILE"
-fi
-if [[ -e "$OUTPUTDATAFILE" ]]; then
-    $EVNDISPSYS/bin/logFile anasumData "$OUTPUTDATAFILE" "$OUTPUTDATAFILE"
+    $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$(dirname $OUTPUTDATAFILE)/$(basename $OUTPUTLOGFILE)"
 fi
 
 echo "RUN$RUNNUM ANPARLOG log file: $OUTPUTLOGFILE"

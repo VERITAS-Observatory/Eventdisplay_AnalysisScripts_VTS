@@ -5,11 +5,11 @@
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
-IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+IRFVERSION="$EDVERSION"
 AUXVERSION="auxv01"
 
-if [[ "$#" -lt 4 ]]; then
+if [ "$#" -lt 4 ]; then
 # begin help message
 echo "
 ANASUM parallel data analysis: submit jobs using a simple run list
@@ -60,7 +60,9 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -210,7 +212,9 @@ getNumberedDirectory()
 RUNS=`cat "$RUNLIST"`
 NRUNS=`cat "$RUNLIST" | wc -l `
 echo "total number of runs to analyze: $NRUNS"
-# loop over all runs
+
+#########################################
+# loop over all files in files loop
 for RUN in ${RUNS[@]}; do
 
     # check if file already has been processed
@@ -240,7 +244,7 @@ for RUN in ${RUNS[@]}; do
         TMPLOGDIR=${LOGDIR}-${RUN:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
-    FSCRIPT="$TMPLOGDIR/RUN$RUN-$(date +%s)"
+    FSCRIPT="$TMPLOGDIR/ANASUM.$RUN-$(date +%s)"
     rm -f $FSCRIPT.sh
     echo "Run script written to $FSCRIPT"
 
@@ -282,7 +286,6 @@ for RUN in ${RUNS[@]}; do
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
         echo "-------------------------------------------------------------------------------"
         echo
-    elif [[ $SUBC == *sbatch* ]]; then
 	elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
