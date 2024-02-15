@@ -4,12 +4,12 @@
 # qsub parameters
 h_cpu=0:59:00; h_vmem=12000M; tmpdir_size=1G
 
-if [[ $# -lt 2 ]]; then
+if [[ $# -lt 3 ]]; then
 # begin help message
 echo "
 ANASUM parallel data analysis: combine parallel-processed anasum runs
 
-ANALYSIS.anasum_combine.sh <anasum run list> <anasum directory> [output file name] [run parameter file]
+ANALYSIS.anasum_combine.sh <anasum run list> <anasum directory> <output file name> [run parameter file]
 
 required parameters:
 
@@ -20,11 +20,9 @@ required parameters:
 
     <anasum directory>      input directory containing anasum root files
 
-optional parameters:
+    <output file name>      name of combined anasum file (full path)
 
-    [output file name]      name of combined anasum file
-                            (written to same location as anasum files)
-                            default: anasum.combined
+optional parameters:
 
     [run parameter file]    anasum run parameter file (located in
                             \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
@@ -39,13 +37,15 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
 RUNLIST=$1
 DDIR=$2
-[[ "$3" ]] && OUTFILE=$3 || OUTFILE="anasum.combined"
+OUTFILE=$3
 OUTFILE=${OUTFILE%%.root}
 [[ "$4" ]] && RUNP=$4 || RUNP="ANASUM.runparameter"
 
@@ -112,5 +112,3 @@ elif [[ $SUBC == *parallel* ]]; then
 elif [[ "$SUBC" == *simple* ]] ; then
     "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 fi
-
-exit
