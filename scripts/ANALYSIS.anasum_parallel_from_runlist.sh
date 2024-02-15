@@ -233,9 +233,11 @@ for RUN in ${RUNS[@]}; do
         TMPINDIR=$(getNumberedDirectory $RUN $INDIR)
         if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
             echo "error: mscw file not found: $TMPINDIR/$RUN.mscw.root (also not found in directory above)"
+            touch $ODIR/$RUN.NOTFOUND
             continue
         fi
     fi
+    rm -f $ODIR/$RUN.NOTFOUND
 
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
