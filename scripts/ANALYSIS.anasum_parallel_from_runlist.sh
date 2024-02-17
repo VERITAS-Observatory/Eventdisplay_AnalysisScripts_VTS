@@ -34,9 +34,8 @@ required parameters:
 
 optional parameters:
 
-    [run parameter file]    anasum run parameter file (located in
-                            \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
-                            default is ANASUM.runparameter)
+    [run parameter file]    anasum run parameter file
+                            (default: \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter)
 
     [mscw directory]        directory containing the mscw.root files.
 			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
@@ -70,7 +69,7 @@ RUNLIST=$1
 ODIR=$2
 CUTS=$3
 BACKGND=$4
-[[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
+[[ "$5" ]] && RUNP=$5  || RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 [[ "$7" ]] && SKIP=$7 || SKIP=0
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
