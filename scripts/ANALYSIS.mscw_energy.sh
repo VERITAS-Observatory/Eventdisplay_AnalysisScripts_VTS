@@ -135,8 +135,8 @@ do
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
     # directory (e.g., on afs)
-    if [[ ${NRUNS} -gt 5000 ]]; then
-        TMPLOGDIR=${LOGDIR}-${AFILE:0:1}
+    if [[ ${NRUNS} -gt 1000 ]]; then
+        TMPLOGDIR=${LOGDIR}/MSCW_${AFILE:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
     FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$AFILE"

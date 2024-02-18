@@ -51,6 +51,7 @@ check_mscw_log_files()
     echo "Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*.mscw.log | sort -u)"
     echo "Errors in mscw log files:"
     echo "$(grep -i error ${1}/*.mscw.log |  grep -v "error weighting parameter" | grep -v BDTDispError | grep -v "disp error")"
+    grep -h -i "lookuptable:" ${1}/*[0-9].mscw.log > $TMPLOG
 }
 
 TMPLOG="$(pwd)/DQM.${DTYPE}.$(uuid).tmp.txt"
@@ -60,5 +61,6 @@ if [[ $DTYPE == "evndisp" ]]; then
     cat $TMPLOG | sort -u
 elif [[ $DTYPE == "mscw" ]]; then
     check_mscw_log_files $FDIR
+    cat $TMPLOG | sort -u
 fi
 rm -f $TMPLOG
