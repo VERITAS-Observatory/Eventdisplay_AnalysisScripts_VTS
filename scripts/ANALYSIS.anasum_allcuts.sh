@@ -29,7 +29,8 @@ RUNTYPE=${2}
 EDVERSION="v490"
 EDVERSIONFULL="v490.7"
 #
-PREDIR="$VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/processed_data_${EDVERSIONFULL}/${VERITAS_ANALYSIS_TYPE:0:2}"
+PREDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+echo $PREDIR
 # anasum file are writting into this directory
 TMPDIR="$VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/AP/PreProcessing/"
 
@@ -45,7 +46,9 @@ do
         ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
             "$TMPDIR/anasum_${C}" \
             ${C} \
-            IGNOREACCEPTANCE | tee -a ${TMPLOG}
+            IGNOREACCEPTANCE \
+            $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter \
+            $PREDIR | tee -a ${TMPLOG}
     elif [[ $RUNTYPE == "V2DL3" ]]; then
         CF=${C/NN/}
         mkdir -p $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${CF}

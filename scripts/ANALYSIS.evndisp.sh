@@ -161,8 +161,7 @@ fi
 
 file_on_disk()
 {
-    ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_$EDVERSION/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
-    ARCHIVEDIR="$VERITAS_USER_DATA_DIR/analysis/Results/v490/processed_data_v490.7/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
+    ARCHIVEDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
     TRUN="$1"
     if [[ ${TRUN} -lt 100000 ]]; then
         EDIR="${ARCHIVEDIR}/${TRUN:0:1}/"

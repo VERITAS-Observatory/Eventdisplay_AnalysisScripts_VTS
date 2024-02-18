@@ -1,11 +1,11 @@
 #!/bin/bash
-# script to run V2DL3 
+# script to run V2DL3
 # (convert anasum output to FITS-DL3)
 # run point-like and full-enclosure analysis
 
 # set observatory environmental variables
 source $EVNDISPSYS/setObservatory.sh VTS
-# Don't do set -e. 
+# Don't do set -e.
 # set -e
 
 # parameters replaced by parent script using sed
@@ -16,7 +16,7 @@ CUT=CCUT
 # EventDisplay version
 EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
 # Directory with preprocessed data
-INPUTDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum/"
+INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum/"
 # V2DL3 code
 V2DL3="$EVNDISPSYS/../V2DL3/"
 
@@ -31,7 +31,7 @@ mkdir -p "$TEMPDIR"
 
 # run list
 FILES=`cat "$RUNLIST"`
-NRUNS=`cat "$RUNLIST" | wc -l ` 
+NRUNS=`cat "$RUNLIST" | wc -l `
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -72,7 +72,7 @@ echo "IsGamma: 1" > $EVENTFILTER
 echo "Event filter file: ${EVENTFILTER}"
 ls -l ${EVENTFILTER}
 cat ${EVENTFILTER}
- 
+
 # directory schema for preprocessed files
 getNumberedDirectory()
 {
@@ -89,7 +89,7 @@ getNumberedDirectory()
 for RUN in $FILES
 do
     echo $RUN
-    ANASUMFILE="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUT})/${RUN}.anasum.root"
+    ANASUMFILE="$(getNumberedDirectory $RUN $VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUT})/${RUN}.anasum.root"
     if [[ ! -e ${ANASUMFILE} ]]; then
         echo "File ${ANASUMFILE} not found"
         echo "Skipping run $RUN"

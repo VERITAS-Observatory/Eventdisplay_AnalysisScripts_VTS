@@ -70,7 +70,7 @@ ODIR=$2
 CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter"
-[[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+[[ "$6" ]] && INDIR=$6 || INDIR="${VERITAS_PREPROCESSED_DATA_DIR}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 [[ "$7" ]] && SKIP=$7 || SKIP=0
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 
@@ -218,7 +218,7 @@ for RUN in ${RUNS[@]}; do
 
     # check if file already has been processed
     if [[ $SKIP == "1" ]]; then
-        ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
+        ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
         if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
             echo "$RUN already processed (${ARCHIVEDIR}/${RUN}.anasum.root)"
             echo "skipping run"

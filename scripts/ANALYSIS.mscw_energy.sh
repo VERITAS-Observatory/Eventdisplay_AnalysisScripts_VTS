@@ -114,8 +114,7 @@ do
 
     # check if file is on disk
     if [[ $SKIP == "1" ]]; then
-        TMPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
-        TMPDIR="$VERITAS_USER_DATA_DIR/analysis/Results/v490/processed_data_v490.7/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+        TMPDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
         if [[ -d "$TMPDIR" ]]; then
             TMPMDIR=$(getNumberedDirectory $AFILE "$TMPDIR")
             if [ -e "$TMPMDIR/$AFILE.mscw.root" ]; then
