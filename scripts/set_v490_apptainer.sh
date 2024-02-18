@@ -10,7 +10,7 @@ if [[ $# < 1 ]]; then
    echo "   e.g., AP, AP_DISP, TS, NN"
 fi
 
-EVNDISPERSION="v490.7"
+EVNDISPVERSION="v490.7"
 USERAFSDIR="/afs/ifh.de/group/cta/scratch/$USER"
 USERLUSTDIR="/lustre/fs23/group/veritas/users/$USER"
 GROUPLUSTDIR="/lustre/fs23/group/veritas"
@@ -25,7 +25,7 @@ export VERITAS_ANALYSIS_TYPE=${1}
 # data directory (VBF files)
 export VERITAS_DATA_DIR=${GROUPDATADDIR}
 # general auxiliary directory
-export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPVERSION:0:4}
+export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPVERSION}-prepocessing
 # pre-processed data products
 # export VERITAS_PREPROCESSED_DATA_DIR=${GROUPDATADDIR}/shared/processed_data_v${EVNDISPVERSION:0:4}/
 export VERITAS_PREPROCESSED_DATA_DIR=${USERLUSTDIR}/analysis/Results/${EVNDISPVERSION:0:4}/processed_data_${EVNDISPVERSION}
@@ -40,4 +40,4 @@ export VERITAS_USER_LOG_DIR=${USERAFSDIR}/LOGS/VERITAS
 export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
 # export EVNDISPSYS="apptainer exec --no-mount /etc/ssh/ssh_known_hosts2 ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
 export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
-export EVNDISPSCRIPTS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/Eventdisplay_AnalysisScripts_VTS_${EVNDISPVERSION:0:4}/scripts
+export EVNDISPSCRIPTS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/Eventdisplay_AnalysisScripts_VTS_${EVNDISPVERSION}/scripts

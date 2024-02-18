@@ -7,8 +7,6 @@ h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 IRFVERSION="$EDVERSION"
-# Directory with preprocessed data
-DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
 
 if [ $# -lt 2 ]; then
 echo "
@@ -60,7 +58,7 @@ exec 5>&1
 # Parse command line arguments
 RLIST=$1
 [[ "$2" ]] && ODIR=$2
-[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$DEFEVNDISPDIR"
+[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp"
 [[ "$4" ]] && SKIP=$4 || SKIP=0
 [[ "$5" ]] && ID=$5 || ID=0
 [[ "$6" ]] && FORCEDATMO=$6

@@ -183,6 +183,9 @@ if [[ DISPBDT != "NOTSET" ]]; then
     echo "" >> ${MSCWLOGFILE}
     echo "dispBDT XML files read from ${DISPDIR}" >> ${MSCWLOGFILE}
 fi
+echo "EVNDISP file: ${INFILE}" >> ${MSCWLOGFILE}
+echo "VERITAS_EVNDISP_AUX: ${VERITAS_EVNDISP_AUX_DIR}" >> ${MSCWLOGFILE}
+echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}" >> ${MSCWLOGFILE}
 
 # move logfiles into output file
 if [[ -e ${MSCWLOGFILE} ]]; then

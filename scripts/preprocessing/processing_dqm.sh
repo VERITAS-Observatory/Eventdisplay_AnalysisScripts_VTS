@@ -41,6 +41,7 @@ check_evndisp_log_files()
     echo "Warnings in evndisp files: "
     echo "--------------------"
     echo "$(grep -i warning ${1}/*[0-9].log | grep -v "WARNING: Skipping mount")"
+    grep -h -i EVNDISP.reconstruction.runparameter ${1}/*[0-9].log  | tee -a $TMPLOG
 }
 
 check_mscw_log_files()
@@ -52,8 +53,12 @@ check_mscw_log_files()
     echo "$(grep -i error ${1}/*.mscw.log |  grep -v "error weighting parameter" | grep -v BDTDispError | grep -v "disp error")"
 }
 
+TMPLOG="$(pwd)/DQM.${DTYPE}.$(uuid).tmp.txt"
+rm -f $TMPLOG
 if [[ $DTYPE == "evndisp" ]]; then
     check_evndisp_log_files $FDIR
+    cat $TMPLOG | sort -u
 elif [[ $DTYPE == "mscw" ]]; then
     check_mscw_log_files $FDIR
 fi
+rm -f $TMPLOG

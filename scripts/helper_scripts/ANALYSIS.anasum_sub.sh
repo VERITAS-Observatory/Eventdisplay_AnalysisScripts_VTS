@@ -211,6 +211,8 @@ $EVNDISPSYS/bin/anasum   \
     -o $OUTPUTDATAFILE   &> $OUTPUTLOGFILE
 
 echo "$(inspect_executables)" >> ${OUTPUTLOGFILE}
+echo "INDIR ${INDIR}" >> ${OUTPUTLOGFILE}
+echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}" >> ${OUTPUTLOGFILE}
 
 if [[ -e "$OUTPUTLOGFILE" ]]; then
     $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$(dirname $OUTPUTDATAFILE)/$(basename $OUTPUTLOGFILE)"
