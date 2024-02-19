@@ -2,7 +2,7 @@
 # script to combine anasum files processed in parallel mode
 
 # qsub parameters
-h_cpu=0:59:00; h_vmem=12000M; tmpdir_size=1G
+h_cpu=0:59:00; h_vmem=12000M; tmpdir_size=50G
 
 if [[ $# -lt 3 ]]; then
 # begin help message

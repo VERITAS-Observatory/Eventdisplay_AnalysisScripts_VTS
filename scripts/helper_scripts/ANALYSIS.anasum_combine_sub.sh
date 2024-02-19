@@ -22,6 +22,36 @@ else
 fi
 mkdir -p $TEMPDIR
 
+getNumberedDirectory()
+{
+    TRUN="$1"
+    IDIR="$2"
+    if [[ ${TRUN} -lt 100000 ]]; then
+        ODIR="${IDIR}/${TRUN:0:1}/"
+    else
+        ODIR="${IDIR}/${TRUN:0:2}/"
+    fi
+    echo ${ODIR}
+}
+
+# copy all files to TMPDIR (as anasum cannot access subdirectories
+# as used in pre-processing)
+RUNS=$(cat "$RUNLIST")
+for R in $RUNS; do
+    if [[ -e "$DDIR/$R.anasum.root" ]]; then
+        cp -f -v "$DDIR/$R.anasum.root" "$TEMPDIR"
+    else
+        FIL="$(getNumberedDirectory $R ${DDIR})/${R}.anasum.root"
+        if [[ -e "$FIL" ]]; then
+            cp -f -v "$FIL" "$TEMPDIR"
+        else
+            echo "ERROR: Run $R not found in $DDIR or $FIL"
+            echo "exiting..."
+            exit
+        fi
+    fi
+done
+
 OUTPUTDATAFILE="$OUTFILE"
 OUTPUTLOGFILE="$OUTFILE.log"
 rm -f ${OUTPUTLOGFILE}
@@ -32,7 +62,7 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
     APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind $(dirname $OUTFILE):/opt/ODIR "
-    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${DDIR}:/opt/DDIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${TEMPDIR}:/opt/DDIR "
     APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${TEMPDIR}:/opt/TEMPDIR"
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
     APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,TEMPDIR=/opt/TEMPDIR,LOGDIR=/opt/ODIR"
