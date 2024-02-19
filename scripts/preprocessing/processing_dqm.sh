@@ -54,6 +54,17 @@ check_mscw_log_files()
     grep -h -i "lookuptable:" ${1}/*[0-9].mscw.log > $TMPLOG
 }
 
+check_anasum_log_files()
+{
+    NFIL=$(ls -1 ${1}/*.anasum.root | wc -l)
+    echo "Number of anasum file: $NFIL"
+    echo "Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*.anasum.log | sort -u)"
+    echo "Errors in anasumlog files:"
+    echo "$(grep -i error ${1}/*.anasum.log)"
+    grep -h -i "reading effective areas from" ${1}/*[0-9].anasum.log > $TMPLOG
+}
+
+
 TMPLOG="$(pwd)/DQM.${DTYPE}.$(uuid).tmp.txt"
 rm -f $TMPLOG
 if [[ $DTYPE == "evndisp" ]]; then
@@ -61,6 +72,9 @@ if [[ $DTYPE == "evndisp" ]]; then
     cat $TMPLOG | sort -u
 elif [[ $DTYPE == "mscw" ]]; then
     check_mscw_log_files $FDIR
+    cat $TMPLOG | sort -u
+elif [[ $DTYPE == "anasum" ]]; then
+    check_anasum_log_files $FDIR
     cat $TMPLOG | sort -u
 fi
 rm -f $TMPLOG
