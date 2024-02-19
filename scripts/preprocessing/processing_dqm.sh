@@ -41,7 +41,7 @@ check_evndisp_log_files()
     echo "Warnings in evndisp files: "
     echo "--------------------"
     echo "$(grep -i warning ${1}/*[0-9].log | grep -v "WARNING: Skipping mount")"
-    grep -h -i EVNDISP.reconstruction.runparameter ${1}/*[0-9].log  | tee -a $TMPLOG
+    grep -h -i EVNDISP.reconstruction.runparameter ${1}/*[0-9].log > $TMPLOG
 }
 
 check_mscw_log_files()
