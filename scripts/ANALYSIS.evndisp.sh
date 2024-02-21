@@ -29,7 +29,7 @@ None of the following options are usually required:
                            Default: EVNDISP.reconstruction.runparameter.AP.v4x
 
    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
-                           directory (1=skip, 0=run the analysis; default 0)
+                           directory (1=skip, 0=run the analysis; default 1)
 
     [calibration]
           0                run analysis only; neither tzero nor pedestal calculation are performed,
@@ -91,7 +91,7 @@ if [[ $EDVERSION == "v487" ]]; then
     ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v48x"
 fi
 [[ "$3" ]] && ACUTS=$3 || ACUTS=${ACUTS_AUTO}
-[[ "$4" ]] && SKIP=$4 || SKIP=0
+[[ "$4" ]] && SKIP=$4 || SKIP=1
 [[ "$5" ]] && CALIB=$5 || CALIB=1
 [[ "$6" ]] && TELTOANA=$6 || TELTOANA=1234
 [[ "$7" ]] && CALIBFILE=$7 || CALIBFILE=calibrationlist.dat
