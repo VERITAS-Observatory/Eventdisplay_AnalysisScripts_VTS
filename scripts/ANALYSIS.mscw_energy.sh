@@ -27,7 +27,7 @@ optional parameters:
 			    Default: $DEFEVNDISPDIR
 
    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
-                           directory (1=skip, 0=run the analysis; default 0)
+                           directory (1=skip, 0=run the analysis; default 1)
 
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
@@ -59,7 +59,7 @@ exec 5>&1
 RLIST=$1
 [[ "$2" ]] && ODIR=$2
 [[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp"
-[[ "$4" ]] && SKIP=$4 || SKIP=0
+[[ "$4" ]] && SKIP=$4 || SKIP=1
 [[ "$5" ]] && ID=$5 || ID=0
 [[ "$6" ]] && FORCEDATMO=$6
 DISPBDT="1"
