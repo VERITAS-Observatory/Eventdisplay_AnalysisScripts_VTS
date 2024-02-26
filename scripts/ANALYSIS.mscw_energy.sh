@@ -2,19 +2,17 @@
 # script to analyse data files with lookup tables
 
 # qsub parameters
-h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
+h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 
 # EventDisplay version
-EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
-# Directory with preprocessed data
-DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+IRFVERSION="$EDVERSION"
 
 if [ $# -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [preprocessing skip] [Rec ID] [ATM] [evndisp log file directory]
+ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [preprocessing skip] [Rec ID] [ATM]
 
 required parameters:
 
@@ -28,8 +26,8 @@ optional parameters:
     [evndisp directory]     directory containing evndisp output ROOT files.
 			    Default: $DEFEVNDISPDIR
 
-    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
-                            directory (1=skip, 0=run the analysis; default 0)
+   [preprocessing skip]    Skip if run is already processed and found in the preprocessing
+                           directory (1=skip, 0=run the analysis; default 1)
 
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
@@ -38,8 +36,6 @@ optional parameters:
 
     [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
 
-    [evndisp log file directory] directory with evndisplay log files (default: assume same
-                            as evndisp output ROOT files)
 
 The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
 variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
@@ -51,7 +47,9 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # create extra stdout for duplication of command output
@@ -61,11 +59,10 @@ exec 5>&1
 # Parse command line arguments
 RLIST=$1
 [[ "$2" ]] && ODIR=$2
-[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$DEFEVNDISPDIR"
-[[ "$4" ]] && SKIP=$4 || SKIP=0
+[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp"
+[[ "$4" ]] && SKIP=$4 || SKIP=1
 [[ "$5" ]] && ID=$5 || ID=0
 [[ "$6" ]] && FORCEDATMO=$6
-[[ "$7" ]] && INPUTLOGDIR=$7 || INPUTLOGDIR=${INPUTDIR}
 DISPBDT="1"
 
 # Read runlist
@@ -83,7 +80,7 @@ echo
 mkdir -p $ODIR
 echo -e "Output files will be written to:\n $ODIR"
 
-# run scripts are written into this directory
+# directory for run scripts
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/MSCW.${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
@@ -111,11 +108,12 @@ getNumberedDirectory()
 # loop over all files in files loop
 for AFILE in $FILES
 do
+    echo "Now analysing run $AFILE"
     BFILE="${INPUTDIR%/}/$AFILE.root"
 
-    # check if file already has been processed
+    # check if file is on disk
     if [[ $SKIP == "1" ]]; then
-        TMPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+        TMPDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
         if [[ -d "$TMPDIR" ]]; then
             TMPMDIR=$(getNumberedDirectory $AFILE "$TMPDIR")
             if [ -e "$TMPMDIR/$AFILE.mscw.root" ]; then
@@ -135,13 +133,13 @@ do
         fi
         BFILE="$TMPINDIR/$AFILE.root"
     fi
-    echo "Now analysing $BFILE (ID=$ID)"
+    echo "Processing $BFILE (ID=$ID)"
 
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
     # directory (e.g., on afs)
-    if [[ ${NRUNS} -gt 5000 ]]; then
-        TMPLOGDIR=${LOGDIR}-${AFILE:0:1}
+    if [[ ${NRUNS} -gt 1000 ]]; then
+        TMPLOGDIR=${LOGDIR}/MSCW_${AFILE:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
     FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$AFILE"
@@ -149,7 +147,6 @@ do
 
     sed -e "s|RECONSTRUCTIONID|$ID|" \
         -e "s|OUTPUTDIRECTORY|$ODIR|" \
-        -e "s|INPUTLOGDIR|${INPUTLOGDIR}|" \
         -e "s|BDTDISP|${DISPBDT}|" \
         -e "s|VERSIONIRF|${IRFVERSION}|" \
         -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
