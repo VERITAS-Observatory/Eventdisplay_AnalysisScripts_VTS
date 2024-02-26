@@ -159,6 +159,7 @@ else
 fi
 
 
+# directory schema
 file_on_disk()
 {
     ARCHIVEDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
