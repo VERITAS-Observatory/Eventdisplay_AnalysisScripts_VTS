@@ -1,8 +1,9 @@
 # Eventdisplay Analysis Scripts for VERITAS
 
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/307321978.svg)](https://zenodo.org/badge/latestdoi/307321978)
 
-Run scripts for the analysis of VERITAS data.
+Run scripts for the analysis of VERITAS data. Requires the installation or availability of a container of the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
 
 ## Usage
 
@@ -11,6 +12,8 @@ Expected environmental variables:
 - `$EVNDISPSYS` - pointing to Eventdisplay installation ([here](https://github.com/VERITAS-Observatory/EventDisplay_v4))
 - `$EVNDISPSCRIPT` - pointing to the `./scripts` directory of this repository ([here](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/tree/main/scripts))
 - `$VERITAS_ANALYSIS_TYPE` (recommended) - indicating the reconstruction methods applied; e.g., AP\_DISP, NN\_DISP.
+
+Additional environmental variables useful especially for running on a batch system can be found in [./scripts/set_v490_apptainer.sh](./scripts/set_v490_apptainer.sh).
 
 Submission commands for a range of different batch systems can be found in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify according to your local needs.
 
@@ -32,7 +35,7 @@ No changes to the analysis scripts are required, with the exception of the updat
 
 ### MC Analysis - evndisp stage
 
-This is the stage requiring most computing resources and usually takes several days.
+This is the stage requiring most computing resources and usually takes several days. MC simulation files are required in the directory structure outlined in [./scripts/IRF.production.sh](./scripts/IRF.production.sh).
 
 Run for all analysis types (`AP`, `NN`) the following steps:
 
@@ -103,7 +106,7 @@ The `$EVNDISPSYS"/bin/calculateCrabRateFromMC` tool is used to calculate rates a
 
 ### Effective area generation
 
-
+(to be added)
 
 ## Notes
 
