@@ -26,22 +26,43 @@ fi
 RUNL=${1}
 RUNTYPE=${2}
 
-EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
+EDVERSION="v490"
+EDVERSIONFULL="v490.7"
+#
+PREDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+echo $PREDIR
+# anasum file are writting into this directory
+TMPDIR="$VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
+
+# temporary file for output
+TMPLOG="$(pwd)/anasum.submit.$(uuid).tmp.txt"
+rm -f ${TMPLOG}
 
 for C in $CUTS
 do
     if [[ $RUNTYPE == "ANASUM" ]]; then
-        mkdir -p $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_anasum_${C}
+        mkdir -p "$TMPDIR/anasum_${C}"
         ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
-            $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_anasum_${C} \
+            "$TMPDIR/anasum_${C}" \
             ${C} \
             IGNOREACCEPTANCE \
-            $EVNDISPSYS/../EventDisplay_Release_${EDVERSION}/preprocessing/parameter_files/anasum.runparameter.dat 
-    else
+            $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter \
+            $PREDIR | tee -a ${TMPLOG}
+    elif [[ $RUNTYPE == "V2DL3" ]]; then
         CF=${C/NN/}
-        mkdir -p $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${CF}
+        mkdir -p "$TMPDIR/v2dl3_${CF}"
          ./ANALYSIS.v2dl3.sh ${RUNL} \
-             $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${CF} \
+             "$TMPDIR/v2dl3_${CF}" \
              ${CF}
+    else
+        echo "Error: unknown run type $RUNTYPE (allowed: ANASUM or V2DL3)"
+        exit
     fi
 done
+
+echo
+echo "===================================================================="
+echo "JOB SUBMISSION"
+echo "===================================================================="
+grep -A 1 "Job submission using HTCondor" ${TMPLOG} | sort -r -u
+rm -f ${TMPLOG}

@@ -5,11 +5,11 @@
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
-IRFVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+IRFVERSION="$EDVERSION"
 AUXVERSION="auxv01"
 
-if [[ "$#" -lt 4 ]]; then
+if [ "$#" -lt 4 ]; then
 # begin help message
 echo "
 ANASUM parallel data analysis: submit jobs using a simple run list
@@ -35,15 +35,15 @@ required parameters:
 
 optional parameters:
 
-    [run parameter file]    anasum run parameter file (located in
-                            \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
-                            default is ANASUM.runparameter)
+    [run parameter file]    anasum run parameter file
+                            (default: \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter)
 
     [mscw directory]        directory containing the mscw.root files.
 			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
 
-    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
-                            directory (1=skip, 0=run the analysis; default 0)
+   [preprocessing skip]    Skip if run is already processed and found in the preprocessing
+                           directory (1=skip, 0=run the analysis; default 0)
+
 
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
 			    Default: CARE_June2020
@@ -60,7 +60,9 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -68,8 +70,8 @@ RUNLIST=$1
 ODIR=$2
 CUTS=$3
 BACKGND=$4
-[[ "$5" ]] && RUNP=$5  || RUNP="ANASUM.runparameter"
-[[ "$6" ]] && INDIR=$6 || INDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+[[ "$5" ]] && RUNP=$5  || RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter"
+[[ "$6" ]] && INDIR=$6 || INDIR="${VERITAS_PREPROCESSED_DATA_DIR}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 [[ "$7" ]] && SKIP=$7 || SKIP=0
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 
@@ -171,7 +173,7 @@ fi
 
 # Check that run list exists
 if [[ ! -f "$RUNLIST" ]]; then
-    echo "Error, simple runlist $RUNLIST not found, exiting..."
+    echo "Error, anasum runlist $RUNLIST not found, exiting..."
     exit 1
 fi
 
@@ -180,14 +182,13 @@ if [[ "$RUNP" == `basename $RUNP` ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
-    echo "Error, anasum run parameter file not found, exiting..."
-    echo "(searched for $RUNP)"
+    echo "Error, anasum run parameter file '$RUNP' not found, exiting..."
     exit 1
 fi
 
-# run scripts are written into this directory
+# directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.${DATE}-$(uuidgen)/"
+LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.${CUTS}-${DATE}-$(uuidgen)"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
@@ -215,12 +216,14 @@ getNumberedDirectory()
 RUNS=`cat "$RUNLIST"`
 NRUNS=`cat "$RUNLIST" | wc -l `
 echo "total number of runs to analyze: $NRUNS"
-# loop over all runs
+
+#########################################
+# loop over all files in files loop
 for RUN in ${RUNS[@]}; do
 
     # check if file already has been processed
     if [[ $SKIP == "1" ]]; then
-        ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
+        ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
         if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
             echo "$RUN already processed (${ARCHIVEDIR}/${RUN}.anasum.root)"
             echo "skipping run"
@@ -235,9 +238,11 @@ for RUN in ${RUNS[@]}; do
         TMPINDIR=$(getNumberedDirectory $RUN $INDIR)
         if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
             echo "error: mscw file not found: $TMPINDIR/$RUN.mscw.root (also not found in directory above)"
+            touch $ODIR/$RUN.NOTFOUND
             continue
         fi
     fi
+    rm -f $ODIR/$RUN.NOTFOUND
 
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
@@ -246,7 +251,7 @@ for RUN in ${RUNS[@]}; do
         TMPLOGDIR=${LOGDIR}-${RUN:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
-    FSCRIPT="$TMPLOGDIR/qsub_analyse-$DATE-RUN$RUN-$(date +%s)"
+    FSCRIPT="$TMPLOGDIR/ANASUM.$RUN-$(date +%s)"
     rm -f $FSCRIPT.sh
     echo "Run script written to $FSCRIPT"
 
@@ -282,10 +287,17 @@ for RUN in ${RUNS[@]}; do
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        echo
+        echo "-------------------------------------------------------------------------------"
+        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "-------------------------------------------------------------------------------"
+        echo
 	elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
+        echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
 	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 	fi
