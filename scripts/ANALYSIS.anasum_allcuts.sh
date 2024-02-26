@@ -41,7 +41,6 @@ rm -f ${TMPLOG}
 for C in $CUTS
 do
     if [[ $RUNTYPE == "ANASUM" ]]; then
-        mkdir -p $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_anasum_${C}
         mkdir -p "$TMPDIR/anasum_${C}"
         ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
             "$TMPDIR/anasum_${C}" \
@@ -51,7 +50,6 @@ do
             $PREDIR | tee -a ${TMPLOG}
     elif [[ $RUNTYPE == "V2DL3" ]]; then
         CF=${C/NN/}
-        mkdir -p $VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/bbb_v2dl3-${CF}
         mkdir -p "$TMPDIR/v2dl3_${CF}"
          ./ANALYSIS.v2dl3.sh ${RUNL} \
              "$TMPDIR/v2dl3_${CF}" \
