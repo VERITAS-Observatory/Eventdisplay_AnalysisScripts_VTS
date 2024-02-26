@@ -6,7 +6,7 @@ if [ ! -n "$2" ] || [ "$1" = "-h" ]; then
 echo "
 ./check_runs_on_disk.sh <directory with files> <evndisp data type>
 
-   evndisp data type can be evndisp, mscw
+   evndisp data type can be evndisp, mscw, anasum
 "
 exit
 fi
