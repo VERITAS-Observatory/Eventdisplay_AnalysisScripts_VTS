@@ -17,6 +17,10 @@ Additional environmental variables useful especially for running on a batch syst
 
 Submission commands for a range of different batch systems can be found in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify according to your local needs.
 
+## Download of data from the VERITAS database
+
+Scripts are provided to download run-wise information from the VERITAS database, see [./scripts/db_scripts/README.md](./scripts/db_scripts/README.md).
+
 ## Production of instrument response functions (IRFs)
 
 Instrument response functions (IRFs) are provided for each release of Eventdisplay.
