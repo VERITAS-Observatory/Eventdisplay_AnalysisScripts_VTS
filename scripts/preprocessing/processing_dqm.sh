@@ -56,12 +56,12 @@ check_mscw_log_files()
 
 check_anasum_log_files()
 {
-    NFIL=$(ls -1 ${1}/*.anasum.root | wc -l)
+    NFIL=$(find ${1} -name "*.anasum.root" | wc -l)
     echo "Number of anasum file: $NFIL"
-    echo "Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*.anasum.log | sort -u)"
+    echo "Container revisions: $(find ${1} -name "*.anasum.log" -exec grep -h org.opencontainers.image.revision {} \; | sort -u)"
     echo "Errors in anasumlog files:"
-    echo "$(grep -i error ${1}/*.anasum.log)"
-    grep -h -i "reading effective areas from" ${1}/*[0-9].anasum.log > $TMPLOG
+    echo "$(find ${1} -name "*.anasum.log" -exec grep -i error {} \;)"
+    find ${1} -name "*.anasum.log" -exec grep -h -i "reading effective areas from" {} \;> $TMPLOG
 }
 
 
