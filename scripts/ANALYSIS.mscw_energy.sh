@@ -2,24 +2,22 @@
 # script to analyse data files with lookup tables
 
 # qsub parameters
-h_cpu=00:29:00; h_vmem=2000M; tmpdir_size=4G
+h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 
 # EventDisplay version
-EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .)
-IRFVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d . | sed -e 's/[a-zA-Z]*$//'`
-# Directory with preprocessed data
-DEFEVNDISPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+IRFVERSION="$EDVERSION"
 
 if [ $# -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [output directory] [Rec ID] [ATM] [evndisp log file directory]
+ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [preprocessing skip] [Rec ID] [ATM]
 
 required parameters:
 
     <runlist>               simple run list with one run number per line.
-    
+
 optional parameters:
 
     [output directory]      directory where mscw.root files are written
@@ -28,15 +26,16 @@ optional parameters:
     [evndisp directory]     directory containing evndisp output ROOT files.
 			    Default: $DEFEVNDISPDIR
 
+   [preprocessing skip]    Skip if run is already processed and found in the preprocessing
+                           directory (1=skip, 0=run the analysis; default 1)
+
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
-    
+
     [simulation type]       e.g. CARE_June2020 (this is the default)
 
     [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
 
-    [evndisp log file directory] directory with evndisplay log files (default: assume same 
-                            as evndisp output ROOT files)
 
 The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
 variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
@@ -47,7 +46,9 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # create extra stdout for duplication of command output
@@ -57,10 +58,10 @@ exec 5>&1
 # Parse command line arguments
 RLIST=$1
 [[ "$2" ]] && ODIR=$2
-[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$DEFEVNDISPDIR"
-[[ "$4" ]] && ID=$4 || ID=0
-[[ "$5" ]] && FORCEDATMO=$5
-[[ "$6" ]] && INPUTLOGDIR=$6 || INPUTLOGDIR=${INPUTDIR}
+[[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp"
+[[ "$4" ]] && SKIP=$4 || SKIP=1
+[[ "$5" ]] && ID=$5 || ID=0
+[[ "$6" ]] && FORCEDATMO=$6
 DISPBDT="1"
 
 # Read runlist
@@ -70,7 +71,7 @@ if [ ! -f "$RLIST" ] ; then
 fi
 FILES=`cat "$RLIST"`
 
-NRUNS=`cat "$RLIST" | wc -l ` 
+NRUNS=`cat "$RLIST" | wc -l `
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -78,9 +79,9 @@ echo
 mkdir -p $ODIR
 echo -e "Output files will be written to:\n $ODIR"
 
-# run scripts are written into this directory
+# directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$VERITAS_USER_LOG_DIR/${DATE}-$(uuidgen)/MSCW.ANADATA"
+LOGDIR="$VERITAS_USER_LOG_DIR/MSCW.${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
@@ -106,16 +107,19 @@ getNumberedDirectory()
 # loop over all files in files loop
 for AFILE in $FILES
 do
+    echo "Now analysing run $AFILE"
     BFILE="${INPUTDIR%/}/$AFILE.root"
 
-    # check if file exists
-    TMPDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
-    if [[ -d "$TMPDIR" ]]; then
-        TMPMDIR=$(getNumberedDirectory $AFILE "$TMPDIR")
-        if [ -e "$TMPMDIR/$AFILE.mscw.root" ]; then
-            echo "RUN $AFILE already processed; skipping"
-            continue
-        fi    
+    # check if file is on disk
+    if [[ $SKIP == "1" ]]; then
+        TMPDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
+        if [[ -d "$TMPDIR" ]]; then
+            TMPMDIR=$(getNumberedDirectory $AFILE "$TMPDIR")
+            if [ -e "$TMPMDIR/$AFILE.mscw.root" ]; then
+                echo "RUN $AFILE already processed; skipping"
+                continue
+            fi
+        fi
     fi
     # EVNDISP file
     if [ ! -e "$BFILE" ]; then
@@ -126,13 +130,13 @@ do
         fi
         BFILE="$TMPINDIR/$AFILE.root"
     fi
-    echo "Now analysing $BFILE (ID=$ID)"
+    echo "Processing $BFILE (ID=$ID)"
 
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
     # directory (e.g., on afs)
-    if [[ ${NRUNS} -gt 5000 ]]; then
-        TMPLOGDIR=${LOGDIR}-${AFILE:0:1}
+    if [[ ${NRUNS} -gt 1000 ]]; then
+        TMPLOGDIR=${LOGDIR}/MSCW_${AFILE:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
     FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$AFILE"
@@ -140,7 +144,6 @@ do
 
     sed -e "s|RECONSTRUCTIONID|$ID|" \
         -e "s|OUTPUTDIRECTORY|$ODIR|" \
-        -e "s|INPUTLOGDIR|${INPUTLOGDIR}|" \
         -e "s|BDTDISP|${DISPBDT}|" \
         -e "s|VERSIONIRF|${IRFVERSION}|" \
         -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
@@ -159,7 +162,7 @@ do
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
-        
+
         echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
@@ -175,12 +178,12 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh   
+        $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
 done
 

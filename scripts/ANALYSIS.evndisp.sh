@@ -2,13 +2,12 @@
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters
-h_cpu=11:59:00; h_vmem=2000M; tmpdir_size=25G
+h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
-# begin help message
 echo "
 EVNDISP data analysis: submit jobs from a simple run list
 
@@ -30,7 +29,7 @@ None of the following options are usually required:
                            Default: EVNDISP.reconstruction.runparameter.AP.v4x
 
    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
-                           directory (1=skip, 0=run the analysis; default 0)
+                           directory (1=skip, 0=run the analysis; default 1)
 
     [calibration]
           0                run analysis only; neither tzero nor pedestal calculation are performed,
@@ -60,12 +59,13 @@ variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # create extra stdout for duplication of command output
@@ -91,14 +91,12 @@ if [[ $EDVERSION == "v487" ]]; then
     ACUTS_AUTO="EVNDISP.reconstruction.runparameter.v48x"
 fi
 [[ "$3" ]] && ACUTS=$3 || ACUTS=${ACUTS_AUTO}
-[[ "$4" ]] && SKIP=$4 || SKIP=0
+[[ "$4" ]] && SKIP=$4 || SKIP=1
 [[ "$5" ]] && CALIB=$5 || CALIB=1
 [[ "$6" ]] && TELTOANA=$6 || TELTOANA=1234
 [[ "$7" ]] && CALIBFILE=$7 || CALIBFILE=calibrationlist.dat
 # VPM is on by default
 VPM=1
-# Download file to disk (if not available)
-DOWNLOAD=0
 # directory with DB text
 DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/DBTEXT"
 
@@ -163,7 +161,7 @@ fi
 
 file_on_disk()
 {
-    ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_$EDVERSION/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
+    ARCHIVEDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
     TRUN="$1"
     if [[ ${TRUN} -lt 100000 ]]; then
         EDIR="${ARCHIVEDIR}/${TRUN:0:1}/"
@@ -216,8 +214,10 @@ do
         -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|VVERSION|$EDVERSION|" \
-        -e "s|DOWNLOADVBF|$DOWNLOAD|" \
         -e "s|DATABASETEXT|${DBTEXTDIR}|" \
+        -e "s|VTS_DATA_DIR|${VERITAS_DATA_DIR}|" \
+        -e "s|VTS_2DATA_DIR|/lustre/fs23/group/veritas|" \
+        -e "s|VTS_USER_DATA_DIR|${VERITAS_USER_DATA_DIR}|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
@@ -260,16 +260,12 @@ do
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        if [[ ${EDVERSION} == "v487" ]]; then
-           condor_submit $FSCRIPT.sh.condor
-        else
-            echo
-            echo "-------------------------------------------------------------------------------"
-            echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-            echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-            echo "-------------------------------------------------------------------------------"
-            echo
-        fi
+        echo
+        echo "-------------------------------------------------------------------------------"
+        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "-------------------------------------------------------------------------------"
+        echo
     elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
