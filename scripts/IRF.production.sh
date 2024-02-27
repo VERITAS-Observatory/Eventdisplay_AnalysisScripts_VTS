@@ -13,26 +13,26 @@ required parameters:
 
     <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
-    
+
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
                              (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
                              ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
+                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
                              TRAINMVANGRES, EVNDISPCOMPRESS)
-    
+
 optional parameters:
-    
+
     [epoch]                 array epoch(s) (e.g., V4, V5, V6)
                             (default: \"V4 V5 V6\")
-                            (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b 
+                            (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b
                              V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
                              V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
                              V6_2022_2022s, V6_2022_2023w, V6_2023_2023s\")
 
     [atmosphere]            atmosphere model(s) (21/61 = winter, 22/62 = summer)
                             (default: \"61 62\")
-                            
+
     [Rec ID]                reconstruction ID(s) (default: \"0 2 3 4 5\")
                             (see EVNDISP.reconstruction.runparameter)
 
@@ -119,33 +119,33 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     WOBBLE_OFFSETS=( 0.5 )
 elif [ "${SIMTYPE}" = "CARE_UV_June1409" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=( 0.5 ) 
+    WOBBLE_OFFSETS=( 0.5 )
 elif [ "${SIMTYPE}" = "CARE_UV_2212" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq) 
+    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq | head -n -1)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u) 
+    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 50 )
+    # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 65 )
-    # ZENITH_ANGLES=( 20 )
+    #  ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
     ######################################
-    # TRAINMVANGRES production 
+    # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
     # NSB_LEVELS=( 160 200 250 )
     # WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
@@ -157,15 +157,17 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
     # (END TEMPORARY)
     ######################################
-elif [[ "${SIMTYPE:0:12}" = "CARE_Jan2024" ]]; then
-    SIMDIR="${VERITAS_USER_DATA_DIR}/simpipe_test/data_2/ATM${ATMOS}"
+elif [[ "${SIMTYPE}" = "CARE_RedHV_Feb2024" ]]; then
+    SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
-    OBSTYPE=${SIMTYPE:13}
-    echo $OBSTYPE "${SIMTYPE:0:12}"
     set -- $ZENITH_ANGLES
-    echo $SIMDIR
-    NSB_LEVELS=$(find ${SIMDIR}/Zd${ZENITH_ANGLES[0]}/MERGEVBF_${OBSTYPE}/ -type f -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort | uniq | paste -sd ' ')
-    WOBBLE_OFFSETS=$(find ${SIMDIR}/Zd${ZENITH_ANGLES[0]}/MERGEVBF_${OBSTYPE}/ -type f -name "*.zst" -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}'| sort | uniq | paste -sd ' ')
+    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    ######################################
+    # TEST
+    NSB_LEVELS=( 200 )
+    ZENITH_ANGLES=( 65 )
+    WOBBLE_OFFSETS=( 0.5 )
 elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
@@ -201,26 +203,29 @@ elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
 elif [ "${SIMTYPE}" = "GRISU" ]; then
    if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
         CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
    else
         CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
                  ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
                  ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
    fi
 else
    if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
         CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat 
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat"
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
    else
         CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat 
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
                  ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
                  ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
    fi
 fi
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat"
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
    if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
@@ -241,6 +246,7 @@ CUTLIST=${CUTLIST//$'\n'/}
 CUTTYPES="NTel2-PointSource-Moderate
           NTel2-PointSource-Soft
           NTel3-PointSource-Hard"
+CUTTYPES="NTel2-PointSource-Hard"
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
     CUTTYPES="NTel2-PointSource-SuperSoft"
@@ -297,7 +303,7 @@ for VX in $EPOCH; do
                         if [[ $DISPBDT == "1" ]]; then
                             TRAINDIR="${BDTDIR}/mscw_${VX:0:2}_DISP/"
                             MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
-                        fi 
+                        fi
                         mkdir -p -v "${MVADIR}"
                         if [[ $IRFTYPE == "TRAINTMVA" ]]; then
                             # retrieve size cut
