@@ -41,7 +41,7 @@ optional parameters:
 			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
 
    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
-                           directory (1=skip, 0=run the analysis; default 0)
+                           directory (1=skip, 0=run the analysis; default 1)
 
 
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
@@ -71,7 +71,7 @@ CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="${VERITAS_PREPROCESSED_DATA_DIR}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
-[[ "$7" ]] && SKIP=$7 || SKIP=0
+[[ "$7" ]] && SKIP=$7 || SKIP=1
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 
 ANATYPE="AP"
