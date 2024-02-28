@@ -146,13 +146,17 @@ do
     mkdir -p ${ODIR}/Calibration/${T}
 done
 if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat" ]]; then
-   cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat ${ODIR}/Calibration/
+   if [[ ! -e ${ODIR}/Calibration/calibrationlist.LowGain.dat ]]; then
+       cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat ${ODIR}/Calibration/
+   fi
 else
    echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat)"
    exit
 fi
 if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped" ]]; then
-   cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped ${ODIR}/Calibration/
+   if [[ ! -e ${ODIR}/Calibration/LowGainPedestals.lped ]]; then
+       cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped ${ODIR}/Calibration/
+   fi
 else
    echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped)"
    exit
