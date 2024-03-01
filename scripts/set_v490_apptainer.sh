@@ -27,8 +27,7 @@ export VERITAS_DATA_DIR=${GROUPDATADDIR}
 # general auxiliary directory
 export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPVERSION}-prepocessing
 # pre-processed data products
-# export VERITAS_PREPROCESSED_DATA_DIR=${GROUPDATADDIR}/shared/processed_data_v${EVNDISPVERSION:0:4}/
-export VERITAS_PREPROCESSED_DATA_DIR=${USERLUSTDIR}/analysis/Results/${EVNDISPVERSION:0:4}/processed_data_${EVNDISPVERSION}
+export VERITAS_PREPROCESSED_DATA_DIR=${GROUPDATADDIR}/shared/processed_data_${EVNDISPVERSION:0:4}.7/
 # user IRF production directory
 export VERITAS_IRFPRODUCTION_DIR=${GROUPLUSTDIR}/IRFPRODUCTION
 # user data
