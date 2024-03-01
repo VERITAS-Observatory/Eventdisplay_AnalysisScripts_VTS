@@ -125,7 +125,7 @@ do
     if [ ! -e "$BFILE" ]; then
         TMPINDIR=$(getNumberedDirectory $AFILE ${INPUTDIR})
         if [ ! -e "$TMPINDIR/$AFILE.root" ]; then
-            echo "ERR: File $BFILE does not exist !!!" >> mscw.errors.log
+            echo "ERR: File $BFILE does not exist" >> mscw.errors.log
             continue
         fi
         BFILE="$TMPINDIR/$AFILE.root"
