@@ -4,11 +4,10 @@
 #
 
 if [[ ${VERITAS_ANALYSIS_TYPE:0:2} == "AP" ]]; then
-    CUTS="moderate2tel soft2tel hard3tel"
+    CUTS="moderate2tel soft2tel hard2tel hard3tel"
 else
     CUTS="supersoftNN2tel"
 fi
-
 
 if [ $# -lt 2 ]; then
 echo "
