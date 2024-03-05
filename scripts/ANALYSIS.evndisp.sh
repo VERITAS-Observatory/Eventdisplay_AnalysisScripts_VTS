@@ -273,7 +273,7 @@ do
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
+        "$FSCRIPT.sh" | tee "$FSCRIPT.log"
     elif [[ "$SUBC" == *test* ]]; then
         echo "TESTING SCRIPT $FSCRIPT.sh"
     fi

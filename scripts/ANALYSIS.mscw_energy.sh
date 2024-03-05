@@ -42,6 +42,7 @@ variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
 
 --------------------------------------------------------------------------------
 "
+#end help message
 exit
 fi
 
@@ -121,6 +122,8 @@ do
             fi
         fi
     fi
+    echo "Processing $AFILE"
+
     # EVNDISP file
     if [ ! -e "$BFILE" ]; then
         TMPINDIR=$(getNumberedDirectory $AFILE ${INPUTDIR})

@@ -15,12 +15,12 @@ required parameters:
 
     <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV_2212)
-    
+
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
                              (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
                              ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA, 
+                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
                              TRAINMVANGRES, EVNDISPCOMPRESS)
 
 --------------------------------------------------------------------------------
@@ -57,10 +57,7 @@ process_irfs()
                 ./IRF.production.sh $2 $1 $E $3 $ID
             done
         else
-            for ID in 0
-            do
-                ./IRF.production.sh $2 $1 $E $3 $ID
-            done
+            ./IRF.production.sh $2 $1 $E $3 0
         fi
     done
 }
@@ -71,8 +68,18 @@ if [[ ${SIMTYPE} == "CARE_June2020" ]] || [[ ${SIMTYPE} == "CARE_RedHV" ]]; then
 elif [[ ${SIMTYPE} == "CARE_UV_2212" ]]; then
     process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_obsfilter.dat
 elif [[ ${SIMTYPE} == "GRISU" ]]; then
-    ./IRF.production.sh GRISU ${IRFTYPE} V5 21 0
-    ./IRF.production.sh GRISU ${IRFTYPE} V5 22 0
-    ./IRF.production.sh GRISU ${IRFTYPE} V4 21 0
-    ./IRF.production.sh GRISU ${IRFTYPE} V4 22 0
+    if [[ "$2" == "ANALYSETABLES" ]] || [[ "$2" == "EFFECTIVEAREAS" ]] || [[ "$2" == "COMBINEEFFECTIVEAREAS" ]]; then
+        for ID in 0 2 3 4 5
+        do
+            ./IRF.production.sh GRISU ${IRFTYPE} V5 21 $ID
+            ./IRF.production.sh GRISU ${IRFTYPE} V5 22 $ID
+            ./IRF.production.sh GRISU ${IRFTYPE} V4 21 $ID
+            ./IRF.production.sh GRISU ${IRFTYPE} V4 22 $ID
+        done
+    else
+            ./IRF.production.sh GRISU ${IRFTYPE} V5 21 0
+            ./IRF.production.sh GRISU ${IRFTYPE} V5 22 0
+            ./IRF.production.sh GRISU ${IRFTYPE} V4 21 0
+            ./IRF.production.sh GRISU ${IRFTYPE} V4 22 0
+    fi
 fi
