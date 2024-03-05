@@ -134,16 +134,15 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq | head -n -1)
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
     NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 65 )
-    #  ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
+#    ZENITH_ANGLES=( 20 )
+#    WOBBLE_OFFSETS=( 2.0 )
+#    NSB_LEVELS=( 400 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -200,32 +199,20 @@ elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
-elif [ "${SIMTYPE}" = "GRISU" ]; then
-   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
-   else
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-   fi
 else
    if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
+
+       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+                ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
+                ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
+                ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
    else
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+                ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
+                ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+                ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
    fi
 fi
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat"
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
    if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
@@ -245,8 +232,8 @@ CUTLIST=${CUTLIST//$'\n'/}
 # Cut types are used for BDT training and optimisation
 CUTTYPES="NTel2-PointSource-Moderate
           NTel2-PointSource-Soft
+          NTel2-PointSource-Hard
           NTel3-PointSource-Hard"
-CUTTYPES="NTel2-PointSource-Hard"
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
     CUTTYPES="NTel2-PointSource-SuperSoft"
