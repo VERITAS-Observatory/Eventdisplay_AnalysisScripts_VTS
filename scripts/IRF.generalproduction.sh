@@ -52,8 +52,7 @@ process_irfs()
         fi
         echo $E $1 $2 $3
         if [[ "$1" == "ANALYSETABLES" ]] || [[ "$1" == "EFFECTIVEAREAS" ]] || [[ "$1" == "COMBINEEFFECTIVEAREAS" ]]; then
-            # for ID in 0 2 3 4 5
-            for ID in 2 3 4 5
+            for ID in 0 2 3 4 5
             do
                 ./IRF.production.sh $2 $1 $E $3 $ID
             done
@@ -70,7 +69,7 @@ elif [[ ${SIMTYPE} == "CARE_UV_2212" ]]; then
     process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_obsfilter.dat
 elif [[ ${SIMTYPE} == "GRISU" ]]; then
     if [[ "$2" == "ANALYSETABLES" ]] || [[ "$2" == "EFFECTIVEAREAS" ]] || [[ "$2" == "COMBINEEFFECTIVEAREAS" ]]; then
-        for ID in 2 3 4 5
+        for ID in 0 2 3 4 5
         do
             ./IRF.production.sh GRISU ${IRFTYPE} V5 21 $ID
             ./IRF.production.sh GRISU ${IRFTYPE} V5 22 $ID
