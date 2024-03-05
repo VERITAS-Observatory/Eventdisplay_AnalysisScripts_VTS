@@ -114,6 +114,8 @@ elif [[ $CUTS = NTel2HardPre ]]; then
     CUT="NTel2-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel3HardPre ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-Preselection"
+elif [[ $CUTS = NTel2HardPre ]]; then
+    CUT="NTel2-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel2Pre ]]; then
     CUT="NTel2-PointSource-TMVA-BDT-Preselection"
 elif [[ $CUTS = NTel3Pre ]]; then
@@ -230,6 +232,7 @@ for RUN in ${RUNS[@]}; do
             continue
         fi
     fi
+    echo "Processing $RUN"
 
     TMPINDIR="$INDIR"
     # check for mscw file

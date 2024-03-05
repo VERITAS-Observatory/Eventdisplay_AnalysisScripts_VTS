@@ -163,6 +163,7 @@ else
 fi
 
 
+# directory schema
 file_on_disk()
 {
     ARCHIVEDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp/"
@@ -278,7 +279,7 @@ do
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
+        "$FSCRIPT.sh" | tee "$FSCRIPT.log"
     elif [[ "$SUBC" == *test* ]]; then
         echo "TESTING SCRIPT $FSCRIPT.sh"
     fi
