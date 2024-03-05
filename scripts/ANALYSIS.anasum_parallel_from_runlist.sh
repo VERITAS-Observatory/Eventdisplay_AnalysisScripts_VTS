@@ -24,9 +24,9 @@ required parameters:
     <output directory>      anasum output files are written to this directory
 
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard3tel, supersoft, supersoftNN2tel)
-                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre,
-                            NTel2HardPre, NTel2SuperSoftPre)
+                            (i.e., moderate2tel, soft2tel, hard2tel, hard3tel, supersoft, supersoftNN2tel)
+                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel2HardPre,
+                            NTel3HardPre, NTel2SuperSoftPre)
 
     <background model>      background model
                             (RE = reflected region, RB = ring background,
@@ -42,7 +42,7 @@ optional parameters:
 			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
 
    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
-                           directory (1=skip, 0=run the analysis; default 0)
+                           directory (1=skip, 0=run the analysis; default 1)
 
 
     [sim type]              use IRFs derived from this simulation type (GRISU-SW6 or CARE_June2020)
@@ -72,7 +72,7 @@ CUTS=$3
 BACKGND=$4
 [[ "$5" ]] && RUNP=$5  || RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter"
 [[ "$6" ]] && INDIR=$6 || INDIR="${VERITAS_PREPROCESSED_DATA_DIR}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
-[[ "$7" ]] && SKIP=$7 || SKIP=0
+[[ "$7" ]] && SKIP=$7 || SKIP=1
 [[ "$8" ]] && SIMTYPE=$8 || SIMTYPE="DEFAULT"
 
 ANATYPE="AP"
@@ -110,6 +110,8 @@ elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
 elif [[ $CUTS = NTel2SuperSoftPre ]]; then
     CUT="NTel2-PointSource-SuperSoft-TMVA-Preselection"
+elif [[ $CUTS = NTel2HardPre ]]; then
+    CUT="NTel2-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel3HardPre ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel2HardPre ]]; then

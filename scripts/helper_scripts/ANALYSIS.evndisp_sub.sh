@@ -140,13 +140,13 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     ls -l ${TMP_DBTEXTDIRECTORY}
     if [[ ! -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
         # TMP for preprocessing
-        if [[ ! -e ${VERITAS_DATA_DIR_2}/data/data/${RUNDATE}/${RUN}.cvbf ]]; then
+        if [[ ! -e ${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf ]]; then
             RUNONDISK="file not found"
         else
             if [ -n "$EVNDISP_APPTAINER" ]; then
-                OPT+=( -sourcefile /opt/VERITAS_DATA_DIR_2/data/data/${RUNDATE}/${RUN}.cvbf )
+                OPT+=( -sourcefile /opt/VERITAS_DATA_DIR_2/data/${RUNDATE}/${RUN}.cvbf )
             else
-                OPT+=( -sourcefile ${VERITAS_DATA_DIR_2}/data/data/${RUNDATE}/${RUN}.cvbf )
+                OPT+=( -sourcefile ${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf )
             fi
         fi
         # END TMP

@@ -19,9 +19,9 @@
 
 # HTCondor
 # submit the job
-* condor_submit
+ condor_submit
 # write condor files only
- condor
+* condor
 
 # script testing
  test
