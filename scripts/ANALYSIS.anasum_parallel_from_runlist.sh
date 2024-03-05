@@ -24,8 +24,9 @@ required parameters:
     <output directory>      anasum output files are written to this directory
 
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard3tel, supersoft, supersoftNN2tel)
-                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel3HardPre, NTel2SuperSoftPre)
+                            (i.e., moderate2tel, soft2tel, hard2tel, hard3tel, supersoft, supersoftNN2tel)
+                            (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel2HardPre,
+                            NTel3HardPre, NTel2SuperSoftPre)
 
     <background model>      background model
                             (RE = reflected region, RB = ring background,
@@ -93,6 +94,8 @@ elif [[ $CUTS = "supersoftNN2tel" ]] || [[ $CUTS = "BDTsoftNN2tel" ]]; then
     CUT="NTel2-PointSource-SuperSoft-NN-TMVA-BDT"
 elif [[ $CUTS = "hard3tel" ]] || [[ $CUTS = "BDThard3tel" ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-BDT"
+elif [[ $CUTS = "hard2tel" ]] || [[ $CUTS = "BDThard2tel" ]]; then
+    CUT="NTel2-PointSource-Hard-TMVA-BDT"
 elif [[ $CUTS = "moderatebox" ]]; then
     CUT="NTel2-PointSource-Moderate"
 elif [[ $CUTS = "softbox" ]]; then
@@ -107,6 +110,8 @@ elif [[ $CUTS = NTel2SoftPre ]]; then
     CUT="NTel2-PointSource-Soft-TMVA-Preselection"
 elif [[ $CUTS = NTel2SuperSoftPre ]]; then
     CUT="NTel2-PointSource-SuperSoft-TMVA-Preselection"
+elif [[ $CUTS = NTel2HardPre ]]; then
+    CUT="NTel2-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel3HardPre ]]; then
     CUT="NTel3-PointSource-Hard-TMVA-Preselection"
 elif [[ $CUTS = NTel2Pre ]]; then
