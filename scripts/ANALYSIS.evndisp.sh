@@ -221,11 +221,9 @@ do
         -e "s|VVERSION|$EDVERSION|" \
         -e "s|DATABASETEXT|${DBTEXTDIR}|" \
         -e "s|VTS_DATA_DIR|${VERITAS_DATA_DIR}|" \
-        -e "s|VTS_2DATA_DIR|/lustre/fs23/group/veritas/data|" \
+        -e "s|VTS_2DATA_DIR|/lustre/fs24/group/cta/tmp_data|" \
         -e "s|VTS_USER_DATA_DIR|${VERITAS_USER_DATA_DIR}|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
-
-#        -e "s|VTS_2DATA_DIR|/lustre/fs24/group/cta/tmp_data|" \
 
     chmod u+x "$FSCRIPT.sh"
     echo "$FSCRIPT.sh"
