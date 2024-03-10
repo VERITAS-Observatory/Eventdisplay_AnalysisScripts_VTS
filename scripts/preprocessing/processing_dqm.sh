@@ -60,7 +60,7 @@ check_anasum_log_files()
     echo "Number of anasum file: $NFIL"
     echo "Container revisions: $(find ${1} -name "*.anasum.log" -exec grep -h org.opencontainers.image.revision {} \; | sort -u)"
     echo "Errors in anasumlog files:"
-    echo "$(find ${1} -name "*.anasum.log" -exec grep -i error {} \;)"
+    echo "$(find ${1} -name "*.anasum.log" -exec grep -H -i error {} \;)"
     find ${1} -name "*.anasum.log" -exec grep -h -i "reading effective areas from" {} \;> $TMPLOG
 }
 
