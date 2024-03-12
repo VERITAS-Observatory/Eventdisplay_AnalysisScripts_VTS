@@ -34,6 +34,11 @@ getNumberedDirectory()
     echo ${ODIR}
 }
 
+OUTPUTDATAFILE="$OUTFILE"
+OUTPUTLOGFILE="$OUTFILE.log"
+rm -f ${OUTPUTLOGFILE}
+touch ${OUTPUTLOGFILE}
+
 # copy all files to TMPDIR (as anasum cannot access subdirectories
 # as used in pre-processing)
 RUNS=$(cat "$RUNLIST")
@@ -45,16 +50,15 @@ for R in $RUNS; do
         if [[ -e "$FIL" ]]; then
             cp -f -v "$FIL" "$TEMPDIR"
         else
-            echo "ERROR: Run $R not found in $DDIR or $FIL"
-            echo "exiting..."
-            exit
+            echo "ERROR: Run $R not found in $DDIR or $FIL" >> ${OUTPUTLOGFILE}
         fi
     fi
 done
-
-OUTPUTDATAFILE="$OUTFILE"
-OUTPUTLOGFILE="$OUTFILE.log"
-rm -f ${OUTPUTLOGFILE}
+if [[ $(wc -l < "${OUTPUTLOGFILE}") -ne 0 ]]; then
+    echo "Not all runs found on disk"
+    echo "exiting..."
+    exit
+fi
 
 # explicit binding for apptainers
 if [ -n "$EVNDISP_APPTAINER" ]; then
