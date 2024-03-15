@@ -136,8 +136,10 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    echo $ZENITH_ANGLES $SIMDIR
+    NSB_LEVELS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
+    echo $NSB_LEVELS
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
 #    ZENITH_ANGLES=( 20 )
@@ -196,7 +198,8 @@ if [[ $CUTSLISTFILE != "" ]]; then
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
 elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 else
@@ -222,7 +225,7 @@ if [[ $ANATYPE = "NN"* ]]; then
            CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
        else
            CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-                     ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+                    ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
        fi
    fi
 fi
