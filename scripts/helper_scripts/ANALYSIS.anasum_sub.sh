@@ -170,20 +170,16 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
             RADACCRUN=${RADACCRUN/SuperSoft-NN-TMVA-BDT/SuperSoft}
             CUTFILE=${CUTFILE/SuperSoft-NN-TMVA-BDT/SuperSoft}
         else
-            echo "RedHV runs - change soft/moderate/hard BDT to soft/moderate box cuts"
-            REPLACE_CUT="Soft"
-            if [[ $EFFAREARUN == *"Moderate"* ]] || [[ $EFFAREARUN == *"Hard"* ]]; then
-                REPLACE_CUT="Moderate"
-            fi
-            EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/$REPLACE_CUT}
-            RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/$REPLACE_CUT}
-            CUTFILE=${CUTFILE/Soft-TMVA-BDT/$REPLACE_CUT}
-            EFFAREARUN=${EFFAREARUN/Moderate-TMVA-BDT/$REPLACE_CUT}
-            RADACCRUN=${RADACCRUN/Moderate-TMVA-BDT/$REPLACE_CUT}
-            CUTFILE=${CUTFILE/Moderate-TMVA-BDT/$REPLACE_CUT}
-            EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/$REPLACE_CUT}
-            RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/$REPLACE_CUT}
-            CUTFILE=${CUTFILE/Hard-TMVA-BDT/$REPLACE_CUT}
+            echo "RedHV runs - change BDT to box cuts"
+            EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/Soft}
+            RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/Soft}
+            CUTFILE=${CUTFILE/Soft-TMVA-BDT/Soft}
+            EFFAREARUN=${EFFAREARUN/Moderate-TMVA-BDT/Moderate}
+            RADACCRUN=${RADACCRUN/Moderate-TMVA-BDT/Moderate}
+            CUTFILE=${CUTFILE/Moderate-TMVA-BDT/Moderate}
+            EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/Hard}
+            RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/Hard}
+            CUTFILE=${CUTFILE/Hard-TMVA-BDT/Hard}
             EFFAREARUN=${EFFAREARUN/NTel3/NTel2}
             RADACCRUN=${RADACCRUN/NTel3/NTel2}
             CUTFILE=${CUTFILE/NTel3/NTel2}
