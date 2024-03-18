@@ -174,12 +174,22 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
             EFFAREARUN=${EFFAREARUN/Soft-TMVA-BDT/Soft}
             RADACCRUN=${RADACCRUN/Soft-TMVA-BDT/Soft}
             CUTFILE=${CUTFILE/Soft-TMVA-BDT/Soft}
-            EFFAREARUN=${EFFAREARUN/Moderate-TMVA-BDT/Moderate}
-            RADACCRUN=${RADACCRUN/Moderate-TMVA-BDT/Moderate}
-            CUTFILE=${CUTFILE/Moderate-TMVA-BDT/Moderate}
-            EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/Hard}
-            RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/Hard}
-            CUTFILE=${CUTFILE/Hard-TMVA-BDT/Hard}
+            if [[ $OBSL == "obsLowHV" ]]; then
+                EFFAREARUN=${EFFAREARUN/Moderate-TMVA-BDT/Moderate}
+                RADACCRUN=${RADACCRUN/Moderate-TMVA-BDT/Moderate}
+                CUTFILE=${CUTFILE/Moderate-TMVA-BDT/Moderate}
+                # hard cuts are replaced by moderate cuts!
+                EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/Moderate}
+                RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/Moderate}
+                CUTFILE=${CUTFILE/Hard-TMVA-BDT/Moderate}
+            else
+                EFFAREARUN=${EFFAREARUN/Moderate-TMVA-BDT/Soft}
+                RADACCRUN=${RADACCRUN/Moderate-TMVA-BDT/Soft}
+                CUTFILE=${CUTFILE/Moderate-TMVA-BDT/Soft}
+                EFFAREARUN=${EFFAREARUN/Hard-TMVA-BDT/Soft}
+                RADACCRUN=${RADACCRUN/Hard-TMVA-BDT/Soft}
+                CUTFILE=${CUTFILE/Hard-TMVA-BDT/Soft}
+            fi
             EFFAREARUN=${EFFAREARUN/NTel3/NTel2}
             RADACCRUN=${RADACCRUN/NTel3/NTel2}
             CUTFILE=${CUTFILE/NTel3/NTel2}
