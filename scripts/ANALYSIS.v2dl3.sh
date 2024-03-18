@@ -1,17 +1,11 @@
 #!/bin/bash
-# script to run V2DL3 
+# script to run V2DL3
 # (convert anasum output to FITS-DL3)
 # run point-like and full-enclosure analysis
 #
 
 # qsub parameters
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=5G
-
-# EventDisplay version
-EDVERSION=$($EVNDISPSYS/bin/anasum --version | tr -d .)
-# Directory with preprocessed data
-DEFANASUMDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/anasum/"
-V2DL3="$EVNDISPSYS/../V2DL3/"
 
 if [ $# -lt 3 ]; then
 echo "
@@ -22,7 +16,7 @@ ANALYSIS.v2dl3.sh <run list> <output directory> <cut name> [nruns per job]
 required parameters:
 
     <runlist>               simple run list with one run number per line.
-    
+
     <output directory>      directory where fits.gz files are written
 
     <cut name>              cut name to search pre-processing directories
@@ -99,7 +93,7 @@ do
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
-        
+
         echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
@@ -115,12 +109,12 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh   
+        $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${LOGDIR}/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
 done
 

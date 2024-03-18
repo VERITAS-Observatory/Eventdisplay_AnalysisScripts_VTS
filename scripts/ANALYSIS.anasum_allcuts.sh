@@ -32,6 +32,7 @@ PREDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 echo $PREDIR
 # anasum file are writting into this directory
 TMPDIR="$VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
+TMPDIR="$VERITAS_DATA_DIR/tmp/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
 
 # temporary file for output
 TMPLOG="$(pwd)/anasum.submit.$(uuid).tmp.txt"

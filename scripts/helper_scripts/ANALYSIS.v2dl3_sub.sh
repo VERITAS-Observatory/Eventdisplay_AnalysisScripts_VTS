@@ -4,7 +4,9 @@
 # run point-like and full-enclosure analysis
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source $EVNDISPSYS/setObservatory.sh VTS
+fi
 # Don't do set -e.
 # set -e
 
@@ -12,13 +14,6 @@ source $EVNDISPSYS/setObservatory.sh VTS
 RUNLIST=RRUNLIST
 ODIR=OODIR
 CUT=CCUT
-
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/anasum --version | tr -d .`
-# Directory with preprocessed data
-INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum/"
-# V2DL3 code
-V2DL3="$EVNDISPSYS/../V2DL3/"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -63,7 +58,7 @@ check_conda_installation
 
 source activate base
 conda activate v2dl3Eventdisplay
-export PYTHONPATH=\$PYTHONPATH:${V2DL3}
+export PYTHONPATH=\$PYTHONPATH:${V2DL3SYS}
 
 V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
 # selection for full-gamma files
@@ -86,6 +81,22 @@ getNumberedDirectory()
     echo ${ODIR}
 }
 
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${TEMPDIR}:/opt/DDIR "
+    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${TEMPDIR}:/opt/TEMPDIR"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,INDIR=/opt/INDIR,TEMPDIR=/opt/TEMPDIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    DDIR="/opt/DDIR/"
+    echo "APPTAINER DDIR: $DDIR"
+fi
+
+
 for RUN in $FILES
 do
     echo $RUN
@@ -96,15 +107,22 @@ do
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    EFFAREA=$($EVNDISPSYS/bin/printAnasumRunParameter ${ANASUMFILE} ${RUN} -effareafile)
-    echo "   Effective area file: $EFFAREA"
-    EPOCH=$($EVNDISPSYS/bin/printRunParameter ${ANASUMFILE} -epoch)
+    cp -v ${ANASUMFILE} ${TEMPDIR}
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        ED_ANASUMFILE="/opt/TEMPDIR/$(basename ${ANASUMFILE})"
+    else
+        ED_ANASUMFILE="${ED_ANASUMFILE}"
+    fi
+    EFFAREA=$($EVNDISPSYS/bin/printAnasumRunParameter ${ED_ANASUMFILE} ${RUN} -effareafile)
+    EPOCH=$($EVNDISPSYS/bin/printRunParameter ${ED_ANASUMFILE} -epoch)
+    echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
     DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
     if [[ ! -e ${DBFITSFILE} ]]; then
         echo "DB File ${DBFITSFILE} not found"
         echo "Skipping run $RUN"
         continue
     fi
+    echo "   Using DBFits file ${DBFITSFILE}"
 
     for m in "point-like" "full-enclosure"
     do
@@ -123,7 +141,7 @@ do
             mkdir -p ${ODIR}/${m}${p}
             rm -f ${ODIR}/${m}${p}/${RUN}.log
 
-            python ${V2DL3}/pyV2DL3/script/v2dl3_for_Eventdisplay.py \
+            python ${V2DL3SYS}/pyV2DL3/script/v2dl3_for_Eventdisplay.py \
                 --${m} \
                 ${V2DL3OPT} ${V2DL3SELECT} \
                 --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
@@ -131,7 +149,16 @@ do
                 --instrument_epoch ${EPOCH} \
                 --db_fits_file ${DBFITSFILE} \
                 ${ODIR}/${m}${p}/${RUN}.fits.gz
+
+            python --version >> ${ODIR}/${m}${p}/${RUN}.log
+            conda list -n v2dl3Eventdisplay >> ${ODIR}/${m}${p}/${RUN}.log
+            PDIR=$(pwd)
+            cd ${V2DL3SYS}
+            echo "GIT status: " >> ${ODIR}/${m}${p}/${RUN}.log
+            git rev-parse HEAD >> ${ODIR}/${m}${p}/${RUN}.log
+            cd ${PDIR}
         done
     done
 done
+
 exit

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Prepare run lists and time cuts using the 
+# Prepare run lists and time cuts using the
 # DQM information.
 #
 # uses DBText files and removes all runs with
@@ -11,11 +11,11 @@
 # - run lists per epoch
 # - time masks per epoch
 
-if [ ! -n "$4" ] || [ "$1" = "-h" ]; then
+if [ ! -n "$2" ] || [ "$1" = "-h" ]; then
 echo "
-Prepare run lists for different epochs from files in a given directory.
+Prepare run lists for different epochs from a run list
 
-./prepare_runlist_after_dqm.sh <directory> <file type> <suffix> <list of broken runs>
+./prepare_runlist_after_dqm.sh <run list> <list of broken runs>
 
 file type: e.g., "8*.root"
 
@@ -23,16 +23,14 @@ file type: e.g., "8*.root"
 exit
 fi
 
-FILEDIR="${1}"
-FILETYPE="${2}"
-FILESUFFIX="${3}"
+RUNLIST="${1}"
 
 # DQM files are read this directory
 DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
 
 # List of broken runs
 # (not caught with the logic below)
-BROKENRUNS=$(cut -d ' ' -f 1 ${4})
+BROKENRUNS=$(cut -d ' ' -f 1 ${2})
 
 get_db_text_tar_file()
 {
@@ -62,7 +60,7 @@ sort_output_files()
 {
     for E in "" _V4 _V5 _V6; do
         sort -n -o runlist${E}.dat runlist${E}.dat
-    done            
+    done
     sort -n -o runlist_V6_redHV.dat runlist_V6_redHV.dat
     sort -n -o runlist_V6_UV.dat runlist_V6_UV.dat
     sort -n -o runlist_NULL.dat runlist_NULL.dat
@@ -106,7 +104,7 @@ fill_timemask()
 
 prepare_output_files
 
-RUNS=$(find ${FILEDIR} -type f -name "$FILETYPE" | sort -n)
+RUNS=$(cat $RUNLIST)
 
 for RF in $RUNS
 do
@@ -174,7 +172,7 @@ do
             && [[ ${RCAT} != "reducedhv" ]] \
             && [[ ${RCAT} != "moonfilter" ]] \
             && [[ ${RCAT} != "NULL" ]]; then
-            echo "   RUN $R $RCAT (CATEGORY CUT APPLIED)"
+                echo "   RUN $R $RCAT (CATEGORY CUT APPLIED ${RCAT}; not science, reducedhv, moonfilter, NULL)"
             continue
         fi
         # DQM status
@@ -195,7 +193,7 @@ do
         RUSABLE=$(echo "${DQMSTRING}" | cut -d '|' -f 6 ${RDQM} | grep -v usable_duration)
         if [[ $RUSABLE != "NULL" ]]; then
             RTUSABLE=$(echo $RUSABLE | awk 'NR==1 {split($1, arr, "[:]"); print arr[2]}')
-            if [[ $((10#$RTUSABLE)) -lt 5 ]]; then
+            if [[ $((10#$RTUSABLE)) -lt 2 ]]; then
                 echo "   RUN $R $RSTATUS $RTUSABLE (TIME CUT APPLIED; $RUSABLE)"
                 continue
             fi
