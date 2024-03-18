@@ -97,7 +97,7 @@ do
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
 
-    result=$(python ${V2DL3}/utils/query_epoch_effective_area.py "$ANASUMFILE" $RUN)
+    result=$(python ${V2DL3}/utils/query_anasum_runparameters.py "$ANASUMFILE" $RUN)
     EPOCH=$(echo $result | cut -d',' -f1)
     EFFAREA=$(echo $result | cut -d',' -f2)
     echo "   Effective area file: $EFFAREA"
