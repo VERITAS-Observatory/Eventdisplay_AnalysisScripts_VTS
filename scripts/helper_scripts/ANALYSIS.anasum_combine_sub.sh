@@ -101,6 +101,7 @@ RUNLIST="${TEMPDIR}/$(basename $RUNLIST)"
 cp -v "$RUNP" "$TEMPDIR"
 cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
 RUNP="${TEMPDIR}/$(basename $RUNP)"
+cat "$RUNLIST"
 
 $EVNDISPSYS/bin/anasum \
     -i 1 \
@@ -110,11 +111,11 @@ $EVNDISPSYS/bin/anasum \
     -o ${OUTPUTDATAFILE}.root 2>&1 | tee ${OUTPUTLOGFILE}
 
 # for Crab runs: print sensitivity estimate
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${DDIR}/${OUTFILE}.root -runinfo)
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${OUTPUTDATAFILE}.root -runinfo)
 TMPTARGET=$(echo $RUNINFO | cut -d\  -f7- )
 if [[ ${TMPTARGET} == "Crab" ]]; then
     echo "========================== SENSITIVITY ESTIMATE ==========================" >> ${OUTFILE}.log
-    $EVNDISPSYS/bin/printCrabSensitivity ${DDIR}/${OUTFILE}.root >> ${OUTFILE}.log
+    $EVNDISPSYS/bin/printCrabSensitivity ${OUTPUTDATAFILE}.root >> ${OUTFILE}.log
     echo "========================== ==========================" >> ${OUTFILE}.log
 fi
 
