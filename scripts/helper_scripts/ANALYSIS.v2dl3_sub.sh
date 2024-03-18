@@ -96,9 +96,12 @@ do
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    EFFAREA=$($EVNDISPSYS/bin/printAnasumRunParameter ${ANASUMFILE} ${RUN} -effareafile)
+
+    result=$(python -c "from ${V2DL3}/utils/query_anasum_runparameters import get_epoch_effective_area; get_epoch_effective_area(${RUN})")
+    EPOCH=$(echo $result | cut -d',' -f1)
+    EFFAREA=$(echo $result | cut -d',' -f2)
     echo "   Effective area file: $EFFAREA"
-    EPOCH=$($EVNDISPSYS/bin/printRunParameter ${ANASUMFILE} -epoch)
+
     DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
     if [[ ! -e ${DBFITSFILE} ]]; then
         echo "DB File ${DBFITSFILE} not found"
