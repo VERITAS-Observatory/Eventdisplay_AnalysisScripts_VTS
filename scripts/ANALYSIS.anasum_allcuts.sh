@@ -53,7 +53,7 @@ do
         mkdir -p "$TMPDIR/v2dl3_${CF}"
          ./ANALYSIS.v2dl3.sh ${RUNL} \
              "$TMPDIR/v2dl3_${CF}" \
-             ${CF}
+             ${CF} | tee -a ${TMPLOG}
     else
         echo "Error: unknown run type $RUNTYPE (allowed: ANASUM or V2DL3)"
         exit
