@@ -87,9 +87,9 @@ do
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    result=$(python -c "from ${V2DL3}/utils/query_anasum_runparameters import get_epoch_effective_area; get_epoch_effective_area(${ANASUMFILE})")
-    EPOCH=$(echo $result | cut -d',' -f1)
-    EFFAREA=$(echo $result | cut -d',' -f2)
+    result=$(python ${V2DL3SYS}/utils/query_anasum_runparameters.py ${ANASUMFILE} ${RUN})
+    EPOCH=$(echo $result |  awk '{print $2}')
+    EFFAREA=$(echo $result | awk '{print $5}')
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
     DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
     if [[ ! -e ${DBFITSFILE} ]]; then
