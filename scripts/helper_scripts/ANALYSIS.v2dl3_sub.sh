@@ -3,10 +3,6 @@
 # (convert anasum output to FITS-DL3)
 # run point-like and full-enclosure analysis
 
-# set observatory environmental variables
-if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    source $EVNDISPSYS/setObservatory.sh VTS
-fi
 # Don't do set -e.
 # set -e
 
@@ -81,22 +77,6 @@ getNumberedDirectory()
     echo ${ODIR}
 }
 
-# explicit binding for apptainers
-if [ -n "$EVNDISP_APPTAINER" ]; then
-    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
-    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
-    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
-    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${TEMPDIR}:/opt/DDIR "
-    APPTAINER_MOUNT=" ${APPTAINER_MOUNT} --bind ${TEMPDIR}:/opt/TEMPDIR"
-    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
-    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,INDIR=/opt/INDIR,TEMPDIR=/opt/TEMPDIR"
-    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
-    echo "APPTAINER SYS: $EVNDISPSYS"
-    DDIR="/opt/DDIR/"
-    echo "APPTAINER DDIR: $DDIR"
-fi
-
-
 for RUN in $FILES
 do
     echo $RUN
@@ -107,14 +87,9 @@ do
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    cp -v ${ANASUMFILE} ${TEMPDIR}
-    if [ -n "$EVNDISP_APPTAINER" ]; then
-        ED_ANASUMFILE="/opt/TEMPDIR/$(basename ${ANASUMFILE})"
-    else
-        ED_ANASUMFILE="${ED_ANASUMFILE}"
-    fi
-    EFFAREA=$($EVNDISPSYS/bin/printAnasumRunParameter ${ED_ANASUMFILE} ${RUN} -effareafile)
-    EPOCH=$($EVNDISPSYS/bin/printRunParameter ${ED_ANASUMFILE} -epoch)
+    result=$(python ${V2DL3SYS}/utils/query_anasum_runparameters.py ${ANASUMFILE} ${RUN})
+    EPOCH=$(echo $result |  awk '{print $2}')
+    EFFAREA=$(echo $result | awk '{print $5}')
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
     DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
     if [[ ! -e ${DBFITSFILE} ]]; then

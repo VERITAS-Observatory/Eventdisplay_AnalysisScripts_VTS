@@ -175,7 +175,7 @@ fi
 
 # Check that run list exists
 if [[ ! -f "$RUNLIST" ]]; then
-    echo "Error, anasum runlist $RUNLIST not found, exiting..."
+    echo "Error, runlist $RUNLIST not found, exiting..."
     exit 1
 fi
 
