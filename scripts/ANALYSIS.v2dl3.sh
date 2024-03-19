@@ -73,14 +73,7 @@ for J in ${FILELISTS}
 do
     echo "Submitting analysis for file list $J"
 
-    TMPLOGDIR=${LOGDIR}
-    # avoid reaching limits of number of files per
-    # directory (e.g., on afs)
-    if [[ ${NRUNS} -gt 5000 ]]; then
-        TMPLOGDIR=${LOGDIR}-${RUN:0:1}
-        mkdir -p ${TMPLOGDIR}
-    fi
-    FSCRIPT="$TMPLOGDIR/V2DL3-$(basename $J)"
+    FSCRIPT="$LOGDIR/V2DL3-$(basename $J)"
     rm -f $FSCRIPT.sh
     echo "Run script written to $FSCRIPT"
 
