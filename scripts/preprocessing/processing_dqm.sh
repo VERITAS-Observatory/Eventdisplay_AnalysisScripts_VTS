@@ -64,6 +64,13 @@ check_anasum_log_files()
     find ${1} -name "*.anasum.log" -exec grep -h -i "reading effective areas from" {} \;> $TMPLOG
 }
 
+check_v2dl3_log_files()
+{
+    NFIL=$(find ${1}/point-like -name "*.fits.gz" | wc -l)
+    echo "Number of v2dl3 file: $NFIL"
+    echo "Errors in v2dl3 files:"
+    echo "$(find ${1} -name "*.log" -exec grep -H -i error {} \; | grep -v "several offsets" | grep -v "Coordinate zenith tolerance is")"
+}
 
 TMPLOG="$(pwd)/DQM.${DTYPE}.$(uuid).tmp.txt"
 rm -f $TMPLOG
@@ -76,5 +83,7 @@ elif [[ $DTYPE == "mscw" ]]; then
 elif [[ $DTYPE == "anasum" ]]; then
     check_anasum_log_files $FDIR
     cat $TMPLOG | sort -u
+elif [[ $DTYPE == "v2dl3" ]]; then
+    check_v2dl3_log_files $FDIR
 fi
 rm -f $TMPLOG
