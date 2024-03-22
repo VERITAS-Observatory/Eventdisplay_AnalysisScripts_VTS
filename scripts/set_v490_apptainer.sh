@@ -15,7 +15,6 @@ USERAFSDIR="/afs/ifh.de/group/cta/scratch/$USER"
 USERLUSTDIR="/lustre/fs23/group/veritas/users/$USER"
 GROUPLUSTDIR="/lustre/fs23/group/veritas"
 GROUPDATADDIR="/lustre/fs24/group/veritas"
-export EVNDISP_APPTAINER="/lustre/fs24/group/veritas/shared/APPTAINERS/eventdisplay_v4_v490.7-preprocessing-docker.sif"
 
 ########################################################################
 # data and IRF directories
@@ -36,6 +35,7 @@ export VERITAS_USER_DATA_DIR=${USERLUSTDIR}
 export VERITAS_USER_LOG_DIR=${USERAFSDIR}/LOGS/VERITAS
 
 ## EVENTDISPLAY using apptainers
+export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.7-preprocessing-docker-v2.sif"
 export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
 # export EVNDISPSYS="apptainer exec --no-mount /etc/ssh/ssh_known_hosts2 ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
 export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
