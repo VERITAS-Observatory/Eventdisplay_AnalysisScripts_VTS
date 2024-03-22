@@ -5,6 +5,8 @@
 
 Run scripts for the analysis of VERITAS data. Requires the installation or availability of a container of the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
 
+Scripts are optimized for the DESY computing environment using HTCondor batch systems and apptainers.
+
 ## Usage
 
 Expected environmental variables:
@@ -17,7 +19,7 @@ Additional environmental variables useful especially for running on a batch syst
 
 Submission commands for a range of different batch systems can be found in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify according to your local needs.
 
-## Download of data from the VERITAS database
+## Download of database data from the VERITAS database
 
 Scripts are provided to download run-wise information from the VERITAS database, see [./scripts/db_scripts/README.md](./scripts/db_scripts/README.md).
 

@@ -49,11 +49,10 @@ do
             $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter \
             $PREDIR | tee -a ${TMPLOG}
     elif [[ $RUNTYPE == "V2DL3" ]]; then
-        CF=${C/NN/}
-        mkdir -p "$TMPDIR/v2dl3_${CF}"
+        mkdir -p "$TMPDIR/v2dl3_${C}"
          ./ANALYSIS.v2dl3.sh ${RUNL} \
-             "$TMPDIR/v2dl3_${CF}" \
-             ${CF} | tee -a ${TMPLOG}
+             "$TMPDIR/v2dl3_${C}" \
+             ${C} | tee -a ${TMPLOG}
     else
         echo "Error: unknown run type $RUNTYPE (allowed: ANASUM or V2DL3)"
         exit
