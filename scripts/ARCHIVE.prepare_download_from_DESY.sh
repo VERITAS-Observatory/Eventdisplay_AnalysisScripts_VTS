@@ -3,7 +3,7 @@
 # preprocessed Eventdisplay data products
 #
 
-EDVERSION="v490"
+EDVERSION="v490.7"
 DESYPATH="http://styx.zeuthen.desy.de/veritas/"
 
 if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
@@ -93,6 +93,7 @@ echo "   Eventdisplay version: $EDVERSION"
 echo "   Source path: $DESYPATH"
 
 echo -n "" > "$OLIST"
+chmod u+x "$OLIST"
 
 file_directory()
 {
