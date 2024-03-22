@@ -136,13 +136,13 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-#    ZENITH_ANGLES=( 20 )
-#    WOBBLE_OFFSETS=( 2.0 )
-#    NSB_LEVELS=( 400 )
+    # ZENITH_ANGLES=( 65 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 50 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -196,7 +196,9 @@ if [[ $CUTSLISTFILE != "" ]]; then
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
 elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat
+             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard.dat"
 elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
 else
@@ -222,7 +224,7 @@ if [[ $ANATYPE = "NN"* ]]; then
            CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
        else
            CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-                     ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
+                    ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
        fi
    fi
 fi
