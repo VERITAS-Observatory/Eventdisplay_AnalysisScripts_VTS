@@ -5,7 +5,7 @@
 #
 
 # qsub parameters
-h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=5G
+h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
 if [ "$#" -lt 3 ]; then
 echo "
