@@ -28,5 +28,5 @@ repos:
     hooks:
       - id: codespell
         args: [
-          "--ignore-words-list=TRUN"
+          "--ignore-words-list=trun"
         ]
