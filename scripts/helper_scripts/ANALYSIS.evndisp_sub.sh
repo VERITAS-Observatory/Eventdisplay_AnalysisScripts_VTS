@@ -3,7 +3,7 @@
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    source $EVNDISPSYS/setObservatory.sh VTS
+    source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
 # parameters replaced by parent script using sed
