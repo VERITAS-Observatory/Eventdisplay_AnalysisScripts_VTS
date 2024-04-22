@@ -3,12 +3,12 @@
 #
 
 # qsub parameters
-h_cpu=47:59:00; h_vmem=2000M; tmpdir_size=550G
+h_cpu=47:59:00; h_vmem=16000M; tmpdir_size=550G
 
 if [ $# -lt 7 ]; then
 # begin help message
 echo "
-IRF generation: analyze simulation VBF files using evndisp 
+IRF generation: analyze simulation VBF files using evndisp
 
 IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [analysis type] [uuid]
 
@@ -28,7 +28,7 @@ required parameters:
     <offset angle>          offset angle of simulations [deg]
 
     <NSB level>             NSB level of simulations [MHz]
-    
+
     <sim type>              file simulation type (e.g. GRISU-SW6, CARE_June1425)
 
     <runparameter file>     file with integration window size and reconstruction cuts/methods,
@@ -36,7 +36,7 @@ required parameters:
 
 
 optional parameters:
-    
+
     [particle]              type of particle used in simulation:
                             gamma = 1, electron = 2, proton = 14, helium = 402
                             (default = 1  -->  gamma)
