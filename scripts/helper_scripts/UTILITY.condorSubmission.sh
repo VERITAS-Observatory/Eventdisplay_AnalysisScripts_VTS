@@ -25,6 +25,6 @@ request_memory = ${2}
 request_disk = ${3}
 getenv = True
 max_materialize = 50
+priority = 850
 queue 1
 EOL
-# priority = 15
