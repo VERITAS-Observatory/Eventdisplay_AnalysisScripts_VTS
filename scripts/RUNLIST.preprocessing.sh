@@ -71,6 +71,6 @@ while read -r RUNID; do
 		FINALARRAY+=("$RUNID")
 		echo "$RUNID"
 	fi
-done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status = 'good_run' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or ( \"$DQMCATEGORY\" = \"%\" and data_category is null )  ) and usable_duration >= '00:${MIN_DURATION}:00' and run_id in ${RUN_IDS[@]}")
+done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status != 'do_not_use' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or ( \"$DQMCATEGORY\" = \"%\" and data_category is null )  ) and usable_duration >= '00:${MIN_DURATION}:00' and run_id in ${RUN_IDS[@]}")
 
 exit
