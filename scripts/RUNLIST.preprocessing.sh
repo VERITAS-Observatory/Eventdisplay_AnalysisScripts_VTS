@@ -15,6 +15,8 @@ RUNLIST.preprocessing.sh [start date] [end date]
     [end date]              select all runs on or before this date
                             (default: none, format = YYYY-MM-DD)
 
+    [exclusion list]        list of runs excluded from analysis (optional)
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -28,6 +30,7 @@ bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 # Parse command line arguments
 [[ "$1" ]] && START_DATE=$1" 00:00:00" || START_DATE="2011-01-01 00:00:00"
 [[ "$2" ]] && END_DATE_STR="and db_end_time <= '$2 00:00:00'"
+[[ "$3" ]] && EXCLUDE=""
 MIN_DURATION=2
 #  Use '%' for all runs.
 MODE="%"
@@ -69,8 +72,22 @@ FINALARRAY=()
 while read -r RUNID; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
 		FINALARRAY+=("$RUNID")
-		echo "$RUNID"
 	fi
 done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status != 'do_not_use' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or ( \"$DQMCATEGORY\" = \"%\" and data_category is null )  ) and usable_duration >= '00:${MIN_DURATION}:00' and run_id in ${RUN_IDS[@]}")
+
+exclusion_list=()
+# check exclusion list
+if [[ -n $EXCLUDE  ]]; then
+    while IFS= read -r line; do
+        column=$(echo "$line" | awk '{print $1}')
+        exclusion_list+=("$column")
+    done < "$EXCLUDE"
+fi
+
+for RUNID in "${FINALARRAY[@]}"; do
+    if ! [[ "${exclusion_list[*]}" =~ (^| )"$RUNID"($| ) ]]; then
+        echo "$RUNID"
+    fi
+done
 
 exit
