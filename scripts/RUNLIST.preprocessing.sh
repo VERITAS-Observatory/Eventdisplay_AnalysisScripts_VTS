@@ -30,7 +30,7 @@ bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 # Parse command line arguments
 [[ "$1" ]] && START_DATE=$1" 00:00:00" || START_DATE="2011-01-01 00:00:00"
 [[ "$2" ]] && END_DATE_STR="and db_end_time <= '$2 00:00:00'"
-[[ "$3" ]] && EXCLUDE=""
+[[ "$3" ]] && EXCLUDE="$3" || EXCLUDE=""
 MIN_DURATION=2
 #  Use '%' for all runs.
 MODE="%"
