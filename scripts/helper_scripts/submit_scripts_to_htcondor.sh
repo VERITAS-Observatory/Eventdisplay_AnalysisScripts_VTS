@@ -42,13 +42,13 @@ if ls ${JDIR}/*.condor 1> /dev/null 2>&1; then
     echo "$(grep -h request_disk $CONDORFILE)"  >>  ${SUBMITF}
     echo "getenv = True" >>  ${SUBMITF}
     echo "max_materialize = 850" >>  ${SUBMITF}
-    echo "priority = 50" >> ${SUBMITF}
+    echo "priority = 450" >> ${SUBMITF}
     echo "queue file matching files *.sh" >> ${SUBMITF}
 
     PDIR=$(pwd)
     if [[ ${2} == "submit" ]]; then
         cd ${JDIR}
-        condor_submit submit.txt
+        condor_submit submit.txt requirements='OpSysAndVer=="AlmaLinux9"'
         cd ${PDIR}
     fi
 else
