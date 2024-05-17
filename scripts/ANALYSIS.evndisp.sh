@@ -183,36 +183,36 @@ file_on_disk()
 
 #########################################
 # loop over all files in files loop
-for AFILE in $FILES
+for FILE in $FILES
 do
-    echo "Now analysing run $AFILE"
+    echo "Now analysing run $FILE"
 
     # check if file is on disk
     if [[ $SKIP == "1" ]]; then
-        FDISK=$(file_on_disk $AFILE)
+        FDISK=$(file_on_disk $FILE)
         if [[ $FDISK == "TRUE" ]]; then
-            echo "RUN $AFILE already proccessed; skipping"
+            echo "RUN $FILE already processed; skipping"
             continue
         fi
     fi
-    echo "Processing $AFILE"
+    echo "Processing $FILE"
 
-    FSCRIPT="${LOGDIR}/EVN.run${AFILE}"
+    FSCRIPT="${LOGDIR}/EVN.run${FILE}"
 
-    if [[ ${AFILE} -lt 100000 ]]; then
-        DBRUNFIL="${DBTEXTDIRECTORY}/${AFILE:0:1}/${AFILE}.tar.gz"
+    if [[ ${FILE} -lt 100000 ]]; then
+        DBRUNFIL="${DBTEXTDIRECTORY}/${FILE:0:1}/${FILE}.tar.gz"
     else
-        DBRUNFIL="${DBTEXTDIRECTORY}/${AFILE:0:2}/${AFILE}.tar.gz"
+        DBRUNFIL="${DBTEXTDIRECTORY}/${FILE:0:2}/${FILE}.tar.gz"
     fi
 
     if [[ -e ${DBRUNFIL} ]] && [[ ${EDVERSION} != "v487" ]]; then
         DBTEXTDIR="${DBTEXTDIRECTORY}"
     else
         DBTEXTDIR="0"
-        echo "INFO $DBTEXTDIR not found for ${AFILE}"
+        echo "INFO $DBTEXTDIR not found for ${FILE}"
     fi
 
-    sed -e "s|RUNFILE|$AFILE|"              \
+    sed -e "s|RUNFILE|$FILE|"              \
         -e "s|CALIBRATIONOPTION|$CALIB|"    \
         -e "s|OUTPUTDIRECTORY|$ODIR|"       \
         -e "s|USEVPMPOINTING|$VPM|" \
@@ -221,7 +221,7 @@ do
         -e "s|VVERSION|$EDVERSION|" \
         -e "s|DATABASETEXT|${DBTEXTDIR}|" \
         -e "s|VTS_DATA_DIR|${VERITAS_DATA_DIR}|" \
-        -e "s|VTS_2DATA_DIR|/lustre/fs24/group/cta/tmp_data|" \
+        -e "s|VTS_2DATA_DIR|/lustre/fs23/group/veritas/data|" \
         -e "s|VTS_USER_DATA_DIR|${VERITAS_USER_DATA_DIR}|" \
         -e "s|USECALIBLIST|$CALIBFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
@@ -257,11 +257,11 @@ do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
 
-        echo "RUN $AFILE JOBID $JOBID"
-        echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
+        echo "RUN $FILE JOBID $JOBID"
+        echo "RUN $FILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
-            echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
-            echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
+            echo "RUN $FILE OLOG $FSCRIPT.sh.o$JOBID"
+            echo "RUN $FILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
@@ -275,7 +275,7 @@ do
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
-        echo "RUN $AFILE OLOG $FSCRIPT.log"
+        echo "RUN $FILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
         "$FSCRIPT.sh" | tee "$FSCRIPT.log"
     elif [[ "$SUBC" == *test* ]]; then
@@ -283,7 +283,7 @@ do
     fi
 
     if [[ ! -e ${DBRUNFIL} ]] || [[ ${DBTEXTDIR} == "0" ]]; then
-        echo "SLEEPING (${SLEEPABIT}) ${DBRUNFIL} $AFILE"
+        echo "SLEEPING (${SLEEPABIT}) ${DBRUNFIL} $FILE"
         sleep ${SLEEPABIT}
     fi
 done

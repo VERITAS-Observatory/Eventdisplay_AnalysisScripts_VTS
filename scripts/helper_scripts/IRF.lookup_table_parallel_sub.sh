@@ -1,8 +1,10 @@
 #!/bin/bash
-# script to run over all zenith angles and telescope combinations and create lookup tables 
+# script to run over all zenith angles and telescope combinations and create lookup tables
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
 ZA=ZENITHANGLE
@@ -24,28 +26,51 @@ echo "PROCESS ID ${ProcId}"
 rm -f "$ODIR/$TABFILE.root"
 rm -f "$ODIR/$TABFILE.log"
 
-
 # temporary directory
-if [[ -n "$TMPDIR" ]]; then 
+if [[ -n "$TMPDIR" ]]; then
     DDIR="$TMPDIR/evndispfiles"
 else
     DDIR="/tmp/evndispfiles"
 fi
 mkdir -p "$DDIR"
-echo $PATH
+echo "Temporary directory: $DDIR"
+
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    # path used by EVNDISPSYS needs to be set
+    CALDIR="/opt/ODIR"
+fi
+
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/evndisp
+    fi
+}
+
 
 if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
-    echo "Copying evndisp root files to ${TMPDIR}"
-    find ${INDIR} -name "*[0-9].root" -exec cp -v {} ${TMPDIR} \;
+    echo "Copying evndisp root files to ${DDIR}"
+    find ${INDIR} -name "*[0-9].root" -exec cp -v {} ${DDIR} \;
 elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     if command -v zstd /dev/null; then
-        echo "Copying evndisp root.zst files to ${TMPDIR}"
+        echo "Copying evndisp root.zst files to ${DDIR}"
         FLIST=$(find ${INDIR} -name "*[0-9].root.zst")
         for F in $FLIST
         do
             echo "unpacking $F"
             ofile=$(basename $F .zst)
-            zstd -d $F -o ${TMPDIR}/${ofile}
+            zstd -d $F -o ${DDIR}/${ofile}
         done
     else
         echo "Error: no zstd installation"
@@ -55,16 +80,15 @@ fi
 
 
 # make the table part
-# v5x versions: parameter -limitEnergyReconstruction is obsolete
 $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
-                            -inputfile "${TMPDIR}/*[0-9].root" \
-                            -tablefile "$ODIR/$TABFILE.root" \
+                            -inputfile "${DDIR}/*[0-9].root" \
+                            -tablefile "${DDIR}/$TABFILE.root" \
                             -ze=$ZA \
                             -arrayrecid=$RECID \
                             -woff=$WOBBLE &> "$ODIR/$TABFILE.log"
 
+mv -v -f "${DDIR}/$TABFILE.root" "${ODIR}/$TABFILE.root"
+echo "$(inspect_executables)" >> "$ODIR/$TABFILE.log"
 $EVNDISPSYS/bin/logFile mscwTableFillLow "$ODIR/$TABFILE.root" "$ODIR/$TABFILE.log"
-
-exit

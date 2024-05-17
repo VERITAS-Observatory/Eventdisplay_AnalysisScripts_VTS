@@ -4,6 +4,9 @@
 # qsub parameters
 h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=20G
 
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+
 if [[ $# -lt 7 ]]; then
 # begin help message
 echo "
@@ -45,11 +48,11 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//'`
 # date used in run scripts / log file directories
 DATE=`date +"%y%m%d"`
 
@@ -139,5 +142,3 @@ elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
 echo "LOG/SUBMIT DIR: ${LOGDIR}"
-
-exit

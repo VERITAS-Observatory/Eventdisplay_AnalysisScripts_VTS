@@ -1,12 +1,13 @@
 #!/bin/bash
 # submit evndisp for grisu/care simulations
-#
 
 # qsub parameters
 h_cpu=47:59:00; h_vmem=16000M; tmpdir_size=550G
 
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+
 if [ $# -lt 7 ]; then
-# begin help message
 echo "
 IRF generation: analyze simulation VBF files using evndisp
 
@@ -49,16 +50,15 @@ Note: zenith angles, wobble offsets, and noise values are hard-coded into script
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
 # date used in run scripts / log file directories
 DATE=`date +"%y%m%d"`
 
@@ -88,8 +88,10 @@ OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
+# run scripts are written into this directory
 LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-EVNDISP-${UUID}/"
 mkdir -p "$LOGDIR"
+echo -e "Log files will be written to:\n $LOGDIR"
 
 echo "Using runparameter file $ACUTS"
 
@@ -292,5 +294,3 @@ do
     fi
 done
 echo "LOG/SUBMIT DIR: ${LOGDIR}"
-
-exit
