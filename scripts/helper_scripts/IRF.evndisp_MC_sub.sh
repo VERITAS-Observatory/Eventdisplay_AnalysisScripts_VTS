@@ -40,7 +40,8 @@ V4N=${ODIR/v490/v4N}
 if [ -e "$V4N/$ONAME.root.zst" ]; then
     zstd --test $V4N/$ONAME.root.zst
     echo "OUTPUT $V4N/$ONAME.root exists; skipping this job"
-    exit
+    #    TMP don't skip job
+#    exit
 fi
 
 # temporary directory
@@ -62,6 +63,8 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
+    # path used by EVNDISPSYS needs to be set
+    CALDIR="/opt/ODIR"
 fi
 
 #################################
