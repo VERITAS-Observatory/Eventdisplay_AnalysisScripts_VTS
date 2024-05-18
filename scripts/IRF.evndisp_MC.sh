@@ -270,7 +270,7 @@ do
         -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x "$FSCRIPT.sh"
-    echo "$FSCRIPT.sh"
+    echo "Run script written to: $FSCRIPT"
 
     let "RUNNUM = ${RUNNUM} + 100"
 

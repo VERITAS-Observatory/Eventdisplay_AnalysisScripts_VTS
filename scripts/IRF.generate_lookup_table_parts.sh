@@ -7,8 +7,7 @@ h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=20G
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
-if [[ $# -lt 7 ]]; then
-# begin help message
+if [ $# -lt 7 ]; then
 echo "
 IRF generation: create partial (for one point in the parameter space) lookup
                 tables from MC evndisp ROOT files
@@ -43,7 +42,6 @@ optional parameters:
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 

@@ -51,6 +51,7 @@ if [[ $PROCESS == "apptainer"* ]]; then
     export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3/
 # SL7 processing
 elif [[ $PROCESS == "sl7" ]] || [[ $PROCESS == "al9" ]]; then
+    unset EVNDISP_APPTAINER
     TDIR=`pwd`
     if [[ $PROCESS == "sl7" ]]; then
         export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root-6.24.06_build/

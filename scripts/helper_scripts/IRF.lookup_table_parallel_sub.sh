@@ -89,6 +89,7 @@ $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -arrayrecid=$RECID \
                             -woff=$WOBBLE &> "$ODIR/$TABFILE.log"
 
-mv -v -f "${DDIR}/$TABFILE.root" "${ODIR}/$TABFILE.root"
 echo "$(inspect_executables)" >> "$ODIR/$TABFILE.log"
-$EVNDISPSYS/bin/logFile mscwTableFillLow "$ODIR/$TABFILE.root" "$ODIR/$TABFILE.log"
+cp -v "$ODIR/$TABFILE.log" "$DDIR/$TABFILE.log"
+$EVNDISPSYS/bin/logFile mscwTableFillLow "${DDIR}/$TABFILE.root" "$DDIR/$TABFILE.log"
+mv -v -f "${DDIR}/$TABFILE.root" "${ODIR}/$TABFILE.root"
