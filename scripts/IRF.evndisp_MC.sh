@@ -269,8 +269,8 @@ do
         -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
         -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT.sh > $FSCRIPT.sh
 
-    chmod u+x $FSCRIPT.sh
-    echo $FSCRIPT.sh
+    chmod u+x "$FSCRIPT.sh"
+    echo "$FSCRIPT.sh"
 
     let "RUNNUM = ${RUNNUM} + 100"
 
@@ -290,7 +290,7 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
     fi
 done
 echo "LOG/SUBMIT DIR: ${LOGDIR}"
