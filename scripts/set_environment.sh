@@ -6,7 +6,7 @@ if [[ $# < 2 ]]; then
    echo "source ./set_v490.sh <analysis type> <processing type>"
    echo
    echo "Analysis types:  e.g., AP, AP_DISP, TS, NN"
-   echo "Processing types: al9, sl7, apptainer
+   echo "Processing types: al9, sl7, apptainer"
 fi
 
 export VERITAS_ANALYSIS_TYPE="${1}"
@@ -56,7 +56,7 @@ elif [[ $PROCESS == "sl7" ]] || [[ $PROCESS == "al9" ]]; then
         export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root_v6.30.02.Linux-almalinux9.3-x86_64-gcc11.4/
         export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-c17/
     fi
-    export EVNDISPSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/EventDisplay_${EVNDISPVERSION}-${PROCESS}
+    export EVNDISPSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/EventDisplay_${EVNDISPVERSION:0:4}-${PROCESS}
     cd $ROOTSYS
     source ./bin/thisroot.sh
     export PATH=$PATH:${VBFSYS}/bin/
