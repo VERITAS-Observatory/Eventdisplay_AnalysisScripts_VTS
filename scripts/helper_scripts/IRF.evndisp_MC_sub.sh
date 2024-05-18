@@ -258,9 +258,12 @@ add_log_file()
      fi
 }
 
-add_log_file evndispLog $ODIR/$ONAME.log
-add_log_file evndisppedLog $ODIR/$ONAME.ped.log
-add_log_file evndisptzeroLog $ODIR/$ONAME.tzero.log
+cp -v  "$ODIR/$ONAME.log"  "$DDIR/$ONAME.log"
+add_log_file evndispLog "$DDIR/$ONAME.log"
+cp -v "$ODIR/$ONAME.ped.log" "$DDIR/$ONAME.ped.log"
+add_log_file evndisppedLog "$DDIR/$ONAME.ped.log"
+cp -v "$ODIR/$ONAME.tzero.log" "$DDIR/$ONAME.tzero.log"
+add_log_file evndisptzeroLog "$DDIR/$ONAME.tzero.log"
 
 ### check that log files are filled correctly
 compare_log_file()
