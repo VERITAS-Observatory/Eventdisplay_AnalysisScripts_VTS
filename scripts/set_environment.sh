@@ -13,6 +13,20 @@ export VERITAS_ANALYSIS_TYPE="${1}"
 PROCESS="${2}"
 EVNDISPVERSION="v490.7"
 
+# Test for allowed processing types
+allowed_processing_types=("apptainer" "apptainer-dev" "al9" "sl7")
+FOUND_PROCESS="FALSE"
+for item in $allowed_processing_types
+do
+    if [[ $item == $PROCESS ]]; then
+        FOUND_PROCESS="TRUE"
+    fi
+done
+if [[ $FOUND_PROCESS == "FALSE" ]]; then
+    echo "Processing type $PROCESS not allowed"
+    return
+fi
+
 ########################################################################
 # host system settings
 USERAFSDIR="/afs/ifh.de/group/cta/scratch/$USER"
@@ -42,7 +56,7 @@ export VERITAS_USER_LOG_DIR=${USERAFSDIR}/LOGS/VERITAS
 if [[ $PROCESS == "apptainer"* ]]; then
     export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.7-preprocessing-docker-v2.sif"
     if [[ $PROCESS == "apptainer-dev" ]]; then
-        export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.9-dev1.sif"
+        export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.9-dev3.sif"
     fi
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     # export EVNDISPSYS="apptainer exec --no-mount /etc/ssh/ssh_known_hosts2 ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
