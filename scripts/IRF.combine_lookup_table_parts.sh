@@ -2,7 +2,7 @@
 # script to combine several table file into one
 
 # qsub parameters
-h_cpu=20:29:00; h_vmem=8000M; tmpdir_size=10G
+h_cpu=20:29:00; h_vmem=24000M; tmpdir_size=10G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)

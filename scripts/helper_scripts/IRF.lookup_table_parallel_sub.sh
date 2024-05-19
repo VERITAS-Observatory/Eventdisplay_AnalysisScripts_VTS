@@ -8,11 +8,11 @@ fi
 
 # parameters replaced by parent script using sed
 ZA=ZENITHANGLE
-WOBBLE=WOBBLEOFFSET
 NOISE=NOISELEVEL
-EPOCH=ARRAYEPOCH
+WOBBLE=WOBBLEOFFSET
+EPOCH="ARRAYEPOCH"
 ATM=ATMOSPHERE
-RECID=RECONSTRUCTIONID
+RECID="RECONSTRUCTIONID"
 SIMTYPE=SIMULATIONTYPE
 INDIR=INPUTDIR
 ODIR=OUTPUTDIR
@@ -65,7 +65,7 @@ if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
 elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     if command -v zstd /dev/null; then
         echo "Copying evndisp root.zst files to ${DDIR}"
-        FLIST=$(find ${INDIR} -name "*[0-9].root.zst")
+        FLIST=$(find "${INDIR}/" -name "*[0-9].root.zst")
         for F in $FLIST
         do
             echo "unpacking $F"
