@@ -17,9 +17,6 @@ IRF.generate_lookup_table_parts.sh <epoch> <atmosphere> <zenith> <offset angle> 
 required parameters:
 
     <epoch>                 array epoch (e.g., V4, V5, V6)
-                            V4: array before T1 move (before Fall 2009)
-                            V5: array after T1 move (Fall 2009 - Fall 2012)
-                            V6: array after camera update (after Fall 2012)
 
     <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
@@ -62,7 +59,6 @@ WOBBLE=$4
 NOISE=$5
 RECID=$6
 SIMTYPE=$7
-PARTICLE_TYPE="gamma"
 [[ "$8" ]] && ANALYSIS_TYPE=$8  || ANALYSIS_TYPE=""
 [[ "${9}" ]] && UUID=${9} || UUID=${DATE}-$(uuidgen)
 EVNIRFVERSION="v4N"
@@ -72,7 +68,7 @@ EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 
 # input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 fi
 if [[ ! -d $INDIR ]]; then
     echo "Error, could not locate input directory. Locations searched:"
@@ -82,14 +78,14 @@ fi
 echo "Input file directory: $INDIR"
 
 # Output file directory
-if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_${PARTICLE_TYPE}/Tables"
+if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_gamma/Tables"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-MAKETABLES-${UUID}/"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MAKETABLES-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
