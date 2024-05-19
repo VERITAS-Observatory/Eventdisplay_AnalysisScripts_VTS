@@ -1,5 +1,5 @@
 #!/bin/bash
-# combine tables
+# combine lookup tables
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
@@ -11,12 +11,21 @@ FLIST=TABLELIST
 OFILE=OUTPUTFILE
 ODIR=OUTPUTDIR
 
+# temporary directory
+if [[ -n "$TMPDIR" ]]; then
+    DDIR="$TMPDIR/combineTables"
+else
+    DDIR="/tmp/combineTables"
+fi
+mkdir -p "$DDIR"
+echo "Temporary directory: $DDIR"
+
 # explicit binding for apptainers
 if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
-    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
+    APPTAINER_MOUNT+=" --bind ${DDIR}:${DDIR} "
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
     APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
@@ -34,12 +43,18 @@ inspect_executables()
     fi
 }
 
+# copy table files to temp
+xargs -a "$ODIR/$FLIST" cp -t "$DDIR"
+ls -1 "${DDIR}"/*.root > "$DDIR/$FLIST"
+
 # combine the tables
-if [[ $IRFVERSION = "v4"* ]]; then
-    $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root median &> $ODIR/$OFILE.log
-else
-    $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root &> $ODIR/$OFILE.log
-fi
+$EVNDISPSYS/bin/combineLookupTables "$DDIR/$FLIST" "$DDIR/$OFILE.root" median &> "$ODIR/$OFILE.log"
+
+# log files
 echo "$(inspect_executables)" >> "$ODIR/$OFILE.log"
-$EVNDISPSYS/bin/logFile makeTableCombineLog $ODIR/$OFILE.root $ODIR/$OFILE.log
-$EVNDISPSYS/bin/logFile makeTableFileList $ODIR/$OFILE.root $ODIR/$FLIST
+cp -v "$ODIR/$OFILE.log" "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile makeTableCombineLog "$DDIR/$OFILE.root" "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile makeTableFileList "$DDIR/$OFILE.root" "$DDIR/$FLIST"
+
+# cleanup
+mv -f -v "$DDIR/$OFILE.root" "$ODIR/$OFILE.root"

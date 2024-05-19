@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to run over all zenith angles and telescope combinations and create lookup tables
+# fill lookup tables
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
