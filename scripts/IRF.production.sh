@@ -138,9 +138,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
-    NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 20 40 65 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 200 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -350,7 +350,7 @@ for VX in $EPOCH; do
                fi
                $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
                    $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $ANATYPE
+                   $SIMTYPE $ANATYPE $UUID
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
@@ -422,7 +422,7 @@ for VX in $EPOCH; do
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
                                    $ID $SIMTYPE $ANATYPE \
-                                   $DISPBDT $UUID ${EDVERSION}
+                                   $DISPBDT $UUID
                             done # cuts
                         done #recID
                     fi
