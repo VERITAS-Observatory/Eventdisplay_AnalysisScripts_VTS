@@ -2,7 +2,7 @@
 # script to combine several table file into one
 
 # qsub parameters
-h_cpu=20:29:00; h_vmem=24000M; tmpdir_size=10G
+h_cpu=20:29:00; h_vmem=64000M; tmpdir_size=10G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -100,7 +100,7 @@ echo "LOOKUPTABLE $OFILE"
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_combine_sub"
 
 # make run script
-FSCRIPT="$LOGDIR/CMB-TBL.$OFILE.$DATE.MC"
+FSCRIPT="$LOGDIR/TABLES-COMBINE.$OFILE.$DATE.MC"
 
 sed -e "s|TABLELIST|$FLIST|" \
     -e "s|OUTPUTFILE|$OFILE|" \
