@@ -1,8 +1,10 @@
 #!/bin/bash
-# script to calculate effective areas (VERITAS)
+# calculate effective areas
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
 OFILE=EAFILENAME
@@ -13,13 +15,36 @@ EFFAREAFILE=EFFFILE
 DISPBDT=USEDISP
 
 # temporary directory
-if [[ -n "$TMPDIR" ]]; then 
+if [[ -n "$TMPDIR" ]]; then
     DDIR="$TMPDIR/EFFAREA/"
 else
     DDIR="/tmp/EFFAREA"
 fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
+
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    # path used by EVNDISPSYS needs to be set
+    CALDIR="/opt/ODIR"
+fi
+
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/evndisp
+    fi
+}
 
 # cp MC file to TMPDIR
 cp -f "$MCFILE" "$DDIR"/
@@ -29,7 +54,7 @@ MCFILE=${DDIR}/${MCFILE}
 # loop over all cuts
 for CUTSFILE in $CUTSLIST; do
 
-# Check that cuts file exists
+    # Check that cuts file exists
     CUTSFILE=${CUTSFILE%%.dat}
     CUTS_NAME=`basename $CUTSFILE`
     CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -51,7 +76,7 @@ for CUTSFILE in $CUTSLIST; do
     mkdir -p $OSUBDIR
     chmod -R g+w $OSUBDIR
 
-# parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
+    # parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
     PARAMFILE="
     * FILLINGMODE 0
     * ENERGYRECONSTRUCTIONMETHOD 1
@@ -64,9 +89,8 @@ for CUTSFILE in $CUTSLIST; do
     * FILLMONTECARLOHISTOS 0
     * ENERGYSPECTRUMINDEX 20 1.6 0.2
     * FILLMONTECARLOHISTOS 0
-    ESPECTRUM_FOR_WEIGHTING $VERITAS_EVNDISP_AUX_DIR/AstroData/TeV_data/EnergySpectrum_literatureValues_CrabNebula.dat 5
     * CUTFILE $CUTSFILE
-     IGNOREFRACTIONOFEVENTS 0.5        
+     IGNOREFRACTIONOFEVENTS 0.5
     * SIMULATIONFILE_DATA $MCFILE"
 
     # create makeEffectiveArea parameter file
@@ -74,14 +98,16 @@ for CUTSFILE in $CUTSLIST; do
     rm -f "$DDIR/$EAPARAMS.dat"
     eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
 
-# calculate effective areas
-    rm -f $OSUBDIR/$OFILE.root 
+    # calculate effective areas
+    rm -f $OSUBDIR/$OFILE.root
     $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
     chmod g+w $DDIR/$EAPARAMS.root
     if [[ -f $EVNDISPSYS/bin/logFile ]]; then
         echo "Filling log file into root file"
-        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.log
+        echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+        cp -v "$DDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
+        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
         rm -f $OSUBDIR/$EAPARAMS.log
     else
         chmod g+w $OSUBDIR/$EAPARAMS.log
@@ -89,5 +115,3 @@ for CUTSFILE in $CUTSLIST; do
     cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
 
 done
-
-exit

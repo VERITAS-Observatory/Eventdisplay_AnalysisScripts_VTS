@@ -1,23 +1,25 @@
 #!/bin/bash
-# script to analyse MC files with lookup tables
+# analyse MC files with lookup tables
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
-INDIR=INPUTDIR
-ODIR=OUTPUTDIR
 TABFILE=TABLEFILE
 ZA=ZENITHANGLE
 NOISE=NOISELEVEL
 WOBBLE=WOBBLEOFFSET
 ANATYPE=ANALYSISTYPE
 NROOTFILES=NFILES
-RECID="RECONSTRUCTIONID"
-SIMTYPE=SSIMTYPE
 EPOCH="ARRAYEPOCH"
-ATM="ATMOS"
+ATM=ATMOSPHERE
+RECID="RECONSTRUCTIONID"
+SIMTYPE=SIMULATIONTYPE
 DISPBDT=USEDISP
+INDIR=INPUTDIR
+ODIR=OUTPUTDIR
 
 # output directory
 OSUBDIR="$ODIR/MSCW_RECID${RECID}"
@@ -32,13 +34,37 @@ echo "Output directory for data products: " $OSUBDIR
 OFILE="${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
 
 # temporary directory
-if [[ -n "$TMPDIR" ]]; then 
+if [[ -n "$TMPDIR" ]]; then
     DDIR="$TMPDIR/MSCW_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
 else
     DDIR="/tmp/MSCW_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
 fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
+
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT+=" --bind ${DDIR}:${DDIR}"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=${DDIR},CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    # path used by EVNDISPSYS needs to be set
+    CALDIR="/opt/ODIR"
+fi
+
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/evndisp
+    fi
+}
+
 
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
@@ -69,7 +95,7 @@ if [ $DISPBDT -eq 1 ]; then
     else
         DISPDIR="${DISPDIR}/XZE/"
     fi
-    # unzip XML files into tmpdir
+    # unzip XML files into DDIR
     cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
     gunzip -v ${DDIR}/*xml.gz
     MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
@@ -84,31 +110,31 @@ rm -f $OSUBDIR/$OFILE.list
 echo "INDIR ${INDIR}"
 if [ -n "$(find "${INDIR}/" -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Using evndisp root files from ${INDIR}"
-    ls -1 ${INDIR}/*[0-9].root > $OSUBDIR/$OFILE.list
+    cp -v "${INDIR}/*[0-9].root" "$DDIR"
 elif [ -n "$(find  "${INDIR}/" -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     if command -v zstd /dev/null; then
-        echo "Copying evndisp root.zst files to ${TMPDIR}"
+        echo "Copying evndisp root.zst files to ${DDIR}"
         FLIST=$(find "${INDIR}/" -name "*[0-9].root.zst")
         for F in $FLIST
         do
             echo "unpacking $F"
             ofile=$(basename $F .zst)
-            zstd -d $F -o ${TMPDIR}/${ofile}
+            zstd -d $F -o ${DDIR}/${ofile}
         done
     else
         echo "Error: no zstd installation"
         exit
     fi
-    ls -1 ${TMPDIR}/*[0-9].root > $OSUBDIR/$OFILE.list
 fi
+ls -1 "$DDIR"/*[0-9].root > "$DDIR/$OFILE.list"
 echo "Evndisp files:"
-cat $OSUBDIR/$OFILE.list
+cat "$DDIR/$OFILE.list"
 
 # run mscw_energy
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
 $EVNDISPSYS/bin/mscw_energy $MOPT \
-    -inputfilelist $OSUBDIR/$OFILE.list \
+    -inputfilelist "$DDIR/$OFILE.list" \
     -outputfile $outputfilename \
     -noise=$NOISE &> $logfile
 
@@ -119,14 +145,14 @@ if [ $DISPBDT -eq 1 ]; then
     echo "Reading DISPBDT XML files from ${DISPDIR}" >> $logfile
 fi
 
-$EVNDISPSYS/bin/logFile mscwTableLog $outputfilename $logfile
+echo "$(inspect_executables)" >> "$logfile"
+cp -v "$logfile" "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile mscwTableLog $outputfilename "$DDIR/$OFILE.log"
 
 # cp results file back to data directory and clean up
 outputbasename=$( basename $outputfilename )
 cp -f -v $outputfilename $OSUBDIR/$outputbasename
+cp -f -v "$DDIR/$OFILE.log" "$logfile"
 rm -f "$outputfilename"
-rmdir $DDIR
 chmod g+w "$OSUBDIR/$outputbasename"
 chmod g+w "$logfile"
-
-exit

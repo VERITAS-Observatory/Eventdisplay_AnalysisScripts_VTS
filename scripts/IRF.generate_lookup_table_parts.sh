@@ -1,5 +1,6 @@
 #!/bin/bash
-# script to run over all noise levels and create lookup tables (queue submit)
+# fill lookup tables for a given point in the parameter space
+# (output need to be combined afterwards)
 
 # qsub parameters
 h_cpu=03:29:00; h_vmem=4000M; tmpdir_size=20G
