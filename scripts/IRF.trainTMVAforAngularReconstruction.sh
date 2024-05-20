@@ -72,7 +72,7 @@ EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 # Output file directory
 TMVADIR="TMVA_AngularReconstruction"
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_gamma/${TMVADIR}/ze${ZA}deg/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_gamma/${TMVADIR}/ze${ZA}deg_loss02/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"

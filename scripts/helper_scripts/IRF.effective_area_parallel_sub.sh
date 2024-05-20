@@ -103,14 +103,10 @@ for CUTSFILE in $CUTSLIST; do
     $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
     chmod g+w $DDIR/$EAPARAMS.root
-    if [[ -f $EVNDISPSYS/bin/logFile ]]; then
-        echo "Filling log file into root file"
-        echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
-        cp -v "$DDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
-        rm -f $OSUBDIR/$EAPARAMS.log
-    else
-        chmod g+w $OSUBDIR/$EAPARAMS.log
-    fi
+    echo "Filling log file into root file"
+    echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+    cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
+    $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
+    rm -f $OSUBDIR/$EAPARAMS.log
     cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
 done

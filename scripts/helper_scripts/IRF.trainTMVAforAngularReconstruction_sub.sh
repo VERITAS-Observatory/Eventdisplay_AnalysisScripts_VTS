@@ -60,6 +60,10 @@ rm -f "$ODIR/$ONAME*"
 # quality cuts
 QUALITYCUTS="size>1.&&ntubes>log10(4.)&&width>0.&&width<2.&&length>0.&&length<10.&&tgrad_x<100.*100.&&loss<0.20&&cross<20.0&&Rcore<2000."
 
+# TMP loose quality cuts
+QUALITYCUTS="size>1.&&ntubes>log10(4.)&&width>0.&&width<2.&&length>0.&&length<10.&&tgrad_x<100.*100.&&loss<0.40&&cross<20.0&&Rcore<2000."
+QUALITYCUTS="size>1.&&ntubes>log10(4.)&&width>0.&&width<2.&&length>0.&&length<10.&&tgrad_x<100.*100.&&loss<0.20&&cross<20.0&&Rcore<2000."
+
 # fraction of events to use for training,
 # remaining events will be used for testing
 TRAINTESTFRACTION=0.5
