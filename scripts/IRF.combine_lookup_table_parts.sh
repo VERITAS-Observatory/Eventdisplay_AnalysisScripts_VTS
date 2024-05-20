@@ -1,7 +1,7 @@
 #!/bin/bash
 # script to combine several table file into one
 
-# qsub parameters
+# job requirements
 h_cpu=20:29:00; h_vmem=64000M; tmpdir_size=10G
 
 # EventDisplay version
@@ -44,7 +44,7 @@ fi
 [[ $? != "0" ]] && exit 1
 
 # date used in run scripts / log file directories
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 
 # Parse command line arguments
 OFILE=$1
@@ -67,7 +67,7 @@ fi
 echo "Input file directory: $INDIR"
 
 # Output file directory
-if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
+if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/Tables/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
