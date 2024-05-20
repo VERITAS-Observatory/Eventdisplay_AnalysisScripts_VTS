@@ -68,9 +68,9 @@ WOBBLE=$5
 NOISE=$6
 RECID=$7
 SIMTYPE=$8
-[[ "$8" ]] && ANALYSIS_TYPE=$8 || ANALYSIS_TYPE=""
-[[ "$9" ]] && DISPBDT=$9 || DISPBDT=0
-[[ "${10}" ]] && UUID=${10} || UUID=${DATE}-$(uuidgen)
+[[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
+[[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
+[[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -86,7 +86,7 @@ fi
 if [[ ! -d $INDIR ]]; then
     echo "Error, could not locate input directory. Locations searched:"
     echo "$INDIR"
-#    exit 1
+    exit 1
 fi
 echo "Input file directory: $INDIR"
 
@@ -123,7 +123,7 @@ echo "ODIR: $ODIR"
 echo "DATAFILE $MCFILE"
 echo "EFFFILE $EFFAREAFILE"
 # make run script
-FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
+FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|USEDISP|${DISPBDT}|" \

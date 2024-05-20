@@ -7,7 +7,6 @@ if [ ! -n "$EVNDISP_APPTAINER" ]; then
 fi
 
 # parameters replaced by parent script using sed
-OFILE=EAFILENAME
 MCFILE=DATAFILE
 ODIR=OUTPUTDIR
 CUTSLIST="GAMMACUTS"
@@ -59,10 +58,11 @@ for CUTSFILE in $CUTSLIST; do
     CUTS_NAME=`basename $CUTSFILE`
     CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
     if [[ "$CUTSFILE" == `basename $CUTSFILE` ]]; then
-        CUTSFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/$CUTSFILE.dat"
+        CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
     else
         CUTSFILE="$CUTSFILE.dat"
     fi
+    cp -f "$CUTSFILE" "$DDIR"/
     if [[ ! -f "$CUTSFILE" ]]; then
         echo "Error, gamma/hadron cuts file not found, exiting..."
         exit 1
@@ -89,7 +89,7 @@ for CUTSFILE in $CUTSLIST; do
     * FILLMONTECARLOHISTOS 0
     * ENERGYSPECTRUMINDEX 20 1.6 0.2
     * FILLMONTECARLOHISTOS 0
-    * CUTFILE $CUTSFILE
+    * CUTFILE $DDIR/$(basename $CUTSFILE)
      IGNOREFRACTIONOFEVENTS 0.5
     * SIMULATIONFILE_DATA $MCFILE"
 
@@ -113,5 +113,4 @@ for CUTSFILE in $CUTSLIST; do
         chmod g+w $OSUBDIR/$EAPARAMS.log
     fi
     cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
-
 done
