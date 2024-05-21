@@ -212,6 +212,11 @@ cp -v "$RUNP" "$TEMPDIR"
 cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
 RUNP="${TEMPDIR}/$(basename $RUNP)"
 
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    RUNP="/opt/TEMPDIR/$(basename $RUNP)"
+    FLIST="/opt/TEMPDIR/$(basename $FLIST)"
+fi
+
 #################################
 # run anasum
 $EVNDISPSYS/bin/anasum   \

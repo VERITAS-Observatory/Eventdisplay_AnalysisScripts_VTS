@@ -103,6 +103,11 @@ cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
 RUNP="${TEMPDIR}/$(basename $RUNP)"
 cat "$RUNLIST"
 
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    RUNP="/opt/TEMPDIR/$(basename $RUNP)"
+    RUNLIST="/opt/TEMPDIR/$(basename $RUNLIST)"
+fi
+
 $EVNDISPSYS/bin/anasum \
     -i 1 \
     ${RUNLISTSTRING} ${RUNLIST} \
