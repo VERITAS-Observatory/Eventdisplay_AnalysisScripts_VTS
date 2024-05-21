@@ -39,7 +39,7 @@ optional parameters:
                             (default: \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter)
 
     [mscw directory]        directory containing the mscw.root files.
-			    Default: $VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/
+                            (default: \$VERITAS_PREPROCESSED_DATA_DIR/\${VERITAS_ANALYSIS_TYPE:0:2}/mscw/)
 
    [preprocessing skip]    Skip if run is already processed and found in the preprocessing
                            directory (1=skip, 0=run the analysis; default 1)
@@ -299,7 +299,7 @@ for RUN in ${RUNS[@]}; do
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
-        echo "RUN $AFILE OLOG $FSCRIPT.log"
+        echo "RUN $RUN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
 	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 	fi
