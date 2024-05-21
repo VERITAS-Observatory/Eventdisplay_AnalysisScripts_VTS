@@ -35,7 +35,9 @@ mkdir -p "$TEMPDIR"
 if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
     APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
-    APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR_2}:/opt/VERITAS_DATA_DIR_2 "
+    if [ -d "$VERITAS_DATA_DIR_2" ]; then
+	APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR_2}:/opt/VERITAS_DATA_DIR_2 "
+    fi
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${DBTEXTDIRECTORY}:/opt/DBTEXT "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
@@ -150,7 +152,7 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     fi
 else
     # original way accessing the VERITAS DB
-    RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
+    RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/scripts/RUNLIST.whichRunsAreOnDisk.sh -d)
 fi
 if [[ ${RUNONDISK} == *"file not found"** ]]; then
   echo "$RUN not on disk"
