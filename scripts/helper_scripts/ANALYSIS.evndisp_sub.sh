@@ -145,7 +145,13 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
         else
             OPT+=( -sourcefile ${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf )
         fi
-    elif [[ ! -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
+    elif [[ -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
+        if [ -n "$EVNDISP_APPTAINER" ]; then
+            OPT+=( -sourcefile /opt/VERITAS_DATA_DIR/data/${RUNDATE}/${RUN}.cvbf )
+        else
+            OPT+=( -sourcefile ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf )
+        fi
+    else
         RUNONDISK="file not found"
     fi
 else
@@ -280,5 +286,3 @@ if [[ $CALIB != "5" ]]; then
     echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
     rm -f "$TEMPDIR/$RUN.root"
 fi
-
-exit
