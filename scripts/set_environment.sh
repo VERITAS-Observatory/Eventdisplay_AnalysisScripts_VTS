@@ -56,7 +56,7 @@ export VERITAS_USER_LOG_DIR=${USERAFSDIR}/LOGS/VERITAS
 if [[ $PROCESS == "apptainer"* ]]; then
     export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.7-preprocessing-docker-v2.sif"
     if [[ $PROCESS == "apptainer-dev" ]]; then
-        export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.9-dev3.sif"
+        export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.9-dev4.sif"
         export VERITAS_EVNDISP_AUX_DIR="${VERITAS_EVNDISP_AUX_DIR}-dev"
     fi
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
