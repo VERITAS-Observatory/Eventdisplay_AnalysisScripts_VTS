@@ -7,6 +7,8 @@
 #
 
 h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=24G
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [[ $# -lt 7 ]]; then
 # begin help message
@@ -18,13 +20,13 @@ IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA runpa
 required parameters:
 
     <background file directory>     directory with background training (mscw) files
-    
-    <TMVA runparameter file>        TMVA runparameter file with basic options (incl. whole range of 
+
+    <TMVA runparameter file>        TMVA runparameter file with basic options (incl. whole range of
 	                                energy and zenith angle bins) and full path
-    
+
     <output directory>              BDT files are written to this directory
-    
-    <output file name>              name of output file e.g. BDT  
+
+    <output file name>              name of output file e.g. BDT
 
     <sim type>                      simulation type
                                     (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
@@ -41,7 +43,9 @@ exit
 fi
 echo " "
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -58,8 +62,6 @@ EPOCH=$6
 ATM=$7
 RECID="0"
 PARTICLE_TYPE="gamma"
-# evndisplay version
-IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforGammaHadronSeparation --version | tr -d .| sed -e 's/[a-Z]*$//'`
 
 DISPBDT=""
 ANATYPE="AP"
@@ -67,7 +69,7 @@ if [[ ! -z $VERITAS_ANALYSIS_TYPE ]]; then
     ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
     if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
         DISPBDT="_DISP"
-    fi 
+    fi
 fi
 
 # Check that list of background files exists
@@ -152,7 +154,7 @@ do
    do
       echo "---------------------------------------------------------------------------"
       echo "Zenith Bin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
-      
+
       # copy run parameter file with basic options to output directory
       # cp -v -f $RUNPAR $ODIR
 
@@ -160,11 +162,11 @@ do
       RFIL=$ODIR/$RXPAR"_$i""_$j"
       echo "TMVA Runparameter file: $RFIL.runparameter"
       rm -f $RFIL
-      
+
       echo "* ENERGYBINS ${EBINMIN[$i]} ${EBINMAX[$i]}" > $RFIL.runparameter
       echo "* ZENBINS  ${ZEBINARRAY[$j]} ${ZEBINARRAY[$j+1]}" >> $RFIL.runparameter
       grep "*" $RUNPAR | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
-    
+
       nTrainSignal=200000
       nTrainBackground=200000
 
@@ -175,7 +177,7 @@ do
       echo "#######################################################################################" >> $RFIL.runparameter
       # signal and background files (depending on on-axis or cone data set)
       for ATMX in $ATM; do
-          SDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/$ANATYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}${DISPBDT}"
+          SDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/$ANATYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}${DISPBDT}"
           echo "Signal input directory: $SDIR"
           if [[ ! -d $SDIR ]]; then
               echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
@@ -185,7 +187,7 @@ do
               for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
               do
                   if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
-                      if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then 
+                      if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root`
                           for arg in $SIGNALLIST
                           do
@@ -208,7 +210,7 @@ do
                   fi
               done
           fi
-      done 
+      done
       echo "#######################################################################################" >> $RFIL.runparameter
       BLIST="$ODIR/BackgroundRunlist_Ze${j}.list"
       rm -f ${BLIST}
@@ -221,7 +223,7 @@ do
    	  do
          echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
       done
-         
+
       FSCRIPT=$LOGDIR/$ONAME"_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \
           -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
@@ -257,5 +259,3 @@ do
       fi
    done
 done
-
-exit

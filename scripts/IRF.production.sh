@@ -1,9 +1,10 @@
 #!/bin/bash
 # IRF production script (VERITAS)
-#
+
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 2 ]; then
-# begin help message
 echo "
 IRF generation: produce a full set of instrument response functions (IRFs)
 
@@ -45,7 +46,6 @@ optional parameters:
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
@@ -55,7 +55,9 @@ olddir=$(pwd)
 cd $(dirname "$0")
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -66,10 +68,6 @@ IRFTYPE=$2
 [[ "$5" ]] && RECID=$5 || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-
-# evndisplay version
-EDVERSION=$($EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//')
-echo "Eventdisplay version: ${EDVERSION}"
 
 # uuid for this job batch
 DATE=`date +"%y%m%d"`
@@ -140,9 +138,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # ZENITH_ANGLES=( 65 )
+    # ZENITH_ANGLES=( 20 40 65 )
     # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 50 )
+    # NSB_LEVELS=( 200 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -352,7 +350,7 @@ for VX in $EPOCH; do
                fi
                $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
                    $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $ANATYPE
+                   $SIMTYPE $ANATYPE $UUID
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
@@ -424,7 +422,7 @@ for VX in $EPOCH; do
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
                                    $ID $SIMTYPE $ANATYPE \
-                                   $DISPBDT $UUID ${EDVERSION}
+                                   $DISPBDT $UUID
                             done # cuts
                         done #recID
                     fi

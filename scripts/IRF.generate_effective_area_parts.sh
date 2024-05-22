@@ -1,12 +1,14 @@
 #!/bin/bash
-# submit effective area analysis
+# calculate effective areas for a given point in the parameter space
 # (output need to be combined afterwards)
 
 # qsub parameters
 h_cpu=13:29:00; h_vmem=15000M; tmpdir_size=20G
 
-if [[ $# -lt 8 ]]; then
-# begin help message
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+
+if [ $# -lt 8 ]; then
 echo "
 IRF generation: create partial effective area files from MC ROOT files
  (simulations that have been processed by both evndisp_MC and mscw_energy_MC)
@@ -15,14 +17,11 @@ IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <
 
 required parameters:
 
-    <cuts file>             gamma/hadron cuts file (located in 
+    <cuts file>             gamma/hadron cuts file (located in
                              \$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles)
                             (might be a list of cut files)
 
     <epoch>                 array epoch (e.g., V4, V5, V6)
-                            V4: array before T1 move (before Fall 2009)
-                            V5: array after T1 move (Fall 2009 - Fall 2012)
-                            V6: array after camera update (after Fall 2012)
 
     <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
@@ -40,22 +39,21 @@ required parameters:
 optional parameters:
 
     [analysis type]         type of analysis (default="")
-    
+
     [dispBDT]              use dispDBDT angular reconstruction
                            (default: 0; use: 1)
 
     [uuid]                  UUID used for submit directory
 
-    [version]               Eventdisplay version (e.g., v490)
-
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # date used in run scripts / log file directories
@@ -70,11 +68,9 @@ WOBBLE=$5
 NOISE=$6
 RECID=$7
 SIMTYPE=$8
-PARTICLE_TYPE="gamma"
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
 [[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
-[[ "${12}" ]] && EDVERSION=${12} || EDVERSION=$($EVNDISPSYS/bin/makeEffectiveArea --version | tr -d .| sed -e 's/[a-Z]*$//')
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -82,7 +78,7 @@ CUTS_NAME=${CUTS_NAME%%.dat}
 
 # input directory containing mscw_energy_MC products
 if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}"
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/MSCW_RECID${RECID}"
     if [[ ${DISPBDT} == "1" ]]; then
         INDIR=${INDIR}_DISP
     fi
@@ -90,19 +86,19 @@ fi
 if [[ ! -d $INDIR ]]; then
     echo "Error, could not locate input directory. Locations searched:"
     echo "$INDIR"
-#    exit 1
+    exit 1
 fi
 echo "Input file directory: $INDIR"
 
 # Output file directory
-if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-EFFAREA-RECID${RECID}-${UUID}"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-EFFAREA-RECID${RECID}-${UUID}"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -121,13 +117,13 @@ EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NO
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_parallel_sub"
 
 echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
-            
+
 echo "CUTSFILE: $CUTSFILE"
 echo "ODIR: $ODIR"
 echo "DATAFILE $MCFILE"
 echo "EFFFILE $EFFAREAFILE"
 # make run script
-FSCRIPT="$LOGDIR/EA.ID${RECID}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
+FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|USEDISP|${DISPBDT}|" \
@@ -163,5 +159,3 @@ elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
 echo "LOG/SUBMIT DIR: ${LOGDIR}"
-
-exit
