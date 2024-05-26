@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to train BDTs with TMVA
+# script to train TMVA (BDTs) for gamma/hadron separation
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
