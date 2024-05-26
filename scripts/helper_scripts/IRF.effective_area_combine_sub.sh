@@ -53,6 +53,6 @@ $EVNDISPSYS/bin/combineEffectiveAreas "$DDIR/$OFILE.list" ${DDIR}/$OFILE DL3redu
 # log files
 echo "$(inspect_executables)" >> "$ODIR/$OFILE.log"
 cp -v "${ODIR}/$OFILE.log" "${DDIR}/$OFILE.log"
-$EVNDISPSYS/bin/logFile effAreaCombineLog "${DDIR}/$OFILE.root" "${ODIR}/$OFILE.log"
+$EVNDISPSYS/bin/logFile effAreaCombineLog "${DDIR}/$OFILE.root" "${DDIR}/$OFILE.log"
 
-mv -v -f ${DDIR}/$OFILE ${ODIR}
+mv -v -f "${DDIR}/$OFILE.root" ${ODIR}
