@@ -48,6 +48,7 @@ mkdir -p $ODIR
 chmod -R g+w $ODIR
 cp -v $EAFILES $DDIR/
 ls -1 $DDIR/*.root > $DDIR/$OFILE.list
+echo "Copied $(cat $DDIR/$OFILE.list | wc -l) input files to $DDIR"
 $EVNDISPSYS/bin/combineEffectiveAreas "$DDIR/$OFILE.list" ${DDIR}/$OFILE DL3reduced &> ${ODIR}/$OFILE.log
 
 # log files
