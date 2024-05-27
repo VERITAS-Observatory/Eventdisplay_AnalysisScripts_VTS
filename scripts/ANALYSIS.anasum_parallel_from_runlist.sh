@@ -122,6 +122,10 @@ elif [[ $CUTS = NTel3Pre ]]; then
     CUT="NTel3-PointSource-TMVA-BDT-Preselection"
 elif [[ $CUTS = "BDTExtended025moderate2tel" ]]; then
     CUT="NTel2-Extended025-Moderate-TMVA-BDT"
+elif [[ $CUTS = "BDTExtended040moderate2tel" ]]; then
+    CUT="NTel2-Extended040-Moderate-TMVA-BDT"
+elif [[ $CUTS = "BDTExtended040hard2tel" ]]; then
+    CUT="NTel2-Extended040-Hard-TMVA-BDT"
 elif [[ $CUTS = "BDTExtended050moderate2tel" ]]; then
     CUT="NTel2-Extended050-Moderate-TMVA-BDT"
 else
