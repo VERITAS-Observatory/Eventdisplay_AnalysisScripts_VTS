@@ -2,7 +2,7 @@
 # submit evndisp for grisu/care simulations
 
 # qsub parameters
-h_cpu=47:59:00; h_vmem=16000M; tmpdir_size=550G
+h_cpu=47:59:00; h_vmem=32000M; tmpdir_size=550G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
