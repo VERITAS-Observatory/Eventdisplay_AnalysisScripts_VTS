@@ -14,7 +14,7 @@ IRF general production for IRFs for all epochs
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV_2212)
+                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV_2212, CARE_RedHV_Feb2024)
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -62,7 +62,7 @@ process_irfs()
     done
 }
 
-if [[ ${SIMTYPE} == "CARE_June2020" ]] || [[ ${SIMTYPE} == "CARE_RedHV" ]]; then
+if [[ ${SIMTYPE} == "CARE_June2020" ]] || [[ ${SIMTYPE} == "CARE_RedHV"* ]]; then
     process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_WINTER.dat
     process_irfs ${IRFTYPE} ${SIMTYPE} 62 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_SUMMER.dat
 elif [[ ${SIMTYPE} == "CARE_UV_2212" ]]; then

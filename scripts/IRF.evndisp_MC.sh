@@ -102,11 +102,11 @@ if [[ ${ANALYSIS_TYPE} == *"SQ2"* ]]; then
 fi
 
 # Create a unique set of run numbers
-if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="946500"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="956500"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="966500"
-elif [ ${SIMTYPE:0:4} = "CARE" ]; then
+elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="941200"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="951200"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
@@ -126,6 +126,7 @@ fi
 VBFNAME="NO_VBFNAME"
 NOISEFILE="NO_NOISEFILE"
 echo "SIMTYPE $SIMTYPE"
+echo "SIMDIR $SIMDIR"
 
 #######################################################
 # GRISU simulations
@@ -168,7 +169,7 @@ elif [ ${SIMTYPE} == "CARE_UV_2212" ]; then
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
     echo "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz"
 #######################################################
-elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
+elif [ ${SIMTYPE} == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
     if [[ ${ATM} == 61 ]]; then
         LBL="PMTUpgrade_RHV_CARE_v1.6.2_12"
@@ -179,9 +180,14 @@ elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     fi
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
 #######################################################
+elif [ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]; then
+    VBFNAME=$(find ${SIMDIR} -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+    echo _${WOBBLE}wob_${NOISE}MHz
+    echo "$VBFNAME"
+#######################################################
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     VBFNAME=$(find ${SIMDIR} -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
-    echo _${WOFFSET}wob_${NOISE}MHz
+    echo _${WOBBLE}wob_${NOISE}MHz
     echo $SIMDIR/Zd${ZA}/merged/Data/
 #######################################################
 # elif [ ${SIMTYPE:0:4} == "CARE" ]; then
