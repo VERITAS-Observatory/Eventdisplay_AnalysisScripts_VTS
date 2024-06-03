@@ -16,7 +16,6 @@ TELTOANA=TELTOANACOMB
 LOGDIR="$ODIR"
 CALDIR="$ODIR"
 ACUTS=RECONSTRUCTIONRUNPARAMETERFILE
-EDVERSION=VVERSION
 DBTEXTDIRECTORY=DATABASETEXT
 VERITAS_DATA_DIR=VTS_DATA_DIR
 VERITAS_DATA_DIR_2=VTS_2DATA_DIR
@@ -35,7 +34,9 @@ mkdir -p "$TEMPDIR"
 if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
     APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR}:/opt/VERITAS_DATA_DIR "
-    APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR_2}:/opt/VERITAS_DATA_DIR_2 "
+    if [ -d "$VERITAS_DATA_DIR_2" ]; then
+        APPTAINER_MOUNT+=" --bind ${VERITAS_DATA_DIR_2}:/opt/VERITAS_DATA_DIR_2 "
+    fi
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${DBTEXTDIRECTORY}:/opt/DBTEXT "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
@@ -145,12 +146,18 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
         else
             OPT+=( -sourcefile ${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf )
         fi
-    elif [[ ! -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
+    elif [[ -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
+        if [ -n "$EVNDISP_APPTAINER" ]; then
+            OPT+=( -sourcefile /opt/VERITAS_DATA_DIR/data/${RUNDATE}/${RUN}.cvbf )
+        else
+            OPT+=( -sourcefile ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf )
+        fi
+    else
         RUNONDISK="file not found"
     fi
 else
     # original way accessing the VERITAS DB
-    RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
+    RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/scripts/RUNLIST.whichRunsAreOnDisk.sh -d)
 fi
 if [[ ${RUNONDISK} == *"file not found"** ]]; then
   echo "$RUN not on disk"
@@ -280,5 +287,3 @@ if [[ $CALIB != "5" ]]; then
     echo "RUN$RUN VERITAS_USER_DATA_DIR $DATAFILE"
     rm -f "$TEMPDIR/$RUN.root"
 fi
-
-exit
