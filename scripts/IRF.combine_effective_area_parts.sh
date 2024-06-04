@@ -2,7 +2,7 @@
 # combine effective area files into one
 
 # job requirements
-h_cpu=11:29:00; h_vmem=4000M; tmpdir_size=1G
+h_cpu=11:29:00; h_vmem=512000M; tmpdir_size=500G
 #
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)

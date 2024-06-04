@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to train BDTs with TMVA
+# train BDTs with TMVA
 #
 # note the large amount of hardwired parameters in this scripts
 # dependence especially on the type of simulations and
@@ -10,10 +10,9 @@ h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=24G
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
-if [[ $# -lt 7 ]]; then
-# begin help message
+if [ $# -lt 7 ]; then
 echo "
-TMVA training of BDT: submit jobs from a TMVA runparameter file
+TMVA (BDT) training for gamma/hadron separation: submit jobs from a TMVA runparameter file
 
 IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA runparameter file> <output directory> <output file name> <sim type> <epoch> <atmosphere>
 
@@ -38,13 +37,12 @@ required parameters:
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
-echo " "
+
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -248,7 +246,12 @@ do
          echo "JOBID:  $JOBID"
       elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        condor_submit $FSCRIPT.sh.condor
+        echo
+        echo "-------------------------------------------------------------------------------"
+        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "-------------------------------------------------------------------------------"
+        echo
       elif [[ $SUBC == *sbatch* ]]; then
             $SUBC $FSCRIPT.sh
       elif [[ $SUBC == *parallel* ]]; then

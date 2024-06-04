@@ -49,6 +49,8 @@ export VERITAS_IRFPRODUCTION_DIR=${GROUPLUSTDIR}/IRFPRODUCTION
 export VERITAS_USER_DATA_DIR=${USERLUSTDIR}
 # user log
 export VERITAS_USER_LOG_DIR=${USERAFSDIR}/LOGS/VERITAS
+# EVENTDISPLAY script directory (this directory)
+export EVNDISPSCRIPTS="$(pwd)"
 
 ########################################################################
 # software settings
@@ -62,7 +64,6 @@ if [[ $PROCESS == "apptainer"* ]]; then
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     # export EVNDISPSYS="apptainer exec --no-mount /etc/ssh/ssh_known_hosts2 ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
     export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
-    export EVNDISPSCRIPTS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/Eventdisplay_AnalysisScripts_VTS_${EVNDISPVERSION}/scripts
     export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3/
 # SL7 processing
 elif [[ $PROCESS == "sl7" ]] || [[ $PROCESS == "al9" ]]; then
@@ -81,7 +82,6 @@ elif [[ $PROCESS == "sl7" ]] || [[ $PROCESS == "al9" ]]; then
     export PATH=$PATH:${VBFSYS}/bin/
     LD_LIBRARY_PATH=$VBFSYS/lib:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH
     export SOFASYS=${EVNDISPSYS}/sofa
-    export EVNDISPSCRIPTS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/Eventdisplay_AnalysisScripts_VTS/scripts
     cd ${EVNDISPSYS}
     source ./setObservatory.sh VTS
     cd ${TDIR}

@@ -1,7 +1,7 @@
 #!/bin/bash
-# select mscw files for BDT training
-# 
-# selection is based on 
+# select mscw files for BDT gamma/hadron separation training
+#
+# selection is based on
 # - epoch
 # - observation mode
 # - avoidance of strong gamma-ray sources (e.g., Crab)
@@ -11,8 +11,8 @@
 #
 
 if [ $# -ne 4 ]; then
-    echo "./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>"
-     echo 
+    echo "./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>"
+     echo
      echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
      exit
@@ -92,7 +92,7 @@ do
     fi
     TMPOBSTIME=$(echo $RUNINFO | awk '{print $6}')
     if (( $TMPOBSTIME <  $MINOBSTIME )); then
-        echo "   SKIPPING OBSTIME: $TMPOBSTIME $MINOBSTIME" 
+        echo "   SKIPPING OBSTIME: $TMPOBSTIME $MINOBSTIME"
         continue
     fi
     # need to take care of target with spaces in their names
