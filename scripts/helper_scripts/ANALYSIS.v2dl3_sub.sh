@@ -128,9 +128,6 @@ do
             python --version >> ${ODIR}/${m}${p}/${RUN}.log
             conda list -n v2dl3Eventdisplay >> ${ODIR}/${m}${p}/${RUN}.log
             PDIR=$(pwd)
-            cd ${V2DL3SYS}
-            echo "GIT status: " >> ${ODIR}/${m}${p}/${RUN}.log
-            git rev-parse HEAD >> ${ODIR}/${m}${p}/${RUN}.log
             cd ${PDIR}
         done
     done
