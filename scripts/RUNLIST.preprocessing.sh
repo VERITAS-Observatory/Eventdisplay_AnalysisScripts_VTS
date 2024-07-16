@@ -52,7 +52,9 @@ fi
 MYSQL="mysql -u readonly -h $MYSQLDB -A"
 RUNINFOARRAY=()
 while read -r RUNID; do
-	if [[ "$RUNID" =~ ^[0-9]+$ ]]; then
+    non_digits="${RUNID//[0-9]/}"
+    if [[ ! -n "$non_digits" ]]; then
+        echo $RUNID
 		RUNINFOARRAY+=("$RUNID")
 	fi
 done < <($MYSQL -e " select run_id from VERITAS.tblRun_Info where run_type LIKE \"$MODE\" and observing_mode = 'wobble' and duration >= '00:${MIN_DURATION}:00' and db_start_time >= '$START_DATE' $END_DATE_STR and config_mask in $TEL_MASKS ;")
