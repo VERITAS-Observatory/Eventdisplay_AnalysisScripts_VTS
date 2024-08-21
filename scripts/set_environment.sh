@@ -6,7 +6,7 @@ if [[ $# < 2 ]]; then
    echo "source ./set_v490.sh <analysis type> <processing type>"
    echo
    echo "Analysis types:  e.g., AP, AP_DISP, TS, NN"
-   echo "Processing types: al9, sl7, apptainer"
+   echo "Processing types: al9, apptainer"
 fi
 
 export VERITAS_ANALYSIS_TYPE="${1}"
@@ -14,7 +14,7 @@ PROCESS="${2}"
 EVNDISPVERSION="v490.7"
 
 # Test for allowed processing types
-allowed_processing_types=("apptainer" "apptainer-dev" "al9" "sl7")
+allowed_processing_types=("apptainer" "apptainer-dev" "al9")
 FOUND_PROCESS="FALSE"
 for item in $allowed_processing_types
 do
@@ -65,17 +65,12 @@ if [[ $PROCESS == "apptainer"* ]]; then
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     # export EVNDISPSYS="apptainer exec --no-mount /etc/ssh/ssh_known_hosts2 ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
     export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
-# SL7 processing
-elif [[ $PROCESS == "sl7" ]] || [[ $PROCESS == "al9" ]]; then
+    # Alma Linux 9 (al9) processing
+elif [[ $PROCESS == "al9" ]]; then
     unset EVNDISP_APPTAINER
     TDIR=`pwd`
-    if [[ $PROCESS == "sl7" ]]; then
-        export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root-6.24.06_build/
-        export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-SL6
-    elif [[ $PROCESS == "al9" ]]; then
-        export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root_v6.30.02.Linux-almalinux9.3-x86_64-gcc11.4/
-        export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-c17/
-    fi
+    export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root_v6.30.02.Linux-almalinux9.3-x86_64-gcc11.4/
+    export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-c17/
     export EVNDISPSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/EventDisplay_${EVNDISPVERSION:0:4}-${PROCESS}
     cd $ROOTSYS
     source ./bin/thisroot.sh
