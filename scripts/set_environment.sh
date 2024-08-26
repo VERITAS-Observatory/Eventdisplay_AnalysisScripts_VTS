@@ -3,7 +3,7 @@
 #  set directories for Eventdisplay analysis at DESY
 #
 if [[ $# < 2 ]]; then
-   echo "source ./set_v490.sh <analysis type> <processing type>"
+   echo "source ./set_environment.sh <analysis type> <processing type>"
    echo
    echo "Analysis types:  e.g., AP, AP_DISP, TS, NN"
    echo "Processing types: al9, apptainer"
