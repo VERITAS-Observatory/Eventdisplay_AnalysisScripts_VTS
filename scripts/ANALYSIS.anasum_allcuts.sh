@@ -35,7 +35,7 @@ TMPDIR="$VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_
 TMPDIR="$VERITAS_DATA_DIR/tmp/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
 
 # temporary file for output
-TMPLOG="$(pwd)/anasum.submit.$(uuid).tmp.txt"
+TMPLOG="$(pwd)/anasum.submit.$(uuidgen).tmp.txt"
 rm -f ${TMPLOG}
 
 for C in $CUTS

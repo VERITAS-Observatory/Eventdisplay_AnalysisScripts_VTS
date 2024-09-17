@@ -52,10 +52,11 @@ fi
 MYSQL="mysql -u readonly -h $MYSQLDB -A"
 RUNINFOARRAY=()
 while read -r RUNID; do
-	if [[ "$RUNID" =~ ^[0-9]+$ ]]; then
+    non_digits="${RUNID//[0-9]/}"
+    if [[ ! -n "$non_digits" ]]; then
 		RUNINFOARRAY+=("$RUNID")
 	fi
-done < <($MYSQL -e " select run_id from VERITAS.tblRun_Info where run_type LIKE \"$MODE\" and observing_mode = 'wobble' and duration >= '00:${MIN_DURATION}:00' and db_start_time >= '$START_DATE' $END_DATE_STR and config_mask in $TEL_MASKS ;")
+done < <($MYSQL -e " select run_id from VERITAS.tblRun_Info where run_type LIKE \"$MODE\" and observing_mode = 'wobble' and duration >= '00:${MIN_DURATION}:00' and db_start_time >= '$START_DATE' $END_DATE_STR and config_mask in $TEL_MASKS and run_status != 'prepared' ;")
 
 # check if VERITAS.tblRun_Info had 0 runs for us
 if (( ${#RUNINFOARRAY[@]} <= 0 )) ; then
@@ -70,10 +71,11 @@ RUN_IDS=$(IFS=, ; echo "(${RUNINFOARRAY[*]})")
 # Do some final quality checks using the VOFFLINE.tblRun_Analysis_Comments table
 FINALARRAY=()
 while read -r RUNID; do
-	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
+    non_digits="${RUNID//[0-9]/}"
+    if [[ ! -n "$non_digits" ]]; then
 		FINALARRAY+=("$RUNID")
 	fi
-done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status != 'do_not_use' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or ( \"$DQMCATEGORY\" = \"%\" and data_category is null )  ) and usable_duration >= '00:${MIN_DURATION}:00' and run_id in ${RUN_IDS[@]}")
+done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status != 'do_not_use' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or data_category is null ) and (usable_duration >= '00:${MIN_DURATION}:00' or usable_duration is null) and run_id in ${RUN_IDS[@]}")
 
 exclusion_list=()
 # check exclusion list

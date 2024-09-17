@@ -13,7 +13,8 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
+                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
+                            CARE_RedHV_Feb2024, CARE_202404)
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -29,7 +30,7 @@ optional parameters:
                             (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b
                              V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
                              V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
-                             V6_2022_2022s, V6_2022_2023w, V6_2023_2023s\")
+                             V6_2022_2022s, V6_2022_2023w, V6_2023_2023s, V6_2023_2024w\")
 
     [atmosphere]            atmosphere model(s) (21/61 = winter, 22/62 = summer)
                             (default: \"61 62\")
@@ -96,7 +97,7 @@ elif [[ $ANATYPE = "TS"* ]]; then
 fi
 
 # simulation types and definition of parameter space
-if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     # GrISU simulation parameters
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
     NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
@@ -115,22 +116,22 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     fi
     NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
     WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" = "CARE_UV_June1409" ]; then
+elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" = "CARE_UV_2212" ]; then
+elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
-elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
+elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
+elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
@@ -138,7 +139,7 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # ZENITH_ANGLES=( 20 40 65 )
+    # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 200 )
     ######################################
@@ -154,18 +155,31 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
     # (END TEMPORARY)
     ######################################
-elif [[ "${SIMTYPE}" = "CARE_RedHV_Feb2024" ]]; then
+elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 200 )
-    ZENITH_ANGLES=( 65 )
-    WOBBLE_OFFSETS=( 0.5 )
-elif [ ${SIMTYPE:0:4} = "CARE" ]; then
+    # NSB_LEVELS=( 300 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSETS=( 0.5 )
+elif [[ "${SIMTYPE}" == "CARE_202404" ]]; then
+    SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    set -- $ZENITH_ANGLES
+    ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
+    # assume sanme NSB and wobble offsets in all bins
+    NSB_LEVELS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    ######################################
+    # TEST
+    # NSB_LEVELS=( 300 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSET=( 0.5 )
+elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
@@ -193,7 +207,7 @@ if [[ $CUTSLISTFILE != "" ]]; then
     # read file containing list of cuts
     IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
     CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
-elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
+elif [ "${SIMTYPE}" = "CARE_RedHV"* ]; then
     CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat
              ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard.dat"
@@ -218,7 +232,7 @@ if [[ $ANATYPE = "NN"* ]]; then
    if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
    else
-       if [ "${SIMTYPE}" = "CARE_RedHV" ]; then
+       if [ "${SIMTYPE}" = "CARE_RedHV"* ]; then
            CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
        else
            CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
@@ -342,6 +356,8 @@ for VX in $EPOCH; do
                elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="300 600 900"
+               elif [[ ${SIMTYPE} = "CARE_RedHV_"* ]]; then
+                   FIXEDNSB="300 600 900"
                elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="160 200 300"
@@ -381,6 +397,10 @@ for VX in $EPOCH; do
                           SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
                        elif [[ ${SIMTYPE:0:13} = "CARE_June2020" ]]; then
                           SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
+                       elif [[ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]]; then
+                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATM}/Zd${ZA}/
+                       elif [[ ${SIMTYPE} == "CARE_202404" ]]; then
+                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATM}/Zd${ZA}/
                        elif [[ ${SIMTYPE:0:12} = "CARE_Jan2024" ]]; then
                           OBSTYPE=${SIMTYPE:13}
                           SIMDIR="${VERITAS_USER_DATA_DIR}/simpipe_test/data/ATM${ATM}/Zd${ZA}/MERGEVBF_${OBSTYPE}/"
