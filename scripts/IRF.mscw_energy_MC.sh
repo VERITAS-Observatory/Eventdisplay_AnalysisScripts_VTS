@@ -2,7 +2,7 @@
 # script to analyse MC files with lookup tables
 
 # qsub parameters
-h_cpu=10:29:00; h_vmem=12000M; tmpdir_size=100G
+h_cpu=10:29:00; h_vmem=8000M; tmpdir_size=100G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
