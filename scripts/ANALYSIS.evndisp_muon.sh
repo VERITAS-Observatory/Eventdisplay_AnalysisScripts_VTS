@@ -17,12 +17,12 @@ ANALYSIS.evndisp.sh <runlist> [output directory] [runparameter file] [calibratio
 required parameters:
 
     <runlist>               simple run list with one run number per line
-    
+
 optional parameters:
-    
+
     [output directory]     directory where output ROOT files will be stored.
 			   Default: $VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/
-	 
+
     [runparameter file]    file with integration window size and reconstruction cuts/methods,
                            expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 
@@ -32,11 +32,11 @@ optional parameters:
 
 			   EVNDISP.reconstruction.runparameter.DISP		 (long sumwindow -> for use with CARE IRFs;
 										                    DISP enabled, use RecID 1 in later stages to access it)
-										 
+
 			   EVNDISP.reconstruction.runparameter.SumWindow6-noDISP (short sumwindow -> for use with grisu IRFs; DISP disabled)
 			   EVNDISP.reconstruction.runparameter.SumWindow6-DISP	 (short sumwindow -> for use with grisu IRFs; DISP enabled [RecID 1])
 
-    [calibration]	   
+    [calibration]
           0		   neither tzero nor pedestal calculation is performed, must have the calibration results
 			   already in $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?
           1                pedestal & average tzero calculation (default)
@@ -44,7 +44,7 @@ optional parameters:
           3                average tzero calculation only
           4                pedestal & average tzero calculation are performed;
                            laser run number is taken from calibration file,
-                           gains taken from $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?/<laserrun>.gain.root 
+                           gains taken from $VERITAS_EVENTDISPLAY_AUX_DIR/Calibration/Tel_?/<laserrun>.gain.root
 
     [Model3D]              set to 1 to switch on 3D model (default is off)
 
@@ -80,7 +80,7 @@ mkdir -p $ODIR
 # Try to use the correct reconstruction runparameters. For V4 and V5 the default is GRISU / SumWindow6-noDISP.
 if [[ "$SIMTYPE" == "CARE"* ]]; then
     ACUTS_AUTO=EVNDISP.reconstruction.runparameter
-elif [[ "$SIMTYPE" == "GRISU"* ]]; then 
+elif [[ "$SIMTYPE" == "GRISU"* ]]; then
     ACUTS_AUTO=EVNDISP.reconstruction.runparameter.SumWindow6-noDISP
 else
     echo "WARNING: Unknown simulation type $SIMTYPE, please check ..."
@@ -120,7 +120,7 @@ SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
 
 TIMETAG=`date +"%s"`
 
-NRUNS=`cat $RLIST | wc -l ` 
+NRUNS=`cat $RLIST | wc -l `
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -151,22 +151,22 @@ do
 	echo "VPM is switched on (default)"
 	else
 	echo "VPM bool is set to $VPM (switched off)"
-	fi  
+	fi
 	if [[ $MODEL3D == "0" ]]; then
             echo "Model3D is switched off (default)"
 	else
             echo "Model3D bool is set to $MODEL3D (switched on)"
-	fi 
+	fi
 	if [[ $TELTOANA == "1234" ]]; then
 	echo "Telescope combination saved in the DB is analyzed (default)"
 	else
 	echo "Analyzed telescopes: $TELTOANA"
-	fi 
+	fi
 	if [[ $CALIB == "4" ]]; then
 	echo "read calibration from calibration file $CALIBFILE"
 	else
             echo "read calibration from VOffline DB (default)"
-	fi 
+	fi
 
     # run locally or on cluster
     SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
@@ -178,7 +178,7 @@ do
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
-        
+
         echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
@@ -194,7 +194,7 @@ do
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"	
+	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
 done
 
