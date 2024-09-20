@@ -88,7 +88,7 @@ cd $VERITAS_EVNDISP_AUX_DIR/DispBDTs
 Generate background training events using:
 
 ```bash
-./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
+./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
 ```
 
 Use e.g. `$VERITAS_DATA_DIR/processed_data_v490/AP/mscw/` for the source directory.
