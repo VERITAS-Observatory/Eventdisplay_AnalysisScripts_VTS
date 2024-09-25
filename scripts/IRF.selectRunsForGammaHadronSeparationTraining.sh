@@ -12,7 +12,7 @@
 if [ $# -ne 4 ]; then
     echo "./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>"
      echo
-     echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
+     echo "files are sorted in epochs, observations mode, zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
      exit
 fi
@@ -44,8 +44,7 @@ if [[ $MEPOCH == "V4" ]]; then
 elif [[ $MEPOCH == "V5" ]]; then
     FLIST=$(find ${2} -name "[4,5,6]*[0-9].mscw.root"  | sed 's/\.root$//')
 else
-#    FLIST=$(find ${2} -name "[6-9, 10]*[0-9].mscw.root"  | sed 's/\.root$//')
-    FLIST=$(find ${2} -name "10*[0-9].mscw.root"  | sed 's/\.root$//')
+    FLIST=$(find ${2} -name "[6-9, 10]*[0-9].mscw.root"  | sed 's/\.root$//')
 fi
 
 mkdir -p ${3}
