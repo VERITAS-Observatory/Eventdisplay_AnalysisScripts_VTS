@@ -136,6 +136,19 @@ LOGDIR="$ODIR/$DATE/TMVA.ANADATA"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
 
+####################################
+# Run prefix
+get_run_prefix()
+{
+    RUNN="${1%%.*}"
+
+    if [[ ${RUNN} -lt 100000 ]]; then
+        echo "${RUNN:0:1}"
+    else
+        echo "${RUNN:0:2}"
+    fi
+}
+
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_sub"
 
@@ -216,16 +229,17 @@ do
           echo "Error, directory with background files ${BDIR}/Ze_${j} not found, exiting..."
           exit 1
       fi
-      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" > ${BLIST}
-   	  for arg in $(cat $BLIST | sort -n)
-   	  do
-          echo "* BACKGROUNDFILE DDIR/$arg" >> $RFIL.runparameter
-      done
+      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | while read -r arg; do
+          PF=$(get_run_prefix "$arg")
+          echo "* BACKGROUNDFILE DDIR/$PF/$arg"
+      done >> "$RFIL.runparameter"
+      # expect training files to be from pre-processing directory
+      BCKFILEDIR="$VERITAS_PREPROCESSED_DATA_DIR/$ANATYPE/mscw"
 
       FSCRIPT=$LOGDIR/$ONAME"_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \
           -e "s|MCDIRECTORY|$SDIR|" \
-          -e "s|DATADIRECTORY|${BDIR}/Ze_${j}|" \
+          -e "s|DATADIRECTORY|$BCKFILEDIR|" \
           -e "s|OUTPUTDIR|${ODIR}|" \
           -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
