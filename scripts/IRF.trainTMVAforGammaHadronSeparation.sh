@@ -170,7 +170,7 @@ do
 
       echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
 
-      echo "* OUTPUTFILE $ODIR/ ${ONAME}_${i}_${j}" >> $RFIL.runparameter
+      echo "* OUTPUTFILE ODIR ${ONAME}_${i}_${j}" >> $RFIL.runparameter
 
       echo "#######################################################################################" >> $RFIL.runparameter
       # signal and background files (depending on on-axis or cone data set)
@@ -189,7 +189,7 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE SIMDIR/$(basename $arg)" >> $RFIL.runparameter
                           done
                       fi
                   fi
@@ -202,7 +202,7 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE SIMDIR/$(basename $arg)" >> $RFIL.runparameter
                           done
                       fi
                   fi
@@ -216,14 +216,17 @@ do
           echo "Error, directory with background files ${BDIR}/Ze_${j} not found, exiting..."
           exit 1
       fi
-      ls -1 ${BDIR}/Ze_${j}/*.root > ${BLIST}
-   	  for arg in $(cat $BLIST)
+      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" > ${BLIST}
+   	  for arg in $(cat $BLIST | sort -n)
    	  do
-         echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
+          echo "* BACKGROUNDFILE DDIR/$arg" >> $RFIL.runparameter
       done
 
       FSCRIPT=$LOGDIR/$ONAME"_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \
+          -e "s|MCDIRECTORY|$SDIR|" \
+          -e "s|DATADIRECTORY|${BDIR}/Ze_${j}|" \
+          -e "s|OUTPUTDIR|${ODIR}|" \
           -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
       chmod u+x $FSCRIPT.sh
