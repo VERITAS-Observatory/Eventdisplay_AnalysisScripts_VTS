@@ -52,10 +52,7 @@ inspect_executables()
     fi
 }
 
-"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS # > "$LDIR"/$(basename $RXPAR)"_preselect.log"
-
-echo "$RXPAR".runparameter
-exit
+"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS > "$LDIR"/$(basename $RXPAR)"_preselect.log"
 
 "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR"/$(basename $RXPAR)".log"
 
