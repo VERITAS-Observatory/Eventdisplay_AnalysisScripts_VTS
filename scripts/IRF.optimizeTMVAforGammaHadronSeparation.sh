@@ -17,7 +17,7 @@ required parameters:
     <preselection results directory>     directory with preselection results
 
     <cut type>                      preselection cut type (e.g., NTel2-Moderate)
-    
+
     <sim type>                      simulation type (e.g. GRISU, CARE_June2020)
 
     <epoch>                         array epoch e.g. V4, V5, V6, V6_2012_2013a
@@ -41,7 +41,7 @@ SIMTYPE=$3
 EPOCH=$4
 ATM=$5
 # evndisplay version
-IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforGammaHadronSeparation --version | tr -d .| sed -e 's/[a-Z]*$//'`
+IRFVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 DISPBDT=""
 ANATYPE="AP"
@@ -49,7 +49,7 @@ if [[ ! -z $VERITAS_ANALYSIS_TYPE ]]; then
     ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
     if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
         DISPBDT="_DISP"
-    fi 
+    fi
 fi
 
 # Check that list of background files exists
@@ -159,5 +159,3 @@ elif [[ $SUBC == *parallel* ]]; then
 elif [[ "$SUBC" == *simple* ]] ; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
-
-exit

@@ -50,7 +50,7 @@ done
 find $DDIR -name "*.root.zst" -exec zstd -f -d {} \;
 ls -1 $DDIR
 ls -1 $DDIR/*.root > ${DDIR}/$NLIST
-echo "LISTLISTLIST ${DDIR}/$NLIST"
+echo "FILELIST ${DDIR}/$NLIST"
 cat ${DDIR}/$NLIST
 
 ODIR="${ODIR}/${BDT}"

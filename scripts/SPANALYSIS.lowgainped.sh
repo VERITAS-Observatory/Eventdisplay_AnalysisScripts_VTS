@@ -14,11 +14,11 @@ SPANALYSIS.lowgainped.sh <runlist> <start of sumwindow> [calib directory] [sum w
 required parameters:
 
     <runlist>               simple run list with one run number per line
-    
+
     <start of sumwindow>    default 100 for calib runs with 128 samples, 40 for calib runs with 64 samples.
 
 optional parameters:
-    
+
     [calib directory]       directory where output files will be stored. Default $VERITAS_EVNDISP_AUX_DIR/ .
 
     [sum window]            calibration sum window. Default 20.
@@ -71,7 +71,7 @@ mkdir -p $LOGDIR
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/SPANALYSIS.lowgainped_sub"
 
 
-NRUNS=`cat $RLIST | wc -l ` 
+NRUNS=`cat $RLIST | wc -l `
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -100,7 +100,7 @@ do
 	echo "Analyzed telescopes: $TELTOANA (default, all telescopes)"
 	else
 	echo "Analyzed telescopes: $TELTOANA"
-	fi 
+	fi
 
     # run locally or on cluster
     SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
@@ -117,7 +117,7 @@ do
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
-        
+
         echo "RUN $AFILE JOBID $JOBID"
         echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then

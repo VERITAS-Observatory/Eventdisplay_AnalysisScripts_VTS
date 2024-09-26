@@ -297,7 +297,7 @@ for VX in $EPOCH; do
                 for ATM in $ATMOS; do
                     for C in ${CUTTYPES[@]}; do
                         echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
-                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining"
+                        BDTDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining"
                         MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         # list of background files
                         TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"

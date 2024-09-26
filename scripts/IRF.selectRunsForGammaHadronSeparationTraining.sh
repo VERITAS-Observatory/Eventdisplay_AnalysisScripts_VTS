@@ -8,12 +8,11 @@
 #
 # files are linked to a new directory
 #
-#
 
 if [ $# -ne 4 ]; then
     echo "./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>"
      echo
-     echo "files are sorted in zenith angle bins defined in TMVA run parameter file"
+     echo "files are sorted in epochs, observations mode, zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
      exit
 fi

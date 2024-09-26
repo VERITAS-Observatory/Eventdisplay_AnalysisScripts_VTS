@@ -7,7 +7,7 @@
 # noise files are written in grisu-style ascii format
 #
 # this scripts runs locally
-# 
+#
 # all relevant values are hardcoded in this scripts:
 # - CARE file names
 # - noise levels in MHz
@@ -44,7 +44,7 @@ FIL="PedestalOnly_V6_PMTUpgrade_CARE_v1.6.2_11_ATM21_zen20deg_050wob_"
 GRI="Pedestal_V6_PMTUpgrade_CARE_v1.6.2_11_ATM21_zen20deg_"
 
 
-# loop over all noise levels (in MHz) and convert 
+# loop over all noise levels (in MHz) and convert
 for N in 50 75 100 130 160 200 250 300 350 400 450
 do
     IFIL=${DDIR}${FIL}${N}MHz.cvbf.bz2
