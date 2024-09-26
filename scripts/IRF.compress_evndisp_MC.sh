@@ -20,7 +20,7 @@ required parameters:
                             V4: array before T1 move (before Fall 2009)
                             V5: array after T1 move (Fall 2009 - Fall 2012)
                             V6: array after camera update (after Fall 2012)
-    
+
     <atmosphere>            atmosphere model (21 = winter, 22 = summer)
 
     <zenith>                zenith angle of simulations [deg]
@@ -28,12 +28,12 @@ required parameters:
     <offset angle>          offset angle of simulations [deg]
 
     <NSB level>             NSB level of simulations [MHz]
-    
+
     <sim type>              file simulation type (e.g. GRISU-SW6, CARE_June1425)
 
 
 optional parameters:
-    
+
     [analysis type]         type of analysis (default="")
 
     [uuid]                  UUID used for submit directory

@@ -50,7 +50,7 @@ for RUN in $RUNNUMS; do
         RUN=`$EVNDISPSYS/bin/VTS.getLaserRunFromDB $i $RUN`
         echo "Checking telescope $i, laser run $RUN, data run $RUN:"
         echo "$CALIBDIR/Tel_$i/$RUN.gain.root"
-        
+
         if [[ ! -f "$CALIBDIR/Tel_$i/$RUN.gain.root" ]]; then
             echo "Processing gains from laser/flash run $RUN, telescope $i"
             RUNFILE=`find -L $DDIR -name "$RUN.cvbf"`

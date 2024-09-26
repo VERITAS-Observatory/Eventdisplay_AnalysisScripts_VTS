@@ -34,14 +34,14 @@ RUNNUM=$1
 [[ "$2" ]] && SAMPLES=$2 || SAMPLES="0"
 [[ "$3" ]] && CALIBDIR=$3 || CALIBDIR="$VERITAS_USER_DATA_DIR/"
 
-OPT=" -calibrationsumwindow=20 -calibrationdirectory $CALIBDIR " 
+OPT=" -calibrationsumwindow=20 -calibrationdirectory $CALIBDIR "
 
 #high gain mode
 if [[ $SAMPLES == "0" ]]; then
 	OPT="$OPT -runmode=1 -calibrationsumfirst=0 "
 
 #low gain mode
-else 
+else
 	OPT="$OPT -runmode=6 -reconstructionparameter EVNDISP.reconstruction.LGCalibration.runparameter "
 
 	if [[ $SAMPLES == "64" ]]; then
@@ -50,7 +50,7 @@ else
 		OPT="$OPT -calibrationsumfirst=100 "
 	elif [[ $SAMPLES == "100" ]]; then
 		OPT="$OPT -calibrationsumfirst=75 "
-	else 
+	else
 		echo "Invalid number of samples given, please fix the script."
 		exit 1
 	fi
@@ -58,6 +58,6 @@ fi
 
 # Run evndisp
 echo "$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT "
-$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT 
+$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT
 
 exit

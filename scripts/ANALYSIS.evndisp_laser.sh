@@ -76,7 +76,7 @@ for RUN in $RUNNUMS; do
     else
     echo "Analyzed telescopes: $TELTOANA"
     fi
-    
+
     FSCRIPT="$LOGDIR/EVN.laser-$RUN"
 
     sed -e "s|RUNFILE|$RUN|" \
@@ -92,13 +92,13 @@ for RUN in $RUNNUMS; do
     SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
-        
+
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
-        
+
         echo "RUN $RUN: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
@@ -108,7 +108,7 @@ for RUN in $RUNNUMS; do
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
     elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log" 
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
 done
 

@@ -2,7 +2,7 @@
 # submit TMVA training for angular reconstruction
 
 # qsub parameters
-h_cpu=47:29:00; h_vmem=24000M; tmpdir_size=100G
+h_cpu=47:29:00; h_vmem=8000M; tmpdir_size=100G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -72,7 +72,7 @@ EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
 # Output file directory
 TMVADIR="TMVA_AngularReconstruction"
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_gamma/${TMVADIR}/ze${ZA}deg_loss02/"
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_gamma/${TMVADIR}/ze${ZA}deg/"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"

@@ -5,6 +5,8 @@ NOTFLAG=false # flag for if the -n flag was used
 DATFLAG=false # flat to print full date of run
 HELPFLAG=false # if true, print help text and exit
 PRINTPATH=false # if true, print full path of file on disl
+DOWNLOADFLAG=true
+RAWDATASERVER=$(grep "\* VTSRAWDATA" $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter  | awk {'print $3'})
 #echo "INP:'`basename $0`' '$1' '$2' '$3'"
 
 ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
@@ -61,30 +63,30 @@ if $HELPFLAG ; then
 	echo " $ cat <file of runs> | `basename $0` -n" ; echo
 	exit
 fi
-	
+
 #echo "NOTFLAG:$NOTFLAG"
 
 # list of run_id's to read in
 #RUNFILE=$1
 if [ ! -e $RUNFILE ] ; then
 	echo "File '$RUNFILE' could not be found, sorry."
-	exit	
+	exit
 fi
 RUNLISTTMP=`cat $RUNFILE`
 RUNLIST=$(echo "$RUNLISTTMP" | grep -oP "^\d+$" )
 if [ -z "$RUNLIST" ] ; then
-  >&2 echo "Error, RUNLIST.whichRunsAreOnDisk.sh : input file/pipe contains no runs, exiting..." 
+  >&2 echo "Error, RUNLIST.whichRunsAreOnDisk.sh : input file/pipe contains no runs, exiting..."
   exit 1
 fi
 #echo "RUNLIST:$RUNLIST"
 #echo "Files not on disk:"
-    
+
 # find the veritas db url
 MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit
-fi 
+fi
 
 
 # mysql login info
@@ -97,7 +99,7 @@ for ARUN in $RUNLIST ; do
 	if (( $ARUN > 0 )); then
 		if [[ "$COUNT" -eq 0 ]] ; then
 			SUB="run_id = $ARUN"
-		else 
+		else
 			SUB="$SUB OR run_id = $ARUN"
 		fi
 		COUNT=$((COUNT+1))
@@ -110,14 +112,14 @@ done
 # are assigned to RUNID and RUNDATE
 while read -r RUNID RUNDATE ; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
-		
+
 		# decode the date tag
 		read YY MM DD HH MI SE <<< ${RUNDATE//[-:]/ }
 		#echo "  YEARMONTHDAY:$YY$MM$DD"
-		
+
 		# generate the filename
 		TARGFILE="$VERITAS_DATA_DIR/data/d$YY$MM$DD/$RUNID.cvbf"
-		
+
 		# test to see if the file exists
 		#echo "  Does file exist: $TARGFILE"
 		if [ -e $TARGFILE ] ; then # file exists
@@ -133,6 +135,8 @@ while read -r RUNID RUNDATE ; do
 				echo "$RUNID"
             elif $DATFLAG ; then
                 echo "file not found - date: $YY$MM$DD"
+            elif $DOWNLOADFLAG ; then
+                echo "bbftp -V -S -p 12 -u bbftp -e \"mget /veritas/data/d$YY$MM$DD/$RUNID.cvbf $VERITAS_DATA_DIR/data/d$YY$MM$DD/\" $RAWDATASERVER"
 			fi
 		fi
 	fi

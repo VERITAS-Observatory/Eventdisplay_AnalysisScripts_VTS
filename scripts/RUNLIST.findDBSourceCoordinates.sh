@@ -3,10 +3,10 @@
 if [ ! "$#" -eq "1" ] || [ "$1" = "-h" ] ; then
 	echo "Print the coordinates of a source" ; echo
 	echo "`basename $0` <sourcename>" ; echo
-	echo "<source name>  : The name of the source, as stored in VERITAS.tblObserving_Sources"  
-	echo "                 or from \$EVNDISPSYS/scripts/VTS/RUNLIST.findDBSourceCoordinates.sh" ; echo 
+	echo "<source name>  : The name of the source, as stored in VERITAS.tblObserving_Sources"
+	echo "                 or from \$EVNDISPSYS/scripts/VTS/RUNLIST.findDBSourceCoordinates.sh" ; echo
 	echo "Examples:" ; echo
-	echo "  Print the Crab's positon:"
+	echo "  Print the Crab's position:"
 	echo "  $ `basename $0` \"Crab\""
 	echo "  83.633349 22.014475" ; echo
 	echo "  Print Markarian 501's position:"
@@ -44,7 +44,6 @@ while read -r EPOCH RA DEC NAME; do
 		echo "$SRCRADEG $SRCDECDEG"
 		exit 0
 	fi
-done < <($MYSQL -e " select epoch, ra, decl, source_id from VERITAS.tblObserving_Sources where source_id = '$SOURCENAME' ;" ) 
+done < <($MYSQL -e " select epoch, ra, decl, source_id from VERITAS.tblObserving_Sources where source_id = '$SOURCENAME' ;" )
 
 exit 0
-

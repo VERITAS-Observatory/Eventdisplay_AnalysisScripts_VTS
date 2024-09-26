@@ -14,7 +14,7 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pi
 		echo " $ `basename $0` n myrunlist.dat" ; echo
 		echo "Print list of only south and east wobble runs:"
 		echo " $ `basename $0` se myrunlist.dat" ; echo
-		echo "Works with pipes : " 
+		echo "Works with pipes : "
 		echo " $ cat myrunlist.dat | `basename $0` w" ; echo
 		exit
 	fi
@@ -45,13 +45,13 @@ if [[ "$LOWARG" == *w* ]] ; then WESTFLAG=true ; fi
 
 # get database url from parameter file
 MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
-    
+
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit
 #else
 #    echo "MYSQLDB: $MYSQLDB"
-fi 
+fi
 
 # mysql login info
 MYSQL="mysql -u readonly -h $MYSQLDB -A"
@@ -63,7 +63,7 @@ for ARUN in $RUNLIST ; do
 	if (( $ARUN > 0 )); then
 		if [[ "$COUNT" -eq 0 ]] ; then
 			SUB="run_id = $ARUN"
-		else 
+		else
 			SUB="$SUB OR run_id = $ARUN"
 		fi
 		COUNT=$((COUNT+1))
@@ -76,7 +76,7 @@ done
 # are assigned to RUNID and RUNDATE
 while read -r RUNID RUNWOBANGLE ; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
-		
+
         #echo "$RUNID :: $RUNWOBANGLE"
         if $NORTFLAG ; then
             if [ "$RUNWOBANGLE" -eq "0"   ] ; then echo "$RUNID" ; fi
@@ -90,7 +90,7 @@ while read -r RUNID RUNWOBANGLE ; do
         if $WESTFLAG ; then
             if [ "$RUNWOBANGLE" -eq "270" ] ; then echo "$RUNID" ; fi
         fi
-		
+
 	fi
 # This is where the MYSQL command is executed, with the list of requested runs
 # You have to do it this way, because using a pipe | calls the command in a

@@ -17,12 +17,12 @@ optional parameters:
 
     [allow 3-tel]           flag to include three-telescope runs
                             (default = 0 = no; set to 1 for yes)
-                            
+
     [worst weather]         select runs with weather >= this letter grade
                             (default: \"B\" weather)
-                            
+
     [min duration]          minimum run duration (default: 15 minutes)
-    
+
     [start date]            select all runs on or after this date
                             (default: 2011-01-01, format = YYYY-MM-DD)
 
@@ -30,13 +30,13 @@ optional parameters:
                             (default: none, format = YYYY-MM-DD)
 
     [runmode]		    use runs taken with this runmode
-			    (default: observing = regular runs). 
-			    Use 'obsLowHV' or 'obsFilter' 
-                            to select only reduced HV/only filter runs. 
+			    (default: observing = regular runs).
+			    Use 'obsLowHV' or 'obsFilter'
+                            to select only reduced HV/only filter runs.
 			    Use '%' for all runs.
 
     [DQM category]	    use runs taken with this DQM category.
-			    Default: science. Other options: 
+			    Default: science. Other options:
 			    calibration, engineering, moonfilter, reducedhv, special.
 --------------------------------------------------------------------------------
 "

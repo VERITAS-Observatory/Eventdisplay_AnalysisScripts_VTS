@@ -87,7 +87,7 @@ if $HELPFLAG ; then
 	echo "  $ `basename $0` -n \"Tycho\" myrunlist.dat"
 	echo "  43744 PSRJ2229+6114"
 	echo "  43745 PSRJ2229+6114" ; echo
-    echo "Works with pipes : " 
+    echo "Works with pipes : "
     echo "  $ cat myrunlist.dat | `basename $0` \"Tycho\""
 	echo "  47146"
 	echo "  47147"
@@ -100,20 +100,20 @@ function echoerr(){ echo "$@" 1>&2; } #for spitting out error text
 # list of run_id's to read in
 if [ ! -e $RUNFILE ] ; then
 	echo "File '$RUNFILE' could not be found in $PWD , sorry."
-	exit	
+	exit
 fi
 RUNLIST=`cat $RUNFILE`
 #echo "RUNLIST:$RUNLIST"
 
 # get database url from parameter file
 MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
-    
+
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit
 #else
 #    echo "MYSQLDB: $MYSQLDB"
-fi 
+fi
 
 # mysql login info
 MYSQL="mysql -u readonly -h $MYSQLDB -A"
@@ -125,7 +125,7 @@ for ARUN in $RUNLIST ; do
 	if (( $ARUN > 0 )); then
 		if [[ "$COUNT" -eq 0 ]] ; then
 			SUB="run_id = $ARUN"
-		else 
+		else
 			SUB="$SUB OR run_id = $ARUN"
 		fi
 		COUNT=$((COUNT+1))
@@ -138,7 +138,7 @@ done
 # are assigned to RUNID and RUNDATE
 while read -r RUNID RUNTYPE RUNSOURCE; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
-		
+
 		if [[ "$RUNSOURCE" == "$SOURCE" ]] || [[ "$RUNTYPE" == "$SOURCE" ]] ; then
 			if ! $NOTFLAG ; then
 				echo "$RUNID"
@@ -146,13 +146,13 @@ while read -r RUNID RUNTYPE RUNSOURCE; do
 		else
 			if $NOTFLAG ; then
 				if [[ "$RUNSOURCE" == "NOSOURCE" ]]; then
-					echo "$RUNID $RUNTYPE" 
+					echo "$RUNID $RUNTYPE"
 				else
 					echo "$RUNID $RUNSOURCE"
 				fi
 			fi
 		fi
-		
+
 	fi
 # This is where the MYSQL command is executed, with the list of requested runs
 # You have to do it this way, because using a pipe | calls the command in a

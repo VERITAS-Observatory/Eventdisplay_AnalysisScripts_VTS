@@ -26,7 +26,6 @@ RUNL=${1}
 RUNTYPE=${2}
 
 EDVERSION="v490"
-EDVERSIONFULL="v490.7"
 #
 PREDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 echo $PREDIR
@@ -38,6 +37,9 @@ TMPDIR="$VERITAS_DATA_DIR/tmp/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
 TMPLOG="$(pwd)/anasum.submit.$(uuidgen).tmp.txt"
 rm -f ${TMPLOG}
 
+# set this to zero to force reprocessing
+SKIPIFPROCESSED="1"
+
 for C in $CUTS
 do
     if [[ $RUNTYPE == "ANASUM" ]]; then
@@ -47,7 +49,7 @@ do
             ${C} \
             IGNOREACCEPTANCE \
             $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter \
-            $PREDIR | tee -a ${TMPLOG}
+            $PREDIR $SKIPIFPROCESSED | tee -a ${TMPLOG}
     elif [[ $RUNTYPE == "V2DL3" ]]; then
         mkdir -p "$TMPDIR/v2dl3_${C}"
          ./ANALYSIS.v2dl3.sh ${RUNL} \
