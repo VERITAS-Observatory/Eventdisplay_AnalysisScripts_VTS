@@ -11,7 +11,7 @@ fi
 
 if [ $# -lt 2 ]; then
 echo "
-./ANALYSIS.anasum_allcuts.sh <run list> < ANASUM / V2DL3 >
+./ANALYSIS.anasum_allcuts.sh <run list> < ANASUM / V2DL3 / PRECUTS >
 
     Run anasum or V2LD3 applying standard cuts.
 
@@ -24,30 +24,42 @@ fi
 
 RUNL=${1}
 RUNTYPE=${2}
+IGNORETYPE="IGNOREACCEPTANCE"
+# set this to zero to force reprocessing
+SKIPIFPROCESSED="1"
 
-EDVERSION="v490"
+# BDT preparation cuts
+if [[ ${RUNTYPE} == "PRECUTS" ]]; then
+    if [[ ${VERITAS_ANALYSIS_TYPE:0:2} == "AP" ]]; then
+        CUTS="NTel2ModeratePre NTel2SoftPre NTel2HardPre NTel3HardPre"
+    else
+        CUTS="NTel2SuperSoftPre"
+    fi
+    echo "BDT preparation cuts: $CUTS"
+    IGNORETYPE="IGNOREIRF"
+    SKIPIFPROCESSED="0"
+fi
+
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 #
 PREDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 echo $PREDIR
 # anasum file are writing into this directory
-TMPDIR="$VERITAS_USER_DATA_DIR/analysis/Results/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
 TMPDIR="$VERITAS_DATA_DIR/tmp/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
 
 # temporary file for output
 TMPLOG="$(pwd)/anasum.submit.$(uuidgen).tmp.txt"
 rm -f ${TMPLOG}
 
-# set this to zero to force reprocessing
-SKIPIFPROCESSED="1"
 
 for C in $CUTS
 do
-    if [[ $RUNTYPE == "ANASUM" ]]; then
+    if [[ $RUNTYPE == "ANASUM" ]] || [[ $RUNTYPE == "PRECUTS" ]]; then
         mkdir -p "$TMPDIR/anasum_${C}"
         ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
             "$TMPDIR/anasum_${C}" \
             ${C} \
-            IGNOREACCEPTANCE \
+            ${IGNORETYPE} \
             $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter \
             $PREDIR $SKIPIFPROCESSED | tee -a ${TMPLOG}
     elif [[ $RUNTYPE == "V2DL3" ]]; then
