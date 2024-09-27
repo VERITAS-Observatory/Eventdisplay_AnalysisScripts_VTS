@@ -14,6 +14,7 @@ Example:
 import argparse
 import logging
 import os
+import sys
 import tarfile
 
 import astropy
@@ -290,6 +291,9 @@ def extract_dqm_table(run, temp_run_dir):
 
     # run info
     run_info = read_file(os.path.join(temp_run_dir, f"{run}.runinfo"))
+    if run_info is None:
+        logging.error("Exiting. Cannot work without runinfo file")
+        sys.exit()
     row["run_id"] = run_info["run_id"][0]
     row["run_type"] = run_info["run_type"][0]
     row["observing_mode"] = run_info["observing_mode"][0]
