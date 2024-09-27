@@ -317,7 +317,6 @@ def extract_dqm_table(run, temp_run_dir):
         row["light_level"] = np.nan
         row["dqm_comment"] = ""
 
-
     # L3 rate
     (
         row["l3_rate_mean"],
@@ -379,7 +378,7 @@ def convert_table_comment_to_ascii(table):
                     old_length = len(row[name])
                     new_string = convert_to_ascii(row[name])
                     table[i][name] = new_string[:old_length]
-    except AttributeError:
+    except (AttributeError, TypeError):
         pass
 
 
@@ -435,6 +434,7 @@ def main():
     finally:
         # Delete the temporary directory and its contents
         logging.info("Deleting %s", temp_dir)
+
 
 #        shutil.rmtree(temp_dir)
 
