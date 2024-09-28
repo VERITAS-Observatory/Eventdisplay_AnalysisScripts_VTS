@@ -92,7 +92,7 @@ mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/${ANALYSIS_TYPE}/submit-EFFAREAS-${UUID}/"
+LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/${ANALYSIS_TYPE}/submit-COMBINEEFFAREAS-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
