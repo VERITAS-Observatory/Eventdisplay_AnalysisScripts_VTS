@@ -62,13 +62,13 @@ fi
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
-SIMTYPE=$1
-IRFTYPE=$2
-[[ "$3" ]] && EPOCH=$3 || EPOCH="V6 V5 V4"
-[[ "$4" ]] && ATMOS=$4 || ATMOS="61 62"
-[[ "$5" ]] && RECID=$5 || RECID="0"
-[[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
-[[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
+SIMTYPE="$1"
+IRFTYPE="$2"
+[[ "$3" ]] && EPOCH="$3" || EPOCH="V6 V5 V4"
+[[ "$4" ]] && ATMOS="$4" || ATMOS="61 62"
+[[ "$5" ]] && RECID="$5" || RECID="0"
+[[ "$6" ]] && CUTSLISTFILE="$6" || CUTSLISTFILE=""
+[[ "$7" ]] && SIMDIR="$7" || SIMDIR=""
 
 # uuid for this job batch
 DATE=`date +"%y%m%d"`
@@ -205,27 +205,33 @@ if [[ $CUTSLISTFILE != "" ]]; then
         exit 1
     fi
     # read file containing list of cuts
-    IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
-    CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
-elif [ "${SIMTYPE}" = "CARE_RedHV"* ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard.dat"
-elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    CUTLISTFROMFILE=$(cat $CUTSLISTFILE)
+    CUTLIST=""
+    for CUT in ${CUTLISTFROMFILE[@]}; do
+        CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
+    done
 else
-   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
+    if [ "${SIMTYPE}" = "CARE_RedHV"* ]; then
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat
+                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard.dat
+                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard.dat"
+    elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
+        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
+    else
+       if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
 
-       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-                ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
-   else
-       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
-                ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-   fi
+           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
+                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
+                    ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
+                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
+       else
+           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
+                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
+                    ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
+                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
+       fi
+    fi
 fi
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
@@ -240,8 +246,8 @@ if [[ $ANATYPE = "NN"* ]]; then
        fi
    fi
 fi
-CUTLIST=`echo $CUTLIST |tr '\r' ' '`
-CUTLIST=${CUTLIST//$'\n'/}
+
+CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat"
 
 # Cut types are used for BDT training and optimisation
 CUTTYPES="NTel2-PointSource-Moderate
@@ -254,6 +260,7 @@ if [[ $ANATYPE = "NN"* ]]; then
 fi
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
+
 
 ############################################################
 # loop over complete parameter space and submit production
@@ -377,6 +384,7 @@ for VX in $EPOCH; do
                       TFIL="${TABLECOM}"
                       # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                       TFILID=$TFIL$ANATYPE
+                      echo "CUTLIST $CUTLIST"
                       for CUTS in ${CUTLIST[@]}; do
                          echo "Generate effective areas $CUTS"
                          $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
@@ -436,9 +444,9 @@ for VX in $EPOCH; do
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
-                        for ID in $RECID; do
+                        for ID in ${RECID}; do
                             for CUTS in ${CUTLIST[@]}; do
-                                echo "combine effective areas $CUTS"
+                               echo "calculate effective areas $CUTS (ID $ID)"
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
                                    $ID $SIMTYPE $ANATYPE \
