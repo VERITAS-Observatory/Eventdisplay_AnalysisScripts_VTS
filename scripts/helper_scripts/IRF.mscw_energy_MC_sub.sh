@@ -61,17 +61,14 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l ${EVNDISPSYS}/bin/mscw_energy
     fi
 }
 
 
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
-echo "MSCW options: $MOPT"
-
 # dispBDT reconstruction
-# note: loss cuts needs to be equivalent to that used in training
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
