@@ -74,7 +74,6 @@ for CUTSFILE in $CUTSLIST; do
     fi
     echo -e "Output files will be written to:\n $OSUBDIR"
     mkdir -p $OSUBDIR
-    chmod -R g+w $OSUBDIR
 
     # parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
     PARAMFILE="
@@ -102,11 +101,12 @@ for CUTSFILE in $CUTSLIST; do
     rm -f $OSUBDIR/$OFILE.root
     $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
-    chmod g+w $DDIR/$EAPARAMS.root
     echo "Filling log file into root file"
     echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
     cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
     $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
     rm -f $OSUBDIR/$EAPARAMS.log
     cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
+    chmod -R g+w $OSUBDIR
+    chmod g+w $OSUBDIR/$EAPARAMS.root
 done
