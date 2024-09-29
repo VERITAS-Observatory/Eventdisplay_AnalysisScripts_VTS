@@ -68,7 +68,7 @@ do
              "$TMPDIR/v2dl3_${C}" \
              ${C} | tee -a ${TMPLOG}
     else
-        echo "Error: unknown run type $RUNTYPE (allowed: ANASUM or V2DL3)"
+        echo "Error: unknown run type $RUNTYPE (allowed: ANASUM, V2DL3, or PRECUTS)"
         exit
     fi
 done
