@@ -39,7 +39,9 @@ optional parameters:
                             (see EVNDISP.reconstruction.runparameter)
 
     [cuts list file]        file containing one gamma/hadron cuts file per line
-                            (default: hard-coded standard EventDisplay cuts)
+                            required for PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
+                            COMBINEEFFECTIVEAREAS, ANATABLESEFFAREAS
+                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/IRF_GAMMAHADRONCUTS*\"
 
     [sim directory]         directory containing simulation VBF files
 
@@ -197,57 +199,22 @@ echo "Zenith Angles: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
 echo "Wobble offsets: ${WOBBLE_OFFSETS}"
 
-# Set gamma/hadron cuts
-if [[ $CUTSLISTFILE != "" ]]; then
-    if [ ! -f $CUTSLISTFILE ]; then
-        echo "Error, cuts list file not found, exiting..."
-        echo $CUTSLISTFILE
+# read cut list file
+read_cutlist()
+{
+    CUTFILE="${1}"
+    if [[ $CUTFILE == "" ]] || [ ! -f $CUTFILE ]; then
+        echo "Error, cuts list file not found, exiting..." >&2
+        echo $CUTFILE
         exit 1
     fi
-    # read file containing list of cuts
-    CUTLISTFROMFILE=$(cat $CUTSLISTFILE)
+    CUTLISTFROMFILE=$(cat $CUTFILE)
     CUTLIST=""
     for CUT in ${CUTLISTFROMFILE[@]}; do
         CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
     done
-else
-    if [ "${SIMTYPE}" = "CARE_RedHV"* ]; then
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat
-                 ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard.dat
-                 ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard.dat"
-    elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
-        CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
-    else
-       if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
-
-           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-                    ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
-                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
-       else
-           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
-                    ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-                    ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-       fi
-    fi
-fi
-# NN cuts for soft only
-if [[ $ANATYPE = "NN"* ]]; then
-   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
-       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
-   else
-       if [ "${SIMTYPE}" = "CARE_RedHV"* ]; then
-           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
-       else
-           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-                    ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
-       fi
-   fi
-fi
-
-CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-BDT.dat"
+    echo $CUTLIST
+}
 
 # Cut types are used for BDT training and optimisation
 CUTTYPES="NTel2-PointSource-Moderate
@@ -284,6 +251,8 @@ for VX in $EPOCH; do
        ######################
        # combine effective areas
        if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]] || [[ $IRFTYPE == "COMBINEPRESELECTEFFECTIVEAREAS" ]]; then
+            CUTLIST=$(read_cutlist "$CUTSLISTFILE")
+            echo "CUTLIST: $CUTLIST"
             for ID in $RECID; do
                 for CUTS in ${CUTLIST[@]}; do
                     echo "combine effective areas $CUTS"
@@ -384,6 +353,7 @@ for VX in $EPOCH; do
                       TFIL="${TABLECOM}"
                       # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                       TFILID=$TFIL$ANATYPE
+                      CUTLIST=$(read_cutlist "$CUTSLISTFILE")
                       echo "CUTLIST $CUTLIST"
                       for CUTS in ${CUTLIST[@]}; do
                          echo "Generate effective areas $CUTS"
@@ -444,6 +414,8 @@ for VX in $EPOCH; do
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
+                        CUTLIST=$(read_cutlist "$CUTSLISTFILE")
+                        echo "CUTLIST: $CUTLIST"
                         for ID in ${RECID}; do
                             for CUTS in ${CUTLIST[@]}; do
                                echo "calculate effective areas $CUTS (ID $ID)"
