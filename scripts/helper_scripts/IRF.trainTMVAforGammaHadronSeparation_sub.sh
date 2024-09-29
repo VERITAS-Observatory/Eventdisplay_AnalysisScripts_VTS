@@ -52,12 +52,14 @@ inspect_executables()
     fi
 }
 
-"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS > "$LDIR"/$(basename $RXPAR)"_preselect.log"
+rm -f "$LDIR"/$(basename $RXPAR)"_preselect.log"
+eval "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS > "$LDIR"/$(basename $RXPAR)"_preselect.log"
 
-"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR"/$(basename $RXPAR)".log"
+rm -f "$LDIR"/$(basename $RXPAR)".log"
+eval "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR"/$(basename $RXPAR)".log"
 
 echo "$(inspect_executables)" >> "$LDIR"/$(basename $RXPAR)".log"
-"$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
+eval "$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
 
 # remove unnecessary *.C files
 CDIR=`dirname $RXPAR`

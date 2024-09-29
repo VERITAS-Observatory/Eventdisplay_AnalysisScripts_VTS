@@ -41,7 +41,7 @@ SIMTYPE=$3
 EPOCH=$4
 ATM=$5
 # evndisplay version
-IRFVERSION=`$EVNDISPSYS/bin/trainTMVAforGammaHadronSeparation --version | tr -d .| sed -e 's/[a-Z]*$//'`
+IRFVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 DISPBDT=""
 ANATYPE="AP"
@@ -159,5 +159,3 @@ elif [[ $SUBC == *parallel* ]]; then
 elif [[ "$SUBC" == *simple* ]] ; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
-
-exit
