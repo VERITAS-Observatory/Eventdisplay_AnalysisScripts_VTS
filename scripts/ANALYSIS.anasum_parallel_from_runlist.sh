@@ -24,7 +24,7 @@ required parameters:
     <output directory>      anasum output files are written to this directory
 
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard2tel, hard3tel, supersoft, supersoftNN2tel)
+                            (i.e., moderate2tel, soft2tel, hard2tel, hard3tel, supersoft, supersoftNN2tel, moderatebox)
                             (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel2HardPre,
                             NTel3HardPre, NTel2SuperSoftPre)
 
