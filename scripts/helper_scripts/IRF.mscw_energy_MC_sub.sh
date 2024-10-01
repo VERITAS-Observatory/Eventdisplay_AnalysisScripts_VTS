@@ -61,23 +61,21 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l ${EVNDISPSYS}/bin/mscw_energy
     fi
 }
 
 
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
-echo "MSCW options: $MOPT"
-
 # dispBDT reconstruction
-# note: loss cuts needs to be equivalent to that used in training
 if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
-    MOPT="$MOPT -maxloss=0.2"
-    # MOPT="$MOPT -disp_use_intersect"
+    MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
+    MOPT="$MOPT -maxloss=0.40"
+    MOPT="$MOPT -use_evndisp_selected_images=0"
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${SIMTYPE} == *"RedHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}_redHV/"
@@ -101,6 +99,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
     MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
+    MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
 

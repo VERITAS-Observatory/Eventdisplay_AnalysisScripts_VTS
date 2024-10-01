@@ -141,7 +141,7 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # ZENITH_ANGLES=( 20 )
+    # ZENITH_ANGLES=( 20 40 60 )
     # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 200 )
     ######################################

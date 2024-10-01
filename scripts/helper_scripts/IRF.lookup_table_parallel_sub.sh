@@ -78,6 +78,10 @@ elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     fi
 fi
 
+# Redo stereo reconstruction with diff cuts on images
+MOPT="-redo_stereo_reconstruction -minangle_stereo_reconstruction=10"
+MOPT="$MOPT -maxloss=0.4 -use_evndisp_selected_images=0"
+MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
 
 # make the table part
 $EVNDISPSYS/bin/mscw_energy -filltables=1 \
@@ -85,7 +89,7 @@ $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -write1DHistograms \
                             -inputfile "${DDIR}/*[0-9].root" \
                             -tablefile "${DDIR}/$TABFILE.root" \
-                            -ze=$ZA \
+                            -ze=$ZA $MOPT \
                             -arrayrecid=$RECID \
                             -woff=$WOBBLE &> "$ODIR/$TABFILE.log"
 
