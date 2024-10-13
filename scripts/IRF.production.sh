@@ -168,7 +168,7 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     # NSB_LEVELS=( 300 )
     # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" == "CARE_202404" ]]; then
+elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
