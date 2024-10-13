@@ -14,7 +14,7 @@ required parameters:
 
     <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
-                            CARE_RedHV_Feb2024, CARE_202404)
+                            CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
