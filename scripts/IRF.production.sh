@@ -41,7 +41,7 @@ optional parameters:
     [cuts list file]        file containing one gamma/hadron cuts file per line
                             required for PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             COMBINEEFFECTIVEAREAS, ANATABLESEFFAREAS
-                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/IRF_GAMMAHADRONCUTS*\"
+                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS*\"
 
     [sim directory]         directory containing simulation VBF files
 
