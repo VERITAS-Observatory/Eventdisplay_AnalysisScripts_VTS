@@ -6,7 +6,7 @@
 
 set -e
 
-ANATYPE="AP"
+ANATYPE="NN"
 
 I1="$VERITAS_IRFPRODUCTION_DIR/v4N/${ANATYPE}/CARE_202404"
 I2="$VERITAS_IRFPRODUCTION_DIR/v4N/${ANATYPE}/CARE_June2020"
@@ -29,7 +29,7 @@ for E in $EPOCHDIR; do
         for E in $EFILES; do
             OFILE=$(basename $E)
             OFILE="1${OFILE:1}"
-            ln -s $E $TDIR/$OFILE
+            ln -f -s $E $TDIR/$OFILE
         done
 
         if [[ -e $I2/$EPOCH/$(basename $P) ]]; then
@@ -37,7 +37,7 @@ for E in $EPOCHDIR; do
             for E in $EFILES; do
                 OFILE=$(basename $E)
                 OFILE="2${OFILE:1}"
-                ln -s $E $TDIR/$OFILE
+                ln -f -s $E $TDIR/$OFILE
             done
         else
             echo "NOT IN I2: $I2/$EPOCH/$(basename $P)"
