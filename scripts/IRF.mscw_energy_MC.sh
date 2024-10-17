@@ -121,7 +121,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|NFILES|$NROOTFILES|" \
-    -e "s|TABLEFILE|$(basename $TABFILE)|" \
+    -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
