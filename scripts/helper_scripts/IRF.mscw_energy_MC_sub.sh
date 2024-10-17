@@ -117,8 +117,9 @@ elif [ -n "$(find  "${INDIR}/" -name "*[0-9].root.zst" 2>/dev/null)" ]; then
         for F in $FLIST
         do
             echo "unpacking $F"
+            cp -v -f $F ${DDIR}/
             ofile=$(basename $F .zst)
-            zstd -d $F -o ${DDIR}/${ofile}
+            zstd -d ${DDIR}/${ofile}.zst -o ${DDIR}/${ofile}
         done
     else
         echo "Error: no zstd installation"
