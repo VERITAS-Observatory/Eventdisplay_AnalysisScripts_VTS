@@ -42,6 +42,7 @@ optional parameters:
                             required for PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             COMBINEEFFECTIVEAREAS, ANATABLESEFFAREAS
                             Typically found in \"$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS*\"
+                            Full path.
 
     [sim directory]         directory containing simulation VBF files
 
