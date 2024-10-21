@@ -121,15 +121,12 @@ Cut optimization requires signal rates (from simulations) and background rates (
 The `$EVNDISPSYS"/bin/calculateCrabRateFromMC` tool is used to calculate rates after pre-selection cuts (note: set `CALCULATERATEFILES="TRUE"` in `$EVNDISPSCRIPTS/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub.sh`).
 
 1. Generate effective ares for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS`.
-2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/IRF.anasumforTMVAOptimisation.sh` to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training).
+2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/IRF.anasumforTMVAOptimisation.sh` to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training). These files should be moved into e.g. `$VERITAS_IRFPRODUCTION_DIR/v491/AP/BDTtraining/BackgroundRates/V6/NTel2-Moderate` (adjust epoch and cut directory name).
 
 ### Effective area generation
 
 (to be added)
 
-## Notes
-
-In version v483 and earlier, these scripts were part of the Eventdisplay package and in the scripts/VTS directory (e.g., [v483 script](https://github.com/VERITAS-Observatory/EventDisplay_v4/tree/v483/scripts/VTS)).
 
 ## Support
 
