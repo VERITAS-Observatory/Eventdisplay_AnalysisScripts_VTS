@@ -1,6 +1,6 @@
 #!/bin/bash
 # Check if runs read from a run list are processed already with
-# evndisp or mscw files 
+# evndisp or mscw files
 #
 
 if [ ! -n "$2" ] || [ "$1" = "-h" ]; then

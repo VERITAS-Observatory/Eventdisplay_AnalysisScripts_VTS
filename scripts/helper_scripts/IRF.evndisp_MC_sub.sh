@@ -39,9 +39,8 @@ echo "Runnumber $RUNNUM"
 V4N=${ODIR/v490/v4N}
 if [ -e "$V4N/$ONAME.root.zst" ]; then
     zstd --test $V4N/$ONAME.root.zst
-    echo "OUTPUT $V4N/$ONAME.root exists; skipping this job"
-    #    TMP don't skip job
-#    exit
+    echo "OUTPUT $V4N/$ONAME.root.zst exists; skipping this job"
+    exit
 fi
 
 # temporary directory

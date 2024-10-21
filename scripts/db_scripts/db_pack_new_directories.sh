@@ -1,3 +1,4 @@
+#!/bin/bash
 # pack newly written directories extracted from the DB
 # with query_run_list.sh
 #

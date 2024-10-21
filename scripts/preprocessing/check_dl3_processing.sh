@@ -1,3 +1,6 @@
+#!/bin/bash
+# Check the number of files for DL3 processing
+
 NFIL=$(find ${1}/point-like -name "*.fits.gz" | wc -l)
 
 if [[ ${VERITAS_ANALYSIS_TYPE:0:2} == "AP" ]]; then

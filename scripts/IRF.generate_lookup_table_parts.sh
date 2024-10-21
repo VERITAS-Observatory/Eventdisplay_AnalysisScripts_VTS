@@ -3,7 +3,7 @@
 # (output need to be combined afterwards)
 
 # qsub parameters
-h_cpu=03:29:00; h_vmem=8000M; tmpdir_size=20G
+h_cpu=03:29:00; h_vmem=12000M; tmpdir_size=20G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)

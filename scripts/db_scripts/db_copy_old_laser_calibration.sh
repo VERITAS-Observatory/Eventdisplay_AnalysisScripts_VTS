@@ -41,7 +41,7 @@ fill_gain_or_toff()
         echo "No calibration found for ${LRUN} ${2}"
         echo "${CALIBDIR}/Tel_${2}/${LRUN}.${3}"
     fi
-}    
+}
 
 DBTEXTFILE=$(get_db_text_tar_file ${1})
 if [[ ! -e ${DBTEXTFILE} ]]; then

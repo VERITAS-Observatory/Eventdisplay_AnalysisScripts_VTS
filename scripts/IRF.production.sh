@@ -14,7 +14,7 @@ required parameters:
 
     <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
-                            CARE_RedHV_Feb2024, CARE_202404)
+                            CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -41,7 +41,8 @@ optional parameters:
     [cuts list file]        file containing one gamma/hadron cuts file per line
                             required for PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             COMBINEEFFECTIVEAREAS, ANATABLESEFFAREAS
-                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/IRF_GAMMAHADRONCUTS*\"
+                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS*\"
+                            Full path.
 
     [sim directory]         directory containing simulation VBF files
 
@@ -168,7 +169,7 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     # NSB_LEVELS=( 300 )
     # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" == "CARE_202404" ]]; then
+elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
