@@ -41,6 +41,9 @@ fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 
+# copy evndisp file to TMPDIR (as it might be a linked file)
+cp -v "$INFILE" "$DDIR"/"$BFILE".root
+
 # explicit binding for apptainers
 if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
@@ -53,7 +56,7 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,DDIR=/opt/DDIR,LOGDIR=/opt/ODIR"
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
-    INFILEPATH="/opt/INDIR/$BFILE.root"
+    INFILEPATH="/opt/DDIR/$BFILE.root"
     echo "APPTAINER INFILEPATH: $INFILEPATH"
 fi
 
@@ -142,7 +145,6 @@ fi
 
 MSCWLOGFILE="$ODIR/$BFILE.mscw.log"
 rm -f ${MSCWLOGFILE}
-cp -f -v $INFILE $DDIR
 
 MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
 echo "MSCWDATAFILE $MSCWDATAFILE"
