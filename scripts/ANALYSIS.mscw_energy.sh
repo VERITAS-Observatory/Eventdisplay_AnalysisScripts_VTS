@@ -137,7 +137,7 @@ do
     # avoid reaching limits of number of files per
     # directory (e.g., on afs)
     if [[ ${NRUNS} -gt 1000 ]]; then
-        TMPLOGDIR=${LOGDIR}/MSCW_${AFILE:0:1}
+        TMPLOGDIR=${LOGDIR}/MSCW_${RUNN:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
     FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$RUNN"
