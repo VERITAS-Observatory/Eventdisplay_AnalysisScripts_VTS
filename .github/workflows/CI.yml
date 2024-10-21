@@ -25,6 +25,11 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Check whether the citation metadata from CITATION.cff is valid
         uses: citation-file-format/cffconvert-github-action@2.0.0
         with:
@@ -32,4 +37,5 @@ jobs:
 
       - name: Pre-commit
         run: |
+          pip install pre-commit
           pre-commit run --all-files
