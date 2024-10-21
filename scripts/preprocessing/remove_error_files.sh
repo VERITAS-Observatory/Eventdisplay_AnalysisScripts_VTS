@@ -1,4 +1,3 @@
-#!/bin/bash
 # Read a run list and check for errors
 # in log files
 # remove files with errors.
