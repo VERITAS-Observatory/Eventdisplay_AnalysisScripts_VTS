@@ -1,7 +1,9 @@
 # Eventdisplay Analysis Scripts for VERITAS
 
-[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/307321978.svg)](https://zenodo.org/badge/latestdoi/307321978)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/LICENSE)
+
+## Overview
 
 Run scripts for the analysis of VERITAS data. Requires the installation or availability of a container of the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
 
@@ -15,7 +17,7 @@ Expected environmental variables:
 - `$EVNDISPSCRIPT` - pointing to the `./scripts` directory of this repository ([here](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/tree/main/scripts))
 - `$VERITAS_ANALYSIS_TYPE` (recommended) - indicating the reconstruction methods applied; e.g., AP\_DISP, NN\_DISP.
 
-Additional environmental variables useful especially for running on a batch system can be found in [./scripts/set_v490_apptainer.sh](./scripts/set_v490_apptainer.sh).
+Additional environmental variables useful especially for running on a batch system can be found in [./scripts/set_environment.sh](./scripts/set_environment.sh).
 
 Submission commands for a range of different batch systems can be found in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify according to your local needs.
 
@@ -48,32 +50,32 @@ This is the stage requiring most computing resources and usually takes several d
 Run for all analysis types (`AP`, `NN`) the following steps:
 
 ```bash
-./IRF.generalproduction.sh CARE_RedHV EVNDISP
-./IRF.generalproduction.sh CARE_June2020 EVNDISP
+./IRF.generalproduction.sh CARE_RedHV_Feb2024 EVNDISP
+./IRF.generalproduction.sh CARE_24_20 EVNDISP
 ```
 
-Results are stored in `$VERITAS_IRFPRODUCTION_DIR/v490/AP/CARE_June2020/V6_2022_2023w_ATM61_gamma/`. For DESY productions, the evndisp files should be moved to `$VERITAS_IRFPRODUCTION_DIR/v4N/AP/CARE_June2020/V6_2022_2023w_ATM61_gamma/`.
+Results are stored in `$VERITAS_IRFPRODUCTION_DIR/v491/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`. For DESY productions, the evndisp files should be moved to `$VERITAS_IRFPRODUCTION_DIR/v4N/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`.
 
 ### MC Analysis - Lookup table filling
 
 Look up table filling per bin:
 
 ```bash
-./IRF.generalproduction.sh CARE_June2020 MAKETABLES
+./IRF.generalproduction.sh CARE_24_20 MAKETABLES
 ```
 
 following by combining the tables with
 
 ```bash
-./IRF.generalproduction.sh CARE_June2020 COMBINETABLES
+./IRF.generalproduction.sh CARE_24_20 COMBINETABLES
 ```
 
-Tables need to be moved from `$VERITAS_IRFPRODUCTION_DIR/v490/${VERITAS_ANALYSIS_TYPE:0:2}/Tables` to `$VERITAS_EVNDISP_AUX_DIR/Tables`.
+Tables need to be moved from `$VERITAS_IRFPRODUCTION_DIR/v491/${VERITAS_ANALYSIS_TYPE:0:2}/Tables` to `$VERITAS_EVNDISP_AUX_DIR/Tables`.
 
 ### MC Analysis - DispBDT Angular Reconstruction training
 
 ```bash
-./IRF.generalproduction.sh CARE_June2020 TRAINMVANGRES
+./IRF.generalproduction.sh CARE_24_20 TRAINMVANGRES
 ```
 
 Files are copied and zipped to `$VERITAS_EVNDISP_AUX_DIR/DispBDTs` by:
@@ -85,7 +87,9 @@ cd $VERITAS_EVNDISP_AUX_DIR/DispBDTs
 
 (take care for any errors printed to the screen)
 
-### BDT Training Preparation
+### BDT Training
+
+#### Preparation
 
 Generate background training events using:
 
@@ -93,18 +97,24 @@ Generate background training events using:
 ./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
 ```
 
-Use e.g. `$VERITAS_DATA_DIR/processed_data_v490/AP/mscw/` for the source directory.
+Use e.g. `$VERITAS_DATA_DIR/processed_data_v491/AP/mscw/` for the source directory, which contains processed mscw files from observations.
 
 This script links mscw files from the archive to a target directory sorted by epoch and zenith bins (read from TMVA run parameter file).
 
-### BDT Training
+#### Training
 
 (only for regular HV)
 
-- use `TRAINTMVA` in `./IRF.generalproduction.sh`.
+- use `TRAINTMVA` in `./IRF.generalproduction.sh`, which calls script `IRF.trainTMVAforGammaHadronSeparation.sh`
 - copy TMVA BDT files to `$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs` using `$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/copy_GammaHadron_V6_BDTs.sh` (XML files are not zipped)
 
-### Optimize Cuts
+Requires as input
+
+- `TMVA.runparameter` file
+- mscw files from observations (see above) for background events
+- mscw files from simulations for signal events
+
+#### Cut optimization
 
 Cut optimization requires signal rates (from simulations) and background rates (from data).
 The `$EVNDISPSYS"/bin/calculateCrabRateFromMC` tool is used to calculate rates after pre-selection cuts (note: set `CALCULATERATEFILES="TRUE"` in `$EVNDISPSCRIPTS/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub.sh`).
@@ -119,3 +129,7 @@ The `$EVNDISPSYS"/bin/calculateCrabRateFromMC` tool is used to calculate rates a
 ## Notes
 
 In version v483 and earlier, these scripts were part of the Eventdisplay package and in the scripts/VTS directory (e.g., [v483 script](https://github.com/VERITAS-Observatory/EventDisplay_v4/tree/v483/scripts/VTS)).
+
+## Support
+
+For any questions, contact Gernot Maier
