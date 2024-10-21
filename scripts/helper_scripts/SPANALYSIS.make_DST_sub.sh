@@ -31,12 +31,12 @@ mkdir -p $LOGDIR
 ACUTS=RRRRPFILE
 
 #########################################
-# pedestal and tzero calculation. No tzeros needed for lmult. 
+# pedestal and tzero calculation. No tzeros needed for lmult.
 if [[ $PED == "1" ]]; then
     rm -f $LOGDIR/$RUN.ped.log
     $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=1 &> $LOGDIR/$RUN.ped.log
 
-    if [[ $LMULT == "0" ]] ; then    
+    if [[ $LMULT == "0" ]] ; then
 	rm -f $LOGDIR/$RUN.tzero.log
     	$EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -nocalibnoproblem &> $LOGDIR/$RUN.tzero.log
     fi

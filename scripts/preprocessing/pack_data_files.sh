@@ -13,7 +13,7 @@ Pack Eventdisplay data products from run list
 
 data type: evndisp, mscw
 
-Note! Copies files to temporary diretory $VERITAS_USER_DATA_DIR/tmp_packing/<outputdirectoryname>
+Note! Copies files to temporary directory $VERITAS_USER_DATA_DIR/tmp_packing/<outputdirectoryname>
 
 "
 exit

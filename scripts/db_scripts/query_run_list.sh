@@ -5,7 +5,7 @@
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
-query_run_list.sh: query DB and write DBTEXT files 
+query_run_list.sh: query DB and write DBTEXT files
 
 ./query_run_list <run list> <DBFITS=TRUE/FALSE (default=FALSE)> <overwrite=0/1 (default=0)
 
@@ -33,4 +33,3 @@ do
 #            --output_path ${ODIR}
 #    fi
 done
-

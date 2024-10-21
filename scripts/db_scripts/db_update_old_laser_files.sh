@@ -35,7 +35,7 @@ get_date()
     RUNINFOSTRING=$(tar -axf ${2} ${1}/${1}.runinfo -O)
     DATE=$(echo "${RUNINFOSTRING}" | cut -d '|' -f 5 | grep -v db_start_time | tr -d '-')
     echo "${DATE:0:8}"
-     
+
 }
 
 fill_laser_run()

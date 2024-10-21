@@ -1,5 +1,5 @@
 #!/bin/bash
-# 
+#
 # Write DB FITS files from a run list
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -18,4 +18,3 @@ for R in $RUNS
 do
     python ./db_write_fits.py --run ${R} --input_path ${IDIR} --output_path ${ODIR}
 done
-

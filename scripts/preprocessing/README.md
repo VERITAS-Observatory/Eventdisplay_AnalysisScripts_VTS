@@ -19,7 +19,7 @@ To get all runs with `do_not_use` flag: `grep "do_not_use (STATUS CUT APPLIED)" 
 ## Data product packing
 
 Pack files for a certain data type:
-e.g., 
+e.g.,
 ```
 ./pack_data_files.sh mscw tmp_packing/22s.list 22s
 ```
