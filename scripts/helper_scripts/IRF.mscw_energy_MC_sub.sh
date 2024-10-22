@@ -54,6 +54,7 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
     CALDIR="/opt/ODIR"
+    TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
 fi
 
 inspect_executables()
