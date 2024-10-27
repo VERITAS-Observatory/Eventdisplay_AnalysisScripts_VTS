@@ -109,7 +109,7 @@ SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
 echo "Processing Zenith = $ZA, Wobble = $WOBBLE, Noise = $NOISE (DISP: $DISPBDT)"
 
 # make run script
-FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-$RECID-$DISPBDT"
+FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-ID${RECID}-$DISPBDT"
 rm -f "$FSCRIPT.sh"
 sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISE|" \

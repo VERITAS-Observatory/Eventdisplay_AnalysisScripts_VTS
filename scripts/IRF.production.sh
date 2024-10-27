@@ -99,6 +99,21 @@ elif [[ $ANATYPE = "TS"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
 fi
 
+# default cut list files
+if [ -z "$CUTSLISTFILE" ]; then
+    if [[ ${SIMTYPE} == *"RedHV"* ]]; then
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_RedHV_${ANATYPE}.dat"
+    elif [[ ${SIMTYPE} == *"UV"* ]]; then
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_UV_${ANATYPE}.dat"
+    elif [[ ${IRFTYPE} == *"PRESELECT"* ]]; then
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_PRESELECTION_${ANATYPE}.dat"
+    else
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_${ANATYPE}.dat"
+    fi
+fi
+
+echo "CUT LIST FILE: $CUTSLISTFILE"
+
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     # GrISU simulation parameters
@@ -199,6 +214,8 @@ fi
 echo "Zenith Angles: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
 echo "Wobble offsets: ${WOBBLE_OFFSETS}"
+
+
 
 # read cut list file
 read_cutlist()
