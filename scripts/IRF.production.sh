@@ -379,7 +379,7 @@ for VX in $EPOCH; do
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
                              $ID $SIMTYPE $ANATYPE \
-                             $DISPBDT $UUID ${EDVERSION}
+                             $DISPBDT $UUID
                       done
                    done
                    continue
@@ -427,7 +427,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID ${EDVERSION}
+                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID
 			            done #recID
                     ######################
                     # analyse effective areas

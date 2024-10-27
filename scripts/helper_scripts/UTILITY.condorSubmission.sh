@@ -10,19 +10,18 @@ UTILITY.condorSubmission.sh [submission script] [memory request] [disk request]
 exit
 fi
 
-SUBSCRIPT=$(readlink -f ${1})
+SUBSCRIPT=$(readlink -f "${1}")
 SUBFIL=${SUBSCRIPT}.condor
 
-rm -f ${SUBFIL}
+[[ -f "$SUBFIL" ]] && rm -f "$SUBFIL".
 
 cat > ${SUBFIL} <<EOL
 Executable = ${SUBSCRIPT}
-Log = ${SUBSCRIPT}.\$(Cluster)_\$(Process).log
 Output = ${SUBSCRIPT}.\$(Cluster)_\$(Process).output
 Error = ${SUBSCRIPT}.\$(Cluster)_\$(Process).error
 Log = ${SUBSCRIPT}.\$(Cluster)_\$(Process).log
-request_memory = ${2}
-request_disk = ${3}
+request_memory = "${2}"
+request_disk = "${3}"
 getenv = True
 max_materialize = 50
 priority = 850
