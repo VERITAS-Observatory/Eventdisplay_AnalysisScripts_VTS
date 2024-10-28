@@ -2,7 +2,7 @@
 # combine effective area files into one
 
 # job requirements
-h_cpu=11:29:00; h_vmem=64000M; tmpdir_size=500G
+h_cpu=11:29:00; h_vmem=12000M; tmpdir_size=20G
 #
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -154,6 +154,8 @@ elif [[ $SUBC == *condor* ]]; then
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
     echo
+elif [[ $SUBC == *sbatch* ]]; then
+    $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
