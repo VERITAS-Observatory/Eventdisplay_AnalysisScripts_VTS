@@ -92,7 +92,7 @@ mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
-LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_gamma/submit-COMBINEEFFAREAS-${UUID}/"
+LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_gamma/submit-COMBINEEFFAREAS-ID${RECID}-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -126,7 +126,7 @@ OFILE="effArea-${EDVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_combine_sub"
 
 # make run script
-FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}-${DISPBDT}-$(date +%s%N)"
+FSCRIPT="$LOGDIR/COMB-EFFAREA-ID${RECID}-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-${DISPBDT}-$(date +%s%N)"
 rm -f $FSCRIPT.sh
 
 sed -e "s|INPUTFILES|$INFILES|" \
