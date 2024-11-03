@@ -72,8 +72,10 @@ elif [[ $CUTTYPE == *"SuperSoft"* ]]; then
     EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
 elif [[ $CUTTYPE == *"Soft"* ]]; then
     EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Soft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
-elif [[ $CUTTYPE == *"Hard"* ]]; then
+elif [[ $CUTTYPE == NTel3*"Hard"* ]]; then
     EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel3-PointSource-Hard-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
+elif [[ $CUTTYPE == NTel2*"Hard"* ]]; then
+    EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Hard-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
 fi
 
 if [[ ! -e $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFFILE} ]]; then
