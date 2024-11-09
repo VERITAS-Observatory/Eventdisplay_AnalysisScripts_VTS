@@ -8,9 +8,9 @@
 
 This repository contains scripts for analyzing VERITAS data and MC simulations.
 
-These scripts require are part of the Eventdisplay packages and require additionally the following items installed:
+These scripts are part of the Eventdisplay packages and require additionally the following items installed:
 
-- Eventdisplay code with all binaries and libraries from [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
+- binaries and libraries from the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
 - Eventdisplay analysis files with configuration files, calibrations files, and instrument response functions. From [Eventdisplay_AnalysisFiles_VTS](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS).
 
 The scripts are optimized for the DESY computing environment, utilizing HTCondor batch systems and apptainers.
@@ -99,7 +99,7 @@ Generate background training events using:
 ./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
 ```
 
-Use e.g. `$VERITAS_DATA_DIR/processed_data_v491/AP/mscw/` for the source directory, which contains processed mscw files from observations.
+Use e.g. `$VERITAS_DATA_DIR/processed_data_v491/AP/mscw/` for the source directory, which contains processed mscw files from observations. Main purpose is to select runs with good data quality and runs obtained from observations of strong gamma-ray sources.
 
 This script links mscw files from the archive to a target directory sorted by epoch and zenith bins (read from TMVA run parameter file).
 
@@ -120,10 +120,18 @@ Requires as input:
 
 Cut optimization requires signal rates (from simulations) and background rates (from data). The `$EVNDISPSYS/bin/calculateCrabRateFromMC` tool is used to calculate rates after pre-selection cuts (note: set `CALCULATERATEFILES="TRUE"` in `$EVNDISPSCRIPTS/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub.sh`).
 
+**Important: This script is not working in combination with the usage of apptainers.**
+
 1. Generate effective areas for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS`.
 2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/ANALYSIS.anasum_allcuts.sh` with the `PRECUTS` option to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training). These files should be moved into e.g. `$VERITAS_IRFPRODUCTION_DIR/v491/AP/BDTtraining/BackgroundRates/V6/NTel2-Moderate` (adjust epoch and cut directory name).
 
-Cut values are extracted by the optimization tool and written to **TODO**. Copy and paste those values into the files defining the gamma/hadron separation cuts in `$VERITAS_EVNDISP_AUX_DIR/GammaHadronCuts`.
+Cut values are extracted by the optimization tool and written e.g., to
+
+```console
+VERITAS_IRFPRODUCTION_DIR/v491/AP/BDTtraining/BackgroundRates/V6/Optimize-NTel2-Moderate/
+```
+
+Copy and paste those values into the files defining the gamma/hadron separation cuts in `$VERITAS_EVNDISP_AUX_DIR/GammaHadronCuts`.
 
 ### Effective Area Generation
 
@@ -144,3 +152,7 @@ Move the generated effective areas files to `$VERITAS_EVNDISP_AUX_DIR/EffectiveA
 ## Support
 
 For any questions, contact Gernot Maier
+
+## License
+
+Eventdisplay_AnalysisScripts_VTS is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file.
