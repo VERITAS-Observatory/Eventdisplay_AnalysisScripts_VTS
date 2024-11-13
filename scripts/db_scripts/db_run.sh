@@ -27,7 +27,7 @@ OVERWRITE="0"
 [[ "$2" ]] && OVERWRITE=$2 || OVERWRITE=0
 NTEL="4"
 
-DBDIR="${VERITAS_DATA_DIR%/}/DBTEXT/"
+DBDIR="${VERITAS_DATA_DIR%/}/shared/DBTEXT/"
 mkdir -p ${DBDIR}
 
 getDBTextFileDirectory()
