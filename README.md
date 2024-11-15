@@ -8,7 +8,7 @@
 
 This repository contains scripts for analyzing VERITAS data and MC simulations.
 
-These scripts require are part of the Eventdisplay packages and require additionally the following items installed:
+These scripts are part of the Eventdisplay packages and additionally require the following items installed:
 
 - Eventdisplay code with all binaries and libraries from [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
 - Eventdisplay analysis files with configuration files, calibrations files, and instrument response functions. From [Eventdisplay_AnalysisFiles_VTS](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS).
