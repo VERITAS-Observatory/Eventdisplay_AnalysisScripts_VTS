@@ -4,6 +4,8 @@
 if [ ! -n "$1" ]; then
 echo "
 ./check_epochs_for_3tel_irfs.sh <run list>
+
+use log files of mscw stage
 "
 exit
 fi
