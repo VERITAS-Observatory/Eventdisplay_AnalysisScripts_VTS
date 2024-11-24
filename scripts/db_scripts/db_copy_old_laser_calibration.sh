@@ -17,7 +17,7 @@ LASERRUN=$1
 CALIBDIR=$2
 
 # DQM files are read this directory
-DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
+DBTEXTDIRECTORY="$VERITAS_DATA_DIR/shared/DBTEXT"
 
 get_db_text_tar_file()
 {

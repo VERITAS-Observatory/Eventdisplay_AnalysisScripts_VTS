@@ -7,7 +7,7 @@ Example:
 
     $ python3 db_write_fits.py --run 64080 \
         --output_path /path/to/output.fits \
-        --input_path $VERITAS_DATA_DIR/DBTEXT
+        --input_path $VERITAS_DATA_DIR/shared/DBTEXT
 
 """
 

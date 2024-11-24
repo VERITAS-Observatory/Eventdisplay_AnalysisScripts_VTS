@@ -115,7 +115,7 @@ do
         if [[ -d "$TMPDIR" ]]; then
             TMPMDIR=$(getNumberedDirectory $RUNN "$TMPDIR")
             if [ -e "$TMPMDIR/$RUNN.mscw.root" ]; then
-                echo "RUN $RUNN already processed; skipping"
+                echo "RUN $RUNN already processed; skipping (FOUND IN $TMPMDIR/$RUNN.mscw.root)"
                 continue
             fi
         fi
@@ -192,3 +192,5 @@ done
 if [[ $SUBC == *parallel* ]]; then
     cat $TMPLOGDIR/runscripts.$TIMETAG.dat | $SUBC
 fi
+
+echo "LOG/SUBMIT DIR: ${TMPLOGDIR}"

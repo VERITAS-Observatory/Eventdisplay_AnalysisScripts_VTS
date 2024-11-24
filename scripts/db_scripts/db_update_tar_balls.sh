@@ -12,7 +12,7 @@ db_update_tar_balls update existing tar ball with new files
 exit
 fi
 
-DBTEXTDIR="$VERITAS_DATA_DIR/DBTEXT/"
+DBTEXTDIR="$VERITAS_DATA_DIR/shared/DBTEXT/"
 FLIST="${1}"
 NEWDIR="${2}"
 

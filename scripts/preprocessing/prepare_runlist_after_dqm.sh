@@ -26,7 +26,7 @@ fi
 RUNLIST="${1}"
 
 # DQM files are read this directory
-DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
+DBTEXTDIRECTORY="$VERITAS_PREPROCESSED_DATA_DIR/../DBTEXT"
 
 # List of broken runs
 # (not caught with the logic below)

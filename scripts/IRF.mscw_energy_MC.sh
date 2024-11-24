@@ -12,7 +12,7 @@ if [ $# -lt 8 ]; then
 echo "
 IRF generation: analyze simulation evndisp ROOT files using mscw_energy
 
-IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
+IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT] [uuid]
 
 required parameters:
 
@@ -47,14 +47,12 @@ optional parameters:
 exit
 fi
 
+
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
-
-# date used in run scripts / log file directories
-DATE=`date +"%y%m%d"`
 
 # Parse command line arguments
 TABFILE=$1
@@ -68,7 +66,7 @@ RECID=$7
 SIMTYPE=$8
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
-[[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
+[[ "${11}" ]] && UUID=${11} || UUID=$(date +"%y%m%d")-$(uuidgen)
 
 # Check that table file exists
 if [[ "$TABFILE" == `basename "$TABFILE"` ]]; then
@@ -86,23 +84,16 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
 fi
 echo "Input file directory: $INDIR"
 
-NROOTFILES=$( ls -l "$INDIR"/*.root.zst 2>/dev/null | wc -l )
-if [[ $NROOTFILES == "0" ]]; then
-    NROOTFILES=$( ls -l "$INDIR"/*.root 2>/dev/null | wc -l )
-fi
-echo "NROOTFILES $NROOTFILES"
-
 # Output file directory
 if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p "$ODIR"
-chmod g+w "$ODIR"
+[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 
 LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MSCW-RECID${RECID}-${UUID}"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p "$LOGDIR"
+[[ ! -d "$LOGDIR" ]] && mkdir -p "$LOGDIR"
 
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
 
@@ -120,7 +111,6 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|ANALYSISTYPE|${ANALYSIS_TYPE}|" \
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
-    -e "s|NFILES|$NROOTFILES|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh

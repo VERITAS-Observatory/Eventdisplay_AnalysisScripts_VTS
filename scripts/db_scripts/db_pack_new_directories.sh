@@ -3,7 +3,7 @@
 # with query_run_list.sh
 #
 
-DBTEXTDIR="$VERITAS_DATA_DIR/DBTEXT/"
+DBTEXTDIR="$VERITAS_DATA_DIR/shared/DBTEXT/"
 
 get_run_directory()
 {

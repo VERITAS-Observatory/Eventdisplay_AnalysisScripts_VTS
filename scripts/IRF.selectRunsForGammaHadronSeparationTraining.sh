@@ -61,6 +61,11 @@ linkFile()
 for F in ${FLIST}
 do
     echo "LINKING file ${F}.root"
+    BNAME=$(basename ${F}.root)
+    if [[ -e ${TARGETDIR}/${BNAME} ]]; then
+        echo "    found..."
+        continue
+    fi
     RUNZENITH=$($EVNDISPSYS/bin/printRunParameter ${F}.root -zenith | awk '{print $4}')
     ZEBIN=0
     for (( j=0; j < $NZEW; j++ ))
