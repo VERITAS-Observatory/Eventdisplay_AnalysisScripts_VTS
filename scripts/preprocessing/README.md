@@ -56,3 +56,12 @@ Move Eventdisplay data products from all stages into an runs_with_issues directo
 ```bash
 ./check_evndisp_mscw_processing.sh <run list>
 ```
+
+### Scripts for tmp directory file handling
+
+These are all files staring with `prepro_`:
+
+```bash
+./prepro_check_and_move_anasum_files.sh
+./prepro_check_and_move_v2dl3_files.sh
+```
