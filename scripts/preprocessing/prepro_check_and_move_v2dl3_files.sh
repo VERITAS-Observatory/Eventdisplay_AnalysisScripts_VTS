@@ -1,7 +1,13 @@
 #!/bin/bash
 # Check and move v2dl3 files for all cuts
 
-for C in v2dl3_hard2tel v2dl3_hard3tel v2dl3_moderate2tel v2dl3_soft2tel; do
+ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+CUTLIST="v2dl3_hard2tel v2dl3_hard3tel v2dl3_moderate2tel v2dl3_soft2tel"
+if [[ $ANATYPE == "NN" ]]; then
+    CUTLIST="v2dl3_supersoftNN2tel"
+fi
+
+for C in $CUTLIST; do
     for A in point-like  full-enclosure-all-events  full-enclosure  point-like-all-events; do
         D="$C/$A"
         echo $D
