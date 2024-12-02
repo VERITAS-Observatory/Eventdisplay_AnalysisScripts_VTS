@@ -10,8 +10,10 @@ fi
 for C in $CUTLIST; do
     for A in point-like  full-enclosure-all-events  full-enclosure  point-like-all-events; do
         D="$C/$A"
-        echo $D
-        ./prepro_check_and_clean_files.sh "$D"
-        ./prepro_move_v2dl3_files.sh "$D"
+        DDIR=${A/full-enclosure/fullenclosure}_${C/v2dl3_/}
+        DDIR=dl3_${DDIR/point-like/pointlike}
+        echo "Source directory: $D Targetdirectory: $DDIR"
+#        ./prepro_check_and_clean_files.sh "$D"
+        $(dirname "$(realpath "$0")")/prepro_move_v2dl3_files.sh "$D" "$DDIR"
     done
 done
