@@ -1,5 +1,14 @@
 #!/bin/bash
-# Check the number of files for DL3 processing
+# Check the number of files DL3 processing
+if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
+echo "
+
+./check_dl3_number_of_files_per_cut.sh <directory>
+
+Check number of DL3 fits and log files for all cuts and analysis types.
+
+"
+fi
 
 NFIL=$(find ${1}/point-like -name "*.fits.gz" | wc -l)
 

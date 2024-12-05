@@ -1,7 +1,7 @@
 # DB scripts to save run-wise information
 
 Scripts to query the VERITAS database for run-wise information and save it in
-several text files per run. The Eventdisplay analysis code can use those files instead of directly querying the database. The information is saved in a tar file of comma-separated files in `$VERITAS_DATA_DIR/DBTEXT/`.
+several text files per run. The Eventdisplay analysis code can use those files instead of directly querying the database. The information is saved in a tar file of comma-separated files in `$VERITAS_DATA_DIR/shared/DBTEXT/`.
 Allows also to convert the csv files into FITS tables.
 
 Note that the scripts are not optimized for optimal querying time, but for simplicity.
@@ -14,7 +14,7 @@ Make sure that the environment is set up correctly:
 export VERITAS_DATA_DIR=<your data directory>
 ```
 
-The database text files (called 'DBTEXT files') are saved in the directory `$VERITAS_DATA_DIR/DBTEXT/`.
+The database text files (called 'DBTEXT files') are saved in the directory `$VERITAS_DATA_DIR/shared/DBTEXT/`.
 
 Query information for a single run:
 
@@ -37,7 +37,7 @@ with the script:
 
 (new directories need to be deleted by hand after packing)
 
-To use this in `evndisp`, add a command line parameter `-dbtextdirectory $VERITAS_DATA_DIR/DBTEXT/<run>`. The analysis script `ANALYSIS.evndisp.sh` will automatically use the DBTEXT files if they are present.
+To use this in `evndisp`, add a command line parameter `-dbtextdirectory $VERITAS_DATA_DIR/shared/DBTEXT/<run>`. The analysis script `ANALYSIS.evndisp.sh` will automatically use the DBTEXT files if they are present.
 
 ## Old (V4) laser runs without database entries
 

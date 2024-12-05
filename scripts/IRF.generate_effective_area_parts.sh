@@ -80,10 +80,10 @@ if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
         INDIR=${INDIR}_DISP
     fi
 fi
-if [[ ! -d $INDIR ]]; then
-    echo "Error, could not locate input directory. Locations searched: $INDIR"
-    exit 1
-fi
+# if [[ ! -d $INDIR ]]; then
+#    echo "Error, could not locate input directory. Locations searched: $INDIR"
+#    exit 1
+# fi
 echo "Input file directory: $INDIR"
 
 # Output file directory

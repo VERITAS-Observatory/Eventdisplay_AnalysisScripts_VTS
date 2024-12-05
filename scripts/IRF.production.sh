@@ -157,7 +157,7 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # ZENITH_ANGLES=( 20 40 60 )
+    # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 200 )
     ######################################
@@ -194,9 +194,15 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 300 )
+    # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSET=( 0.5 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # IRF comparison
+    # ZENITH_ANGLES=( 20 40 50 60 65 )
+    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
+    # NSB_LEVELS=( 200 )
+    ######################################
+    # TRAINMVANGRES production
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/

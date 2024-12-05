@@ -5,7 +5,7 @@
 
 if [ ! -n "$2" ] || [ "$1" = "-h" ]; then
 echo "
-./check_runs_on_disk.sh <runlist> <evndisp data type>
+./check_evndisp_mscw_processing .sh <runlist> <evndisp data type>
 
    evndisp data type can be evndisp, mscw
 "
@@ -14,10 +14,11 @@ fi
 
 FF=$(cat ${1})
 DTYPE=${2}
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 
 file_on_disk()
 {
-    ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_v490/${VERITAS_ANALYSIS_TYPE:0:2}/${DTYPE}/"
+    ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/${DTYPE}/"
     TRUN="$1"
     if [[ ${TRUN} -lt 100000 ]]; then
         EDIR="${ARCHIVEDIR}/${TRUN:0:1}/"
