@@ -136,7 +136,7 @@ while read -r RUNID RUNDATE ; do
             elif $DATFLAG ; then
                 echo "file not found - date: $YY$MM$DD"
             elif $DOWNLOADFLAG ; then
-                echo "bbftp -V -S -p 12 -u bbftp -e \"mget /veritas/data/d$YY$MM$DD/$RUNID.cvbf $VERITAS_DATA_DIR/data/d$YY$MM$DD/\" $RAWDATASERVER"
+                echo "[[ ! -f \"$VERITAS_DATA_DIR/data/d$YY$MM$DD/$RUNID.cvbf\" ]] && bbftp -V -S -p 12 -u bbftp -e \"mget /veritas/data/d$YY$MM$DD/$RUNID.cvbf $VERITAS_DATA_DIR/data/d$YY$MM$DD/\" $RAWDATASERVER || echo 'File already exists, skipping download.'"
 			fi
 		fi
 	fi
