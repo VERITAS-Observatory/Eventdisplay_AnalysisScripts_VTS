@@ -20,11 +20,11 @@ VERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/"
 echo "ODIR $ODIR"
 
-for F in 10 9 8 7 6 5 4 3; do
+for F in 11 10 9 8 7 6 5 4 3; do
    mkdir -p $ODIR/$DDIR/$F
 done
 
-for F in 10 9 8 7 6 5 4 3; do
+for F in 11 10 9 8 7 6 5 4 3; do
     mv -v ${FTYPE}/${F}/*.fits.gz $ODIR/$DDIR/${F}/
     mv -v ${FTYPE}/${F}/*.log $ODIR/$DDIR/${F}/
 done
