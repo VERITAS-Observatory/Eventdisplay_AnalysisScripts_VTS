@@ -17,12 +17,9 @@ VERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/${FTYPE}"
 
 for F in 11 10 9 8 7 6 5 4 3; do
-    mkdir -p $ODIR/$F/
-done
-
-for F in 11 10 9 8 7 6 5 4 3; do
-    echo $ODIR/$F/
-    echo "${FTYPE}/$F*.root"
-    mv -v ${FTYPE}/$F*.root $ODIR/$F/
-    mv -v ${FTYPE}/$F*.log $ODIR/$F/
+    OFDIR="$ODIR/$F"
+    echo "Syncing $OFDIR with ${FTYPE}"
+    mkdir -p "$OFDIR"
+    rsync -av --remove-source-files ${FTYPE}/${F}*.root $OFDIR/
+    rsync -av --remove-source-files ${FTYPE}/${F}*.log $OFDIR/
 done
