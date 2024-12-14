@@ -21,7 +21,10 @@ ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/"
 for F in 11 10 9 8 7 6 5 4 3; do
     OFDIR="$ODIR/$DDIR/$F"
     echo "Syncing $OFDIR with ${FTYPE}"
-    mkdir -p "$OFDIR"
-    rsync -av --remove-source-files  ${FTYPE}/${F}*.fits.gz $ODIR/$DDIR/${F}/
-    rsync -av --remove-source-files  ${FTYPE}/${F}*.log $ODIR/$DDIR/${F}/
+    NFIL=$(ls -1 ${FTYPE}/${F}*.fits.gz 2>/dev/null | wc -l)
+    if [[ $NFIL -gt 0 ]]; then
+        mkdir -p "$OFDIR"
+        rsync -av --remove-source-files  ${FTYPE}/${F}*.fits.gz $ODIR/$DDIR/${F}/
+        rsync -av --remove-source-files  ${FTYPE}/${F}*.log $ODIR/$DDIR/${F}/
+    fi
 done
