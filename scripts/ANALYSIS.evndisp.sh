@@ -98,7 +98,7 @@ fi
 # VPM is on by default
 VPM=1
 # directory with DB text
-DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/DBTEXT"
+DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/shared/DBTEXT"
 
 echo "Using runparameter file $ACUTS ($EDVERSION, $VERITAS_ANALYSIS_TYPE)"
 
