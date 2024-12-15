@@ -1,6 +1,5 @@
 #!/bin/bash
 if [ $# -lt 2 ]; then
-    echo "./move_v2dl3_files.sh <source dl3 directory> <target directory>"
 echo "
 ./prepro_move_preprocessed_files.sh <source dl3 directory> <target directory>
 
@@ -18,13 +17,14 @@ ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 VERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 
 ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/"
-echo "ODIR $ODIR"
 
-for F in 10 9 8 7 6 5 4 3; do
-   mkdir -p $ODIR/$DDIR/$F
-done
-
-for F in 10 9 8 7 6 5 4 3; do
-    mv -v ${FTYPE}/${F}/*.fits.gz $ODIR/$DDIR/${F}/
-    mv -v ${FTYPE}/${F}/*.log $ODIR/$DDIR/${F}/
+for F in 11 10 9 8 7 6 5 4 3; do
+    OFDIR="$ODIR/$DDIR/$F"
+    echo "Syncing $OFDIR with ${FTYPE}"
+    NFIL=$(ls -1 ${FTYPE}/${F}*.fits.gz 2>/dev/null | wc -l)
+    if [[ $NFIL -gt 0 ]]; then
+        mkdir -p "$OFDIR"
+        rsync -av --remove-source-files  ${FTYPE}/${F}*.fits.gz $ODIR/$DDIR/${F}/
+        rsync -av --remove-source-files  ${FTYPE}/${F}*.log $ODIR/$DDIR/${F}/
+    fi
 done

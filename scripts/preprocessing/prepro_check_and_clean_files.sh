@@ -48,8 +48,11 @@ if [[ -n $FLIST ]]; then
 fi
 
 echo "Aux data (and NOTFOUND)"
-mkdir -p "$FTYPE"/aux
-mv -f "$FTYPE"/*.NOTFOUND "$FTYPE"/aux/
+NAUX=$(ls -1 "$FTYPE"/*.NOTFOUND 2>/dev/null | wc -l)
+if [[ $NAUX -gt 0 ]]; then
+    mkdir -p "$FTYPE"/aux
+    mv -f "$FTYPE"/*.NOTFOUND "$FTYPE"/aux/
+fi
 echo "Remove lists"
 rm -f "$FTYPE"/*.list
 rm -f "$FTYPE"/*.runlist

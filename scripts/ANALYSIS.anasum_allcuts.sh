@@ -40,12 +40,14 @@ if [[ ${RUNTYPE} == "PRECUTS" ]]; then
     SKIPIFPROCESSED="0"
 fi
 
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 #
 PREDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 echo $PREDIR
 # anasum file are writing into this directory
-TMPDIR="$VERITAS_DATA_DIR/tmp/${VERITAS_ANALYSIS_TYPE:0:2}/PreProcessing/"
+TMPDIR="$VERITAS_DATA_DIR/tmp/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/"
+
+echo "TMP $TMPDIR"
 
 # temporary file for output
 TMPLOG="$(pwd)/anasum.submit.$(uuidgen).tmp.txt"
