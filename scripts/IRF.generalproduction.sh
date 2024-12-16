@@ -14,15 +14,17 @@ IRF general production for IRFs for all epochs
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV_2212,
-                            CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
+                            Main types: GRISU, CARE_24_20, CARE_RedHV_Feb2024, CARE_UV_2212
+                            Others: CARE_June2020, CARE_RedHV, CARE_202404
 
-    <IRF type>              type of instrument response function to produce
-                            (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
-                             ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
-                             TRAINMVANGRES, EVNDISPCOMPRESS)
+    <IRF type>              type of instrument response function to produce.
+                            EVNDISP,
+                            MAKETABLES, COMBINETABLES, TRAINMVANGRES,
+                            ANALYSETABLES,
+                            PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
+                            TRAINTMVA, OPTIMIZETMVA,
+                            EFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
+                            (EVNDISPCOMPRESS, MVAEVNDISP)
 
 --------------------------------------------------------------------------------
 "
@@ -30,10 +32,6 @@ required parameters:
 exit
 fi
 
-# We need to be in the IRF.production.sh directory so that subscripts are called
-
-
-# Parse command line arguments
 SIMTYPE=$1
 IRFTYPE=$2
 
