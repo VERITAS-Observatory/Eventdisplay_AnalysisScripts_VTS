@@ -11,7 +11,7 @@ fi
 
 export VERITAS_ANALYSIS_TYPE="${1}"
 PROCESS="${2}"
-EVNDISPVERSION="v491.0"
+EVNDISPVERSION="v492.0"
 
 # Test for allowed processing types
 allowed_processing_types=("apptainer" "apptainer-dev" "al9")
@@ -57,7 +57,7 @@ export EVNDISPSCRIPTS="$(pwd)"
 export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3/
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
-    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v491.0.sif"
+    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v492.0-dev1.sif"
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
     # Alma Linux 9 (al9) processing
