@@ -26,7 +26,7 @@ INPUTEPOCH="$1"
 RUNFILE=$2
 if [ ! -e $RUNFILE ] ; then
 	echo "File $RUNFILE could not be found in $PWD , sorry."
-	exit	
+	exit
 fi
 RUNLIST=`cat $RUNFILE`
 #echo "RUNLIST:$RUNLIST"
@@ -35,10 +35,10 @@ RUNLIST=`cat $RUNFILE`
 # only change this if you know what you're doing!
 METHOD="irfperiod"
 
-if [[ "$METHOD" == "irfperiod" ]]; then	
+if [[ "$METHOD" == "irfperiod" ]]; then
     # epoch file to load
     PARAMFILE="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
-	
+
     # get only lines that start with '*'
     EPOCHTHRESH=$( cat $PARAMFILE | grep -P "^\s??\*" | grep "EPOCH" | grep -P "V\d" )
     AVAILABLEEPOCHS=$( echo "$EPOCHTHRESH" | awk '{ print $3 }' )
@@ -60,18 +60,18 @@ if [[ "$METHOD" == "irfperiod" ]]; then
             done
         done
     done
-fi   
+fi
 
 #Paramfile method, hardware major periods (old)
 if [[ "$METHOD" == "useparamfile" ]] ; then
-	
+
 	# epoch file to load
 	PARAMFILE="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
-	
+
 	# get only lines that start with '*'
 	EPOCHTHRESH=$( cat $PARAMFILE | grep -P "^\s??\*" | grep "EPOCH" | grep -P "V\d" )
 	#echo "$EPOCHTHRESH"
-	
+
 	# find out what are the smallest and largest epochs to work with
 	# so we don't loop over V1, V2, V3.... V10, V11, etc
 	MINEPOCH=$( echo "$EPOCHTHRESH" | awk '{ print $3 }' | grep -oP "\d" | awk '{ if(min==""){min=$1}; if($1<min){min=$1};} END {print min }' )
@@ -80,17 +80,17 @@ if [[ "$METHOD" == "useparamfile" ]] ; then
 	#echo "$EPOCHTHRESH"
 	#echo "MINEPOCH:$MINEPOCH"
 	#echo "MAXEPOCH:$MAXEPOCH"
-	
+
 	# loop over runs in runlist
 	for run in ${RUNLIST[@]} ; do
-		
+
 		# loop through all epochs between min and max
 		for epoch in $(seq $MINEPOCH $MAXEPOCH) ; do
-			
+
 			# check to see if the user wants each epoch
 			if [[ $INPUTEPOCH == *$epoch* ]] ; then
 				#echo "  testing for $epoch"
-				
+
 				# find out run boundaries for this
 				MINRUN=$( echo "$EPOCHTHRESH" | grep -P "V$epoch" | awk '{ print $4 }' | grep -oP "\d+" )
 				MAXRUN=$( echo "$EPOCHTHRESH" | grep -P "V$epoch" | awk '{ print $5 }' | grep -oP "\d+" )
@@ -101,13 +101,13 @@ if [[ "$METHOD" == "useparamfile" ]] ; then
 					echo "$run"
 					break # break out of epoch loop, but not the runlist loop
 				fi
-			
-			fi 
+
+			fi
 
 		done
 
 	done
-	
+
 fi
 
 # Hardcoded method
@@ -118,21 +118,21 @@ if [[ "$METHOD" == "hardcoded" ]] ; then
 	if [[ "$INPUTEPOCH" == *4* ]] ; then V4FLAG=true ; fi
 	if [[ "$INPUTEPOCH" == *5* ]] ; then V5FLAG=true ; fi
         if [[ "$INPUTEPOCH" == *6* ]] ; then V6FLAG=true ; fi
-	# first run of V5 : 46642 
-	# first run of V6 : 63373  
+	# first run of V5 : 46642
+	# first run of V6 : 63373
 	for i in ${RUNLIST[@]} ; do
 		if $V4FLAG ; then
-			if [ "$i" -le "46641" ] ; then 
+			if [ "$i" -le "46641" ] ; then
 				echo "$i"
 			fi
 		fi
 		if $V5FLAG ; then
-			if [ "$i" -ge "46642" -a "$i" -le "63372" ] ; then 
+			if [ "$i" -ge "46642" -a "$i" -le "63372" ] ; then
 				echo "$i"
 			fi
 		fi
 		if $V6FLAG ; then
-			if [ "$i" -ge "63373" ] ; then 
+			if [ "$i" -ge "63373" ] ; then
 				echo "$i"
 			fi
 		fi

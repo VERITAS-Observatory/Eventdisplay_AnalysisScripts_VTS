@@ -13,12 +13,12 @@ optional parameters:
 
     [allow 3-tel]           flag to include three-telescope runs
                             (default = 0 = no; set to 1 for yes)
-                            
+
     [worst weather]         select runs with weather >= this letter grade
                             (default: \"B\" weather)
-                            
+
     [min duration]          minimum run duration (default: 15 minutes)
-    
+
     [start date]            select all runs on or after this date
                             (default: 2011-01-01, format = YYYY-MM-DD)
 
@@ -26,15 +26,15 @@ optional parameters:
                             (default: none, format = YYYY-MM-DD)
 
     [runmode]		    use runs taken with this runmode
-			    (default: observing = regular runs). 
-			    Use 'obsLowHV' or 'obsFilter' 
-                            to select only reduced HV/only filter runs. 
+			    (default: observing = regular runs).
+			    Use 'obsLowHV' or 'obsFilter'
+                            to select only reduced HV/only filter runs.
 			    Use '%' for all runs.
 
     [DQM category]	    use runs taken with this DQM category.
-			    Default: science. Other options: 
+			    Default: science. Other options:
 			    calibration, engineering, moonfilter, reducedhv, special.
-    
+
     [Elevation Bound Range] <lower>-<upper> min and max elevation, in degrees,
                             to allow.
                             e.g. 50-70, or 70-85 or 33-88
@@ -93,11 +93,11 @@ for (( i=0; i < ${#WEATHER_GRADES[@]}; i++ )); do
 done
 
 if [[ ! "$ELEVSTRING" =~ - ]] ; then
-  echo "error, 8th agument '$ELEVSTRING' needs to at least contain a '-' character, exiting..."
+  echo "error, 8th argument '$ELEVSTRING' needs to at least contain a '-' character, exiting..."
   exit 1
 fi
 if [[ ! "$AZIMSTRING" =~ - ]] ; then
-  echo "error, 9th agument '$AZIMSTRING' needs to at least contain a '-' character, exiting..."
+  echo "error, 9th argument '$AZIMSTRING' needs to at least contain a '-' character, exiting..."
 fi
 
 MINELEV=$( echo "$ELEVSTRING" | cut -d '-' -f 1 )
@@ -137,7 +137,7 @@ while read lin ; do
   mjdstart=$( echo "$lin" | cut -d ' ' -f 1 )
   mjdend=$(   echo "$lin" | cut -d ' ' -f 2 )
 
-  # in python's datetime.datetime.fromordinal(), 'ordinal' is the number of days since 0001-01-01, 
+  # in python's datetime.datetime.fromordinal(), 'ordinal' is the number of days since 0001-01-01,
   # so we can just add 678576 days to our MJD to get it to 'ordinal' time, then datetime.date can
   # easily convert it to a YYYY-MM-DD string
   datebeg=$( python -c "import datetime ; d1 = datetime.date.fromordinal(678576+int($mjdstart)) ; print d1" )

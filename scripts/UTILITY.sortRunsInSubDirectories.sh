@@ -3,7 +3,7 @@
 # into subdirectories starting with the first (two) digits
 # of the run number.
 # This lowers significantly the number of files in a directory
-# 
+#
 
 if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
 # begin help message

@@ -15,15 +15,15 @@ ANALYSIS.anasum.sh <anasum run list> <output directory> <output file name>
 required parameters:
 
     <anasum run list>       full anasum run list
-    
+
     <output directory>      anasum output files are written to this directory
-    
+
     <output file name>      name of combined anasum file
                             (written to same location as anasum files)
-    
+
 optional parameters:
 
-    [run parameter file]    anasum run parameter file (located in 
+    [run parameter file]    anasum run parameter file (located in
                             \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
                             default is ANASUM.runparameter)
 
@@ -96,7 +96,7 @@ if [[ $SUBC == *"ERROR"* ]]; then
 fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
-    
+
     # account for -terse changing the job number format
     if [[ $SUBC != *-terse* ]] ; then
         echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2

@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to analyse laser files 
+# script to analyse laser files
 
 # set observatory environmental variables
 source $EVNDISPSYS/setObservatory.sh VTS

@@ -38,7 +38,7 @@ done < $CMDFILE
 if [[ -z "$CMD" ]]; then
     echo "ERROR! No submission command is selected in $CMDFILE."
     exit 1
-else 
+else
     echo $CMD
 fi
 

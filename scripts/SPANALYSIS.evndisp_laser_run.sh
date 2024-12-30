@@ -17,10 +17,10 @@ optional parameters:
 
     [teltoana]              use 1 for T1 only, 13 for T1 and T3 only, etc.
                             (default telescope combination is 1234)
-    
+
     [lasermin]              minimum image size to identify as laser event
                             (default = 50000; check results in display)
-                            
+
     [gain]                  calculate gains for high (0) or low (1) gain
                             (default = 0 = high gain; EXPERT USER ONLY)
 

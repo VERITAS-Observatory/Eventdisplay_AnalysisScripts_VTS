@@ -13,6 +13,7 @@ ONAME=BDTFILE
 RECID="0"
 TELTYPE="0"
 BDT=BDTTYPE
+TMVAO=TMVAOPTIONFILE
 
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then
@@ -49,7 +50,7 @@ done
 find $DDIR -name "*.root.zst" -exec zstd -f -d {} \;
 ls -1 $DDIR
 ls -1 $DDIR/*.root > ${DDIR}/$NLIST
-echo "LISTLISTLIST ${DDIR}/$NLIST"
+echo "FILELIST ${DDIR}/$NLIST"
 cat ${DDIR}/$NLIST
 
 ODIR="${ODIR}/${BDT}"
@@ -58,15 +59,19 @@ chmod g+w ${ODIR}
 rm -f "$ODIR/$ONAME*"
 
 # quality cuts
-QUALITYCUTS="size>1.&&ntubes>log10(4.)&&width>0.&&width<2.&&length>0.&&length<10.&&tgrad_x<100.*100.&&loss<0.20&&cross<20.0&&Rcore<2000."
+QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
 
-# TMP loose quality cuts
-QUALITYCUTS="size>1.&&ntubes>log10(4.)&&width>0.&&width<2.&&length>0.&&length<10.&&tgrad_x<100.*100.&&loss<0.40&&cross<20.0&&Rcore<2000."
-QUALITYCUTS="size>1.&&ntubes>log10(4.)&&width>0.&&width<2.&&length>0.&&length<10.&&tgrad_x<100.*100.&&loss<0.20&&cross<20.0&&Rcore<2000."
+# TMVA options
+TMVAOPTIONS="$(grep 'MVAOPTIONS' $TMVAO | awk '{print $3}')"
 
 # fraction of events to use for training,
 # remaining events will be used for testing
 TRAINTESTFRACTION=0.5
+
+# per event weight (use carefully)
+# EWEIGHT="sqrt(MCe0/0.5)"
+# EWEIGHT="10.*(1.+loss)"
+EWEIGHT=""
 
 $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
     "${DDIR}/${NLIST}" \
@@ -75,7 +80,11 @@ $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
     "$RECID" \
     "$TELTYPE" \
     "${BDT}" \
-    "${QUALITYCUTS}" > "$ODIR/$ONAME-$BDT.log"
+    "${QUALITYCUTS}" \
+    "${TMVAOPTIONS}" \
+    "${EWEIGHT}" > "$ODIR/$ONAME-$BDT.log"
 
 cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
 cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/
+# (potentially large training file)
+cp -v ${DDIR}/BDTDisp.root ${ODIR}/

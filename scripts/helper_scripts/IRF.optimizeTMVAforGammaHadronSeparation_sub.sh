@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to calcualte signal and background rates and
+# script to calculate signal and background rates and
 # optimize BDTs with TMVA
 #
 

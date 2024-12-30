@@ -24,7 +24,7 @@ required parameters:
     <output directory>      anasum output files are written to this directory
 
     <cut set>               hardcoded cut sets predefined in the script
-                            (i.e., moderate2tel, soft2tel, hard2tel, hard3tel, supersoft, supersoftNN2tel)
+                            (i.e., moderate2tel, soft2tel, hard2tel, hard3tel, supersoft, supersoftNN2tel, moderatebox)
                             (for BDT preparation: NTel2ModeratePre, NTel2SoftPre, NTel2HardPre,
                             NTel3HardPre, NTel2SuperSoftPre)
 
@@ -100,6 +100,8 @@ elif [[ $CUTS = "moderatebox" ]]; then
     CUT="NTel2-PointSource-Moderate"
 elif [[ $CUTS = "softbox" ]]; then
     CUT="NTel2-PointSource-Soft"
+elif [[ $CUTS = "hardbox" ]]; then
+    CUT="NTel3-PointSource-Hard"
 elif [[ $CUTS = "supersoft" ]]; then
     CUT="NTel2-PointSource-SuperSoft"
 elif [[ $CUTS = "opensoft" ]]; then
@@ -195,7 +197,6 @@ fi
 # directory for run scripts
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.${CUTS}-${DATE}-$(uuidgen)"
-mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # output directory for anasum products
@@ -255,8 +256,8 @@ for RUN in ${RUNS[@]}; do
     # directory (e.g., on afs)
     if [[ ${NRUNS} -gt 5000 ]]; then
         TMPLOGDIR=${LOGDIR}-${RUN:0:1}
-        mkdir -p ${TMPLOGDIR}
     fi
+    mkdir -p ${TMPLOGDIR}
     FSCRIPT="$TMPLOGDIR/ANASUM.$RUN-$(date +%s)"
     rm -f $FSCRIPT.sh
     echo "Run script written to $FSCRIPT"
@@ -296,23 +297,18 @@ for RUN in ${RUNS[@]}; do
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit"
         echo "-------------------------------------------------------------------------------"
         echo
 	elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$TMPLOGDIR/runscripts.$TIMETAG.dat"
         echo "RUN $RUN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
 	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 	fi
 done
-
-# submit all condor jobs at once
-if [[ $SUBC == "condor_submit" ]]; then
-    $EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit
-fi
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then

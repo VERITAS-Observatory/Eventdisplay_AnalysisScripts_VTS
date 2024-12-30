@@ -5,15 +5,18 @@
 # Files are packed per starting run number
 #
 
+ANATYPE="AP"
+
 if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
 echo "
 Pack Eventdisplay data products from run list
 
-./prepare_runlist_after_dqm.sh <Eventdisplay data type> <runlist> <outputdirectoryname>
+./pack_data_files.sh <Eventdisplay data type> <runlist> <outputdirectoryname>
 
 data type: evndisp, mscw
+fixed analysis type: $AP
 
-Note! Copies files to temporary diretory $VERITAS_USER_DATA_DIR/tmp_packing/<outputdirectoryname>
+Note! Copies files to temporary directory $VERITAS_USER_DATA_DIR/tmp_packing/<outputdirectoryname>
 
 "
 exit
@@ -22,9 +25,7 @@ fi
 DATATYPE=${1}
 RUNLIST=${2}
 
-ANATYPE="AP"
-VERSION="v490"
-
+VERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 RUNS=$(cat $RUNLIST)
 
 TMPDATADIR="$VERITAS_USER_DATA_DIR/tmp_packing/${3}/${DATATYPE}"

@@ -15,7 +15,7 @@ required parameters:
 
     <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV_2212,
-                            CARE_RedHV_Feb2024, CARE_202404)
+                            CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -63,10 +63,7 @@ process_irfs()
     done
 }
 
-if [[ ${SIMTYPE} == "CARE_June2020" ]] || [[ ${SIMTYPE} == "CARE_RedHV"* ]] || [[ ${SIMTYPE} == "CARE_202404" ]]; then
-    process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_WINTER.dat
-#    process_irfs ${IRFTYPE} ${SIMTYPE} 62 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_SUMMER.dat
-elif [[ ${SIMTYPE} == "CARE_UV_2212" ]]; then
+if [[ ${SIMTYPE} == "CARE_UV_2212" ]]; then
     process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_obsfilter.dat
 elif [[ ${SIMTYPE} == "GRISU" ]]; then
     if [[ "$2" == "ANALYSETABLES" ]] || [[ "$2" == "EFFECTIVEAREAS" ]] || [[ "$2" == "COMBINEEFFECTIVEAREAS" ]]; then
@@ -83,4 +80,7 @@ elif [[ ${SIMTYPE} == "GRISU" ]]; then
             ./IRF.production.sh GRISU ${IRFTYPE} V4 21 0
             ./IRF.production.sh GRISU ${IRFTYPE} V4 22 0
     fi
+else
+    process_irfs ${IRFTYPE} ${SIMTYPE} 61 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_WINTER.dat
+    process_irfs ${IRFTYPE} ${SIMTYPE} 62 $VERITAS_EVNDISP_AUX_DIR/IRF_EPOCHS_SUMMER.dat
 fi

@@ -7,13 +7,14 @@ Example:
 
     $ python3 db_write_fits.py --run 64080 \
         --output_path /path/to/output.fits \
-        --input_path $VERITAS_DATA_DIR/DBTEXT
+        --input_path $VERITAS_DATA_DIR/shared/DBTEXT
 
 """
 
 import argparse
 import logging
 import os
+import sys
 import tarfile
 
 import astropy
@@ -290,6 +291,9 @@ def extract_dqm_table(run, temp_run_dir):
 
     # run info
     run_info = read_file(os.path.join(temp_run_dir, f"{run}.runinfo"))
+    if run_info is None:
+        logging.error("Exiting. Cannot work without runinfo file")
+        sys.exit()
     row["run_id"] = run_info["run_id"][0]
     row["run_type"] = run_info["run_type"][0]
     row["observing_mode"] = run_info["observing_mode"][0]
@@ -316,7 +320,6 @@ def extract_dqm_table(run, temp_run_dir):
         row["vpm_config_mask"] = np.nan
         row["light_level"] = np.nan
         row["dqm_comment"] = ""
-
 
     # L3 rate
     (
@@ -379,7 +382,7 @@ def convert_table_comment_to_ascii(table):
                     old_length = len(row[name])
                     new_string = convert_to_ascii(row[name])
                     table[i][name] = new_string[:old_length]
-    except AttributeError:
+    except (AttributeError, TypeError):
         pass
 
 
@@ -435,6 +438,7 @@ def main():
     finally:
         # Delete the temporary directory and its contents
         logging.info("Deleting %s", temp_dir)
+
 
 #        shutil.rmtree(temp_dir)
 

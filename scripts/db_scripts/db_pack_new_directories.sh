@@ -1,8 +1,9 @@
+#!/bin/bash
 # pack newly written directories extracted from the DB
 # with query_run_list.sh
 #
 
-DBTEXTDIR="$VERITAS_DATA_DIR/DBTEXT/"
+DBTEXTDIR="$VERITAS_DATA_DIR/shared/DBTEXT/"
 
 get_run_directory()
 {

@@ -17,9 +17,9 @@ required parameters:
 
     <input directory>       directory containing mscw_energy ROOT files from a
                             gamma-ray dark region of the sky (data, not MC), minus the RecID* part
-        
+
     <cuts list file>        file containing one gamma/hadron cuts file per line
-        
+
     <epoch>                 array epoch(s) (e.g., V4, V5, V6)
                             V4: array before T1 move (before Fall 2009)
                             V5: array after T1 move (Fall 2009 - Fall 2012)
@@ -27,7 +27,7 @@ required parameters:
 
     <SIM>                   Sims used to generate lookup table with which the data was analysed,
                             same ones as used for the table in mscw-stage
-    
+
     <Rec ID>                reconstruction ID(s)
                             (see EVNDISP.reconstruction.runparameter)
                             Set to 0 for all telescopes, 1 to cut T1, etc.
@@ -37,10 +37,10 @@ required parameters:
 examples:
 ./IRF.generate_radial_acceptance.sh ~/runlist.dat \
  \$VERITAS_USER_DATA_DIR/rad_accept ~/cutset.dat V6 CARE_June1425 0
-    
+
 ./IRF.generate_radial_acceptance.sh ~/runlist.dat \
  \$VERITAS_USER_DATA_DIR/rad_accept ~/cutset.dat \"V4 V5 V6\" GRISU-SW6 \"0 1 2 3 4\"
-    
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -117,7 +117,7 @@ for CUTS in ${CUTLIST[@]}; do
                 echo "cut file $CUTSFILE"
                 exit 1
             fi
-            
+
             METH="${VERITAS_ANALYSIS_TYPE/_/-}"
 	        CUTSNAME=`basename $CUTSFILE`
             # Generate base file name based on cuts file, extended and point source radial acceptances are the same
@@ -136,7 +136,7 @@ for CUTS in ${CUTLIST[@]}; do
             chmod g+w "$ODIR"
             echo -e "Output files will be written to:\n$ODIR"
             echo "Output file name $OFILE"
-            
+
             FSCRIPT="$LOGDIR/RADIAL-$CUTSNAME-$VX-$ID"
             sed -e "s|RUNLIST|$RLIST|"     \
                 -e "s|INPUTDIR|$MSCWDIR|"  \
@@ -144,10 +144,10 @@ for CUTS in ${CUTLIST[@]}; do
                 -e "s|OUTPUTDIR|$ODIR|"    \
 		        -e "s|TELTOANA|$TELES|" \
                 -e "s|OUTPUTFILE|$OFILE|" $SUBSCRIPT > $FSCRIPT.sh
-            
+
             chmod u+x $FSCRIPT.sh
             echo "Script submitted to cluster: $FSCRIPT.sh"
-            
+
             # run locally or on cluster
             SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
             echo "$LOGDIR"

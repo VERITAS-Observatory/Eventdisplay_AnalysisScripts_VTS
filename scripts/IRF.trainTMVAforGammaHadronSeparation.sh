@@ -136,6 +136,19 @@ LOGDIR="$ODIR/$DATE/TMVA.ANADATA"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
 
+####################################
+# Run prefix
+get_run_prefix()
+{
+    RUNN="${1%%.*}"
+
+    if [[ ${RUNN} -lt 100000 ]]; then
+        echo "${RUNN:0:1}"
+    else
+        echo "${RUNN:0:2}"
+    fi
+}
+
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_sub"
 
@@ -170,7 +183,7 @@ do
 
       echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
 
-      echo "* OUTPUTFILE $ODIR/ ${ONAME}_${i}_${j}" >> $RFIL.runparameter
+      echo "* OUTPUTFILE ODIR ${ONAME}_${i}_${j}" >> $RFIL.runparameter
 
       echo "#######################################################################################" >> $RFIL.runparameter
       # signal and background files (depending on on-axis or cone data set)
@@ -189,7 +202,7 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE SIMDIR/$(basename $arg)" >> $RFIL.runparameter
                           done
                       fi
                   fi
@@ -202,7 +215,7 @@ do
                           SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
                           for arg in $SIGNALLIST
                           do
-                              echo "* SIGNALFILE $arg" >> $RFIL.runparameter
+                              echo "* SIGNALFILE SIMDIR/$(basename $arg)" >> $RFIL.runparameter
                           done
                       fi
                   fi
@@ -216,14 +229,18 @@ do
           echo "Error, directory with background files ${BDIR}/Ze_${j} not found, exiting..."
           exit 1
       fi
-      ls -1 ${BDIR}/Ze_${j}/*.root > ${BLIST}
-   	  for arg in $(cat $BLIST)
-   	  do
-         echo "* BACKGROUNDFILE $arg" >> $RFIL.runparameter
-      done
+      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | while read -r arg; do
+          PF=$(get_run_prefix "$arg")
+          echo "* BACKGROUNDFILE DDIR/$PF/$arg"
+      done >> "$RFIL.runparameter"
+      # expect training files to be from pre-processing directory
+      BCKFILEDIR="$VERITAS_PREPROCESSED_DATA_DIR/$ANATYPE/mscw"
 
-      FSCRIPT=$LOGDIR/$ONAME"_$i""_$j"
+      FSCRIPT=$LOGDIR/$ONAME"_$EPOCH""_$i""_$j"
       sed -e "s|RUNPARAM|$RFIL|"  \
+          -e "s|MCDIRECTORY|$SDIR|" \
+          -e "s|DATADIRECTORY|$BCKFILEDIR|" \
+          -e "s|OUTPUTDIR|${ODIR}|" \
           -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
       chmod u+x $FSCRIPT.sh

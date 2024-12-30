@@ -27,7 +27,7 @@ OVERWRITE="0"
 [[ "$2" ]] && OVERWRITE=$2 || OVERWRITE=0
 NTEL="4"
 
-DBDIR="${VERITAS_DATA_DIR%/}/DBTEXT/"
+DBDIR="${VERITAS_DATA_DIR%/}/shared/DBTEXT/"
 mkdir -p ${DBDIR}
 
 getDBTextFileDirectory()
@@ -76,7 +76,7 @@ get_start_time()
     fi
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
-            for (( j=0; j<${#a[@]}; j++ )); 
+            for (( j=0; j<${#a[@]}; j++ ));
             do
                 if [[ ${a[$j]} == "$field_name" ]]; then
                     start_time_index=$j
@@ -99,7 +99,7 @@ get_end_time()
     fi
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
-            for (( j=0; j<${#a[@]}; j++ )); 
+            for (( j=0; j<${#a[@]}; j++ ));
             do
                 if [[ ${a[$j]} == "$field_name" ]]; then
                     end_time_index=$j
@@ -148,7 +148,7 @@ get_excluded_telescopes()
 }
 
 
-hasbitset() 
+hasbitset()
 {
     local num=$1
     local bit=$2
@@ -172,7 +172,7 @@ get_source_id()
     fi
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
-            for (( j=0; j<${#a[@]}; j++ )); 
+            for (( j=0; j<${#a[@]}; j++ ));
             do
                 if [[ ${a[$j]} == "source_id" ]]; then
                     source_index=$j

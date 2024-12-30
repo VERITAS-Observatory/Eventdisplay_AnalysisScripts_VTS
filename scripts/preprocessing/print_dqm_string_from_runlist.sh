@@ -1,5 +1,5 @@
 #!/bin/bash
-# Print DQM information in one single line 
+# Print DQM information in one single line
 # for each run using DBText files
 #
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -14,7 +14,7 @@ fi
 
 RUNLIST=${1}
 
-DBTEXTDIRECTORY="$VERITAS_DATA_DIR/DBTEXT"
+DBTEXTDIRECTORY="$VERITAS_DATA_DIR/shared/DBTEXT"
 
 unpack_db_textdirectory()
 {

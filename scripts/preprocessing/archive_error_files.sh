@@ -22,7 +22,7 @@ DP="evndisp mscw anasum_moderate2tel"
 for D in $DP
 do
     DDIR=${VERITAS_DATA_DIR}/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/runs_with_issues/${D}
-    for N in 3 4 5 6 7 8 9 10
+    for N in 3 4 5 6 7 8 9 10 11
     do
         mkdir -p -v ${DDIR}/$N
     done

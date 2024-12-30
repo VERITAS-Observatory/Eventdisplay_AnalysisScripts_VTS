@@ -3,7 +3,7 @@
 # (output need to be combined afterwards)
 
 # qsub parameters
-h_cpu=13:29:00; h_vmem=15000M; tmpdir_size=20G
+h_cpu=13:29:00; h_vmem=8000M; tmpdir_size=20G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -13,7 +13,7 @@ echo "
 IRF generation: create partial effective area files from MC ROOT files
  (simulations that have been processed by both evndisp_MC and mscw_energy_MC)
 
-IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
+IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT] [uuid]
 
 required parameters:
 
@@ -51,13 +51,10 @@ exit
 fi
 
 # Run init script
-if [ ! -n "$EVNDISP_APPTAINER" ]; then
+if [ -z "$EVNDISP_APPTAINER" ]; then
     bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
-
-# date used in run scripts / log file directories
-DATE=`date +"%y%m%d"`
 
 # Parse command line arguments
 CUTSFILE="$1"
@@ -70,7 +67,7 @@ RECID=$7
 SIMTYPE=$8
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
-[[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
+[[ "${11}" ]] && UUID=${11} || UUID=$(date +"%y%m%d")-$(uuidgen)
 
 CUTS_NAME=`basename $CUTSFILE`
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -83,11 +80,10 @@ if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
         INDIR=${INDIR}_DISP
     fi
 fi
-if [[ ! -d $INDIR ]]; then
-    echo "Error, could not locate input directory. Locations searched:"
-    echo "$INDIR"
-    exit 1
-fi
+# if [[ ! -d $INDIR ]]; then
+#    echo "Error, could not locate input directory. Locations searched: $INDIR"
+#    exit 1
+# fi
 echo "Input file directory: $INDIR"
 
 # Output file directory
@@ -95,20 +91,15 @@ if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-mkdir -p "$ODIR"
-chmod g+w "$ODIR"
+[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 
 LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-EFFAREA-RECID${RECID}-${UUID}"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p "$LOGDIR"
+[[ ! -d "$LOGDIR" ]] && mkdir -p "$LOGDIR"
 
 #################################
 # template string containing the name of processed simulation root file
 MCFILE="${INDIR}/${ZA}deg_${WOBBLE}wob_NOISE${NOISE}.mscw.root"
-if [[ ! -f ${MCFILE} ]]; then
-    echo "Input mscw file not found: ${MCFILE}"
-#    exit 1
-fi
 
 # effective area output file
 EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
@@ -120,10 +111,10 @@ echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
 echo "CUTSFILE: $CUTSFILE"
 echo "ODIR: $ODIR"
-echo "DATAFILE $MCFILE"
+echo "MC DATAFILE $MCFILE"
 echo "EFFFILE $EFFAREAFILE"
 # make run script
-FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}.$DATE.MC_$(date +%s%N)"
+FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|USEDISP|${DISPBDT}|" \

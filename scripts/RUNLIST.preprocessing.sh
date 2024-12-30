@@ -56,7 +56,7 @@ while read -r RUNID; do
     if [[ ! -n "$non_digits" ]]; then
 		RUNINFOARRAY+=("$RUNID")
 	fi
-done < <($MYSQL -e " select run_id from VERITAS.tblRun_Info where run_type LIKE \"$MODE\" and observing_mode = 'wobble' and duration >= '00:${MIN_DURATION}:00' and db_start_time >= '$START_DATE' $END_DATE_STR and config_mask in $TEL_MASKS and run_status != 'prepared' ;")
+done < <($MYSQL -e " select run_id from VERITAS.tblRun_Info where run_type LIKE \"$MODE\" and (observing_mode = 'wobble' or observing_mode = 'tracking') and duration >= '00:${MIN_DURATION}:00' and db_start_time >= '$START_DATE' $END_DATE_STR and config_mask in $TEL_MASKS and run_status != 'prepared' ;")
 
 # check if VERITAS.tblRun_Info had 0 runs for us
 if (( ${#RUNINFOARRAY[@]} <= 0 )) ; then
@@ -76,6 +76,22 @@ while read -r RUNID; do
 		FINALARRAY+=("$RUNID")
 	fi
 done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status != 'do_not_use' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or data_category is null ) and (usable_duration >= '00:${MIN_DURATION}:00' or usable_duration is null) and run_id in ${RUN_IDS[@]}")
+
+# See if there are runs without DQM at all; these are also included in the final run list
+RUNS_WITH_DQM=()
+while read -r RUNID; do
+    non_digits="${RUNID//[0-9]/}"
+    if [[ ! -n "$non_digits" ]]; then
+        if [[ " ${RUNINFOARRAY[*]} " == *" $RUNID "* ]]; then
+            RUNS_WITH_DQM+=("$RUNID")
+        fi
+    fi
+done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where run_id in ${RUN_IDS[@]}")
+for run in "${RUNINFOARRAY[@]}"; do
+    if [[ ! " ${RUNS_WITH_DQM[*]} " == *" $run "* ]]; then
+        FINALARRAY+=("$run")
+    fi
+done
 
 exclusion_list=()
 # check exclusion list
