@@ -10,7 +10,7 @@ EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 8 ]; then
 echo "
-IRF generation: create partial effective area files from MC ROOT files
+IRF generation: create partial effective area files from MC files
  (simulations that have been processed by both evndisp_MC and mscw_energy_MC)
 
 IRF.generate_effective_area_parts.sh <cuts file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT] [uuid]
@@ -40,8 +40,8 @@ optional parameters:
 
     [analysis type]         type of analysis (default="")
 
-    [dispBDT]              use dispDBDT angular reconstruction
-                           (default: 0; use: 1)
+    [dispBDT]               use dispDBDT angular reconstruction
+                            (default: 0; use: 1)
 
     [uuid]                  UUID used for submit directory
 
@@ -107,7 +107,7 @@ EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NO
 # Job submission script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_parallel_sub"
 
-echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
+echo "Processing Zenith = $ZA, Wobble = $WOBBLE, Noise = $NOISE (DISP: $DISPBDT)"
 
 echo "CUTSFILE: $CUTSFILE"
 echo "ODIR: $ODIR"

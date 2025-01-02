@@ -47,9 +47,8 @@ optional parameters:
 exit
 fi
 
-
 # Run init script
-if [ ! -n "$EVNDISP_APPTAINER" ]; then
+if [ -z "$EVNDISP_APPTAINER" ]; then
     bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
