@@ -12,7 +12,7 @@ if [ $# -lt 8 ]; then
 echo "
 IRF generation: analyze simulation evndisp ROOT files using mscw_energy
 
-IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT] [uuid]
+IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT] [cut list] [uuid]
 
 required parameters:
 
@@ -40,6 +40,10 @@ optional parameters:
     [dispBDT]               use dispDBDT angular reconstruction
                             (default: 0; use: 1)
 
+    [cut list]              cut list file (full path)
+                            This triggers the effective area generation. No data files
+                            from the mscw_energy stage are written to disk.
+
     [uuid]                  UUID used for submit directory
 
 --------------------------------------------------------------------------------
@@ -65,7 +69,8 @@ RECID=$7
 SIMTYPE=$8
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
-[[ "${11}" ]] && UUID=${11} || UUID=$(date +"%y%m%d")-$(uuidgen)
+[[ "${11}" ]] && EFFAREACUTLIST=${11} || EFFAREACUTLIST="NOEFFAREA"
+[[ "${12}" ]] && UUID=${12} || UUID=$(date +"%y%m%d")-$(uuidgen)
 
 # Check that table file exists
 if [[ "$TABFILE" == `basename "$TABFILE"` ]]; then
@@ -112,6 +117,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \
+    -e "s|EEFFAREACUTLIST|$EFFAREACUTLIST|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
 chmod u+x "$FSCRIPT.sh"

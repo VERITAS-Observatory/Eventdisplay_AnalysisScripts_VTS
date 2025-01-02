@@ -194,9 +194,9 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    NSB_LEVELS=( 200 )
+    ZENITH_ANGLES=( 20 )
+    WOBBLE_OFFSETS=( 0.5 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
     # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
@@ -406,14 +406,19 @@ for VX in $EPOCH; do
                         done #recID
                     ######################
                     # analyse table files
-                    elif [[ $IRFTYPE == "ANALYSETABLES" ]]; then
+                    elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                             TFILID=$TFIL$ANATYPE
+                            # run mscw and effective area code
+                            EFFAREACUTLIST="NOEFFAREA"
+                            if [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
+                                EFFAREACUTLIST="$CUTSLISTFILE"
+                            fi
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID
+                                $ID $SIMTYPE $ANATYPE $DISPBDT $EFFAREACUTLIST $UUID
 			            done #recID
                     ######################
                     # analyse effective areas
