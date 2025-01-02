@@ -370,26 +370,6 @@ for VX in $EPOCH; do
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
-                #######################
-                # analyse tables and generate effective areas
-                if [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
-                   for ID in $RECID; do
-                      TFIL="${TABLECOM}"
-                      # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
-                      TFILID=$TFIL$ANATYPE
-                      CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-                      echo "CUTLIST $CUTLIST"
-                      for CUTS in ${CUTLIST[@]}; do
-                         echo "Generate effective areas $CUTS"
-                         $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
-                             $TFILID $CUTS $VX $ATM $ZA \
-                             "${WOBBLE_OFFSETS}" "${NOISE}" \
-                             $ID $SIMTYPE $ANATYPE \
-                             $DISPBDT $UUID
-                      done
-                   done
-                   continue
-                fi
                 for WOBBLE in ${WOBBLE_OFFSETS[@]}; do
                     echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
                     ######################
