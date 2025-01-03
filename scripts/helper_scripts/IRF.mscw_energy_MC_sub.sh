@@ -1,6 +1,6 @@
 #!/bin/bash
-# analyse MC files with lookup tables
-# (optionally) calculate effective areas
+# Analyse MC files with lookup tables
+# (optional) Calculate effective areas
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
@@ -20,6 +20,7 @@ SIMTYPE=SIMULATIONTYPE
 DISPBDT=USEDISP
 INDIR=INPUTDIR
 ODIR=OUTPUTDIR
+# Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
 
 # output directory
@@ -184,8 +185,10 @@ read_cutlist()
 
 CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
 
-for CUTSFILE in ${CUTLIST[@]}; do
-    for ID in 15 14 13 11 7; do
+# loop over 4 and 3-telescope combinations
+for ID in 15 14 13 11 7; do
+    # Gamma/hadron cut list (depends on analysis and observation type)
+    for CUTSFILE in ${CUTLIST[@]}; do
         echo "calculate effective areas $CUTSFILE (ID $ID)"
         EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
         if [[ $ID == "15" ]]; then
@@ -211,7 +214,7 @@ for CUTSFILE in ${CUTLIST[@]}; do
         fi
         cp -v -f "$CUTSFILE" "$DDIR"/
         if [[ ! -f "$CUTSFILE" ]]; then
-            echo "Error, gamma/hadron cuts file not found, exiting..."
+            echo "Error, gamma/hadron cuts file $CUTSFILE not found, exiting..."
             exit 1
         fi
 
@@ -234,28 +237,27 @@ PARAMFILE="
 * FILLMONTECARLOHISTOS 0
 * ENERGYSPECTRUMINDEX 20 1.6 0.2
 * RERUN_STEREO_RECONSTRUCTION_3TEL $ID
-* FILLMONTECARLOHISTOS 0
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $outputfilename"
 
-    # create makeEffectiveArea parameter file
-    EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
-    rm -f "$DDIR/$EAPARAMS.dat"
-    eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+        # create makeEffectiveArea parameter file
+        EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
+        rm -f "$DDIR/$EAPARAMS.dat"
+        eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
 
-    # calculate effective areas
-    rm -f $OSUBDIR/$OFILE.root
-    $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
+        # calculate effective areas
+        rm -f $OSUBDIR/$OFILE.root
+        $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
-    echo "Filling log file into root file"
-    echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
-    cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-    $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
-    rm -f $OSUBDIR/$EAPARAMS.log
-    cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
-    chmod -R g+w $OSUBDIR
-    chmod g+w $OSUBDIR/$EAPARAMS.root
+        echo "Filling log file into root file"
+        echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+        cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
+        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
+        rm -f $OSUBDIR/$EAPARAMS.log
+        cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
+        chmod -R g+w $OSUBDIR
+        chmod g+w $OSUBDIR/$EAPARAMS.root
 
     done
 done
