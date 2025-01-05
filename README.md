@@ -3,6 +3,8 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/307321978.svg)](https://zenodo.org/badge/latestdoi/307321978)
 
+**Long-term support version v490.7**
+
 Run scripts for the analysis of VERITAS data. Requires the installation or availability of a container of the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
 
 Scripts are optimized for the DESY computing environment using HTCondor batch systems and apptainers.
