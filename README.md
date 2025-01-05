@@ -39,6 +39,8 @@ Analysis scripts require a list of all V6 summer and winter periods, which are l
 UV Filter IRF periods are defined in [IRF_EPOCHS_obsfilter.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_obsfilter.dat).
 No changes to the analysis scripts are required, with the exception of the update of the help message (list of epochs) in [./IRF.production.sh](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/scripts/IRF.production.sh).
 
+Adding a new epoch usually requires to re-run the mscw data analysis steps with the updated lookup tables and dispBDTs, as these IRFs changed. This step also updates the IRF flag in the mscw files.
+
 ### MC Analysis - evndisp stage
 
 This is the stage requiring most computing resources and usually takes several days. MC simulation files are required in the directory structure outlined in [./scripts/IRF.production.sh](./scripts/IRF.production.sh).
@@ -88,7 +90,7 @@ cd $VERITAS_EVNDISP_AUX_DIR/DispBDTs
 Generate background training events using:
 
 ```bash
-./IRF.selectRunsForBDTTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
+./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
 ```
 
 Use e.g. `$VERITAS_DATA_DIR/processed_data_v490/AP/mscw/` for the source directory.

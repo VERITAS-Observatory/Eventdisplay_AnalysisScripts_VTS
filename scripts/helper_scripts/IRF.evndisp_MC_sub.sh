@@ -2,9 +2,10 @@
 # script to run evndisp for simulations on one of the cluster nodes (VBF)
 
 # set observatory environmental variables
-source "$EVNDISPSYS"/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
-########################################################
 # parameters replaced by parent script using sed
 RUNNUM=RUNNUMBER
 SIMDIR=DATADIR
@@ -21,7 +22,7 @@ TELTOANA="1234"
 VBFNAME=VBFFFILE
 NOISEFILE=NOISEFFILE
 EDVERSION=VVERSION
-ADDOPT="ADDITIONALOPTIONS"
+ADD_OPT="ADDITIONALOPTIONS"
 
 # number of pedestal events
 PEDNEVENTS="10000"
@@ -39,12 +40,44 @@ V4N=${ODIR/v490/v4N}
 if [ -e "$V4N/$ONAME.root.zst" ]; then
     zstd --test $V4N/$ONAME.root.zst
     echo "OUTPUT $V4N/$ONAME.root exists; skipping this job"
-    exit
+    #    TMP don't skip job
+#    exit
+fi
+
+# temporary directory
+if [[ -n "$TMPDIR" ]]; then
+    DDIR="$TMPDIR/evn_${ZA}_${NOISE}_${WOG}"
+else
+    DDIR="/tmp/evn_${ZA}_${NOISE}_${WOG}"
+fi
+mkdir -p "$DDIR"
+echo "Temporary directory: $DDIR"
+
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    # path used by EVNDISPSYS needs to be set
+    CALDIR="/opt/ODIR"
 fi
 
 #################################
-# detector configuration and cuts
 echo "Using run parameter file $ACUTS"
+
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/evndisp
+    fi
+}
 
 DEAD="EVNDISP.validchannels.dat"
 # default pedestal level
@@ -75,14 +108,6 @@ fi
 [[ ${EPOCH:0:2} == "V5" ]] && CFG="EVN_V5_Oct2012_newArrayConfig_20121027_v420.txt"
 [[ ${EPOCH:0:2} == "V6" ]] && CFG="EVN_V6_Upgrade_20121127_v420.txt"
 
-# temporary directory
-if [[ -n "$TMPDIR" ]]; then 
-    DDIR="$TMPDIR/evn_${ZA}_${NOISE}_${WOG}"
-else
-    DDIR="/tmp/evn_${ZA}_${NOISE}_${WOG}"
-fi
-mkdir -p "$DDIR"
-echo "Temporary directory: $DDIR"
 CALDIR=${DDIR}
 mkdir -p ${CALDIR}/Calibration
 echo "Calibration directory: ${CALDIR}"
@@ -125,11 +150,11 @@ VBF_FILE="$DDIR/$VBF_FILE"
 
 #######################################
 # option for all steps of the analysis
-MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG" 
+MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG"
 MCOPT="$MCOPT -reconstructionparameter $ACUTS -sourcefile $VBF_FILE"
 MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory ${CALDIR}"
 MCOPT="$MCOPT $AMPCORR"
-MCOPT="$MCOPT ${ADDOPT}"
+MCOPT="$MCOPT ${ADD_OPT}"
 
 # Low gain calibration
 LOWGAINCALIBRATIONFILE=NOFILE
@@ -154,7 +179,8 @@ if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
     echo "Calculating pedestals for run $RUNNUM"
     rm -f $ODIR/$RUNNUM.ped.log
     PEDOPT="-runmode=1 -calibrationnevents=${PEDNEVENTS}"
-    $EVNDISPSYS/bin/evndisp $MCOPT $PEDOPT &> $ODIR/$RUNNUM.ped.log
+    $EVNDISPSYS/bin/evndisp $MCOPT $PEDOPT &> "$ODIR/$RUNNUM.ped.log"
+    echo "$(inspect_executables)" >> "$ODIR/$RUNNUM.ped.log"
     if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.ped.log;
     then
         echo "   successful pedestal analysis"
@@ -162,7 +188,7 @@ if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
         echo "   echo in pedestal analysis"
         exit
     fi
-fi    
+fi
 
 ###############################################
 # calculate tzeros
@@ -172,10 +198,11 @@ TZEROPT="$TZEROPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile ${LOW
 rm -f $ODIR/$RUNNUM.tzero.log
 ### eventdisplay GRISU run options
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-   TZEROPT="$TZEROPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV" 
+   TZEROPT="$TZEROPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
 fi
 echo "$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT" &> $ODIR/$RUNNUM.tzero.log
 $EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT &>> $ODIR/$RUNNUM.tzero.log
+echo "$(inspect_executables)" &>> "$ODIR/$RUNNUM.tzero.log"
 if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.tzero.log;
 then
     echo "   successful tzero analysis"
@@ -203,6 +230,7 @@ fi
 echo "Analysing MC file for run $RUNNUM"
 echo "$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT" &> $ODIR/$ONAME.log
 $EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
+echo "$(inspect_executables)" >> "$ODIR/$ONAME.log"
 
 #################################################################################
 # cleanup
@@ -230,9 +258,12 @@ add_log_file()
      fi
 }
 
-add_log_file evndispLog $ODIR/$ONAME.log
-add_log_file evndisppedLog $ODIR/$ONAME.ped.log
-add_log_file evndisptzeroLog $ODIR/$ONAME.tzero.log
+cp -v  "$ODIR/$ONAME.log"  "$DDIR/$ONAME.log"
+add_log_file evndispLog "$DDIR/$ONAME.log"
+cp -v "$ODIR/$ONAME.ped.log" "$DDIR/$ONAME.ped.log"
+add_log_file evndisppedLog "$DDIR/$ONAME.ped.log"
+cp -v "$ODIR/$ONAME.tzero.log" "$DDIR/$ONAME.tzero.log"
+add_log_file evndisptzeroLog "$DDIR/$ONAME.tzero.log"
 
 ### check that log files are filled correctly
 compare_log_file()

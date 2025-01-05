@@ -13,12 +13,12 @@ ANASUM analysis preparation: link pre-processed files to output directory
 required parameters:
 
     <anasum run list>       short run list (run numbers only)
-        
+
     <anasum directory>      input directory containing anasum root files
                             (usually directory with pre-processed files)
 
     <output directory>      directory with links to pre-processed files
-        
+
 --------------------------------------------------------------------------------
 "
 #end help message
@@ -66,4 +66,3 @@ for RUN in ${RUNS[@]}; do
         ln -f -s ${ARCHIVEDIR}/${RUN}.anasum.root ${ODIR}/${RUN}.anasum.root
     fi
 done
-

@@ -2,23 +2,23 @@
 # script to analyse MC files with lookup tables
 
 # qsub parameters
-h_cpu=10:29:00; h_vmem=6000M; tmpdir_size=100G
+h_cpu=10:29:00; h_vmem=8000M; tmpdir_size=100G
 
-if [[ $# -lt 8 ]]; then
-# begin help message
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EVNIRFVERSION="v4N"
+
+if [ $# -lt 8 ]; then
 echo "
-IRF generation: analyze simulation evndisp ROOT files using mscw_energy 
+IRF generation: analyze simulation evndisp ROOT files using mscw_energy
 
 IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT]
 
 required parameters:
 
-    <table file>            mscw_energy lookup table file
-    
+    <table file>            mscw_energy lookup table file (expected to be in \$VERITAS_EVNDISP_AUX/Tables)
+
     <epoch>                 array epoch (e.g., V4, V5, V6)
-                            V4: array before T1 move (before Fall 2009)
-                            V5: array after T1 move (Fall 2009 - Fall 2012)
-                            V6: array after camera update (after Fall 2012)
 
     <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
@@ -36,22 +36,21 @@ required parameters:
 optional parameters:
 
     [analysis type]         type of analysis (default="")
-    
-    [dispBDT]              use dispDBDT angular reconstruction
-                           (default: 0; use: 1)
+
+    [dispBDT]               use dispDBDT angular reconstruction
+                            (default: 0; use: 1)
 
     [uuid]                  UUID used for submit directory
 
-    [version]               Eventdisplay version (e.g., v490)
-
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # date used in run scripts / log file directories
@@ -67,12 +66,9 @@ WOBBLE=$5
 NOISE=$6
 RECID=$7
 SIMTYPE=$8
-PARTICLE_TYPE="gamma"
 [[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
 [[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
 [[ "${11}" ]] && UUID=${11} || UUID=${DATE}-$(uuidgen)
-[[ "${12}" ]] && EDVERSION=${12} || EDVERSION=$($EVNDISPSYS/bin/mscw_energy --version | tr -d .| sed -e 's/[a-Z]*$//')
-EVNIRFVERSION="v4N"
 
 # Check that table file exists
 if [[ "$TABFILE" == `basename "$TABFILE"` ]]; then
@@ -86,16 +82,7 @@ fi
 
 # input directory containing evndisp products
 if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
-fi
-if [[ ! -d $INDIR ]]; then
-    echo "Input directory not found; try without ANALYSIS_TYPE"
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EDVERSION}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
-    if [[ ! -d $INDIR ]]; then
-        echo "Error, could not locate input directory. Locations searched:"
-        echo "$INDIR"
-        exit 1
-    fi
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 fi
 echo "Input file directory: $INDIR"
 
@@ -106,14 +93,14 @@ fi
 echo "NROOTFILES $NROOTFILES"
 
 # Output file directory
-if [[ ! -z $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
+if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
+    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
 fi
 echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-MSCW-RECID${RECID}-${UUID}"
+LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MSCW-RECID${RECID}-${UUID}"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -122,19 +109,19 @@ SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
 echo "Processing Zenith = $ZA, Wobble = $WOBBLE, Noise = $NOISE (DISP: $DISPBDT)"
 
 # make run script
-FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-${PARTICLE_TYPE}-$RECID-$DISPBDT"
+FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-$RECID-$DISPBDT"
 rm -f "$FSCRIPT.sh"
 sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISE|" \
     -e "s|WOBBLEOFFSET|$WOBBLE|" \
     -e "s|ARRAYEPOCH|$EPOCH|" \
-    -e "s|ATMOS|$ATM|" \
+    -e "s|ATMOSPHERE|$ATM|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
     -e "s|ANALYSISTYPE|${ANALYSIS_TYPE}|" \
     -e "s|USEDISP|${DISPBDT}|" \
-    -e "s|SSIMTYPE|$SIMTYPE|" \
+    -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|NFILES|$NROOTFILES|" \
-    -e "s|TABLEFILE|$TABFILE|" \
+    -e "s|TABLEFILE|$(basename $TABFILE)|" \
     -e "s|INPUTDIR|$INDIR|" \
     -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
@@ -167,5 +154,3 @@ elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
 echo "LOG/SUBMIT DIR: ${LOGDIR}"
-
-exit

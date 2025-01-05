@@ -9,7 +9,7 @@ Download sounding (balloon) data from UWYO for VERITAS, combine the monthly
 data into one file and create a list of files
 
 ./UTILITY.downloadSoundingDatafromUWYO.sh <year_start> <year_end>
-    
+
 --------------------------------------------------------------------------------
 "
 #end help message

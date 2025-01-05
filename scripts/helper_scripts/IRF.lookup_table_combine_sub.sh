@@ -1,29 +1,60 @@
 #!/bin/bash
-# combine tables
+# combine lookup tables
 
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
 FLIST=TABLELIST
 OFILE=OUTPUTFILE
 ODIR=OUTPUTDIR
 
-# combine the tables
-if [[ $IRFVERSION = "v4"* ]]; then
-    $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root median &> $ODIR/$OFILE.log 
+# temporary directory
+if [[ -n "$TMPDIR" ]]; then
+    DDIR="$TMPDIR/combineTables"
 else
-    $EVNDISPSYS/bin/combineLookupTables $ODIR/$FLIST $ODIR/$OFILE.root &> $ODIR/$OFILE.log 
+    DDIR="/tmp/combineTables"
 fi
-$EVNDISPSYS/bin/logFile makeTableCombineLog $ODIR/$OFILE.root $ODIR/$OFILE.log
-$EVNDISPSYS/bin/logFile makeTableFileList $ODIR/$OFILE.root $ODIR/$FLIST
+mkdir -p "$DDIR"
+echo "Temporary directory: $DDIR"
 
-# smooth lookup tables (not v4xx)
-# IRFVERSION=`$EVNDISPSYS/bin/combineLookupTables --version | tr -d .| sed -e 's/[a-Z]*$//'`
-# if [[ $IRFVERSION = "v4"* ]]; then
-#    echo "no smoothing in version $IRFVERSION"
-# else
-#    "$EVNDISPSYS"/bin/smoothLookupTables "$ODIR/$OFILE.root" "$ODIR/$OFILE-smoothed.root" &> "$ODIR/$OFILE-smoothed.log"
-# fi
+# explicit binding for apptainers
+if [ -n "$EVNDISP_APPTAINER" ]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
+    APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
+    APPTAINER_MOUNT+=" --bind ${DDIR}:${DDIR} "
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    # path used by EVNDISPSYS needs to be set
+    CALDIR="/opt/ODIR"
+fi
 
-exit
+inspect_executables()
+{
+    if [ -n "$EVNDISP_APPTAINER" ]; then
+        apptainer inspect "$EVNDISP_APPTAINER"
+    else
+        ls -l ${EVNDISPSYS}/bin/evndisp
+    fi
+}
+
+# copy table files to temp
+xargs -a "$ODIR/$FLIST" cp -t "$DDIR"
+ls -1 "${DDIR}"/*.root > "$DDIR/$FLIST"
+
+# combine the tables
+$EVNDISPSYS/bin/combineLookupTables "$DDIR/$FLIST" "$DDIR/$OFILE.root" median &> "$ODIR/$OFILE.log"
+
+# log files
+echo "$(inspect_executables)" >> "$ODIR/$OFILE.log"
+cp -v "$ODIR/$OFILE.log" "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile makeTableCombineLog "$DDIR/$OFILE.root" "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile makeTableFileList "$DDIR/$OFILE.root" "$DDIR/$FLIST"
+
+# cleanup
+mv -f -v "$DDIR/$OFILE.root" "$ODIR/$OFILE.root"

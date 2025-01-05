@@ -14,9 +14,9 @@ ANALYSIS.anasum_parallel.sh <anasum run list> <mscw directory> <output directory
 required parameters:
 
     <anasum run list>       full anasum run list
-    
+
     <mscw directory>        directory containing the mscw.root files
-    
+
     <output directory>      anasum output files are written to this directory
 
     <run parameter file>    anasum run parameter file
@@ -119,7 +119,7 @@ for ((i=1; i <= $NLINES; i++)); do
             -e "s|RUNPARAM|$RUNP|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
         chmod u+x "$FSCRIPT.sh"
-        
+
         # run locally or on cluster
         SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
         SUBC=`eval "echo \"$SUBC\""`
@@ -129,7 +129,7 @@ for ((i=1; i <= $NLINES; i++)); do
         fi
         if [[ $SUBC == *qsub* ]]; then
             JOBID=`$SUBC $FSCRIPT.sh`
-            
+
             # account for -terse changing the job number format
             if [[ $SUBC != *-terse* ]] ; then
                 echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2

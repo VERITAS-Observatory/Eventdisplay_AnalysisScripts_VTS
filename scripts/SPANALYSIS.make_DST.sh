@@ -16,7 +16,7 @@ SPANALYSIS.make_DST.sh <runlist> <summation window> [pedestal calculation] [LMUL
 required parameters:
 
     <runlist>               simple run list with one run number per line
-    
+
     <summation window>      FADC trace summation window (in samples)
 
 optional parameters:
@@ -24,7 +24,7 @@ optional parameters:
     [pedestal calculation]  flag to specify if pedestals/tzeros are calculated
                             (default = 1 = on)
 
-    [LMULT]		    Make DSTs for LMULT calculation (use all events, special low gain calib file) 
+    [LMULT]		    Make DSTs for LMULT calculation (use all events, special low gain calib file)
 			    Default: 0 (off), only the first 5000 events are analysed.
 
     [output dir] 	    Output directory
@@ -32,7 +32,7 @@ optional parameters:
 
     [runparameter file]     file with integration window size and reconstruction cuts/methods, expected in $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/
 			    Default: EVNDISP.reconstruction.LMULT.SWXX.runparameter, sed -e \"s/XX/\$SUMW/g\"
---------------------------------------------------------------------------------   
+--------------------------------------------------------------------------------
 "
 #end help message
 exit
@@ -48,7 +48,7 @@ SUMW=$2
 [[ "$3" ]] && PED=$3 || PED="1"
 [[ "$4" ]] && LMULT=$4 || LMULT="0"
 [[ "$5" ]] && ODIR=$5 || ODIR="$VERITAS_USER_DATA_DIR/analysis/EVD400_DST/$SUMW/"
-[[ "$6" ]] && RUNPFILE=$6 
+[[ "$6" ]] && RUNPFILE=$6
 
 # Read runlist
 if [[ ! -f "$RLIST" ]]; then

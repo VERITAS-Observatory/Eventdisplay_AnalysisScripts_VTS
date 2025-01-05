@@ -1,9 +1,10 @@
 #!/bin/bash
 # IRF production script (VERITAS)
-#
+
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 2 ]; then
-# begin help message
 echo "
 IRF generation: produce a full set of instrument response functions (IRFs)
 
@@ -12,7 +13,8 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV)
+                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
+                            CARE_RedHV_Feb2024, CARE_202404)
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -28,7 +30,7 @@ optional parameters:
                             (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b
                              V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
                              V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
-                             V6_2022_2022s, V6_2022_2023w, V6_2023_2023s\")
+                             V6_2022_2022s, V6_2022_2023w, V6_2023_2023s, V6_2023_2024w\")
 
     [atmosphere]            atmosphere model(s) (21/61 = winter, 22/62 = summer)
                             (default: \"61 62\")
@@ -37,7 +39,9 @@ optional parameters:
                             (see EVNDISP.reconstruction.runparameter)
 
     [cuts list file]        file containing one gamma/hadron cuts file per line
-                            (default: hard-coded standard EventDisplay cuts)
+                            required for PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
+                            COMBINEEFFECTIVEAREAS, ANATABLESEFFAREAS
+                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/IRF_GAMMAHADRONCUTS*\"
 
     [sim directory]         directory containing simulation VBF files
 
@@ -45,7 +49,6 @@ optional parameters:
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
@@ -55,21 +58,19 @@ olddir=$(pwd)
 cd $(dirname "$0")
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
-SIMTYPE=$1
-IRFTYPE=$2
-[[ "$3" ]] && EPOCH=$3 || EPOCH="V6 V5 V4"
-[[ "$4" ]] && ATMOS=$4 || ATMOS="61 62"
-[[ "$5" ]] && RECID=$5 || RECID="0"
-[[ "$6" ]] && CUTSLISTFILE=$6 || CUTSLISTFILE=""
-[[ "$7" ]] && SIMDIR=$7 || SIMDIR=""
-
-# evndisplay version
-EDVERSION=$($EVNDISPSYS/bin/printRunParameter --version | tr -d .| sed -e 's/[a-Z]*$//')
-echo "Eventdisplay version: ${EDVERSION}"
+SIMTYPE="$1"
+IRFTYPE="$2"
+[[ "$3" ]] && EPOCH="$3" || EPOCH="V6 V5 V4"
+[[ "$4" ]] && ATMOS="$4" || ATMOS="61 62"
+[[ "$5" ]] && RECID="$5" || RECID="0"
+[[ "$6" ]] && CUTSLISTFILE="$6" || CUTSLISTFILE=""
+[[ "$7" ]] && SIMDIR="$7" || SIMDIR=""
 
 # uuid for this job batch
 DATE=`date +"%y%m%d"`
@@ -98,7 +99,7 @@ elif [[ $ANATYPE = "TS"* ]]; then
 fi
 
 # simulation types and definition of parameter space
-if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     # GrISU simulation parameters
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
     NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
@@ -117,22 +118,22 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     fi
     NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
     WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" = "CARE_UV_June1409" ]; then
+elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" = "CARE_UV_2212" ]; then
+elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
-elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
+elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
+elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
@@ -140,9 +141,9 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # ZENITH_ANGLES=( 65 )
+    # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 50 )
+    # NSB_LEVELS=( 200 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -156,18 +157,31 @@ elif [[ "${SIMTYPE}" = "CARE_June2020" ]]; then
     # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
     # (END TEMPORARY)
     ######################################
-elif [[ "${SIMTYPE}" = "CARE_RedHV_Feb2024" ]]; then
+elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 200 )
-    ZENITH_ANGLES=( 65 )
-    WOBBLE_OFFSETS=( 0.5 )
-elif [ ${SIMTYPE:0:4} = "CARE" ]; then
+    # NSB_LEVELS=( 300 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSETS=( 0.5 )
+elif [[ "${SIMTYPE}" == "CARE_202404" ]]; then
+    SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    set -- $ZENITH_ANGLES
+    ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
+    # assume sanme NSB and wobble offsets in all bins
+    NSB_LEVELS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    ######################################
+    # TEST
+    # NSB_LEVELS=( 300 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSET=( 0.5 )
+elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
@@ -185,51 +199,22 @@ echo "Zenith Angles: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
 echo "Wobble offsets: ${WOBBLE_OFFSETS}"
 
-# Set gamma/hadron cuts
-if [[ $CUTSLISTFILE != "" ]]; then
-    if [ ! -f $CUTSLISTFILE ]; then
-        echo "Error, cuts list file not found, exiting..."
-        echo $CUTSLISTFILE
+# read cut list file
+read_cutlist()
+{
+    CUTFILE="${1}"
+    if [[ $CUTFILE == "" ]] || [ ! -f $CUTFILE ]; then
+        echo "Error, cuts list file not found, exiting..." >&2
+        echo $CUTFILE
         exit 1
     fi
-    # read file containing list of cuts
-    IFS=$'\r\n' CUTLIST=($(cat $CUTSLISTFILE))
-    CUTLIST=$(IFS=$'\r\n'; cat $CUTSLISTFILE)
-elif [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat
-             ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard.dat"
-elif [[ "${SIMTYPE}" = "CARE_UV"* ]]; then
-    CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft.dat"
-else
-   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
-
-       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-Preselection.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-Preselection.dat
-                ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-Preselection.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Hard-TMVA-Preselection.dat"
-   else
-       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate-TMVA-BDT.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Soft-TMVA-BDT.dat
-                ANASUM.GammaHadron-Cut-NTel3-PointSource-Hard-TMVA-BDT.dat
-                ANASUM.GammaHadron-Cut-NTel2-PointSource-Moderate.dat"
-   fi
-fi
-# NN cuts for soft only
-if [[ $ANATYPE = "NN"* ]]; then
-   if [[ $IRFTYPE == *"PRESELECTEFFECTIVEAREAS" ]]; then
-       CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection.dat"
-   else
-       if [ "${SIMTYPE}" = "CARE_RedHV" ]; then
-           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat"
-       else
-           CUTLIST="ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft.dat
-                    ANASUM.GammaHadron-Cut-NTel2-PointSource-SuperSoft-NN-TMVA-BDT.dat"
-       fi
-   fi
-fi
-CUTLIST=`echo $CUTLIST |tr '\r' ' '`
-CUTLIST=${CUTLIST//$'\n'/}
+    CUTLISTFROMFILE=$(cat $CUTFILE)
+    CUTLIST=""
+    for CUT in ${CUTLISTFROMFILE[@]}; do
+        CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
+    done
+    echo $CUTLIST
+}
 
 # Cut types are used for BDT training and optimisation
 CUTTYPES="NTel2-PointSource-Moderate
@@ -242,6 +227,7 @@ if [[ $ANATYPE = "NN"* ]]; then
 fi
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
+
 
 ############################################################
 # loop over complete parameter space and submit production
@@ -265,6 +251,8 @@ for VX in $EPOCH; do
        ######################
        # combine effective areas
        if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]] || [[ $IRFTYPE == "COMBINEPRESELECTEFFECTIVEAREAS" ]]; then
+            CUTLIST=$(read_cutlist "$CUTSLISTFILE")
+            echo "CUTLIST: $CUTLIST"
             for ID in $RECID; do
                 for CUTS in ${CUTLIST[@]}; do
                     echo "combine effective areas $CUTS"
@@ -285,7 +273,7 @@ for VX in $EPOCH; do
                 for ATM in $ATMOS; do
                     for C in ${CUTTYPES[@]}; do
                         echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
-                        BDTDIR="${VERITAS_USER_DATA_DIR}/analysis/Results/${EDVERSION}/${ANATYPE}/BDTtraining"
+                        BDTDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining"
                         MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
                         # list of background files
                         TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
@@ -344,6 +332,8 @@ for VX in $EPOCH; do
                elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="300 600 900"
+               elif [[ ${SIMTYPE} = "CARE_RedHV_"* ]]; then
+                   FIXEDNSB="300 600 900"
                elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
                    FIXEDWOBBLE="0.5"
                    FIXEDNSB="160 200 300"
@@ -352,7 +342,7 @@ for VX in $EPOCH; do
                fi
                $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
                    $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $ANATYPE
+                   $SIMTYPE $ANATYPE $UUID
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
@@ -363,6 +353,8 @@ for VX in $EPOCH; do
                       TFIL="${TABLECOM}"
                       # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                       TFILID=$TFIL$ANATYPE
+                      CUTLIST=$(read_cutlist "$CUTSLISTFILE")
+                      echo "CUTLIST $CUTLIST"
                       for CUTS in ${CUTLIST[@]}; do
                          echo "Generate effective areas $CUTS"
                          $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
@@ -383,6 +375,10 @@ for VX in $EPOCH; do
                           SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
                        elif [[ ${SIMTYPE:0:13} = "CARE_June2020" ]]; then
                           SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
+                       elif [[ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]]; then
+                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATM}/Zd${ZA}/
+                       elif [[ ${SIMTYPE} == "CARE_202404" ]]; then
+                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATM}/Zd${ZA}/
                        elif [[ ${SIMTYPE:0:12} = "CARE_Jan2024" ]]; then
                           OBSTYPE=${SIMTYPE:13}
                           SIMDIR="${VERITAS_USER_DATA_DIR}/simpipe_test/data/ATM${ATM}/Zd${ZA}/MERGEVBF_${OBSTYPE}/"
@@ -418,13 +414,15 @@ for VX in $EPOCH; do
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
-                        for ID in $RECID; do
+                        CUTLIST=$(read_cutlist "$CUTSLISTFILE")
+                        echo "CUTLIST: $CUTLIST"
+                        for ID in ${RECID}; do
                             for CUTS in ${CUTLIST[@]}; do
-                                echo "combine effective areas $CUTS"
+                               echo "calculate effective areas $CUTS (ID $ID)"
                                $(dirname "$0")/IRF.generate_effective_area_parts.sh \
                                    $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
                                    $ID $SIMTYPE $ANATYPE \
-                                   $DISPBDT $UUID ${EDVERSION}
+                                   $DISPBDT $UUID
                             done # cuts
                         done #recID
                     fi

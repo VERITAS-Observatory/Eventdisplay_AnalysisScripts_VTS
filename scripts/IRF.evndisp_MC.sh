@@ -1,14 +1,15 @@
 #!/bin/bash
 # submit evndisp for grisu/care simulations
-#
 
 # qsub parameters
-h_cpu=47:59:00; h_vmem=2000M; tmpdir_size=550G
+h_cpu=47:59:00; h_vmem=32000M; tmpdir_size=550G
+
+# EventDisplay version
+EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 7 ]; then
-# begin help message
 echo "
-IRF generation: analyze simulation VBF files using evndisp 
+IRF generation: analyze simulation VBF files using evndisp
 
 IRF.evndisp_MC.sh <sim directory> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <sim type> <runparameter file>  [particle] [analysis type] [uuid]
 
@@ -28,7 +29,7 @@ required parameters:
     <offset angle>          offset angle of simulations [deg]
 
     <NSB level>             NSB level of simulations [MHz]
-    
+
     <sim type>              file simulation type (e.g. GRISU-SW6, CARE_June1425)
 
     <runparameter file>     file with integration window size and reconstruction cuts/methods,
@@ -36,7 +37,7 @@ required parameters:
 
 
 optional parameters:
-    
+
     [particle]              type of particle used in simulation:
                             gamma = 1, electron = 2, proton = 14, helium = 402
                             (default = 1  -->  gamma)
@@ -49,16 +50,15 @@ Note: zenith angles, wobble offsets, and noise values are hard-coded into script
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+fi
 [[ $? != "0" ]] && exit 1
 
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
 # date used in run scripts / log file directories
 DATE=`date +"%y%m%d"`
 
@@ -88,8 +88,10 @@ OPDIR=${ODIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
 echo -e "Output files will be written to:\n $OPDIR"
+# run scripts are written into this directory
 LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/submit-EVNDISP-${UUID}/"
 mkdir -p "$LOGDIR"
+echo -e "Log files will be written to:\n $LOGDIR"
 
 echo "Using runparameter file $ACUTS"
 
@@ -100,11 +102,11 @@ if [[ ${ANALYSIS_TYPE} == *"SQ2"* ]]; then
 fi
 
 # Create a unique set of run numbers
-if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="946500"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="956500"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="966500"
-elif [ ${SIMTYPE:0:4} = "CARE" ]; then
+elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="941200"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="951200"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
@@ -124,6 +126,7 @@ fi
 VBFNAME="NO_VBFNAME"
 NOISEFILE="NO_NOISEFILE"
 echo "SIMTYPE $SIMTYPE"
+echo "SIMDIR $SIMDIR"
 
 #######################################################
 # GRISU simulations
@@ -166,7 +169,7 @@ elif [ ${SIMTYPE} == "CARE_UV_2212" ]; then
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
     echo "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz"
 #######################################################
-elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
+elif [ ${SIMTYPE} == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
     if [[ ${ATM} == 61 ]]; then
         LBL="PMTUpgrade_RHV_CARE_v1.6.2_12"
@@ -177,9 +180,14 @@ elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
     fi
     VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
 #######################################################
+elif [ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]; then
+    VBFNAME=$(find ${SIMDIR} -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+    echo _${WOBBLE}wob_${NOISE}MHz
+    echo "$VBFNAME"
+#######################################################
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     VBFNAME=$(find ${SIMDIR} -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
-    echo _${WOFFSET}wob_${NOISE}MHz
+    echo _${WOBBLE}wob_${NOISE}MHz
     echo $SIMDIR/Zd${ZA}/merged/Data/
 #######################################################
 # elif [ ${SIMTYPE:0:4} == "CARE" ]; then
@@ -267,8 +275,8 @@ do
         -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
         -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT.sh > $FSCRIPT.sh
 
-    chmod u+x $FSCRIPT.sh
-    echo $FSCRIPT.sh
+    chmod u+x "$FSCRIPT.sh"
+    echo "Run script written to: $FSCRIPT"
 
     let "RUNNUM = ${RUNNUM} + 100"
 
@@ -288,9 +296,7 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
     fi
 done
 echo "LOG/SUBMIT DIR: ${LOGDIR}"
-
-exit

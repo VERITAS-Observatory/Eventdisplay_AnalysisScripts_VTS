@@ -35,20 +35,20 @@ echo "log = log/\$(file).log" >>  ${SUBMITF}
 echo "output = output/\$(file).output" >>  ${SUBMITF}
 echo "error = error/\$(file).error" >>  ${SUBMITF}
 
-if ls ${JDIR}/*.condor 1> /dev/null 2>&1; then
+if find ${JDIR} -name "*.condor" 1> /dev/null 2>&1; then
     # assume that all condor files have similar requests
     CONDORFILE=$(find ${JDIR} -name "*.condor" | head -n 1)
     echo "$(grep -h request_memory $CONDORFILE)"  >>  ${SUBMITF}
     echo "$(grep -h request_disk $CONDORFILE)"  >>  ${SUBMITF}
     echo "getenv = True" >>  ${SUBMITF}
-    echo "max_materialize = 350" >>  ${SUBMITF}
-#    echo "priority = 50" >> ${SUBMITF}
+    echo "max_materialize = 800" >>  ${SUBMITF}
+    echo "priority = 5" >> ${SUBMITF}
     echo "queue file matching files *.sh" >> ${SUBMITF}
 
     PDIR=$(pwd)
     if [[ ${2} == "submit" ]]; then
         cd ${JDIR}
-        condor_submit submit.txt
+        condor_submit submit.txt requirements='OpSysAndVer=="AlmaLinux9"'
         cd ${PDIR}
     fi
 else
