@@ -6,6 +6,8 @@ if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
 db_write_fits_from_runlist.sh: write DB FITS files from run list
 
+./db_write_fits_from_runlist.sh <run list>
+
 "
 exit
 fi
