@@ -133,7 +133,7 @@ ls -1 "$DDIR"/*[0-9].root > "$DDIR/$OFILE.list"
 echo "Evndisp files:"
 cat "$DDIR/$OFILE.list"
 
-# run mscw_energy
+echo "Running mscw_energy"
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
 $EVNDISPSYS/bin/mscw_energy $MOPT \
@@ -250,10 +250,12 @@ PARAMFILE="
         rm -f $OSUBDIR/$OFILE.root
         $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
-        echo "Filling log file into root file"
+        echo "Filling effAreaLog file into root file: $OSUBDIR/$EAPARAMS.log"
         echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
-        cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
+        cp "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
         $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
+        echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
+        $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
         rm -f $OSUBDIR/$EAPARAMS.log
         cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
         chmod -R g+w $OSUBDIR
