@@ -411,9 +411,10 @@ for VX in $EPOCH; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                             TFILID=$TFIL$ANATYPE
-                            # run mscw and effective area code
+                            # run mscw only
                             EFFAREACUTLIST="NOEFFAREA"
                             if [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
+                                # run mscw and effective area code
                                 EFFAREACUTLIST="$CUTSLISTFILE"
                             fi
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
