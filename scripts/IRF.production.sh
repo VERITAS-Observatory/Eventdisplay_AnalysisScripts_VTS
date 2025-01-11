@@ -112,7 +112,7 @@ if [ -z "$CUTSLISTFILE" ]; then
     fi
 fi
 
-echo "CUT LIST FILE: $CUTSLISTFILE"
+echo "Cut list file: $CUTSLISTFILE"
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
@@ -194,7 +194,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 200 )
+    # NSB_LEVELS=( 200 )
     ZENITH_ANGLES=( 20 )
     WOBBLE_OFFSETS=( 0.5 )
     # IRF comparison
@@ -217,10 +217,9 @@ else
     echo "Invalid simulation type: ${SIMTYPE}. Exiting..."
     exit 1
 fi
-echo "Zenith Angles: ${ZENITH_ANGLES}"
+echo "Zenith angle bins: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
 echo "Wobble offsets: ${WOBBLE_OFFSETS}"
-
 
 
 # read cut list file
@@ -252,6 +251,7 @@ fi
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
+echo "===== Start submission ====="
 
 ############################################################
 # loop over complete parameter space and submit production
@@ -371,7 +371,7 @@ for VX in $EPOCH; do
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
                 for WOBBLE in ${WOBBLE_OFFSETS[@]}; do
-                    echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
+                    echo "Preparing epoch $VX, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE"
                     ######################
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
@@ -444,5 +444,4 @@ done  #VX
 
 # Go back to the original user directory.
 cd $olddir
-echo "UUID for this processing batch: ${UUID}"
 exit

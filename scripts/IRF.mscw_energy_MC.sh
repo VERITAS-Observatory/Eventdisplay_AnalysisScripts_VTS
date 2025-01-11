@@ -57,89 +57,79 @@ if [ -z "$EVNDISP_APPTAINER" ]; then
 fi
 [[ $? != "0" ]] && exit 1
 
-# Parse command line arguments
-TABFILE=$1
-TABFILE=${TABFILE%%.root}.root
-EPOCH=$2
-ATM=$3
-ZA=$4
-WOBBLE=$5
-NOISE=$6
-RECID=$7
-SIMTYPE=$8
-[[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
-[[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
-[[ "${11}" ]] && EFFAREACUTLIST=${11} || EFFAREACUTLIST="NOEFFAREA"
-[[ "${12}" ]] && UUID=${12} || UUID=$(date +"%y%m%d")-$(uuidgen)
+TABFILE=${1%.root}.root
+EPOCH="$2"
+ATM="$3"
+ZA="$4"
+WOBBLE="$5"
+NOISE="$6"
+RECID="$7"
+SIMTYPE="$8"
+ANALYSIS_TYPE="${9:-}"
+DISPBDT="${10:-0}"
+EFFAREACUTLIST="${11:-NOEFFAREA}"
+UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
 
-# Check that table file exists
-if [[ "$TABFILE" == `basename "$TABFILE"` ]]; then
-    TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
-fi
+echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT)"
+
+TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
 if [[ ! -f "$TABFILE" ]]; then
-    echo "Error, table file not found: $TABFILE, exiting..."
-    echo "$TABFILE"
+    echo "Error: table file not found: $TABFILE"
     exit 1
 fi
 
+if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
+    echo "Error: IRF production directory not found: $VERITAS_IRFPRODUCTION_DIR"
+    exit 1
+fi
 # input directory containing evndisp products
-if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
-fi
-echo "Input file directory: $INDIR"
+INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+# output and log directories
+ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
+LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MSCW-RECID${RECID}-${UUID}"
+mkdir -p "$LOGDIR"
+echo "Input: $INDIR"
+echo "Output: $ODIR"
+echo "Logs: $LOGDIR"
 
-# Output file directory
-if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
-fi
-echo -e "Output files will be written to:\n $ODIR"
-
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MSCW-RECID${RECID}-${UUID}"
-echo -e "Log files will be written to:\n $LOGDIR"
-[[ ! -d "$LOGDIR" ]] && mkdir -p "$LOGDIR"
-
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
-
-echo "Processing Zenith = $ZA, Wobble = $WOBBLE, Noise = $NOISE (DISP: $DISPBDT)"
-
-# make run script
-FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-ID${RECID}-$DISPBDT"
-rm -f "$FSCRIPT.sh"
+# run script
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.mscw_energy_MC_sub"
+FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-ID${RECID}-$DISPBDT.sh"
+rm -f "$FSCRIPT"
 sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|NOISELEVEL|$NOISE|" \
     -e "s|WOBBLEOFFSET|$WOBBLE|" \
     -e "s|ARRAYEPOCH|$EPOCH|" \
     -e "s|ATMOSPHERE|$ATM|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
-    -e "s|ANALYSISTYPE|${ANALYSIS_TYPE}|" \
-    -e "s|USEDISP|${DISPBDT}|" \
+    -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
+    -e "s|USEDISP|$DISPBDT|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \
     -e "s|EEFFAREACUTLIST|$EFFAREACUTLIST|" \
-    -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|OUTPUTDIR|$ODIR|" \
+    "$SUBSCRIPT.sh" > "$FSCRIPT"
 
-chmod u+x "$FSCRIPT.sh"
-echo "Run script written to: $FSCRIPT"
+chmod u+x "$FSCRIPT"
+echo "Run script: $FSCRIPT"
 
-# run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
+# Job submission
+SUBMISSION_SCRIPT="$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh"
+SUBC=$("$SUBMISSION_SCRIPT")
 if [[ $SUBC == *"ERROR"* ]]; then
-    echo "$SUBC"
-    exit
+    echo "Error: reading submission type from $SUBMISSION_SCRIPT"
+    exit 1
 fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    echo
     echo "-------------------------------------------------------------------------------"
-    echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+    echo "Job submission using HTCondor - run the following script to submit jobs:"
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
-    echo
 elif [[ $SUBC == *sbatch* ]]; then
     $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *parallel* ]]; then
@@ -147,4 +137,3 @@ elif [[ $SUBC == *parallel* ]]; then
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
-echo "LOG/SUBMIT DIR: ${LOGDIR}"
