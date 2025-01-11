@@ -93,7 +93,6 @@ if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
     ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
 fi
 echo -e "Output files will be written to:\n $ODIR"
-[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 
 LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MSCW-RECID${RECID}-${UUID}"
 echo -e "Log files will be written to:\n $LOGDIR"

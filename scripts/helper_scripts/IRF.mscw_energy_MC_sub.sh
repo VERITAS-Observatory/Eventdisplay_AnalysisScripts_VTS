@@ -24,6 +24,7 @@ ODIR=OUTPUTDIR
 EFFAREACUTLIST=EEFFAREACUTLIST
 
 # output directory
+[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 OSUBDIR="$ODIR/MSCW_RECID${RECID}"
 if [ $DISPBDT -eq 1 ]; then
     OSUBDIR="${OSUBDIR}_DISP"
