@@ -117,6 +117,7 @@ echo "Cut list file: $CUTSLISTFILE"
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     # GrISU simulation parameters
+    SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
     NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
     WOBBLE_OFFSETS=( 0.5 0.00 0.25 0.75 1.00 1.25 1.50 1.75 2.00 )
@@ -126,7 +127,6 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     fi
 elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
-
     if [[ $ATMOS == "62" ]]; then
         ZENITH_ANGLES=( 00 30 50 )
     else
@@ -181,9 +181,9 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 300 )
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    NSB_LEVELS=( 300 )
+    ZENITH_ANGLES=( 20 )
+    WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
@@ -194,7 +194,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 200 )
+    NSB_LEVELS=( 200 )
     ZENITH_ANGLES=( 20 )
     WOBBLE_OFFSETS=( 0.5 )
     # IRF comparison
@@ -375,25 +375,17 @@ for VX in $EPOCH; do
                     ######################
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
-                       if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
-                       elif [[ ${SIMTYPE:0:13} = "CARE_June2020" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
-                       elif [[ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATM}/Zd${ZA}/
-                       elif [[ ${SIMTYPE} == "CARE_202404" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATM}/Zd${ZA}/
-                       elif [[ ${SIMTYPE:0:12} = "CARE_Jan2024" ]]; then
-                          OBSTYPE=${SIMTYPE:13}
-                          SIMDIR="${VERITAS_USER_DATA_DIR}/simpipe_test/data/ATM${ATM}/Zd${ZA}/MERGEVBF_${OBSTYPE}/"
+                       SIMDIRZA="$SIMDIR"
+                       if [[ ${SIMTYPE:0:13} = "CARE_June2020" ]] || [[ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]] || [[ ${SIMTYPE} == "CARE_202404" ]]; then
+                          SIMDIRZA="$SIMDIR/Zd${ZA}/"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
-                               $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
+                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
                                $SIMTYPE $ACUTS 1 $ANATYPE $UUID
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            $(dirname "$0")/IRF.compress_evndisp_MC.sh \
-                               $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
+                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
                                $SIMTYPE $ANATYPE $UUID
                        fi
                     ######################

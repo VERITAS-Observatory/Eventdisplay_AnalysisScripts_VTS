@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to analyse MC files with lookup tables
+# submit mscw_energy to analyse MC files with lookup tables
 
 # qsub parameters
 h_cpu=10:29:00; h_vmem=8000M; tmpdir_size=100G
@@ -10,7 +10,7 @@ EVNIRFVERSION="v4N"
 
 if [ $# -lt 8 ]; then
 echo "
-IRF generation: analyze simulation evndisp ROOT files using mscw_energy
+IRF generation: analyze simulation evndisp files using mscw_energy
 
 IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT] [cut list] [uuid]
 
@@ -31,7 +31,7 @@ required parameters:
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
 
-    <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
+    <sim type>              simulation type (e.g. GRISU, CARE_June1425)
 
 optional parameters:
 
