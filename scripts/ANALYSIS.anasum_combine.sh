@@ -28,7 +28,7 @@ optional parameters:
                             \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/;
                             default is ANASUM.runparameter)
 
-IMPORTANT! Run only after all ANALYSIS.anasum_parallel.sh jobs have finished!
+IMPORTANT! Run only after all ANALYSIS.anasum_parallel_from_runlist.sh jobs have finished!
 
 --------------------------------------------------------------------------------
 "

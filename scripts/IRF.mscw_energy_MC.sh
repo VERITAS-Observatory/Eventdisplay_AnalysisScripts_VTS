@@ -110,6 +110,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
     -e "s|ANALYSISTYPE|${ANALYSIS_TYPE}|" \
     -e "s|USEDISP|${DISPBDT}|" \
+    -e "s|VERSIONIRF|${IRFVERSION}|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \

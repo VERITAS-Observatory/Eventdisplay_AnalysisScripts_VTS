@@ -3,7 +3,7 @@
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    source $EVNDISPSYS/setObservatory.sh VTS
+    source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 set -e
 
@@ -14,6 +14,7 @@ ODIR=OUTDIR
 ONAME=OUTNAME
 RUNP=RUNPARAM
 RUNNUM=RUNNNNN
+IRFVERSION=VERSIONIRF
 # values used for simple run list
 CUTFILE=CCUTFILE
 BM=BBM
@@ -26,11 +27,13 @@ BACKGND=BBACKGND
 # default simulation types
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
-# SIMTYPE_DEFAULT_V6="CARE_June2020"
 SIMTYPE_DEFAULT_V6="CARE_24_20"
-# SIMTYPE_DEFAULT_V6redHV="CARE_RedHV"
-SIMTYPE_DEFAULT_V6redHV="CARE_RedHV_Feb2024"
-SIMTYPE_DEFAULT_V6UV="CARE_UV_2212"
+SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV_Feb2024"
+SIMTYPE_DEFAULT_V6_UV="CARE_UV_2212"
+if [[ $IRFVERSION == v490.* ]]; then
+    SIMTYPE_DEFAULT_V6="CARE_June2020"
+    SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV"
+fi
 
 INFILEPATH="$INDIR/$RUNNUM.mscw.root"
 OUTPUTDATAFILE="$ODIR/$ONAME.root"
@@ -107,13 +110,13 @@ prepare_irf_string()
             REPLACESIMTYPE=${SIMTYPE_DEFAULT_V5}
         elif [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsLowHV" ]]; then
             if [[ $RADTYPE == "0" ]]; then
-                REPLACESIMTYPE=${SIMTYPE_DEFAULT_V6redHV}
+                REPLACESIMTYPE=${SIMTYPE_DEFAULT_V6_REDHV}
             else
                 REPLACESIMTYPE=${SIMTYPE_DEFAULT_V6}
             fi
         elif [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
             if [[ $RADTYPE == "0" ]]; then
-                REPLACESIMTYPE=${SIMTYPE_DEFAULT_V6UV}
+                REPLACESIMTYPE=${SIMTYPE_DEFAULT_V6_UV}
             else
                 REPLACESIMTYPE=${SIMTYPE_DEFAULT_V6}
             fi

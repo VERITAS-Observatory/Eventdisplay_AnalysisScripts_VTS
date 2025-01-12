@@ -26,7 +26,7 @@ RUNL=${1}
 RUNTYPE=${2}
 IGNORETYPE="IGNOREACCEPTANCE"
 # set this to zero to force reprocessing
-SKIPIFPROCESSED="1"
+SKIPIFPROCESSED="0"
 
 # BDT preparation cuts
 if [[ ${RUNTYPE} == "PRECUTS" ]]; then
