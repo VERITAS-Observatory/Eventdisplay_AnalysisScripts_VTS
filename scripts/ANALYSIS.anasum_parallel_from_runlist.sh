@@ -179,11 +179,14 @@ else
     exit 1
 fi
 
-# Check that run list exists
+# Read runlist
 if [[ ! -f "$RUNLIST" ]]; then
     echo "Error, runlist $RUNLIST not found, exiting..."
     exit 1
 fi
+RUNS=$(cat "$RUNLIST")
+NRUNS=$(cat "$RUNLIST" | wc -l)
+echo "total number of runs to analyze: $NRUNS"
 
 # Check that run parameter file exists
 if [[ "$RUNP" == `basename $RUNP` ]]; then
@@ -197,6 +200,7 @@ fi
 # directory for run scripts
 DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.${CUTS}-${DATE}-$(uuidgen)"
+mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # output directory for anasum products
@@ -220,9 +224,6 @@ getNumberedDirectory()
     echo ${ODIR}
 }
 
-RUNS=`cat "$RUNLIST"`
-NRUNS=`cat "$RUNLIST" | wc -l `
-echo "total number of runs to analyze: $NRUNS"
 
 #########################################
 # loop over all files in files loop
@@ -266,6 +267,7 @@ for RUN in ${RUNS[@]}; do
         -e "s|DATADIR|$TMPINDIR|"        \
         -e "s|OUTDIR|$ODIR|"          \
         -e "s|OUTNAME|$RUN.anasum|"        \
+        -e "s|VERSIONIRF|${IRFVERSION}|" \
         -e "s|RUNNNNN|$RUN|"          \
         -e "s|BBM|$BM|" \
         -e "s|MBMPARAMS|$BMPARAMS|" \
