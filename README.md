@@ -56,7 +56,7 @@ Run the following steps for all analysis types (`AP`, `NN`):
 ./IRF.generalproduction.sh CARE_24_20 EVNDISP
 ```
 
-Results are stored in `$VERITAS_IRFPRODUCTION_DIR/v491/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`. For DESY productions, the evndisp files should be moved to `$VERITAS_IRFPRODUCTION_DIR/v4N/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`.
+Results are stored in `$VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`. For DESY productions, the evndisp files should be moved to `$VERITAS_IRFPRODUCTION_DIR/v4N/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`.
 
 ### MC Analysis - Lookup Table Filling
 
@@ -72,7 +72,7 @@ Then combine the tables with:
 ./IRF.generalproduction.sh CARE_24_20 COMBINETABLES
 ```
 
-Move the tables from `$VERITAS_IRFPRODUCTION_DIR/v491/${VERITAS_ANALYSIS_TYPE:0:2}/Tables` to `$VERITAS_EVNDISP_AUX_DIR/Tables`.
+Move the tables from `$VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/${VERITAS_ANALYSIS_TYPE:0:2}/Tables` to `$VERITAS_EVNDISP_AUX_DIR/Tables`.
 
 ### MC Analysis - DispBDT Angular Reconstruction Training
 
@@ -123,12 +123,12 @@ Cut optimization requires signal rates (from simulations) and background rates (
 **Important: This script is not working in combination with the usage of apptainers.**
 
 1. Generate effective areas for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS`.
-2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/ANALYSIS.anasum_allcuts.sh` with the `PRECUTS` option to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training). These files should be moved into e.g. `$VERITAS_IRFPRODUCTION_DIR/v491/AP/BDTtraining/BackgroundRates/V6/NTel2-Moderate` (adjust epoch and cut directory name).
+2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/ANALYSIS.anasum_allcuts.sh` with the `PRECUTS` option to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training). These files should be moved into e.g. `$VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/AP/BDTtraining/BackgroundRates/V6/NTel2-Moderate` (adjust epoch and cut directory name).
 
 Cut values are extracted by the optimization tool and written e.g., to
 
 ```console
-VERITAS_IRFPRODUCTION_DIR/v491/AP/BDTtraining/BackgroundRates/V6/Optimize-NTel2-Moderate/
+VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/AP/BDTtraining/BackgroundRates/V6/Optimize-NTel2-Moderate/
 ```
 
 Copy and paste those values into the files defining the gamma/hadron separation cuts in `$VERITAS_EVNDISP_AUX_DIR/GammaHadronCuts`.

@@ -16,6 +16,7 @@ ANATYPE=ANALYSISTYPE
 EPOCH="ARRAYEPOCH"
 ATM=ATMOSPHERE
 RECID="RECONSTRUCTIONID"
+IRFVERSION=VERSIONIRF
 SIMTYPE=SIMULATIONTYPE
 DISPBDT=USEDISP
 INDIR=INPUTDIR
@@ -77,9 +78,13 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
-    MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
-    MOPT="$MOPT -maxloss=0.40"
-    MOPT="$MOPT -use_evndisp_selected_images=0"
+    if [[ $IRFVERSION == v490.* ]]; then
+        MOPT="$MOPT -maxloss=0.20"
+    else
+        MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
+        MOPT="$MOPT -maxloss=0.40"
+        MOPT="$MOPT -use_evndisp_selected_images=0"
+    fi
     # MOPT="$MOPT -maxnevents=1000"
     if [[ ${SIMTYPE} == *"RedHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}_redHV/"
@@ -103,7 +108,9 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
     MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
-    MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
+    if [[ $IRFVERSION != v490.* ]]; then
+        MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
+    fi
     echo "DISP BDT options: $MOPT"
 fi
 

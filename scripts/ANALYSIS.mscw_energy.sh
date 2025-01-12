@@ -55,7 +55,7 @@ fi
 exec 5>&1
 
 # Parse command line arguments
-RLIST=$1
+RUNLIST=$1
 [[ "$2" ]] && ODIR=$2
 [[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp"
 [[ "$4" ]] && SKIP=$4 || SKIP=1
@@ -64,15 +64,14 @@ RLIST=$1
 DISPBDT="1"
 
 # Read runlist
-if [ ! -f "$RLIST" ] ; then
-    echo "Error, runlist $RLIST not found, exiting..."
+if [[ ! -f "$RUNLIST" ]]; then
+    echo "Error, runlist $RUNLIST not found, exiting..."
     exit 1
 fi
-FILES=`cat "$RLIST"`
+FILES=$(cat "$RUNLIST")
 
-NRUNS=`cat "$RLIST" | wc -l `
+NRUNS=$(cat "$RUNLIST" | wc -l)
 echo "total number of runs to analyze: $NRUNS"
-echo
 
 # make output directory if it doesn't exist
 mkdir -p $ODIR
