@@ -74,6 +74,8 @@ UUID=${11:-"${DATE}-$(uuidgen)"}
 declare -A PARTICLE_NAMES=( [1]="gamma" [2]="electron" [14]="proton" [402]="alpha" )
 PARTICLE_TYPE="${PARTICLE_NAMES[$PARTICLE]}"
 
+echo "IRF.evndisp_MC.sh for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (Analysis type: $ANALYSIS_TYPE)"
+
 if [[ -z $VERITAS_IRFPRODUCTION_DIR || -z $VERITAS_EVNDISP_AUX_DIR ]]; then
     echo "Error: environment variables VERITAS_IRFPRODUCTION_DIR or VERITAS_EVNDISP_AUX_DIR are not set."
     exit 1
