@@ -376,7 +376,7 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        SIMDIRZA="$SIMDIR"
-                       if [[ ${SIMTYPE:0:13} = "CARE_June2020" ]] || [[ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]] || [[ ${SIMTYPE} == "CARE_202404" ]]; then
+                       if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
