@@ -184,7 +184,7 @@ for V in $VBFNAME; do
        # RedHV runs need more space during the analysis (otherwise quota is exceeded)
        TMSF=$(echo "${FF%?}*10.0" | bc)
     elif [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-       # GRISU files are bzipped, simulated without and NSB, and need more space (factor of ~14)
+       # GRISU files are bzipped, simulated without NSB, and need more space (factor of ~14)
        TMSF=$(echo "${FF%?}*25.0" | bc)
     fi
     TMUNI=$(echo "${FF: -1}")
