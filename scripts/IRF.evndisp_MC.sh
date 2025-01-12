@@ -230,4 +230,3 @@ for V in $VBFNAME; do
         echo "$FSCRIPT &> $(basename $FSCRIPT .sh).log" >> "$LOGDIR/runscripts.dat"
     fi
 done
-echo "LOG/SUBMIT DIR: ${LOGDIR}"
