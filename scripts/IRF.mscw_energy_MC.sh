@@ -93,7 +93,7 @@ echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
 
 # run script
-SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.mscw_energy_MC_sub"
+SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
 FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-ID${RECID}-$DISPBDT.sh"
 rm -f "$FSCRIPT"
 sed -e "s|ZENITHANGLE|$ZA|" \
@@ -104,7 +104,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|RECONSTRUCTIONID|$RECID|" \
     -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
     -e "s|USEDISP|$DISPBDT|" \
-    -e "s|VERSIONIRF|$IRFVERSION|" \
+    -e "s|VERSIONIRF|$EVNIRFVERSION|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \

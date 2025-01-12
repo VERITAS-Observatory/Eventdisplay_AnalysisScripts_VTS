@@ -6,7 +6,7 @@
 h_cpu=13:29:00; h_vmem=8000M; tmpdir_size=20G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+IRFVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 8 ]; then
 echo "
@@ -34,7 +34,7 @@ required parameters:
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
 
-    <sim type>              simulation type (e.g. GRISU-SW6, CARE_June1425)
+    <sim type>              simulation type (e.g. GRISU, CARE_June1425)
 
 optional parameters:
 
@@ -56,92 +56,78 @@ if [ -z "$EVNDISP_APPTAINER" ]; then
 fi
 [[ $? != "0" ]] && exit 1
 
-# Parse command line arguments
 CUTSFILE="$1"
-EPOCH=$2
-ATM=$3
-ZA=$4
-WOBBLE=$5
-NOISE=$6
-RECID=$7
-SIMTYPE=$8
-[[ "$9" ]] && ANALYSIS_TYPE=$9 || ANALYSIS_TYPE=""
-[[ "${10}" ]] && DISPBDT=${10} || DISPBDT=0
-[[ "${11}" ]] && UUID=${11} || UUID=$(date +"%y%m%d")-$(uuidgen)
+EPOCH="$2"
+ATM="$3"
+ZA="$4"
+WOBBLE="$5"
+NOISE="$6"
+RECID="$7"
+SIMTYPE="$8"
+ANALYSIS_TYPE="${9:-}"
+DISPBDT="${10:-0}"
+UUID="${11:-$(date +"%y%m%d")-$(uuidgen)}"
 
-CUTS_NAME=`basename $CUTSFILE`
-CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-CUTS_NAME=${CUTS_NAME%%.dat}
+echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT)"
 
-# input directory containing mscw_energy_MC products
-if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/MSCW_RECID${RECID}"
-    if [[ ${DISPBDT} == "1" ]]; then
-        INDIR=${INDIR}_DISP
-    fi
+
+if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
+    echo "Error: IRF production directory not found: $VERITAS_IRFPRODUCTION_DIR"
+    exit 1
 fi
-# if [[ ! -d $INDIR ]]; then
-#    echo "Error, could not locate input directory. Locations searched: $INDIR"
-#    exit 1
-# fi
-echo "Input file directory: $INDIR"
-
-# Output file directory
-if [[ -n $VERITAS_IRFPRODUCTION_DIR ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
+# input directory containing mscw_energy products
+INDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/MSCW_RECID${RECID}"
+if [[ ${DISPBDT} == "1" ]]; then
+    INDIR=${INDIR}_DISP
 fi
-echo -e "Output files will be written to:\n $ODIR"
-[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
+# output and log directories
+ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
+LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-EFFAREA-RECID${RECID}-${UUID}"
+mkdir -p "$LOGDIR"
+echo "Input: $INDIR"
+echo "Output: $ODIR"
+echo "Logs: $LOGDIR"
 
-LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-EFFAREA-RECID${RECID}-${UUID}"
-echo -e "Log files will be written to:\n $LOGDIR"
-[[ ! -d "$LOGDIR" ]] && mkdir -p "$LOGDIR"
-
-#################################
 # template string containing the name of processed simulation root file
 MCFILE="${INDIR}/${ZA}deg_${WOBBLE}wob_NOISE${NOISE}.mscw.root"
-
 # effective area output file
 EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
-
-# Job submission script
+# name of cut
+CUTS_NAME=$(basename $CUTSFILE)
+CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
+CUTS_NAME=${CUTS_NAME%%.dat}
+echo "Cuts: $CUTSFILE $CUTS_NAME"
+echo "MC file: $MCFILE"
+echo "Eff area file: $EFFAREAFILE"
+# run script
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_parallel_sub"
-
-echo "Processing Zenith = $ZA, Wobble = $WOBBLE, Noise = $NOISE (DISP: $DISPBDT)"
-
-echo "CUTSFILE: $CUTSFILE"
-echo "ODIR: $ODIR"
-echo "MC DATAFILE $MCFILE"
-echo "EFFFILE $EFFAREAFILE"
-# make run script
-FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}"
+FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}.sh"
+rm -f "$FSCRIPT"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|DATAFILE|$MCFILE|" \
-    -e "s|GAMMACUTS|${CUTSFILE}|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|GAMMACUTS|${CUTSFILE}|" $SUBSCRIPT.sh > $FSCRIPT
 
-chmod u+x "$FSCRIPT.sh"
-echo "Run script written to: $FSCRIPT"
+chmod u+x "$FSCRIPT"
+echo "Run script: $FSCRIPT"
 
-# run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
+# Job submission
+SUBMISSION_SCRIPT="$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh"
+SUBC=$("$SUBMISSION_SCRIPT")
 if [[ $SUBC == *"ERROR"* ]]; then
-    echo "$SUBC"
-    exit
+    echo "Error: reading submission type from $SUBMISSION_SCRIPT"
+    exit 1
 fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    echo
     echo "-------------------------------------------------------------------------------"
-    echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+    echo "Job submission using HTCondor - run the following script to submit jobs:"
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
-    echo
 elif [[ $SUBC == *sbatch* ]]; then
     $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *parallel* ]]; then
@@ -149,4 +135,3 @@ elif [[ $SUBC == *parallel* ]]; then
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
-echo "LOG/SUBMIT DIR: ${LOGDIR}"

@@ -1,5 +1,7 @@
 #!/bin/bash
 # calculate effective areas
+#
+# v490: possible issue with "RERUN_STEREO_RECONSTRUCTION_3TEL" option
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
@@ -8,12 +10,14 @@ fi
 
 # parameters replaced by parent script using sed
 MCFILE=DATAFILE
+DISPBDT=USEDISP
 ODIR=OUTPUTDIR
 CUTSFILE="GAMMACUTS"
 EFFAREAFILE=EFFFILE
-DISPBDT=USEDISP
 REDO3TEL="15"
 
+# output directory
+[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then
     DDIR="$TMPDIR/EFFAREA/"
