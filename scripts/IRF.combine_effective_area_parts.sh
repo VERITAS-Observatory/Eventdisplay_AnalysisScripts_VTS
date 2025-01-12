@@ -2,7 +2,7 @@
 # combine effective area files into one
 
 # job requirements
-h_cpu=11:29:00; h_vmem=64000M; tmpdir_size=500G
+h_cpu=11:29:00; h_vmem=12000M; tmpdir_size=20G
 #
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -92,7 +92,7 @@ mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
 # run scripts and output are written into this directory
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EFFAREA/${ANALYSIS_TYPE}/submit-COMBINEEFFAREAS-${UUID}/"
+LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATMOS}_gamma/submit-COMBINEEFFAREAS-ID${RECID}-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
@@ -126,7 +126,7 @@ OFILE="effArea-${EDVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_combine_sub"
 
 # make run script
-FSCRIPT="$LOGDIR/COMB-EFFAREA-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-ID${RECID}-${DISPBDT}-$(date +%s%N)"
+FSCRIPT="$LOGDIR/COMB-EFFAREA-ID${RECID}-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-${DISPBDT}-$(date +%s%N)"
 rm -f $FSCRIPT.sh
 
 sed -e "s|INPUTFILES|$INFILES|" \
@@ -154,6 +154,8 @@ elif [[ $SUBC == *condor* ]]; then
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
     echo
+elif [[ $SUBC == *sbatch* ]]; then
+    $SUBC $FSCRIPT.sh
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then

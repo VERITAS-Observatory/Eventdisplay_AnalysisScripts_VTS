@@ -13,6 +13,7 @@ ONAME=BDTFILE
 RECID="0"
 TELTYPE="0"
 BDT=BDTTYPE
+TMVAO=TMVAOPTIONFILE
 
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then
@@ -57,9 +58,20 @@ mkdir -p ${ODIR}
 chmod g+w ${ODIR}
 rm -f "$ODIR/$ONAME*"
 
+# quality cuts
+QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
+
+# TMVA options
+TMVAOPTIONS="$(grep 'MVAOPTIONS' $TMVAO | awk '{print $3}')"
+
 # fraction of events to use for training,
 # remaining events will be used for testing
 TRAINTESTFRACTION=0.5
+
+# per event weight (use carefully)
+# EWEIGHT="sqrt(MCe0/0.5)"
+# EWEIGHT="10.*(1.+loss)"
+EWEIGHT=""
 
 $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
     "${DDIR}/${NLIST}" \
@@ -67,7 +79,12 @@ $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
     "$TRAINTESTFRACTION" \
     "$RECID" \
     "$TELTYPE" \
-    "${BDT}" > "$ODIR/$ONAME-$BDT.log"
+    "${BDT}" \
+    "${QUALITYCUTS}" \
+    "${TMVAOPTIONS}" \
+    "${EWEIGHT}" > "$ODIR/$ONAME-$BDT.log"
 
 cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
 cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/
+# (potentially large training file)
+cp -v ${DDIR}/BDTDisp.root ${ODIR}/

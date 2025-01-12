@@ -14,7 +14,7 @@ required parameters:
 
     <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
-                            CARE_RedHV_Feb2024, CARE_202404)
+                            CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -41,7 +41,8 @@ optional parameters:
     [cuts list file]        file containing one gamma/hadron cuts file per line
                             required for PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             COMBINEEFFECTIVEAREAS, ANATABLESEFFAREAS
-                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/IRF_GAMMAHADRONCUTS*\"
+                            Typically found in \"$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS*\"
+                            Full path.
 
     [sim directory]         directory containing simulation VBF files
 
@@ -97,6 +98,21 @@ elif [[ $ANATYPE = "CC"* ]]; then
 elif [[ $ANATYPE = "TS"* ]]; then
   ACUTS="EVNDISP.reconstruction.runparameter.TS.v4x"
 fi
+
+# default cut list files
+if [ -z "$CUTSLISTFILE" ]; then
+    if [[ ${SIMTYPE} == *"RedHV"* ]]; then
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_RedHV_${ANATYPE}.dat"
+    elif [[ ${SIMTYPE} == *"UV"* ]]; then
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_UV_${ANATYPE}.dat"
+    elif [[ ${IRFTYPE} == *"PRESELECT"* ]]; then
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_PRESELECTION_${ANATYPE}.dat"
+    else
+        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_${ANATYPE}.dat"
+    fi
+fi
+
+echo "CUT LIST FILE: $CUTSLISTFILE"
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
@@ -168,7 +184,7 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     # NSB_LEVELS=( 300 )
     # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" == "CARE_202404" ]]; then
+elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
@@ -178,9 +194,15 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 300 )
+    # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSET=( 0.5 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # IRF comparison
+    # ZENITH_ANGLES=( 20 40 50 60 65 )
+    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
+    # NSB_LEVELS=( 200 )
+    ######################################
+    # TRAINMVANGRES production
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
@@ -198,6 +220,8 @@ fi
 echo "Zenith Angles: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
 echo "Wobble offsets: ${WOBBLE_OFFSETS}"
+
+
 
 # read cut list file
 read_cutlist()
@@ -361,7 +385,7 @@ for VX in $EPOCH; do
                              $TFILID $CUTS $VX $ATM $ZA \
                              "${WOBBLE_OFFSETS}" "${NOISE}" \
                              $ID $SIMTYPE $ANATYPE \
-                             $DISPBDT $UUID ${EDVERSION}
+                             $DISPBDT $UUID
                       done
                    done
                    continue
@@ -409,7 +433,7 @@ for VX in $EPOCH; do
                             TFILID=$TFIL$ANATYPE
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID ${EDVERSION}
+                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID
 			            done #recID
                     ######################
                     # analyse effective areas

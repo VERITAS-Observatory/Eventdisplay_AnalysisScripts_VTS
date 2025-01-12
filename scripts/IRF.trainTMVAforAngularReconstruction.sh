@@ -2,7 +2,7 @@
 # submit TMVA training for angular reconstruction
 
 # qsub parameters
-h_cpu=47:29:00; h_vmem=8000M; tmpdir_size=100G
+h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -78,6 +78,9 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
+# TMVA option file
+TMVAOPTIONFILE="${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/TMVA.BDTDisp.runparameter"
+
 # run scripts and output are written into this directory
 DATE=`date +"%y%m%d"`
 LOGDIR="${VERITAS_USER_LOG_DIR}/$DATE/${ANALYSIS_TYPE}/TMVAAngRes-${EPOCH}-ATM${ATM}-${UUID}"
@@ -130,6 +133,7 @@ do
         -e "s|EVNLIST|$EVNLIST|" \
         -e "s|VVERSION|$EDVERSION|" \
         -e "s|BDTTYPE|$disp|" \
+        -e "s|TMVAOPTIONFILE|$TMVAOPTIONFILE|" \
         -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"

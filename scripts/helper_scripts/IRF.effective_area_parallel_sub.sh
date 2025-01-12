@@ -9,7 +9,7 @@ fi
 # parameters replaced by parent script using sed
 MCFILE=DATAFILE
 ODIR=OUTPUTDIR
-CUTSLIST="GAMMACUTS"
+CUTSFILE="GAMMACUTS"
 EFFAREAFILE=EFFFILE
 DISPBDT=USEDISP
 
@@ -50,63 +50,59 @@ cp -f "$MCFILE" "$DDIR"/
 MCFILE=`basename $MCFILE`
 MCFILE=${DDIR}/${MCFILE}
 
-# loop over all cuts
-for CUTSFILE in $CUTSLIST; do
+# Check that cuts file exists
+CUTSFILE=${CUTSFILE%%.dat}
+CUTS_NAME=`basename $CUTSFILE`
+CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
+if [[ "$CUTSFILE" == `basename $CUTSFILE` ]]; then
+    CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
+else
+    CUTSFILE="$CUTSFILE.dat"
+fi
+cp -f "$CUTSFILE" "$DDIR"/
+if [[ ! -f "$CUTSFILE" ]]; then
+    echo "Error, gamma/hadron cuts file not found, exiting..."
+    exit 1
+fi
 
-    # Check that cuts file exists
-    CUTSFILE=${CUTSFILE%%.dat}
-    CUTS_NAME=`basename $CUTSFILE`
-    CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-    if [[ "$CUTSFILE" == `basename $CUTSFILE` ]]; then
-        CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
-    else
-        CUTSFILE="$CUTSFILE.dat"
-    fi
-    cp -f "$CUTSFILE" "$DDIR"/
-    if [[ ! -f "$CUTSFILE" ]]; then
-        echo "Error, gamma/hadron cuts file not found, exiting..."
-        exit 1
-    fi
+OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
+if [[ $DISPBDT == "1" ]]; then
+    OSUBDIR="${OSUBDIR}_DISP"
+fi
+echo -e "Output files will be written to:\n $OSUBDIR"
+mkdir -p $OSUBDIR
 
-    OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
-    if [[ $DISPBDT == "1" ]]; then
-        OSUBDIR="${OSUBDIR}_DISP"
-    fi
-    echo -e "Output files will be written to:\n $OSUBDIR"
-    mkdir -p $OSUBDIR
+# parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
+PARAMFILE="
+* FILLINGMODE 0
+* ENERGYRECONSTRUCTIONMETHOD 1
+* ENERGYAXISBINS 60
+* ENERGYAXISBINHISTOS 30
+* EBIASBINHISTOS 75
+* ANGULARRESOLUTIONBINHISTOS 40
+* RESPONSEMATRICESEBINS 200
+* AZIMUTHBINS 1
+* FILLMONTECARLOHISTOS 0
+* ENERGYSPECTRUMINDEX 20 1.6 0.2
+* FILLMONTECARLOHISTOS 0
+* CUTFILE $DDIR/$(basename $CUTSFILE)
+ IGNOREFRACTIONOFEVENTS 0.5
+* SIMULATIONFILE_DATA $MCFILE"
 
-    # parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
-    PARAMFILE="
-    * FILLINGMODE 0
-    * ENERGYRECONSTRUCTIONMETHOD 1
-    * ENERGYAXISBINS 60
-    * ENERGYAXISBINHISTOS 30
-    * EBIASBINHISTOS 75
-    * ANGULARRESOLUTIONBINHISTOS 40
-    * RESPONSEMATRICESEBINS 200
-    * AZIMUTHBINS 1
-    * FILLMONTECARLOHISTOS 0
-    * ENERGYSPECTRUMINDEX 20 1.6 0.2
-    * FILLMONTECARLOHISTOS 0
-    * CUTFILE $DDIR/$(basename $CUTSFILE)
-     IGNOREFRACTIONOFEVENTS 0.5
-    * SIMULATIONFILE_DATA $MCFILE"
+# create makeEffectiveArea parameter file
+EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
+rm -f "$DDIR/$EAPARAMS.dat"
+eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
 
-    # create makeEffectiveArea parameter file
-    EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
-    rm -f "$DDIR/$EAPARAMS.dat"
-    eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+# calculate effective areas
+rm -f $OSUBDIR/$OFILE.root
+$EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
-    # calculate effective areas
-    rm -f $OSUBDIR/$OFILE.root
-    $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
-
-    echo "Filling log file into root file"
-    echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
-    cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-    $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
-    rm -f $OSUBDIR/$EAPARAMS.log
-    cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
-    chmod -R g+w $OSUBDIR
-    chmod g+w $OSUBDIR/$EAPARAMS.root
-done
+echo "Filling log file into root file"
+echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
+$EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
+rm -f $OSUBDIR/$EAPARAMS.log
+cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
+chmod -R g+w $OSUBDIR
+chmod g+w $OSUBDIR/$EAPARAMS.root

@@ -16,11 +16,12 @@ mkdir -p ${DDIR}
 mkdir -p $(dirname "$OUTFILE")
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
-    TEMPDIR=${TMPDIR}/MSCWDISP-$(uuidgen)
+    TEMPDIR=${TMPDIR}/ANASUM-$(uuidgen)
 else
-    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
+    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/ANASUM-$(uuidgen)"
 fi
 mkdir -p $TEMPDIR
+echo "TEMPDIR: $TEMPDIR"
 
 getNumberedDirectory()
 {
@@ -33,6 +34,11 @@ getNumberedDirectory()
     fi
     echo ${ODIR}
 }
+
+# copy file list, runparameter and time masks file to tmp disk
+cp -v "$RUNLIST" "$TEMPDIR"
+cp -v "$RUNP" "$TEMPDIR"
+cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
 
 OUTPUTDATAFILE="$OUTFILE"
 OUTPUTLOGFILE="$OUTFILE.log"
@@ -56,8 +62,18 @@ for R in $RUNS; do
 done
 if [[ $(wc -l < "${OUTPUTLOGFILE}") -ne 0 ]]; then
     echo "Not all runs found on disk"
+    cat ${OUTPUTLOGFILE}
     echo "exiting..."
     exit
+fi
+
+# determine if this is a short or long run list
+# (use VERSION string to identify long run list)
+NV=$(grep -c "VERSION" ${RUNLIST})
+if [ $NV -eq 0 ]; then
+    RUNLISTSTRING="-k"
+else
+    RUNLISTSTRING="-l"
 fi
 
 # explicit binding for apptainers
@@ -73,18 +89,10 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     DDIR="/opt/DDIR/"
+    TEMPDIR="/opt/DDIR/"
     echo "APPTAINER DDIR: $DDIR"
     OUTPUTDATAFILE="/opt/ODIR/$(basename $OUTFILE)"
     echo "APPTAINER ODIR: $OUTPUTDATAFILE"
-fi
-
-# determine if this is a short or long run list
-# (use VERSION string to identify long run list)
-NV=$(grep -c "VERSION" ${RUNLIST})
-if [ $NV -eq 0 ]; then
-    RUNLISTSTRING="-k"
-else
-    RUNLISTSTRING="-l"
 fi
 
 inspect_executables()
@@ -95,18 +103,21 @@ inspect_executables()
         ls -l ${EVNDISPSYS}/bin/anasum
     fi
 }
-# copy file list, runparameter and time masks file to tmp disk
-cp -v "$RUNLIST" "$TEMPDIR"
-RUNLIST="${TEMPDIR}/$(basename $RUNLIST)"
-cp -v "$RUNP" "$TEMPDIR"
-cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
+echo "TEMPDIR: ${TEMPDIR}"
+RUNLIST="${TEMPDIR}/$(basename "$RUNLIST")"
 RUNP="${TEMPDIR}/$(basename $RUNP)"
-cat "$RUNLIST"
+
+echo "RUNLISTSTRING ${RUNLISTSTRING}"
+echo "RUNLIST ${RUNLIST}"
+echo "DDIR ${DDIR}"
+echo "RUNP ${RUNP}"
+echo "OUTPUTDATAFILE ${OUTPUTDATAFILE}"
+echo "OUTPUTLOGFILE ${OUTPUTLOGFILE}"
 
 $EVNDISPSYS/bin/anasum \
     -i 1 \
     ${RUNLISTSTRING} ${RUNLIST} \
-    -d ${DDIR} \
+    -d ${TEMPDIR} \
     -f ${RUNP} \
     -o ${OUTPUTDATAFILE}.root 2>&1 | tee ${OUTPUTLOGFILE}
 

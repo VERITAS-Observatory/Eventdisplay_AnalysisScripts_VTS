@@ -32,8 +32,6 @@ optional parameters:
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
 
-    [simulation type]       e.g. CARE_June2020 (this is the default)
-
     [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
 
 
@@ -106,32 +104,32 @@ getNumberedDirectory()
 
 #########################################
 # loop over all files in files loop
-for AFILE in $FILES
+for RUNN in $FILES
 do
-    echo "Now analysing run $AFILE"
-    BFILE="${INPUTDIR%/}/$AFILE.root"
+    echo "Now analysing run $RUNN"
+    BFILE="${INPUTDIR%/}/$RUNN.root"
 
     # check if file is on disk
     if [[ $SKIP == "1" ]]; then
         TMPDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
         if [[ -d "$TMPDIR" ]]; then
-            TMPMDIR=$(getNumberedDirectory $AFILE "$TMPDIR")
-            if [ -e "$TMPMDIR/$AFILE.mscw.root" ]; then
-                echo "RUN $AFILE already processed; skipping"
+            TMPMDIR=$(getNumberedDirectory $RUNN "$TMPDIR")
+            if [ -e "$TMPMDIR/$RUNN.mscw.root" ]; then
+                echo "RUN $RUNN already processed; skipping (FOUND IN $TMPMDIR/$RUNN.mscw.root)"
                 continue
             fi
         fi
     fi
-    echo "Processing $AFILE"
+    echo "Processing $RUNN $BFILE"
 
     # EVNDISP file
     if [ ! -e "$BFILE" ]; then
-        TMPINDIR=$(getNumberedDirectory $AFILE ${INPUTDIR})
-        if [ ! -e "$TMPINDIR/$AFILE.root" ]; then
+        TMPINDIR=$(getNumberedDirectory $RUNN ${INPUTDIR})
+        if [ ! -e "$TMPINDIR/$RUNN.root" ]; then
             echo "ERR: File $BFILE does not exist" >> mscw.errors.log
             continue
         fi
-        BFILE="$TMPINDIR/$AFILE.root"
+        BFILE="$TMPINDIR/$RUNN.root"
     fi
     echo "Processing $BFILE (ID=$ID)"
 
@@ -139,10 +137,10 @@ do
     # avoid reaching limits of number of files per
     # directory (e.g., on afs)
     if [[ ${NRUNS} -gt 1000 ]]; then
-        TMPLOGDIR=${LOGDIR}/MSCW_${AFILE:0:1}
+        TMPLOGDIR=${LOGDIR}/MSCW_${RUNN:0:1}
         mkdir -p ${TMPLOGDIR}
     fi
-    FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$AFILE"
+    FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$RUNN"
     rm -f $FSCRIPT.sh
 
     sed -e "s|RECONSTRUCTIONID|$ID|" \
@@ -166,11 +164,11 @@ do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
 
-        echo "RUN $AFILE JOBID $JOBID"
-        echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
+        echo "RUN $RUNN JOBID $JOBID"
+        echo "RUN $RUNN SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
-            echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
-            echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
+            echo "RUN $RUNN OLOG $FSCRIPT.sh.o$JOBID"
+            echo "RUN $RUNN ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
@@ -184,7 +182,7 @@ do
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
-        echo "RUN $AFILE OLOG $FSCRIPT.log"
+        echo "RUN $RUNN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
         "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
@@ -194,3 +192,5 @@ done
 if [[ $SUBC == *parallel* ]]; then
     cat $TMPLOGDIR/runscripts.$TIMETAG.dat | $SUBC
 fi
+
+echo "LOG/SUBMIT DIR: ${TMPLOGDIR}"

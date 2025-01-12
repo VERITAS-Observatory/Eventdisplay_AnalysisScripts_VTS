@@ -67,13 +67,15 @@ mkdir -p $LOGDIR
 
 # EffAreaFile
 if [[ $CUTTYPE == *"Moderate"* ]]; then
-    EFFFILE=effArea-v490-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Moderate-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
+    EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Moderate-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
 elif [[ $CUTTYPE == *"SuperSoft"* ]]; then
-    EFFFILE=effArea-v490-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
+    EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-SuperSoft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
 elif [[ $CUTTYPE == *"Soft"* ]]; then
-    EFFFILE=effArea-v490-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Soft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
-elif [[ $CUTTYPE == *"Hard"* ]]; then
-    EFFFILE=effArea-v490-auxv01-${SIMTYPE}-Cut-NTel3-PointSource-Hard-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
+    EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Soft-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
+elif [[ $CUTTYPE == NTel3*"Hard"* ]]; then
+    EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel3-PointSource-Hard-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
+elif [[ $CUTTYPE == NTel2*"Hard"* ]]; then
+    EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Hard-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
 fi
 
 if [[ ! -e $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFFILE} ]]; then

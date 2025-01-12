@@ -1,9 +1,9 @@
 #!/bin/bash
-# script to analyse files with lookup tables
+# analyse MC files with lookup tables
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    source $EVNDISPSYS/setObservatory.sh VTS
+    source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 set -e
 
@@ -17,8 +17,10 @@ IRFVERSION=VERSIONIRF
 # default simulation types
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
-SIMTYPE_DEFAULT_V6="CARE_June2020"
-SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV"
+# SIMTYPE_DEFAULT_V6="CARE_June2020"
+SIMTYPE_DEFAULT_V6="CARE_24_20"
+# SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV"
+SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV_Feb2024"
 SIMTYPE_DEFAULT_V6_UV="CARE_UV_2212"
 
 ANATYPE="AP"
@@ -30,13 +32,17 @@ INDIR=`dirname $INFILE`
 BFILE=`basename $INFILE .root`
 INFILEPATH="$INFILE"
 
-# temporary (scratch) directory
-if [[ -n $TMPDIR ]]; then
-    TEMPDIR=${TMPDIR}/MSCWDISP-$(uuidgen)
+# temporary directory
+if [[ -n "$TMPDIR" ]]; then
+    DDIR="${TMPDIR}/MSCWDISP-$(uuidgen)"
 else
-    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
+    DDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
 fi
-mkdir -p $TEMPDIR
+mkdir -p "$DDIR"
+echo "Temporary directory: $DDIR"
+
+# copy evndisp file to TMPDIR (as it might be a linked file)
+cp -v "$INFILE" "$DDIR"/"$BFILE".root
 
 # explicit binding for apptainers
 if [ -n "$EVNDISP_APPTAINER" ]; then
@@ -45,12 +51,12 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
     APPTAINER_MOUNT+=" --bind ${INDIR}:/opt/INDIR "
-    APPTAINER_MOUNT+=" --bind ${TEMPDIR}:/opt/TEMPDIR"
+    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
-    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,TEMPDIR=/opt/TEMPDIR,LOGDIR=/opt/ODIR"
+    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,DDIR=/opt/DDIR,LOGDIR=/opt/ODIR"
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
-    INFILEPATH="/opt/INDIR/$BFILE.root"
+    INFILEPATH="/opt/DDIR/$BFILE.root"
     echo "APPTAINER INFILEPATH: $INFILEPATH"
 fi
 
@@ -139,32 +145,29 @@ fi
 
 MSCWLOGFILE="$ODIR/$BFILE.mscw.log"
 rm -f ${MSCWLOGFILE}
-cp -f -v $INFILE $TEMPDIR
 
 MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
 echo "MSCWDATAFILE $MSCWDATAFILE"
 
+# mscw_energy command line options
 MOPT=""
-if [[ DISPBDT != "0" ]]; then
-    MOPT="-redo_stereo_reconstruction"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+# dispBDT reconstruction
+if [ $DISPBDT -eq 1 ]; then
+    MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
-    # note: loss cuts needs to be equivalent to that used in training
-    MOPT="$MOPT -maxloss=0.2"
-    # MOPT="$MOPT -minwidth=0.02"
-    MOPT="$MOPT -minfui=0.2"
+    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
+    MOPT="$MOPT -maxloss=0.40"
+    MOPT="$MOPT -use_evndisp_selected_images=0"
+    # MOPT="$MOPT -minfui=0.2"
     # MOPT="$MOPT -minfitstat=3"
-    # looser cuts in mscw
-    # MOPT="$MOPT -maxloss=0.5"
-    # MOPT="$MOPT -use_evndisp_selected_images=0"
-    # # use interset
-    # MOPT="$MOPT -disp_use_intersect"
-    # unzip xml files
-    cp -v -f ${DISPDIR}/*.xml.gz ${TEMPDIR}/
-    gunzip -v ${TEMPDIR}/*.xml.gz
-    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${TEMPDIR}/BDTDisp_BDT_"
-    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${TEMPDIR}/BDTDispError_BDT_"
-    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${TEMPDIR}/BDTDispSign_BDT_"
+    # unzip XML files into DDIR
+    cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
+    gunzip -v ${DDIR}/*xml.gz
+    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
+    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
+    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
+    MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
     echo "DISP BDT options: $MOPT"
 fi
 
@@ -173,7 +176,7 @@ $EVNDISPSYS/bin/mscw_energy         \
     -updateEpoch=1 \
     -tablefile $TABFILE             \
     -arrayrecid=$RECID              \
-    -inputfile $TEMPDIR/$BFILE.root \
+    -inputfile $DDIR/$BFILE.root \
     -writeReconstructedEventsOnly=1 &> ${MSCWLOGFILE}
 
 echo "$(inspect_executables)" >> ${MSCWLOGFILE}
@@ -189,21 +192,19 @@ echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}" >> ${MSCWLOGFILE}
 
 # move logfiles into output file
 if [[ -e ${MSCWLOGFILE} ]]; then
-  cp -v ${MSCWLOGFILE} $TEMPDIR/
-  LLF="${TEMPDIR}/$(basename ${MSCWLOGFILE})"
-  $EVNDISPSYS/bin/logFile mscwTableLog "$TEMPDIR/$BFILE.mscw.root" "$LLF"
+  cp -v ${MSCWLOGFILE} $DDIR/
+  LLF="${DDIR}/$(basename ${MSCWLOGFILE})"
+  $EVNDISPSYS/bin/logFile mscwTableLog "$DDIR/$BFILE.mscw.root" "$LLF"
 fi
 
 # move output file from scratch and clean up
-cp -f -v $TEMPDIR/$BFILE.mscw.root $MSCWDATAFILE
-rm -f $TEMPDIR/$BFILE.mscw.root
-rm -f $TEMPDIR/$BFILE.root
+cp -f -v $DDIR/$BFILE.mscw.root $MSCWDATAFILE
+rm -f $DDIR/$BFILE.mscw.root
+rm -f $DDIR/$BFILE.root
 
 # write info to log
 echo "RUN$BFILE MSCWLOG ${MSCWLOGFILE}"
 echo "RUN$BFILE MSCWDATA $MSCWDATAFILE"
 
-# remove files in TEMPDIR
-rm -rf $TEMPDIR
-
-exit
+# remove files in DDIR
+rm -rf $DDIR
