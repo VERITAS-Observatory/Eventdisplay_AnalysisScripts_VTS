@@ -71,7 +71,7 @@ unpack_db_textdirectory()
         SRUN=${RRUN:0:2}
     fi
     DBRUNFIL="${DBTEXTDIRECTORY}/${SRUN}/${RRUN}.tar.gz"
-    echo "DBTEXT FILE for $RRUN $DBRUNFIL" >&2
+    echo "DBTEXT FILE for $RRUN $DBRUNFIL"
     if [[ -e ${DBRUNFIL} ]]; then
         mkdir -p ${TMP_DBTEXTDIRECTORY}/${SRUN}
         tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/${SRUN}/
