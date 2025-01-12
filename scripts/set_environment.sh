@@ -12,6 +12,7 @@ fi
 export VERITAS_ANALYSIS_TYPE="${1}"
 PROCESS="${2}"
 EVNDISPVERSION="v490.7"
+EVNDISPMINORVERSION="v490.7.1"
 
 # Test for allowed processing types
 allowed_processing_types=("apptainer" "apptainer-dev" "al9")
@@ -40,7 +41,7 @@ GROUPDATADDIR="/lustre/fs24/group/veritas"
 # data directory (VBF files)
 export VERITAS_DATA_DIR=${GROUPDATADDIR}
 # general auxiliary directory
-export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPVERSION}
+export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPMINORVERSION}
 # pre-processed data products
 export VERITAS_PREPROCESSED_DATA_DIR=${GROUPDATADDIR}/shared/processed_data_${EVNDISPVERSION}/
 # general IRF production directory
@@ -57,11 +58,8 @@ export EVNDISPSCRIPTS="$(pwd)"
 export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3/
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
-    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.7-preprocessing-docker-v2.sif"
-    if [[ $PROCESS == "apptainer-dev" ]]; then
-        export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.9-dev4.sif"
-        export VERITAS_EVNDISP_AUX_DIR="${VERITAS_EVNDISP_AUX_DIR}-dev"
-    fi
+    # export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.7-preprocessing-docker-v2.sif"
+    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_v490.7.sif"
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     # export EVNDISPSYS="apptainer exec --no-mount /etc/ssh/ssh_known_hosts2 ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
     export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
