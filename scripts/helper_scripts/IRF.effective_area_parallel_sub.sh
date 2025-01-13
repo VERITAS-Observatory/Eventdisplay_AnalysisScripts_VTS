@@ -1,5 +1,7 @@
 #!/bin/bash
 # calculate effective areas
+#
+# v490: possible issue with "RERUN_STEREO_RECONSTRUCTION_3TEL" option
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
@@ -8,11 +10,14 @@ fi
 
 # parameters replaced by parent script using sed
 MCFILE=DATAFILE
+DISPBDT=USEDISP
 ODIR=OUTPUTDIR
 CUTSFILE="GAMMACUTS"
 EFFAREAFILE=EFFFILE
-DISPBDT=USEDISP
+REDO3TEL="15"
 
+# output directory
+[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then
     DDIR="$TMPDIR/EFFAREA/"
@@ -75,7 +80,7 @@ mkdir -p $OSUBDIR
 # parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
 PARAMFILE="
 * FILLINGMODE 0
-* ENERGYRECONSTRUCTIONMETHOD 1
+* ENERGYRECONSTRUCTIONMETHOD 0
 * ENERGYAXISBINS 60
 * ENERGYAXISBINHISTOS 30
 * EBIASBINHISTOS 75
@@ -84,7 +89,7 @@ PARAMFILE="
 * AZIMUTHBINS 1
 * FILLMONTECARLOHISTOS 0
 * ENERGYSPECTRUMINDEX 20 1.6 0.2
-* FILLMONTECARLOHISTOS 0
+* RERUN_STEREO_RECONSTRUCTION_3TEL $REDO3TEL
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $MCFILE"

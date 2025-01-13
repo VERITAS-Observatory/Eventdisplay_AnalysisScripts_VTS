@@ -99,6 +99,8 @@ fi
 VPM=1
 # directory with DB text
 DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/shared/DBTEXT"
+# hardwired alternative data directory
+VERITAS_DATA_DIR_2="/lustre/fs23/group/veritas/data"
 
 echo "Using runparameter file $ACUTS ($EDVERSION, $VERITAS_ANALYSIS_TYPE)"
 

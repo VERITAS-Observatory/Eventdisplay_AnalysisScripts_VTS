@@ -42,7 +42,7 @@ inspect_executables()
 # combine effective areas (reduced file size with TH2F replaced by arrays)
 mkdir -p $ODIR
 chmod -R g+w $ODIR
-ls -1 $EAFILES | sed "s|.*/|$DDIR|" > "$ODIR"/"$OFILE".list
+ls -1 $EAFILES > "$ODIR"/"$OFILE".list
 echo "Found $(cat $ODIR/$OFILE.list | wc -l) input files to merge"
 echo "File list: $ODIR/$OFILE.list"
 
