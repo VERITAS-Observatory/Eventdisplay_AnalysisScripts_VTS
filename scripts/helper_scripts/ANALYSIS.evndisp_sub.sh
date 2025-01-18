@@ -169,6 +169,14 @@ fi
 
 echo "CVBF FILE FOUND - data dir: $VERITAS_DATA_DIR $VERITAS_DATA_DIR_2"
 
+# restrict telescope combination to be analyzed:
+if [[ $TELTOANA == "1234" ]]; then
+	echo "Telescope combination saved in the DB is analyzed (default)"
+else
+	OPT+=( -teltoana=$TELTOANA )
+	echo "Analyzed telescope configuration: $TELTOANA "
+fi
+
 #########################################
 # pedestal calculation
 if [[ $CALIB == "1" || $CALIB == "2" || $CALIB == "4" || $CALIB == "5" ]]; then
@@ -192,16 +200,6 @@ else
 ## read gain and toffsets from VOFFLINE DB (default)
 	OPT+=( "-readCalibDB" )
 fi
-
-# restrict telescope combination to be analyzed:
-if [[ $TELTOANA == "1234" ]]; then
-	echo "Telescope combination saved in the DB is analyzed (default)"
-else
-	OPT+=( -teltoana=$TELTOANA )
-	echo "Analyzed telescope configuration: $TELTOANA "
-fi
-
-# None of the following command line options is needed for the standard analysis!
 
 ## Read gain and toff from VOFFLINE DB requiring a special version of analysis
 # OPT+=( -readCalibDB version_number )
