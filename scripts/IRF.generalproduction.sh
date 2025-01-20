@@ -7,7 +7,7 @@
 if [ $# -lt 2 ]; then
 # begin help message
 echo "
-IRF general production for IRFs for all epochs
+IRF production for all epochs
 
 ./IRF.generalproduction.sh <sim type> <IRF type>
 
