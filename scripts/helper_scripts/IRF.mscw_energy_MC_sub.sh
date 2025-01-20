@@ -78,7 +78,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
-    if [[ $IRFVERSION == v490.* ]]; then
+    if [[ $IRFVERSION == v490* ]]; then
         MOPT="$MOPT -maxloss=0.20"
     else
         MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
@@ -108,7 +108,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
     MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
-    if [[ $IRFVERSION != v490.* ]]; then
+    if [[ $IRFVERSION != v490* ]]; then
         MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
     fi
     echo "DISP BDT options: $MOPT"
