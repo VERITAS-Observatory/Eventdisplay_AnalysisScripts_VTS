@@ -194,9 +194,9 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 200 )
-    ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 00 20 30 35 40 45 )
+    # WOBBLE_OFFSETS=( 0.5 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
     # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
