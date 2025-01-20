@@ -6,6 +6,8 @@ echo "
     Check log files for a given analysis type for errors and segmentation fault.
     Move error files into a error directory.
     Recover files from error directory for files successfully processed.
+
+    grep -i error ./mscw/*.log | grep -v BDTDispError | grep -v "BDT disp" | grep -v weighting
 "
     exit
 fi
