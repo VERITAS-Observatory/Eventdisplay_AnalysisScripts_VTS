@@ -181,9 +181,9 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    NSB_LEVELS=( 300 )
-    ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 300 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
