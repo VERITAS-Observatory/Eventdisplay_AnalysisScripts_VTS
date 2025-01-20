@@ -112,11 +112,12 @@ if [ -z "$CUTSLISTFILE" ]; then
     fi
 fi
 
-echo "CUT LIST FILE: $CUTSLISTFILE"
+echo "Cut list file: $CUTSLISTFILE"
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     # GrISU simulation parameters
+    SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
     NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
     WOBBLE_OFFSETS=( 0.5 0.00 0.25 0.75 1.00 1.25 1.50 1.75 2.00 )
@@ -126,7 +127,6 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     fi
 elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
-
     if [[ $ATMOS == "62" ]]; then
         ZENITH_ANGLES=( 00 30 50 )
     else
@@ -195,7 +195,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     ######################################
     # TEST
     # NSB_LEVELS=( 200 )
-    # ZENITH_ANGLES=( 20 )
+    # ZENITH_ANGLES=( 00 20 30 35 40 45 )
     # WOBBLE_OFFSETS=( 0.5 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
@@ -217,10 +217,9 @@ else
     echo "Invalid simulation type: ${SIMTYPE}. Exiting..."
     exit 1
 fi
-echo "Zenith Angles: ${ZENITH_ANGLES}"
+echo "Zenith angle bins: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
 echo "Wobble offsets: ${WOBBLE_OFFSETS}"
-
 
 
 # read cut list file
@@ -252,6 +251,7 @@ fi
 CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
 CUTTYPES=${CUTTYPES//$'\n'/}
 
+echo "===== Start submission ====="
 
 ############################################################
 # loop over complete parameter space and submit production
@@ -370,50 +370,22 @@ for VX in $EPOCH; do
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
-                #######################
-                # analyse tables and generate effective areas
-                if [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
-                   for ID in $RECID; do
-                      TFIL="${TABLECOM}"
-                      # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
-                      TFILID=$TFIL$ANATYPE
-                      CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-                      echo "CUTLIST $CUTLIST"
-                      for CUTS in ${CUTLIST[@]}; do
-                         echo "Generate effective areas $CUTS"
-                         $(dirname "$0")/IRF.generate_mscw_effective_area_parts.sh \
-                             $TFILID $CUTS $VX $ATM $ZA \
-                             "${WOBBLE_OFFSETS}" "${NOISE}" \
-                             $ID $SIMTYPE $ANATYPE \
-                             $DISPBDT $UUID
-                      done
-                   done
-                   continue
-                fi
                 for WOBBLE in ${WOBBLE_OFFSETS[@]}; do
-                    echo "Now processing epoch $VX, atmo $ATM, zenith angle $ZA, wobble $WOBBLE, noise level $NOISE"
+                    echo "Preparing epoch $VX, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE"
                     ######################
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
-                       if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
-                       elif [[ ${SIMTYPE:0:13} = "CARE_June2020" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATM}/Zd${ZA}/
-                       elif [[ ${SIMTYPE} == "CARE_RedHV_Feb2024" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATM}/Zd${ZA}/
-                       elif [[ ${SIMTYPE} == "CARE_202404" ]]; then
-                          SIMDIR=${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATM}/Zd${ZA}/
-                       elif [[ ${SIMTYPE:0:12} = "CARE_Jan2024" ]]; then
-                          OBSTYPE=${SIMTYPE:13}
-                          SIMDIR="${VERITAS_USER_DATA_DIR}/simpipe_test/data/ATM${ATM}/Zd${ZA}/MERGEVBF_${OBSTYPE}/"
+                       SIMDIRZA="$SIMDIR"
+                       if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
+                          SIMDIRZA="$SIMDIR/Zd${ZA}/"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
-                               $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
+                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
                                $SIMTYPE $ACUTS 1 $ANATYPE $UUID
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            $(dirname "$0")/IRF.compress_evndisp_MC.sh \
-                               $SIMDIR $VX $ATM $ZA $WOBBLE $NOISE \
+                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
                                $SIMTYPE $ANATYPE $UUID
                        fi
                     ######################
@@ -426,14 +398,20 @@ for VX in $EPOCH; do
                         done #recID
                     ######################
                     # analyse table files
-                    elif [[ $IRFTYPE == "ANALYSETABLES" ]]; then
+                    elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
                             TFILID=$TFIL$ANATYPE
+                            # run mscw only
+                            EFFAREACUTLIST="NOEFFAREA"
+                            if [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
+                                # run mscw and effective area code
+                                EFFAREACUTLIST="$CUTSLISTFILE"
+                            fi
                             $(dirname "$0")/IRF.mscw_energy_MC.sh \
                                 $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $ANATYPE $DISPBDT $UUID
+                                $ID $SIMTYPE $ANATYPE $DISPBDT $EFFAREACUTLIST $UUID
 			            done #recID
                     ######################
                     # analyse effective areas
@@ -458,5 +436,4 @@ done  #VX
 
 # Go back to the original user directory.
 cd $olddir
-echo "UUID for this processing batch: ${UUID}"
 exit

@@ -20,7 +20,7 @@ DBTEXTDIRECTORY=DATABASETEXT
 VERITAS_DATA_DIR=VTS_DATA_DIR
 VERITAS_DATA_DIR_2=VTS_2DATA_DIR
 VERITAS_USER_DATA_DIR=VTS_USER_DATA_DIR
-#
+
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
     TEMPDIR=$TMPDIR/$RUN
@@ -95,13 +95,13 @@ sub_dir()
 
 # Unpack DBText information (replacement to DB calls)
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
-    echo "UNPACKING DBTEXT from ${DBTEXTDIRECTORY}"
+    echo "UNPACKING DBTEXT from $RUN ${DBTEXTDIRECTORY}"
     TMP_DBTEXTDIRECTORY="${TEMPDIR}/DBTEXT"
     TMP_LASERRUN=$(unpack_db_textdirectory $RUN $TMP_DBTEXTDIRECTORY)
     LRUNID=$(cat ${TMP_LASERRUN} | grep -v run_id | awk -F "|" '{print $1}')
     for LL in ${LRUNID}
     do
-        echo "unpacking $LL"
+        echo "  unpacking flasher/laser run: $LL"
         unpack_db_textdirectory $LL $TMP_DBTEXTDIRECTORY
     done
     echo "DBTEXT directory $(ls -l $TMP_DBTEXTDIRECTORY)"
@@ -169,6 +169,14 @@ fi
 
 echo "CVBF FILE FOUND - data dir: $VERITAS_DATA_DIR $VERITAS_DATA_DIR_2"
 
+# restrict telescope combination to be analyzed:
+if [[ $TELTOANA == "1234" ]]; then
+	echo "Telescope combination saved in the DB is analyzed (default)"
+else
+	OPT+=( -teltoana=$TELTOANA )
+	echo "Analyzed telescope configuration: $TELTOANA "
+fi
+
 #########################################
 # pedestal calculation
 if [[ $CALIB == "1" || $CALIB == "2" || $CALIB == "4" || $CALIB == "5" ]]; then
@@ -192,16 +200,6 @@ else
 ## read gain and toffsets from VOFFLINE DB (default)
 	OPT+=( "-readCalibDB" )
 fi
-
-# restrict telescope combination to be analyzed:
-if [[ $TELTOANA == "1234" ]]; then
-	echo "Telescope combination saved in the DB is analyzed (default)"
-else
-	OPT+=( -teltoana=$TELTOANA )
-	echo "Analyzed telescope configuration: $TELTOANA "
-fi
-
-# None of the following command line options is needed for the standard analysis!
 
 ## Read gain and toff from VOFFLINE DB requiring a special version of analysis
 # OPT+=( -readCalibDB version_number )

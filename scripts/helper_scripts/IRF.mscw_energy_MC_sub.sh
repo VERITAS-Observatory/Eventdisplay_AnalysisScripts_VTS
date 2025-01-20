@@ -1,5 +1,6 @@
 #!/bin/bash
-# analyse MC files with lookup tables
+# Analyse MC files with lookup tables
+# (optional) Calculate effective areas
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
@@ -20,8 +21,11 @@ SIMTYPE=SIMULATIONTYPE
 DISPBDT=USEDISP
 INDIR=INPUTDIR
 ODIR=OUTPUTDIR
+# Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
+EFFAREACUTLIST=EEFFAREACUTLIST
 
 # output directory
+[[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 OSUBDIR="$ODIR/MSCW_RECID${RECID}"
 if [ $DISPBDT -eq 1 ]; then
     OSUBDIR="${OSUBDIR}_DISP"
@@ -74,7 +78,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -redo_stereo_reconstruction"
     MOPT="$MOPT -tmva_disperror_weight 50"
     MOPT="$MOPT -minangle_stereo_reconstruction=10."
-    if [[ $IRFVERSION == v490.* ]]; then
+    if [[ $IRFVERSION == v490* ]]; then
         MOPT="$MOPT -maxloss=0.20"
     else
         MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
@@ -104,7 +108,7 @@ if [ $DISPBDT -eq 1 ]; then
     MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
     MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
-    if [[ $IRFVERSION != v490.* ]]; then
+    if [[ $IRFVERSION != v490* ]]; then
         MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
     fi
     echo "DISP BDT options: $MOPT"
@@ -137,7 +141,7 @@ ls -1 "$DDIR"/*[0-9].root > "$DDIR/$OFILE.list"
 echo "Evndisp files:"
 cat "$DDIR/$OFILE.list"
 
-# run mscw_energy
+echo "Running mscw_energy"
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
 $EVNDISPSYS/bin/mscw_energy $MOPT \
@@ -158,8 +162,112 @@ $EVNDISPSYS/bin/logFile mscwTableLog $outputfilename "$DDIR/$OFILE.log"
 
 # cp results file back to data directory and clean up
 outputbasename=$( basename $outputfilename )
-cp -f -v $outputfilename $OSUBDIR/$outputbasename
-cp -f -v "$DDIR/$OFILE.log" "$logfile"
-rm -f "$outputfilename"
-chmod g+w "$OSUBDIR/$outputbasename"
 chmod g+w "$logfile"
+if [[ $EFFAREACUTLIST == "NOEFFAREA" ]]; then
+    cp -f -v $outputfilename $OSUBDIR/$outputbasename
+    chmod g+w "$OSUBDIR/$outputbasename"
+    exit
+fi
+
+###########################################################################
+# Effective area generation
+###########################################################################
+echo "Effective area generation (cut list: $EFFAREACUTLIST)"
+
+# read cut list file
+read_cutlist()
+{
+    CUTFILE="${1}"
+    if [[ $CUTFILE == "" ]] || [ ! -f $CUTFILE ]; then
+        echo "Error, cuts list file not found, exiting..." >&2
+        echo $CUTFILE
+        exit 1
+    fi
+    CUTLISTFROMFILE=$(cat $CUTFILE)
+    CUTLIST=""
+    for CUT in ${CUTLISTFROMFILE[@]}; do
+        CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
+    done
+    echo $CUTLIST
+}
+
+CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
+
+# loop over 4 and 3-telescope combinations
+for ID in 15 14 13 11 7; do
+    # Gamma/hadron cut list (depends on analysis and observation type)
+    for CUTSFILE in ${CUTLIST[@]}; do
+        echo "calculate effective areas $CUTSFILE (ID $ID)"
+        EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
+        if [[ $ID == "15" ]]; then
+            EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID0-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
+        elif [[ $ID == "14" ]]; then
+            EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID2-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
+        elif [[ $ID == "13" ]]; then
+            EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID3-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
+        elif [[ $ID == "11" ]]; then
+            EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID4-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
+        elif [[ $ID == "7" ]]; then
+            EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID5-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
+        fi
+        # Check that cuts file exists
+        CUTSFILE=${CUTSFILE%%.dat}
+        echo $CUTSFILE
+        CUTS_NAME=$(basename $CUTSFILE)
+        CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
+        if [[ "$CUTSFILE" == $(basename $CUTSFILE) ]]; then
+            CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
+        else
+            CUTSFILE="$CUTSFILE.dat"
+        fi
+        cp -v -f "$CUTSFILE" "$DDIR"/
+        if [[ ! -f "$CUTSFILE" ]]; then
+            echo "Error, gamma/hadron cuts file $CUTSFILE not found, exiting..."
+            exit 1
+        fi
+
+        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
+        if [[ $DISPBDT == "1" ]]; then
+            OSUBDIR="${OSUBDIR}_DISP"
+        fi
+        echo -e "Output files will be written to:\n $OSUBDIR"
+        mkdir -p $OSUBDIR
+
+PARAMFILE="
+* FILLINGMODE 0
+* ENERGYRECONSTRUCTIONMETHOD 0
+* ENERGYAXISBINS 60
+* ENERGYAXISBINHISTOS 30
+* EBIASBINHISTOS 75
+* ANGULARRESOLUTIONBINHISTOS 40
+* RESPONSEMATRICESEBINS 200
+* AZIMUTHBINS 1
+* FILLMONTECARLOHISTOS 0
+* ENERGYSPECTRUMINDEX 20 1.6 0.2
+* RERUN_STEREO_RECONSTRUCTION_3TEL $ID
+* CUTFILE $DDIR/$(basename $CUTSFILE)
+ IGNOREFRACTIONOFEVENTS 0.5
+* SIMULATIONFILE_DATA $outputfilename"
+
+        # create makeEffectiveArea parameter file
+        EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
+        rm -f "$DDIR/$EAPARAMS.dat"
+        eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+
+        # calculate effective areas
+        rm -f $OSUBDIR/$OFILE.root
+        $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
+
+        echo "Filling effAreaLog file into root file: $OSUBDIR/$EAPARAMS.log"
+        echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+        cp "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
+        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
+        echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
+        $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
+        rm -f $OSUBDIR/$EAPARAMS.log
+        cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
+        chmod -R g+w $OSUBDIR
+        chmod g+w $OSUBDIR/$EAPARAMS.root
+
+    done
+done
