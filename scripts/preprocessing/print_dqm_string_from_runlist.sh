@@ -35,7 +35,7 @@ unpack_db_textdirectory()
 
 for E in ""
 do
-    RUNS=$($RUNLIST)
+    RUNS=$(cat $RUNLIST)
 
     for R in $RUNS
     do
