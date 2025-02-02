@@ -78,6 +78,8 @@ elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
         exit
     fi
 fi
+rm -f "$DDIR/$OFILE.list"
+ls -1 "$DDIR"/*[0-9].root > "$DDIR/$OFILE.list"
 
 # Redo stereo reconstruction with diff cuts on images
 MOPT="-redo_stereo_reconstruction -minangle_stereo_reconstruction=10"
@@ -88,7 +90,7 @@ MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
 $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
-                            -inputfile "${DDIR}/*[0-9].root" \
+                            -inputfilelist "$DDIR/$OFILE.list" \
                             -tablefile "${DDIR}/$TABFILE.root" \
                             -ze=$ZA $MOPT \
                             -arrayrecid=$RECID \
