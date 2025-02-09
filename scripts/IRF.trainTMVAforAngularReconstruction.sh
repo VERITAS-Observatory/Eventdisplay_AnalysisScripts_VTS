@@ -108,44 +108,48 @@ do
 done
 echo "FILE LIST: ${EVNLIST}"
 
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub.sh"
 for disp in BDTDispEnergy BDTDisp BDTDispError BDTDispSign
 do
-    SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub.sh"
+    for ((tel=1; tel<=4; tel++)); do
 
-    echo "Processing $disp Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
+        echo "Processing $disp Telescope $tel Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
-    FSCRIPT="$LOGDIR/TA.${disp}.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
-    sed -e "s|OUTPUTDIR|$ODIR|" \
-        -e "s|EVNLIST|$EVNLIST|" \
-        -e "s|VERSIONIRF|$EDVERSION|" \
-        -e "s|BDTTYPE|$disp|" \
-        -e "s|TMVAOPTIONFILE|$TMVAOPTIONFILE|" \
-        -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT" > "$FSCRIPT"
+        FSCRIPT="$LOGDIR/TA.${disp}.TEL${tel}ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
+        sed -e "s|OUTPUTDIR|$ODIR|" \
+            -e "s|EVNLIST|$EVNLIST|" \
+            -e "s|VERSIONIRF|$EDVERSION|" \
+            -e "s|BDTTYPE|$disp|" \
+            -e "s|TMVAOPTIONFILE|$TMVAOPTIONFILE|" \
+            -e "s|RRECID|$RECID|" \
+            -e "s|TTYPE|$tel|" \
+            -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT" > "$FSCRIPT"
 
-    chmod u+x "$FSCRIPT"
-    echo "$FSCRIPT"
+        chmod u+x "$FSCRIPT"
+        echo "$FSCRIPT"
 
-    # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
-    if [[ $SUBC == *"ERROR"* ]]; then
-        echo $SUBC
-        exit
-    fi
-    if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT`
-        echo "RUN $RUNNUM: JOBID $JOBID"
-    elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-        echo "-------------------------------------------------------------------------------"
-        echo
-    elif [[ $SUBC == *sbatch* ]]; then
-            $SUBC $FSCRIPT
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-    fi
+        # run locally or on cluster
+        SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+        SUBC=`eval "echo \"$SUBC\""`
+        if [[ $SUBC == *"ERROR"* ]]; then
+            echo $SUBC
+            exit
+        fi
+        if [[ $SUBC == *qsub* ]]; then
+            JOBID=`$SUBC $FSCRIPT`
+            echo "RUN $RUNNUM: JOBID $JOBID"
+        elif [[ $SUBC == *condor* ]]; then
+            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+            echo
+            echo "-------------------------------------------------------------------------------"
+            echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+            echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+            echo "-------------------------------------------------------------------------------"
+            echo
+        elif [[ $SUBC == *sbatch* ]]; then
+                $SUBC $FSCRIPT
+        elif [[ $SUBC == *parallel* ]]; then
+            echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
+        fi
+    done
 done
