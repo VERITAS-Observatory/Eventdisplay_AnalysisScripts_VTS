@@ -299,7 +299,7 @@ for RUN in ${RUNS[@]}; do
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit 50"
         echo "-------------------------------------------------------------------------------"
         echo
 	elif [[ $SUBC == *sbatch* ]]; then
