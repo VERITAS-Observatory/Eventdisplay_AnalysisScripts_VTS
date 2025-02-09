@@ -109,7 +109,7 @@ do
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit 5"
         echo "-------------------------------------------------------------------------------"
         echo
 	elif [[ $SUBC == *sbatch* ]]; then
