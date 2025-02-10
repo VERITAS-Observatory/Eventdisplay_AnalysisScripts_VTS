@@ -59,16 +59,6 @@ mkdir -p ${ODIR}
 chmod g+w ${ODIR}
 rm -f "$ODIR/$ONAME*"
 
-if [[ $IRFVERSION != v490* ]]; then
-    # TMVA options
-    TMVAOPTIONS="$(grep 'MVAOPTIONS' $TMVAO | awk '{print $3}')"
-    # quality cuts
-    QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
-else
-    TMVAOPTIONS=""
-    QUALITYCUTS=""
-fi
-
 # fraction of events to use for training,
 # remaining events will be used for testing
 TRAINTESTFRACTION=0.5
@@ -78,16 +68,32 @@ TRAINTESTFRACTION=0.5
 # EWEIGHT="10.*(1.+loss)"
 EWEIGHT=""
 
-$EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
-    "${DDIR}/${NLIST}" \
-    "${DDIR}" \
-    "$TRAINTESTFRACTION" \
-    "$RECID" \
-    "$TELTYPE" \
-    "${BDT}" \
-    "${QUALITYCUTS}" \
-    "${TMVAOPTIONS}" \
-    "${EWEIGHT}" > "$ODIR/$ONAME-$BDT.log"
+if [[ $IRFVERSION != v490* ]]; then
+    # TMVA options
+    TMVAOPTIONS="$(grep 'MVAOPTIONS' $TMVAO | awk '{print $3}')"
+    # quality cuts
+    QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
+
+    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
+        "${DDIR}/${NLIST}" \
+        "${DDIR}" \
+        "$TRAINTESTFRACTION" \
+        "$RECID" \
+        "$TELTYPE" \
+        "${BDT}" \
+        "${QUALITYCUTS}" \
+        "${TMVAOPTIONS}" \
+        "${EWEIGHT}" > "$ODIR/$ONAME-$BDT-Tel$TELTYPE.log"
+else
+    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
+        "${DDIR}/${NLIST}" \
+        "${DDIR}" \
+        "$TRAINTESTFRACTION" \
+        "$RECID" \
+        "$TELTYPE" \
+        "${BDT}" > "$ODIR/$ONAME-$BDT-Tel$TELTYPE.log"
+fi
+
 
 cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
 cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/
