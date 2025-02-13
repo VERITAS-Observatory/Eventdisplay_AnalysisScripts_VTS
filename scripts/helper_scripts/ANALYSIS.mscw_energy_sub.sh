@@ -8,10 +8,10 @@ fi
 set -e
 
 # parameters replaced by parent script using sed
-RECID=RECONSTRUCTIONID
 ODIR=OUTPUTDIRECTORY
 INFILE=EVNDISPFILE
 DISPBDT=BDTDISP
+RECID="RECONSTRUCTIONID"
 IRFVERSION=VERSIONIRF
 
 # default simulation types

@@ -6,6 +6,7 @@
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
+set -e
 
 # parameters replaced by parent script using sed
 TABFILE=TABLEFILE
