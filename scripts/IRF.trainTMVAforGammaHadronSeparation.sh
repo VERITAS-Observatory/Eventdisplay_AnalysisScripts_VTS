@@ -1,9 +1,10 @@
 #!/bin/bash
-# train BDTs with TMVA
+# train BDTs for gamma/hadron separation
 #
-# note the large amount of hardwired parameters in this scripts
-# dependence especially on the type of simulations and
-# available zenith / NSB bins
+# note the large amount of hardwired parameters in this scripts:
+# - zenith angles to be trained
+# - training at wobble offsets 0.5 deg only
+# - fixed of NSB levels (adapted to stdHV settings)
 #
 
 h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=24G
@@ -46,20 +47,27 @@ if [ ! -n "$EVNDISP_APPTAINER" ]; then
 fi
 [[ $? != "0" ]] && exit 1
 
-# Parse command line arguments
-BDIR=$1
-RUNPAR=$2
-ODIR=$3
-ONAME=$4
-[[ "$5" ]] && SIMTYPE=$5 || SIMTYPE="CARE_June2020"
-echo "Background file directory: $BDIR"
-echo "Runparameters: $RUNPAR"
-echo "Output dir: $ODIR"
-echo "Simulation type: $SIMTYPE"
-EPOCH=$6
-ATM=$7
+BDIR="$1"
+RUNPAR="$2"
+ODIR="$3"
+ONAME="$4"
+SIMTYPE="$5"
+EPOCH="$6"
+ATM="$7"
+
 RECID="0"
 PARTICLE_TYPE="gamma"
+UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
+
+echo "Background file directory: $BDIR"
+echo "Runparameters: $RUNPAR"
+echo "Simulation type: $SIMTYPE"
+
+# Fixed list of NSB levels; redHV needs attention
+if [[ ${SIMTYPE} == *"RedHV"* ]]; then
+    echo "Fixed NSB levels not suitable for RedHV trainging"
+    exit 1
+fi
 
 DISPBDT=""
 ANATYPE="AP"
@@ -70,7 +78,7 @@ if [[ ! -z $VERITAS_ANALYSIS_TYPE ]]; then
     fi
 fi
 
-# Check that list of background files exists
+# Check that list of background file directory exists
 if [[ ! -d "$BDIR" ]]; then
     echo "Error, directory with background files $BDIR not found, exiting..."
     exit 1
@@ -88,8 +96,10 @@ fi
 RXPAR=`basename $RUNPAR .runparameter`
 echo "Original TMVA run parameter file: $RXPAR.runparameter "
 
-# output directory
-echo -e "Output files will be written to:\n $ODIR"
+LOGDIR="$ODIR/TMVA.ANADATA.${UUID}"
+echo "Output: $ODIR"
+echo "Logs: $LOGDIR"
+mkdir -p $LOGDIR
 mkdir -p $ODIR
 
 #####################################
@@ -129,12 +139,6 @@ NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 # zenith angle bins of MC simulation files
 ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
 
-#####################################
-# directory for run scripts
-DATE=`date +"%y%m%d"`
-LOGDIR="$ODIR/$DATE/TMVA.ANADATA"
-echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
 
 ####################################
 # Run prefix
@@ -165,9 +169,6 @@ do
    do
       echo "---------------------------------------------------------------------------"
       echo "Zenith Bin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
-
-      # copy run parameter file with basic options to output directory
-      # cp -v -f $RUNPAR $ODIR
 
       # updating the run parameter file for each parameter space
       RFIL=$ODIR/$RXPAR"_$i""_$j"
@@ -212,7 +213,7 @@ do
               do
                   if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                       if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,130,160,200,250}.mscw.root`
+                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root`
                           for arg in $SIGNALLIST
                           do
                               echo "* SIGNALFILE SIMDIR/$(basename $arg)" >> $RFIL.runparameter
