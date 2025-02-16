@@ -57,9 +57,13 @@ rm -f ${TMPLOG}
 for C in $CUTS
 do
     if [[ $RUNTYPE == "ANASUM" ]] || [[ $RUNTYPE == "PRECUTS" ]]; then
-        mkdir -p "$TMPDIR/anasum_${C}"
+        CDIR="anasum_${C}"
+        if  [[ $RUNTYPE == "PRECUTS" ]]; then
+            CDIR=$(echo "$CDIR" | sed -E 's/anasum_(NTel[23])([A-Za-z]+)Pre/\1-PointSource-\2/')
+        fi
+        mkdir -p "$TMPDIR/{CDIR}"
         ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
-            "$TMPDIR/anasum_${C}" \
+            "$TMPDIR/${CDIR}" \
             ${C} \
             ${IGNORETYPE} \
             $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter \
