@@ -59,8 +59,9 @@ do
     if [[ $RUNTYPE == "ANASUM" ]] || [[ $RUNTYPE == "PRECUTS" ]]; then
         CDIR="anasum_${C}"
         if  [[ $RUNTYPE == "PRECUTS" ]]; then
-            CDIR=$(echo "$CDIR" | sed -E 's/anasum_(NTel[23])([A-Za-z]+)Pre/\1-PointSource-\2/')
+            CDIR=$(echo "$CDIR" | sed -E 's/anasum_(NTel[23])([A-Za-z]+)Pre/\1-\2/')
         fi
+        echo $CDIR
         mkdir -p "$TMPDIR/{CDIR}"
         ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
             "$TMPDIR/${CDIR}" \
