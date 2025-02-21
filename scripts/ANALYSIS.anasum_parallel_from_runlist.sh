@@ -184,8 +184,8 @@ if [[ ! -f "$RUNLIST" ]]; then
     echo "Error, runlist $RUNLIST not found, exiting..."
     exit 1
 fi
-RUNS=$(cat "$RUNLIST")
-NRUNS=$(cat "$RUNLIST" | wc -l)
+RUNS=$(cat "$RUNLIST" | sort -u)
+NRUNS=$(cat "$RUNLIST" | sort -u | wc -l)
 echo "total number of runs to analyze: $NRUNS"
 
 # Check that run parameter file exists
