@@ -62,7 +62,7 @@ do
             CDIR=$(echo "$CDIR" | sed -E 's/anasum_(NTel[23])([A-Za-z]+)Pre/\1-\2/')
         fi
         echo $CDIR
-        mkdir -p "$TMPDIR/{CDIR}"
+        mkdir -p "$TMPDIR/${CDIR}"
         ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
             "$TMPDIR/${CDIR}" \
             ${C} \

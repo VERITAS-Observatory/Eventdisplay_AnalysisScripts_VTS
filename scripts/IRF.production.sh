@@ -332,7 +332,7 @@ for VX in $EPOCH; do
                                          "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                          # Cut optimization
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
-                             echo "OPTIMIZE TMVA $C"
+                             echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
                              ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
                                  "${BDTDIR}/BackgroundRates/${VX:0:2}" \
                                  "${C/PointSource-/}" \
