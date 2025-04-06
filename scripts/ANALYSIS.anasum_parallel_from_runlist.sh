@@ -134,7 +134,7 @@ else
     echo "ERROR: unknown cut definition: $CUTS"
     exit 1
 fi
-CUTFILE="ANASUM.GammaHadron-Cut-${CUT}.dat"
+CUTFILE="ANASUM.GammaHadron-Cut-${CUT/-NN/}.dat"
 
 # remove PointSource and ExtendedSource string from cut file name for radial acceptances names
 if [[ $CUT == *PointSource-* ]] ; then
