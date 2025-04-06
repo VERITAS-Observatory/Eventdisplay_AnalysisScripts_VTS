@@ -5,7 +5,7 @@
 # uses DBText files and removes all runs with
 #  - flagged as not "science"
 #  - flagged as "do not use"
-#  - usable duration less than 5 min
+#  - usable duration less than 2 min
 #
 #  Output of this scripts are:
 # - run lists per epoch
