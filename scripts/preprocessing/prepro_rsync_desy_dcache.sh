@@ -7,6 +7,7 @@ IDIR="$VERITAS_DATA_DIR/shared/"
 
 # v491.0
 rsync -av $IDIR/processed_data_v491.0/AP/dl3*.tar.gz "$BDIR/v491.0/"
+rsync -av $IDIR/processed_data_v491.0/AP/mscw/* "$BDIR/v491.0/AP/"
 
 # v490.7
 rsync -av $IDIR/processed_data_v490.7/AP/evndisp/ "$BDIR/v490.7/AP/evndisp/"
