@@ -1,5 +1,5 @@
 #!/bin/bash
-# script to train TMVA (BDTs) for angular reconstruction
+# train TMVA (BDTs) for angular reconstruction
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
@@ -8,10 +8,11 @@ fi
 
 # parameters replaced by parent script using sed
 LLIST=EVNLIST
+IRFVERSION=VERSIONIRF
 ODIR=OUTPUTDIR
 ONAME=BDTFILE
-RECID="0"
-TELTYPE="0"
+RECID="RRECID"
+TELTYPE="TTYPE"
 BDT=BDTTYPE
 TMVAO=TMVAOPTIONFILE
 
@@ -29,9 +30,9 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
-    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
+    APPTAINER_MOUNT+=" --bind ${DDIR}:${DDIR}"
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
-    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=${DDIR},CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
@@ -40,8 +41,8 @@ fi
 
 # decompress
 NLIST=${ONAME}.list
-FLIST=$(cat ${ODIR}/${ONAME}.list)
-for F in ${FLIST}
+echo $NLIST
+for F in $(cat $LLIST)
 do
     IDIR=$(dirname $F)
     OF=${DDIR}/$(basename $IDIR)_$(basename $F)
@@ -58,12 +59,6 @@ mkdir -p ${ODIR}
 chmod g+w ${ODIR}
 rm -f "$ODIR/$ONAME*"
 
-# quality cuts
-QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
-
-# TMVA options
-TMVAOPTIONS="$(grep 'MVAOPTIONS' $TMVAO | awk '{print $3}')"
-
 # fraction of events to use for training,
 # remaining events will be used for testing
 TRAINTESTFRACTION=0.5
@@ -73,16 +68,32 @@ TRAINTESTFRACTION=0.5
 # EWEIGHT="10.*(1.+loss)"
 EWEIGHT=""
 
-$EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
-    "${DDIR}/${NLIST}" \
-    "${DDIR}" \
-    "$TRAINTESTFRACTION" \
-    "$RECID" \
-    "$TELTYPE" \
-    "${BDT}" \
-    "${QUALITYCUTS}" \
-    "${TMVAOPTIONS}" \
-    "${EWEIGHT}" > "$ODIR/$ONAME-$BDT.log"
+if [[ $IRFVERSION != v490* ]]; then
+    # TMVA options
+    TMVAOPTIONS="$(grep 'MVAOPTIONS' $TMVAO | awk '{print $3}')"
+    # quality cuts
+    QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
+
+    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
+        "${DDIR}/${NLIST}" \
+        "${DDIR}" \
+        "$TRAINTESTFRACTION" \
+        "$RECID" \
+        "$TELTYPE" \
+        "${BDT}" \
+        "${QUALITYCUTS}" \
+        "${TMVAOPTIONS}" \
+        "${EWEIGHT}" > "$ODIR/$ONAME-$BDT-Tel$TELTYPE.log"
+else
+    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
+        "${DDIR}/${NLIST}" \
+        "${DDIR}" \
+        "$TRAINTESTFRACTION" \
+        "$RECID" \
+        "$TELTYPE" \
+        "${BDT}" > "$ODIR/$ONAME-$BDT-Tel$TELTYPE.log"
+fi
+
 
 cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
 cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/

@@ -18,9 +18,6 @@ IRF.trainTMVAforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <offset a
 required parameters:
 
     <epoch>                 array epoch (e.g., V4, V5, V6)
-                            V4: array before T1 move (before Fall 2009)
-                            V5: array after T1 move (Fall 2009 - Fall 2012)
-                            V6: array after camera update (after Fall 2012)
 
     <atmosphere>            atmosphere model (61 = winter, 62 = summer)
 
@@ -33,7 +30,7 @@ required parameters:
     <Rec ID>                reconstruction ID
                             (see EVNDISP.reconstruction.runparameter)
 
-    <sim type>              simulation type (e.g. GRISU, CARE)
+    <sim type>              simulation type (e.g. GRISU, CARE_June1425)
 
 optional parameters:
 
@@ -47,45 +44,36 @@ exit
 fi
 
 # Run init script
-if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ -z "$EVNDISP_APPTAINER" ]; then
+    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
-# date used in run scripts / log file directories
-DATE=`date +"%y%m%d"`
+EPOCH="$1"
+ATM="$2"
+ZA="$3"
+WOBBLE="$4"
+NOISE="$5"
+RECID="$6"
+SIMTYPE="$7"
+ANALYSIS_TYPE="${8:-}"
+UUID="${9:-$(date +"%y%m%d")-$(uuidgen)}"
 
-# Parse command line arguments
-EPOCH=$1
-ATM=$2
-ZA=$3
-WOBBLE=$4
-NOISE=$5
-RECID=$6
-SIMTYPE=$7
-[[ "$8" ]] && ANALYSIS_TYPE=$8  || ANALYSIS_TYPE=""
-[[ "${9}" ]] && UUID=${9} || UUID=${DATE}-$(uuidgen)
-
-_sizecallineraw=$(grep "* s " ${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/ThroughputCorrection.runparameter | grep " ${EPOCH} ")
-EPOCH_LABEL=$(echo "$_sizecallineraw" | awk '{print $3}')
-
-# Output file directory
-TMVADIR="TMVA_AngularReconstruction"
-if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-    ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH_LABEL}_ATM${ATM}_gamma/${TMVADIR}/ze${ZA}deg/"
+if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
+    echo "Error: IRF production directory not found: $VERITAS_IRFPRODUCTION_DIR"
+    exit 1
 fi
-echo -e "Output files will be written to:\n $ODIR"
+# output and log directories
+ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TMVA_AngularReconstruction/ze${ZA}deg/"
+LOGDIR="${VERITAS_USER_LOG_DIR}/${ANALYSIS_TYPE}/TMVAAngRes-${EPOCH}-ATM${ATM}-${UUID}"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
+mkdir -p "$LOGDIR"
+echo "Output: $ODIR"
+echo "Logs: $LOGDIR"
 
 # TMVA option file
 TMVAOPTIONFILE="${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/TMVA.BDTDisp.runparameter"
-
-# run scripts and output are written into this directory
-DATE=`date +"%y%m%d"`
-LOGDIR="${VERITAS_USER_LOG_DIR}/$DATE/${ANALYSIS_TYPE}/TMVAAngRes-${EPOCH}-ATM${ATM}-${UUID}"
-echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p "$LOGDIR"
 
 # training file name
 BDTFILE="mvaAngRes_${ZA}deg"
@@ -120,46 +108,48 @@ do
 done
 echo "FILE LIST: ${EVNLIST}"
 
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub.sh"
 for disp in BDTDispEnergy BDTDisp BDTDispError BDTDispSign
 do
-    # Job submission script
-    SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub"
+    for ((tel=1; tel<=4; tel++)); do
 
-    echo "Processing $disp Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
+        echo "Processing $disp Telescope $tel Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
-    # make run script
-    FSCRIPT="$LOGDIR/TA.${disp}.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}"
-    sed -e "s|OUTPUTDIR|$ODIR|" \
-        -e "s|EVNLIST|$EVNLIST|" \
-        -e "s|VVERSION|$EDVERSION|" \
-        -e "s|BDTTYPE|$disp|" \
-        -e "s|TMVAOPTIONFILE|$TMVAOPTIONFILE|" \
-        -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
+        FSCRIPT="$LOGDIR/TA.${disp}.TEL${tel}ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
+        sed -e "s|OUTPUTDIR|$ODIR|" \
+            -e "s|EVNLIST|$EVNLIST|" \
+            -e "s|VERSIONIRF|$EDVERSION|" \
+            -e "s|BDTTYPE|$disp|" \
+            -e "s|TMVAOPTIONFILE|$TMVAOPTIONFILE|" \
+            -e "s|RRECID|$RECID|" \
+            -e "s|TTYPE|$tel|" \
+            -e "s|BDTFILE|$BDTFILE|" "$SUBSCRIPT" > "$FSCRIPT"
 
-    chmod u+x "$FSCRIPT.sh"
-    echo "$FSCRIPT.sh"
+        chmod u+x "$FSCRIPT"
+        echo "$FSCRIPT"
 
-    # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
-    if [[ $SUBC == *"ERROR"* ]]; then
-        echo $SUBC
-        exit
-    fi
-    if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
-        echo "RUN $RUNNUM: JOBID $JOBID"
-    elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-        echo "-------------------------------------------------------------------------------"
-        echo
-    elif [[ $SUBC == *sbatch* ]]; then
-            $SUBC $FSCRIPT.sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-    fi
+        # run locally or on cluster
+        SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+        SUBC=`eval "echo \"$SUBC\""`
+        if [[ $SUBC == *"ERROR"* ]]; then
+            echo $SUBC
+            exit
+        fi
+        if [[ $SUBC == *qsub* ]]; then
+            JOBID=`$SUBC $FSCRIPT`
+            echo "RUN $RUNNUM: JOBID $JOBID"
+        elif [[ $SUBC == *condor* ]]; then
+            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+            echo
+            echo "-------------------------------------------------------------------------------"
+            echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+            echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+            echo "-------------------------------------------------------------------------------"
+            echo
+        elif [[ $SUBC == *sbatch* ]]; then
+                $SUBC $FSCRIPT
+        elif [[ $SUBC == *parallel* ]]; then
+            echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
+        fi
+    done
 done

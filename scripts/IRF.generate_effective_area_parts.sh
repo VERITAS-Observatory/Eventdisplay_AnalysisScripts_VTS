@@ -106,6 +106,7 @@ rm -f "$FSCRIPT"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|USEDISP|${DISPBDT}|" \
+    -e "s|VERSIONIRF|$IRFVERSION|" \
     -e "s|DATAFILE|$MCFILE|" \
     -e "s|GAMMACUTS|${CUTSFILE}|" $SUBSCRIPT.sh > $FSCRIPT
 
@@ -120,18 +121,18 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit 1
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
+    JOBID=`$SUBC $FSCRIPT`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs:"
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
 elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT.sh
+    $SUBC $FSCRIPT
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
+    echo "$FSCRIPT &> $(basename $FSCRIPT .sh).log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
-    "$FSCRIPT.sh" | tee "$FSCRIPT.log"
+    "$FSCRIPT" | tee "$(basename $FSCRIPT .sh).log"
 fi

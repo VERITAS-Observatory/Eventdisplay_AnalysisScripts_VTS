@@ -8,6 +8,7 @@ echo "
 ./prepro_rsync_data_ucla.sh <backup eversion (e.g., '.v3.4')
 
 Run this script at DESY from '/lustre/fs24/group/veritas/shared/'
+
 "
 exit
 fi
@@ -20,13 +21,15 @@ fi
 USER="${VTS_UCLA_USER}"
 VERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 VERSION="v490.7"
+VERSION="v491.0"
 BACKUP="$1"
 ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+ANATYPE="AP"
 
 echo "USER: $USER VERSION $VERSION ANATYPE $ANATYPE BACKUP $BACKUP"
-SYNC_EVNDISP=FALSE
+# SYNC_EVNDISP=TRUE
 SYNC_MSCW=TRUE
-SYNC_DL3TAR=FALSE
+SYNC_DL3TAR=TRUE
 SYNC_DL3=TRUE
 
 if [[ $SYNC_EVNDISP == "TRUE" ]]; then

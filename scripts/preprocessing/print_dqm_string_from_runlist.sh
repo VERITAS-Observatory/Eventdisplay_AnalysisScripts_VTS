@@ -33,9 +33,26 @@ unpack_db_textdirectory()
     echo "${TMP_DBTEXTDIRECTORY}/${RRUN}/"
 }
 
+anasum_time_cut()
+{
+    RUN="$1"
+    MASK="$2"
+    if [[ "$MASK" == *NULL* ]]; then
+        return
+    fi
+    echo "RUN $RUN TIME CUT $MASK"
+    data=$(echo "$MASK" | sed 's/.*time_cut_mask[^0-9]*//')
+    echo "$data" | tr ',' '\n' | while IFS='/' read -r num denom; do
+      if [[ -n "$num" && -n "$denom" ]]; then
+          diff=$((denom - num))
+          echo "TIMECUT * $RUN $num $diff 0"
+      fi
+    done
+}
+
 for E in ""
 do
-    RUNS=$($RUNLIST)
+    RUNS=$(cat $RUNLIST)
 
     for R in $RUNS
     do
@@ -63,5 +80,7 @@ do
             RTYPE="NOTYPE"
         fi
         echo $R $RSTATUS $RCUTMASK LENGTH: $RLENGTH WEATHER-$RWEATHER $RCATEGORY $RTARGET $RTYPE
+        anasum_time_cut $R "$RCUTMASK"
+
     done
 done

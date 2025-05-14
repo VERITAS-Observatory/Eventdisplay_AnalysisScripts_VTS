@@ -41,7 +41,7 @@ if [[ ! -f "$RUNLIST" ]]; then
     exit 1
 fi
 
-NRUNS=$(cat "$RUNLIST" | wc -l)
+NRUNS=$(cat "$RUNLIST" | sort -u | wc -l)
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -57,7 +57,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGIDR}/x* 2>/dev/null
 
 # split run list into smaller run lists
-cp -f ${RUNLIST} ${LOGDIR}/
+sort -u "${RUNLIST}" -o "${LOGDIR}/$(basename "${RUNLIST}")"
 (cd "${LOGDIR}" && split -l $SPLITRUN "${LOGDIR}/$(basename ${RUNLIST})")
 
 FILELISTS=$(ls ${LOGDIR}/x*)
@@ -109,7 +109,7 @@ do
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit 5"
         echo "-------------------------------------------------------------------------------"
         echo
 	elif [[ $SUBC == *sbatch* ]]; then
