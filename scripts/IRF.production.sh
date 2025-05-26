@@ -158,9 +158,9 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
-    NSB_LEVELS=( 200 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSETS=( 0.0 )
+    NSB_LEVELS=( 350 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -178,8 +178,8 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find -L "${SIMDIR}" -name "*.vbf.zst" | sed -n 's/.*_\([0-9]\+\)MHz_.*/\1/p' | sort -u)
+    WOBBLE_OFFSETS=$(find -L "$SIMDIR" -type f | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # NSB_LEVELS=( 300 )
