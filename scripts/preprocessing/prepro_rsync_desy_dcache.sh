@@ -14,10 +14,10 @@ echo "Syncing DBFITS"
 rsync -av $IDIR/DBFITS/* "$BDIR/DBFITS/"
 
 # v491.0
-echo "Syncing DL3 v491.0"
-rsync -av $IDIR/processed_data_v491.0/AP/dl3*.tar.gz "$BDIR/v491.0/"
-echo "Syncing mscw v491.0"
-rsync -av $IDIR/processed_data_v491.0/AP/mscw/* "$BDIR/v491.0/AP/"
+# echo "Syncing DL3 v491.0"
+# rsync -av $IDIR/processed_data_v491.0/AP/dl3*.tar.gz "$BDIR/v491.0/"
+# echo "Syncing mscw v491.0"
+# rsync -av $IDIR/processed_data_v491.0/AP/mscw/* "$BDIR/v491.0/AP/"
 
 # v490.7
 echo "Syncing evndisp v490.7 AP"
