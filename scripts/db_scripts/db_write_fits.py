@@ -181,7 +181,7 @@ def extract_corrected_fir(fir_mean, ambient_temp, run, temp_run_dir, config_mask
 
 def extract_fir(run, temp_run_dir, config_mask):
     """
-    Extract mean and std of FIR values for the three different FIRS
+    Extract mean and std of FIR values for the three different FIRs
 
     """
 

@@ -30,5 +30,5 @@ repos:
     hooks:
       - id: codespell
         args: [
-          "--ignore-words-list=trun,afile,runn"
+          "--ignore-words-list=trun,afile,runn,FIRs"
         ]
