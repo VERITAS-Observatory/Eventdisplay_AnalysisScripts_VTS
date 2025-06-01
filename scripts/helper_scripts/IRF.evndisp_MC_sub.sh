@@ -37,11 +37,13 @@ echo "Runnumber $RUNNUM"
 
 # check if output file exist
 V4N=${ODIR/v490/v4N}
+echo "Checking $V4N/$ONAME.root.zst"
 if [ -e "$V4N/$ONAME.root.zst" ]; then
     zstd --test $V4N/$ONAME.root.zst
     echo "OUTPUT $V4N/$ONAME.root.zst exists; skipping this job"
     exit
 fi
+echo "No existing file found. Starting Evndisplay Analysis."
 
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then
