@@ -134,7 +134,10 @@ else
     echo "ERROR: unknown cut definition: $CUTS"
     exit 1
 fi
-CUTFILE="ANASUM.GammaHadron-Cut-${CUT/-NN/}.dat"
+CUTFILE="ANASUM.GammaHadron-Cut-${CUT}.dat"
+if [[ ! -e $VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/$CUTFILE ]]; then
+   CUTFILE="ANASUM.GammaHadron-Cut-${CUT/-NN/}.dat"
+fi
 
 # remove PointSource and ExtendedSource string from cut file name for radial acceptances names
 if [[ $CUT == *PointSource-* ]] ; then
