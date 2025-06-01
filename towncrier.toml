@@ -2,7 +2,6 @@
 name = "Eventdisplay_AnalysisScripts_VTS"
 directory = "docs/changes"
 filename = "CHANGELOG.md"
-underlines = [ "", "", "" ]
 title_format = "## [{version}](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/releases/tag/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/issues/{issue})"
 start_string = "<!-- towncrier release notes start -->\n"
