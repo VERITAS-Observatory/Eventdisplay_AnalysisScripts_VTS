@@ -178,59 +178,55 @@ if [[ $SUBC == *"ERROR"* ]]; then
 fi
 
 #####################################
-# Loop over all VBF files (one job per file)
+# Generate Condor submission file (one job per vbf file)
+
+FNAME="evn-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM"
+mkdir -p "${LOGDIR}/$FNAME"
+FSCRIPT="${LOGDIR}/$FNAME/$FNAME.sh"
+rm -f "${FSCRIPT}.txt"
+touch "${FSCRIPT}.txt"
+
 for V in $VBFNAME; do
-    echo "Preparing run scripts for ${V}"
-    VBFFILE=$(basename ${V})
-
-    # Update tmpdir depending on size of VBF file
-    FF=$(stat --printf="%s" "$V")
-    # Set safety factor
-    SF=5
-    # tmpdir requires a safety factor of 5. or higher (from unzipping VBF file)
-    [[ $SIMTYPE == "CARE_RedHV" ]] && SF=10
-    # GRISU files are bzipped, simulated without NSB, and need more space (factor of ~14)
-    [[ ${SIMTYPE:0:5} == "GRISU" ]] && SF=25
-    # Convert to MiB and apply safety factor
-    tmpdir_size=$(( (FF * SF) / (1024 * 1024) ))M
-    echo "Setting TMPDIR_SIZE to $tmpdir_size"
-
-    # Job submission scripts
-    SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.evndisp_MC_sub.sh"
-    FSCRIPT="${LOGDIR}/evn-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM-${RUNNUM}.sh"
-    sed -e "s|DATADIR|$SIMDIR|" \
-        -e "s|RUNNUMBER|$RUNNUM|" \
-        -e "s|ZENITHANGLE|$ZA|" \
-        -e "s|ATMOSPHERE|$ATM|" \
-        -e "s|OUTPUTDIR|$OPDIR|" \
-        -e "s|DECIMALWOBBLE|$WOBBLE|" \
-        -e "s|INTEGERWOBBLE|$INT_WOBBLE|" \
-        -e "s|NOISELEVEL|$NOISE|" \
-        -e "s|ARRAYEPOCH|$EPOCH|" \
-        -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
-        -e "s|SIMULATIONTYPE|$SIMTYPE|" \
-        -e "s|VBFFFILE|$VBFFILE|" \
-        -e "s|VVERSION|$EDVERSION|" \
-        -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
-        -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT > $FSCRIPT
-
-    chmod u+x "$FSCRIPT"
-    echo "Run script: $FSCRIPT"
-
+    echo "$RUNNUM  $(basename $V)" >> "${FSCRIPT}.txt"
     let "RUNNUM = ${RUNNUM} + 100"
-
-    if [[ $SUBC == *"qsub"* ]]; then
-        JOBID=$($SUBC "$FSCRIPT")
-        echo "RUN $RUNNUM: JOBID $JOBID"
-    elif [[ $SUBC == *"condor"* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$default_tmpdir_size"
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-        echo "-------------------------------------------------------------------------------"
-        echo
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT &> $(basename $FSCRIPT .sh).log" >> "$LOGDIR/runscripts.dat"
-    fi
 done
+
+# Job submission script
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.evndisp_MC_sub.sh"
+sed -e "s|DATADIR|$SIMDIR|" \
+    -e "s|ZENITHANGLE|$ZA|" \
+    -e "s|ATMOSPHERE|$ATM|" \
+    -e "s|OUTPUTDIR|$OPDIR|" \
+    -e "s|DECIMALWOBBLE|$WOBBLE|" \
+    -e "s|INTEGERWOBBLE|$INT_WOBBLE|" \
+    -e "s|NOISELEVEL|$NOISE|" \
+    -e "s|ARRAYEPOCH|$EPOCH|" \
+    -e "s|RECONSTRUCTIONRUNPARAMETERFILE|$ACUTS|" \
+    -e "s|SIMULATIONTYPE|$SIMTYPE|" \
+    -e "s|VVERSION|$EDVERSION|" \
+    -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
+    -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT > $FSCRIPT
+
+chmod u+x "$FSCRIPT"
+echo "Run script: $FSCRIPT"
+
+if [[ $SUBC == *"condor"* ]]; then
+
+    SUBSCRIPT=$(readlink -f "${FSCRIPT}")
+    SUBFIL=${SUBSCRIPT}.condor
+    [[ -f "$SUBFIL" ]] && rm -f "$SUBFIL".
+
+cat > ${SUBFIL} <<EOL
+Executable = ${SUBSCRIPT}
+Output = ${SUBSCRIPT}.\$(Cluster)_\$(Process).output
+Error = ${SUBSCRIPT}.\$(Cluster)_\$(Process).error
+Log = ${SUBSCRIPT}.\$(Cluster)_\$(Process).log
+arguments = \$(RUNNUM) \$(VBFNAME)
+request_memory = $h_vmem
+request_disk = $tmpdir_size
+getenv = True
+max_materialize = 50
+priority = 850
+queue RUNNUM, VBFNAME from ${SUBSCRIPT}.txt
+EOL
+fi
