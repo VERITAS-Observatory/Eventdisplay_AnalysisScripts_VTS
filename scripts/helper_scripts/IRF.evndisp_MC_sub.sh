@@ -35,15 +35,14 @@ echo "SGE_ID ${SGE_TASK_ID}"
 ONAME="$RUNNUM"
 echo "Runnumber $RUNNUM"
 
-# check if output file exist
-V4N=${ODIR/v490/v4N}
-echo "Checking $V4N/$ONAME.root.zst"
-if [ -e "$V4N/$ONAME.root.zst" ]; then
-    zstd --test $V4N/$ONAME.root.zst
-    echo "OUTPUT $V4N/$ONAME.root.zst exists; skipping this job"
-    exit
-fi
-echo "No existing file found. Starting Evndisplay Analysis."
+# Check if output file exist
+# V4N=${ODIR/v490/v4N}
+# echo "Checking $V4N/$ONAME.root.zst"
+#if [ -e "$V4N/$ONAME.root.zst" ]; then
+#    zstd --test $V4N/$ONAME.root.zst
+#    echo "OUTPUT $V4N/$ONAME.root.zst exists; skipping this job"
+#    exit
+# fi
 
 # temporary directory
 if [[ -n "$TMPDIR" ]]; then
@@ -54,8 +53,13 @@ fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 
+# Apptainers
+# copy apptainer sif file to tmp directory (to avoid issues with)
 # explicit binding for apptainers
 if [ -n "$EVNDISP_APPTAINER" ]; then
+    cp -v "$EVNDISP_APPTAINER" "$DDIR"
+    TMP_APPTAINER="$DDIR"/$(basename "$EVNDISP_APPTAINER")
+    EVNDISPSYS=${EVNDISPSYS/$EVNDISP_APPTAINER/$TMP_APPTAINER}
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
@@ -66,6 +70,27 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
     CALDIR="/opt/ODIR"
+fi
+
+# Check if vbf file was already processed
+# Requires search through logs of all processed
+# eventdisplay files in the v4N directory, as
+# run numbering is not consistent
+V4N=${ODIR/v490/v4N}
+if [ -e "$V4N" ]; then
+    TMPDIR="$DDIR/test"
+    mkdir -p "$TMPDIR"
+    VBF_BASENAME="${VBFNAME%.zst}"
+
+    for file in "$V4N"/*.root.zst; do
+        tmpfile="$TMPDIR/$(basename "${file%.zst}")"
+        zstd -d -c "$file" > "$tmpfile"
+        if $EVNDISPSYS/bin/logFile evndispLog "$tmpfile" | grep -q "$VBF_BASENAME"; then
+            echo "File $VBFNAME already processed ($(basename $tmpfile))"
+            exit
+        fi
+    done
+    rm -rf "$TMPDIR"
 fi
 
 #################################
