@@ -190,7 +190,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
     ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
-    # assume sanme NSB and wobble offsets in all bins
+    # assume same NSB and wobble offsets in all bins
     NSB_LEVELS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
