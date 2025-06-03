@@ -6,7 +6,7 @@ h_cpu=47:59:00; h_vmem=8000M; tmpdir_size=250G
 DATE=$(date +"%y%m%d")
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+read -r EDVERSION < "$VERITAS_EVNDISP_AUX_DIR/IRFVERSION"
 
 if [ $# -lt 7 ]; then
 echo "
@@ -105,6 +105,8 @@ elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="941200"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="951200"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
+# Used for 2025 additional MC production
+#    [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="971200"
 fi
 
 INT_WOBBLE=$(echo "$WOBBLE*100" | bc | awk -F '.' '{print $1}')
@@ -159,7 +161,11 @@ elif [ ${SIMTYPE} == "CARE_RedHV" ]; then
     fi
     VBFILENAME="gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst"
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
-    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz*.zst"
+#    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz*.zst"
+# Used for processing of pre-2025 simulations (run number starting with 65...)
+    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_65*.zst"
+# Used for 2025 additional MC production
+#    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_66*.zst"
 fi
 echo "VBF file name search string: $VBFILENAME"
 VBFNAME=$(find ${SIMDIR} -name "$VBFILENAME" -not -name "*.log" -not -name "*.md5sum")
@@ -175,22 +181,18 @@ fi
 # Loop over all VBF files (one job per file)
 for V in $VBFNAME; do
     echo "Preparing run scripts for ${V}"
-    SIMDIR=$(dirname "$V")
     VBFFILE=$(basename ${V})
 
     # Update tmpdir depending on size of VBF file
-    FF=$(ls -ls -Llh ${V} | awk '{print $1}' | sed 's/,/./g')
+    FF=$(stat --printf="%s" "$V")
+    # Set safety factor
+    SF=5
     # tmpdir requires a safety factor of 5. or higher (from unzipping VBF file)
-    TMSF=$(echo "${FF%?}*5.0" | bc)
-    if [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
-       # RedHV runs need more space during the analysis (otherwise quota is exceeded)
-       TMSF=$(echo "${FF%?}*10.0" | bc)
-    elif [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-       # GRISU files are bzipped, simulated without NSB, and need more space (factor of ~14)
-       TMSF=$(echo "${FF%?}*25.0" | bc)
-    fi
-    TMUNI=$(echo "${FF: -1}")
-    tmpdir_size=${TMSF%.*}$TMUNI
+    [[ $SIMTYPE == "CARE_RedHV" ]] && SF=10
+    # GRISU files are bzipped, simulated without NSB, and need more space (factor of ~14)
+    [[ ${SIMTYPE:0:5} == "GRISU" ]] && SF=25
+    # Convert to MiB and apply safety factor
+    tmpdir_size=$(( (FF * SF) / (1024 * 1024) ))M
     echo "Setting TMPDIR_SIZE to $tmpdir_size"
 
     # Job submission scripts
