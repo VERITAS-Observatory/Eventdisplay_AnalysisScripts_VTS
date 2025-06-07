@@ -22,7 +22,7 @@ required parameters:
 
     <epoch>                         array epoch e.g. V4, V5, V6, V6_2012_2013a
 
-    <atmosphere>                    atmosphere model(s) (61 = winter, 62 = summer)
+    <atmosphere>                    atmosphere model (61 = winter, 62 = summer)
 
 --------------------------------------------------------------------------------
 "
