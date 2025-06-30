@@ -93,7 +93,9 @@ cd $VERITAS_EVNDISP_AUX_DIR/DispBDTs
 
 #### Preparation
 
-Generate background training events using:
+Analyze data runs for the new period to the `mscw` stage using `./ANALYSIS.mscw_energy.sh`.
+
+Select background runs for the BDT training.
 
 ```bash
 ./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>
@@ -118,11 +120,11 @@ Requires as input:
 
 #### Cut Optimization
 
-Cut optimization requires signal rates (from simulations) and background rates (from data). The `$EVNDISPSYS/bin/calculateCrabRateFromMC` tool is used to calculate rates after pre-selection cuts (note: set `CALCULATERATEFILES="TRUE"` in `$EVNDISPSCRIPTS/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub.sh`).
+Cut optimization requires signal rates (from simulations) and background rates (from data). The `$EVNDISPSYS/bin/calculateCrabRateFromMC` tool is used to calculate rates after pre-selection cuts (note: check that  `CALCULATERATEFILES="TRUE"` is set in `$EVNDISPSCRIPTS/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub.sh`).
 
 **Important: This script is not working in combination with the usage of apptainers.**
 
-1. Generate effective areas for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS`.
+1. Generate effective areas for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS` with the usual two-step process of first generating effective areas per observational bin and then combine the effective areas. Move the combined files to `$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas`.
 2. Generate background anasum files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/ANALYSIS.anasum_allcuts.sh` with the `PRECUTS` option to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training). These files should be moved into e.g. `$VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/AP/BDTtraining/BackgroundRates/V6/NTel2-Moderate` (adjust epoch and cut directory name).
 
 Cut values are extracted by the optimization tool and written e.g., to
