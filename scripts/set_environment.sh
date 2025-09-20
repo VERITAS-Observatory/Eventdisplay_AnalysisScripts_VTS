@@ -11,7 +11,7 @@ fi
 
 export VERITAS_ANALYSIS_TYPE="${1}"
 PROCESS="${2}"
-EVNDISPVERSION="v492.0"
+EVNDISPVERSION="v491.0"
 EVNDISPMINORVERSION="$EVNDISPVERSION"
 
 # Test for allowed processing types
@@ -40,6 +40,8 @@ GROUPDATADDIR="/lustre/fs24/group/veritas"
 #
 # data directory (VBF files)
 export VERITAS_DATA_DIR=${GROUPDATADDIR}
+# data directory for simulations (dCache)
+export VERITAS_DCACHE_DIR="/pnfs/ifh.de/acs/veritas/diskonly/"
 # general auxiliary directory
 export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPMINORVERSION}
 # pre-processed data products
