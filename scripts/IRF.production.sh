@@ -112,8 +112,11 @@ if [ -z "$CUTSLISTFILE" ]; then
         CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_${ANATYPE}.dat"
     fi
 fi
+# Modify by hand for extended cuts
+# CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_${ANATYPE}_EXTENDED_CUTS.dat"
 
 echo "Cut list file: $CUTSLISTFILE"
+echo "Simulation type: $SIMTYPE"
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
