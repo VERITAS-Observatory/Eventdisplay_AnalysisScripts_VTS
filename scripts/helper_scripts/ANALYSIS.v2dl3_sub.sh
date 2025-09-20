@@ -84,7 +84,7 @@ getNumberedDirectory()
 getInterpolator()
 {
     EFF="$1"
-    if [[ "$EVNDISPVERSION" != v491* ]]; then
+    if [[ "$EFF" != *v491* ]]; then
         INTER="RegularGridInterpolator"
     else
         if [[ "$EFF" == *V5* ]] || [[ "$EFF" == *V4* ]] || [[ "$EFF" == *CARE_RedHV* ]]; then
