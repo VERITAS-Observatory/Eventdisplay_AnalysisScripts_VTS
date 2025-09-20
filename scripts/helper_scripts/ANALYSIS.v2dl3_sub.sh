@@ -10,6 +10,7 @@
 RUNLIST=RRUNLIST
 ODIR=OODIR
 CUT=CCUT
+V2DL3VERSION="0.8.0"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -40,7 +41,7 @@ check_conda_installation()
         exit
     fi
     env_info=$(conda info --envs)
-    env_name="v2dl3Eventdisplay"
+    env_name="v2dl3Eventdisplay-${V2DL3VERSION}"
     if [[ "$env_info" == *"$env_name"* ]]; then
         echo "Found conda environment '$env_name'"
     else
@@ -53,7 +54,7 @@ check_conda_installation()
 check_conda_installation
 
 source activate base
-conda activate v2dl3Eventdisplay
+conda activate v2dl3Eventdisplay-${V2DL3VERSION}
 export PYTHONPATH=\$PYTHONPATH:${V2DL3SYS}
 
 V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
@@ -77,6 +78,24 @@ getNumberedDirectory()
     echo ${ODIR}
 }
 
+# interpolator; might depend on IRF type
+# RegularGridInterpolator is generally the default
+# v491 IRFs are partly incomplete and require KNeighborsRegressor
+getInterpolator()
+{
+    EFF="$1"
+    if [[ "$EVNDISPVERSION" != v491* ]]; then
+        INTER="RegularGridInterpolator"
+    else
+        if [[ "$EFF" == *V5* ]] || [[ "$EFF" == *V4* ]] || [[ "$EFF" == *CARE_RedHV* ]]; then
+            INTER="RegularGridInterpolator"
+        else
+            INTER="KNeighborsRegressor"
+        fi
+    fi
+    echo ${INTER}
+}
+
 for RUN in $FILES
 do
     echo $RUN
@@ -92,6 +111,7 @@ do
     EFFAREA=$(echo $result | awk '{print $5}')
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
     DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
+    INTERPOLATOR=$(getInterpolator $EFFAREA)
     if [[ ! -e ${DBFITSFILE} ]]; then
         echo "DB File ${DBFITSFILE} not found"
         echo "Skipping run $RUN"
@@ -122,11 +142,12 @@ do
                 --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
                 --logfile ${ODIR}/${m}${p}/${RUN}.log \
                 --instrument_epoch ${EPOCH} \
+                --interpolator_name ${INTERPOLATOR} \
                 --db_fits_file ${DBFITSFILE} \
                 ${ODIR}/${m}${p}/${RUN}.fits.gz
 
             python --version >> ${ODIR}/${m}${p}/${RUN}.log
-            conda list -n v2dl3Eventdisplay >> ${ODIR}/${m}${p}/${RUN}.log
+            conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/${RUN}.log
             PDIR=$(pwd)
             cd ${PDIR}
         done
