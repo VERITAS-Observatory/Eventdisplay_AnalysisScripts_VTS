@@ -2,7 +2,7 @@
 # submit evndisp for grisu/care simulations
 
 # qsub parameters
-h_cpu=47:59:00; h_vmem=8000M; tmpdir_size=250G
+h_cpu=47:59:00; h_vmem=8000M; tmpdir_size=50G
 DATE=$(date +"%y%m%d")
 
 # EventDisplay version
@@ -104,9 +104,10 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="941200"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="951200"
-#    [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
+    [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
+#    [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="981200"
 # Used for 2025 additional MC production
-    [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="971200"
+#    [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="971200"
 fi
 
 INT_WOBBLE=$(echo "$WOBBLE*100" | bc | awk -F '.' '{print $1}')
@@ -163,12 +164,17 @@ elif [ ${SIMTYPE} == "CARE_RedHV" ]; then
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
 #    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz*.zst"
 # Used for processing of pre-2025 simulations (run number starting with 65...)
-#    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_65*.zst"
+   VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_[0-5].vbf.zst"
+#    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_65*.vbf.zst"
 # Used for 2025 additional MC production
-    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_66*.zst"
+#    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_66*.zst"
 fi
 echo "VBF file name search string: $VBFILENAME"
 VBFNAME=$(find ${SIMDIR} -name "$VBFILENAME" -not -name "*.log" -not -name "*.md5sum")
+if [[ -z "$VBFNAME" ]]; then
+    echo "No vbf files found"
+    exit
+fi
 
 SUBMISSION_SCRIPT="$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh"
 SUBC=$("$SUBMISSION_SCRIPT")
