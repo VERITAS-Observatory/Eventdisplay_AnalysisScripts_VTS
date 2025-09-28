@@ -220,7 +220,7 @@ if [[ $SUBC == *"condor"* ]]; then
 
     SUBSCRIPT=$(readlink -f "${FSCRIPT}")
     SUBFIL=${SUBSCRIPT}.condor
-    [[ -f "$SUBFIL" ]] && rm -f "$SUBFIL".
+    [[ -f "$SUBFIL" ]] && rm -f "$SUBFIL"
 
 cat > ${SUBFIL} <<EOL
 Executable = ${SUBSCRIPT}
