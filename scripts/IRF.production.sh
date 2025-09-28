@@ -30,7 +30,8 @@ optional parameters:
                             (V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b V6_2013_2014a V6_2013_2014b
                              V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
                              V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
-                             V6_2022_2022s, V6_2022_2023w, V6_2023_2023s, V6_2023_2024w, V6_2024_2024s\")
+                             V6_2022_2022s V6_2022_2023w V6_2023_2023s V6_2023_2024w V6_2024_2024s
+                             V6_2024_2025w \")
 
     [atmosphere]            atmosphere model(s) (21/61 = winter, 22/62 = summer)
                             (default: \"61 62\")
@@ -111,13 +112,16 @@ if [ -z "$CUTSLISTFILE" ]; then
         CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_${ANATYPE}.dat"
     fi
 fi
+# Modify by hand for extended cuts
+# CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_${ANATYPE}_EXTENDED_CUTS.dat"
 
 echo "Cut list file: $CUTSLISTFILE"
+echo "Simulation type: $SIMTYPE"
 
 # simulation types and definition of parameter space
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     # GrISU simulation parameters
-    SIMDIR=${VERITAS_DATA_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
+    SIMDIR=${VERITAS_DCACHE_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
     NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
     WOBBLE_OFFSETS=( 0.5 0.00 0.25 0.75 1.00 1.25 1.50 1.75 2.00 )
@@ -158,8 +162,8 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     ######################################
     # TEST
     # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 200 )
+    # WOBBLE_OFFSETS=( 0.0 )
+    # NSB_LEVELS=( 350 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -174,29 +178,30 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     # (END TEMPORARY)
     ######################################
 elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
-    SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
+    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find -L "${SIMDIR}" -name "*.vbf.zst" | sed -n 's/.*_\([0-9]\+\)MHz_.*/\1/p' | sort -u)
+    WOBBLE_OFFSETS=$(find -L "$SIMDIR" -type f | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # NSB_LEVELS=( 300 )
     # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
-    SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
+    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
     ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
-    # assume sanme NSB and wobble offsets in all bins
+    # assume same NSB and wobble offsets in all bins
     NSB_LEVELS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
     WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
-    # NSB_LEVELS=( 200 )
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
+    # ZENITH_ANGLES=( 20 )
     # WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 160 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
     # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
