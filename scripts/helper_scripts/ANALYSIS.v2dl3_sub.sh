@@ -55,7 +55,7 @@ check_conda_installation
 
 source activate base
 conda activate v2dl3Eventdisplay-${V2DL3VERSION}
-export PYTHONPATH=\$PYTHONPATH:${V2DL3SYS}
+pip install -e "${V2DL3SYS%/}-v${V2DL3VERSION}"
 
 V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
 # selection for full-gamma files
@@ -106,7 +106,7 @@ do
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    result=$(python ${V2DL3SYS}/utils/query_anasum_runparameters.py ${ANASUMFILE} ${RUN})
+    result=$(v2dl3-eventdisplay-query-runparameters ${ANASUMFILE} ${RUN})
     EPOCH=$(echo $result |  awk '{print $2}')
     EFFAREA=$(echo $result | awk '{print $5}')
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
@@ -136,7 +136,7 @@ do
             mkdir -p ${ODIR}/${m}${p}
             rm -f ${ODIR}/${m}${p}/${RUN}.log
 
-            python ${V2DL3SYS}/pyV2DL3/script/v2dl3_for_Eventdisplay.py \
+            v2dl3-eventdisplay \
                 --${m} \
                 ${V2DL3OPT} ${V2DL3SELECT} \
                 --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
