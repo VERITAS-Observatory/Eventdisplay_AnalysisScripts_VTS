@@ -15,7 +15,7 @@ required parameters:
 
     <sim type>              simulation type
                             Main types: GRISU, CARE_24_20, CARE_RedHV_Feb2024, CARE_UV_2212
-                            V6 basic types: CARE_202404, CARE_RedHV_Feb202
+                            V6 basic types: CARE_202404, CARE_RedHV_Feb2024
                             Others: CARE_June2020, CARE_RedHV, CARE_202404
 
     <IRF type>              type of instrument response function to produce.
