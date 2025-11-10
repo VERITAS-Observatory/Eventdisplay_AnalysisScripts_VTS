@@ -251,13 +251,13 @@ do
       awk '{
           filename = $0;
           # Remove extension to get run number (equivalent to ${1%%.*})
-          sub(/\..*$/, "", $0);
-          runn = $0;
-          # Check if run number < 100000 (length check)
+          sub(/\..*$/, "");
+          runn = $0 + 0;  # Force numeric conversion
+          # Check if run number < 100000
           if (runn < 100000) {
-              prefix = substr(runn, 1, 1);
+              prefix = substr($0, 1, 1);
           } else {
-              prefix = substr(runn, 1, 2);
+              prefix = substr($0, 1, 2);
           }
           print "* BACKGROUNDFILE DDIR/" prefix "/" filename;
       }' >> "$RFIL.runparameter"
