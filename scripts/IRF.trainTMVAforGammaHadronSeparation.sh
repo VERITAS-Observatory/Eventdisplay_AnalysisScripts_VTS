@@ -13,7 +13,7 @@
 # - Use nullglob for safe file globbing without ls
 #
 
-h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=24G
+h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 

@@ -201,7 +201,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
     # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
+    WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 160 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
@@ -323,18 +323,19 @@ for VX in $EPOCH; do
                                 continue
                             fi
                             echo "Size cut applied: $SIZECUT"
+                            RUNPAR="TMVA.BDT.runparameter"
                             if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/BDT.runparameter
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/"$RUNPAR"
                             else
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/"$RUNPAR" "$MVADIR"/"$RUNPAR"
                             fi
-                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
+                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/"$RUNPAR"
                             if [[ $CUTFIL = *"NTel3"* ]]; then
-                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/BDT.runparameter
+                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/"$RUNPAR"
                             fi
                             ./IRF.trainTMVAforGammaHadronSeparation.sh \
                                          "${TRAINDIR}" \
-                                         "$MVADIR"/BDT.runparameter \
+                                         "$MVADIR"/"$RUNPAR" \
                                          "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                          # Cut optimization
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
