@@ -44,9 +44,6 @@ mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGIDR}/x* 2>/dev/null
 
-# split run list into smaller run lists
-RUNS=$(cat ${RUNLIST})
-
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.dispXGB_sub"
 TIMETAG=`date +"%s"`

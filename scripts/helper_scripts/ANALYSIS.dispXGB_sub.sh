@@ -83,7 +83,7 @@ echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
 
 OFIL=$(basename $MSCW_FILE .root)
-OFIL="${ODIR}/${OFIL}.${XGB}.root"
+OFIL="${ODIR}/${OFIL}.${XGB}"
 echo "Output file $OFIL"
 
 rm -f "$OFIL".log
