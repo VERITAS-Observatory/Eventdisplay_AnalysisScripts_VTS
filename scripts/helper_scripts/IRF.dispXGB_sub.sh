@@ -8,6 +8,7 @@
 MSCW_FILE=FFILE
 ODIR=OODIR
 env_name="eventdisplay_v4"
+XGB="v7_DirXGB_0.5_1000000"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -54,7 +55,6 @@ ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
 ZA=${ZA%deg}
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
-XGB="v4_DirXGB_0.5_1000000"
 DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/AP/V6_2016_2017_ATM61/"
 if (( $(echo "90.-$ZA < 38" |bc -l) )); then
     DISPDIR="${DISPDIR}/SZE/"
