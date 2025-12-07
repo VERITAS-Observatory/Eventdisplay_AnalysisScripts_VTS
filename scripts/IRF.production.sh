@@ -201,7 +201,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
     # ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
+    # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 160 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )

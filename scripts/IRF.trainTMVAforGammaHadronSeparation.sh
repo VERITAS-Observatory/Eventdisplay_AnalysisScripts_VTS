@@ -6,12 +6,6 @@
 # - training at wobble offsets 0.5 deg only
 # - fixed of NSB levels (adapted to stdHV settings)
 #
-# Performance optimizations (Nov 2025):
-# - Read runparameter file once instead of multiple greps
-# - Batch file writes with output grouping {...} >> file
-# - Replace basename/get_run_prefix subprocesses with awk/parameter expansion
-# - Use nullglob for safe file globbing without ls
-#
 
 h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
 # EventDisplay version
