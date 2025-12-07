@@ -376,7 +376,8 @@ for VX in $EPOCH; do
                        $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
                        $SIMTYPE $ANATYPE $UUID
                else
-                   FIXEDWOBBLE="0.0 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
+                   # Explicitly remove 0.0 bin
+                   FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
                    $(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh \
                        $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
                        $SIMTYPE $ANATYPE $UUID
