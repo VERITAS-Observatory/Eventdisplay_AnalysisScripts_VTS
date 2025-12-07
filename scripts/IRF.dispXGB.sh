@@ -9,19 +9,22 @@ if [ "$#" -lt 2 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
-IRF.dispXGB.sh <input file list> <output directory>
+IRF.dispXGB.sh <input file list> <output directory> <XGB>
 
 required parameters:
 
     <input file list>       file list of input files with one file per line
 
     <output directory>      directory where fits.gz files are written
+
+    <XGB>                   XGB model name (e.g. v7_noWeight_DirXGB_0.5_1000000)
 "
 exit
 fi
 # Parse command line arguments
 FILELIST=$1
 [[ "$2" ]] && ODIR=$2
+[[ "$3" ]] && XGB=$3
 
 # Read file list
 if [[ ! -f "$FILELIST" ]]; then
@@ -55,6 +58,7 @@ do
     rm -f $FSCRIPT.sh
 
     sed -e "s|FFILE|$FILE|" \
+        -e "s|XXGB|$XGB|" \
         -e "s|OODIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x "$FSCRIPT.sh"

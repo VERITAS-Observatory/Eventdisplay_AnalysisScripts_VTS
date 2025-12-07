@@ -1,27 +1,30 @@
 #!/bin/bash
-# script to run XGBoost on mscw files.
+# script to run XGBoost on mscw files (data)
 #
 
 # qsub parameters
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
-if [ "$#" -lt 2 ]; then
+if [ "$#" -lt 3 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
-ANALYSIS.dispXGB.sh <run list> <output directory>
+ANALYSIS.dispXGB.sh <run list> <output directory> <XGB>
 
 required parameters:
 
     <runlist>               simple run list with one run number per line.
 
     <output directory>      directory where fits.gz files are written
+
+    <XGB>                   XGB model name (e.g. v7_noWeight_DirXGB_0.5_1000000)
 "
 exit
 fi
 # Parse command line arguments
 RUNLIST=$1
 [[ "$2" ]] && ODIR=$2
+[[ "$3" ]] && XGB=$3
 
 # Read runlist
 if [[ ! -f "$RUNLIST" ]]; then
@@ -55,6 +58,7 @@ do
     rm -f $FSCRIPT.sh
 
     sed -e "s|RRUN|$RUNN|" \
+        -e "s|XXGB|$XGB|" \
         -e "s|OODIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x "$FSCRIPT.sh"

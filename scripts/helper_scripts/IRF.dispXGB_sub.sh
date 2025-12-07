@@ -8,7 +8,7 @@
 MSCW_FILE=FFILE
 ODIR=OODIR
 env_name="eventdisplay_v4"
-XGB="v7_DirXGB_0.5_1000000"
+XGB=XXGB
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
