@@ -26,9 +26,9 @@ mkdir -p $TEMPDIR
 ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
 
 OBSTIME="5."
-MINEVENTS="10."
+MINEVENTS="5."
 if [[ $CUT == *"Moderate"* ]]; then
-    OBSTIME="1.0"
+    OBSTIME="3.0"
 elif [[ $CUT == *"Soft"* ]]; then
     OBSTIME="0.2"
 elif [[ $CUT == *"Hard"* ]]; then
