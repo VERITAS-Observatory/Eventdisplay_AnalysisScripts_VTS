@@ -64,7 +64,7 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
 fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/XGB_AngularReconstruction/ze${ZA}deg/"
-LOGDIR="${VERITAS_USER_LOG_DIR}/${ANALYSIS_TYPE}/XGBAngRes-${EPOCH}-ATM${ATM}-${UUID}"
+LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-XGBAngRes-RECID${RECID}-${UUID}"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 mkdir -p "$LOGDIR"
