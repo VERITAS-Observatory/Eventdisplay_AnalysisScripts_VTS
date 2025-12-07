@@ -2,7 +2,7 @@
 # Pack dl3 directories into tar packages
 #
 
-VERSION="2025-03-21-v4.2"
+VERSION="2025-10-21-v4.4"
 LDIR=$(find . -maxdepth 1 -type d -name 'dl3*' ! -name '*all-events*')
 
 echo "Pack DL3 for version $VERSION"
