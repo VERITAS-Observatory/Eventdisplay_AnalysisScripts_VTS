@@ -80,6 +80,6 @@ do
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
         echo "RUN $RUNN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
-	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
+        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 	fi
 done

@@ -56,11 +56,11 @@ ZA=${ZA%deg}
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
 DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/AP/V6_2016_2017_ATM61/"
-if (( $(echo "90.-$ZA < 38" |bc -l) )); then
+if (( $(echo "90-$ZA < 38" |bc -l) )); then
     DISPDIR="${DISPDIR}/SZE/"
-elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
+elif (( $(echo "90-$ZA < 48" |bc -l) )); then
     DISPDIR="${DISPDIR}/MZE/"
-elif (( $(echo "90.-$ZA < 58" |bc -l) )); then
+elif (( $(echo "90-$ZA < 58" |bc -l) )); then
     DISPDIR="${DISPDIR}/LZE/"
 else
     DISPDIR="${DISPDIR}/XZE/"
