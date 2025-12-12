@@ -49,13 +49,13 @@ check_conda_installation
 source activate base
 conda activate $env_name
 
-OFIL="${ODIR}/XGB_ntel${TEL}.log"
-rm -f "$OFIL".log
+LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
+rm -f "$LOGFILE".log
 
 cd $EVNDISPSYS
-python $EVNDISPSYS/src/trainXGBoostforDirection.py $LLIST $TEL ${ODIR} $P $N >| ${OFIL} 2>&1
+python $EVNDISPSYS/src/trainXGBoostforDirection.py $LLIST $TEL ${ODIR} $P $N >| ${LOGFILE} 2>&1
 
-python --version >> "${OFIL}.log"
-conda list -n $env_name >> "${OFIL}.log"
+python --version >> "${LOGFILE}"
+conda list -n $env_name >> "${LOGFILE}"
 
 conda deactivate
