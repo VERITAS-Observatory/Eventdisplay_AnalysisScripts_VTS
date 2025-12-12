@@ -45,7 +45,7 @@ DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/XGB-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
-rm -f ${LOGIDR}/x* 2>/dev/null
+rm -f ${LOGDIR}/x* 2>/dev/null
 
 # Job submission script
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.dispXGB_sub"
@@ -77,7 +77,7 @@ do
 	elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${LOGDIR}/runscripts.$TIMETAG.dat
         echo "RUN $RUNN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
         "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
