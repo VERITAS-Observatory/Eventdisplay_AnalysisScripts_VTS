@@ -108,8 +108,8 @@ RUNPAR_CONTENT=$(cat "$RUNPAR")
 
 #####################################
 # energy bins
-if echo "$RUNPAR_CONTENT" | grep -q "^* ENERGYBINS"; then
-    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
+if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
+    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
     declare -a EBINARRAY=( $ENBINS ) #convert to array
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
@@ -119,7 +119,7 @@ if echo "$RUNPAR_CONTENT" | grep -q "^* ENERGYBINS"; then
         EBINMAX[$i]=${EBINARRAY[$i+1]}
     done
 else
-    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
+    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
     declare -a EBINARRAY=( $ENBINS ) #convert to array
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
@@ -135,7 +135,7 @@ fi
 
 #####################################
 # zenith angle bins
-ZEBINS=$(echo "$RUNPAR_CONTENT" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+ZEBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
 NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 
@@ -201,17 +201,15 @@ do
                   echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
                   exit 1
               fi
+              shopt -s nullglob
               if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                   for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
                   do
                       if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                           if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                              # Use parameter expansion to avoid basename subprocess calls
-                              shopt -s nullglob
                               for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root; do
                                   echo "* SIGNALFILE SIMDIR/${arg##*/}"
                               done
-                              shopt -u nullglob
                           fi
                       fi
                   done
@@ -220,16 +218,14 @@ do
                   do
                       if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                           if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                              # Use parameter expansion to avoid basename subprocess calls
-                              shopt -s nullglob
                               for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root; do
                                   echo "* SIGNALFILE SIMDIR/${arg##*/}"
                               done
-                              shopt -u nullglob
                           fi
                       fi
                   done
               fi
+              shopt -u nullglob
           done
       } >> $RFIL.runparameter
       echo "#######################################################################################" >> $RFIL.runparameter
