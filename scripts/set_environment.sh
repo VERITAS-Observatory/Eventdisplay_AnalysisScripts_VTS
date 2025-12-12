@@ -51,13 +51,13 @@ export VERITAS_IRFPRODUCTION_DIR=${GROUPLUSTDIR}/IRFPRODUCTION
 # user data
 export VERITAS_USER_DATA_DIR=${USERLUSTDIR}
 # user log
-export VERITAS_USER_LOG_DIR=${USERAFSDIR}/LOGS/VERITAS
+export VERITAS_USER_LOG_DIR=${USERLUSTDIR}/LOGS/VERITAS
 # EVENTDISPLAY script directory (this directory)
 export EVNDISPSCRIPTS="$(pwd)"
 
 ########################################################################
 # software settings
-export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3/
+export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
     export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPVERSION}-rc3.sif"
