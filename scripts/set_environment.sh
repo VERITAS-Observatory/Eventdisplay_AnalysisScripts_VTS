@@ -7,7 +7,7 @@ if (( $# < 2 )); then
    echo
    echo "Analysis types:  e.g., AP, AP_DISP, TS, NN"
    echo "Processing types: al9, apptainer"
-   exit
+   return
 fi
 
 export VERITAS_ANALYSIS_TYPE="${1}"
