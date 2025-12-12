@@ -24,8 +24,8 @@ VERSION="v491.0"
 VERSION="v490.7"
 BACKUP="$1"
 ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-ANATYPE="NN"
 ANATYPE="AP"
+ANATYPE="NN"
 
 echo "USER: $USER VERSION $VERSION ANATYPE $ANATYPE BACKUP $BACKUP"
 if [[ $VERSION = "v490.7"* ]]; then
@@ -38,22 +38,6 @@ else
     SYNC_MSCW=FALSE
     SYNC_DL3TAR=TRUE
     SYNC_DL3=FALSE
-fi
-
-if [[ $SYNC_EVNDISP == "TRUE" ]]; then
-    echo "Syncing evndisp"
-    rsync -avz -e ssh \
-         --backup --suffix="$BACKUP" \
-        ./processed_data_${VERSION}/$ANATYPE/evndisp/* \
-        ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/evndisp/
-fi
-
-if [[ $SYNC_MSCW == "TRUE" ]]; then
-    echo "Syncing mscw"
-    rsync -avz -e ssh \
-          --backup --suffix="$BACKUP" \
-         ./processed_data_${VERSION}/$ANATYPE/mscw/* \
-         ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/mscw/
 fi
 
 if [[ $SYNC_DL3TAR == "TRUE" ]]; then
@@ -77,4 +61,21 @@ if [[ $SYNC_DL3 == "TRUE" ]]; then
               $DL/* \
              ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/$DL3/
     done
+fi
+
+if [[ $SYNC_MSCW == "TRUE" ]]; then
+    echo "Syncing mscw"
+    rsync -avz -e ssh \
+          --backup --suffix="$BACKUP" \
+         ./processed_data_${VERSION}/$ANATYPE/mscw/* \
+         ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/mscw/
+fi
+
+
+if [[ $SYNC_EVNDISP == "TRUE" ]]; then
+    echo "Syncing evndisp"
+    rsync -avz -e ssh \
+         --backup --suffix="$BACKUP" \
+        ./processed_data_${VERSION}/$ANATYPE/evndisp/* \
+        ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/evndisp/
 fi
