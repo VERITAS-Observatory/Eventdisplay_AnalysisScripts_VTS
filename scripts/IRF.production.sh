@@ -323,18 +323,19 @@ for VX in $EPOCH; do
                                 continue
                             fi
                             echo "Size cut applied: $SIZECUT"
+                            RUNPAR="TMVA.BDT.runparameter"
                             if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/BDT.runparameter
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/"$RUNPAR"
                             else
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/"$RUNPAR" "$MVADIR"/"$RUNPAR"
                             fi
-                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
+                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/"$RUNPAR"
                             if [[ $CUTFIL = *"NTel3"* ]]; then
-                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/BDT.runparameter
+                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/"$RUNPAR"
                             fi
                             ./IRF.trainTMVAforGammaHadronSeparation.sh \
                                          "${TRAINDIR}" \
-                                         "$MVADIR"/BDT.runparameter \
+                                         "$MVADIR"/"$RUNPAR" \
                                          "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                          # Cut optimization
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then

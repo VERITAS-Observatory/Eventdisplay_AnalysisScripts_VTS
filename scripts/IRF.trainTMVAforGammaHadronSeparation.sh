@@ -7,7 +7,7 @@
 # - fixed of NSB levels (adapted to stdHV settings)
 #
 
-h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=24G
+h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
@@ -103,9 +103,13 @@ mkdir -p $LOGDIR
 mkdir -p $ODIR
 
 #####################################
+# Read runparameter file once for efficiency
+RUNPAR_CONTENT=$(cat "$RUNPAR")
+
+#####################################
 # energy bins
-if grep -q "^* ENERGYBINS" "$RUNPAR"; then
-    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
+if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
+    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
     declare -a EBINARRAY=( $ENBINS ) #convert to array
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
@@ -115,7 +119,7 @@ if grep -q "^* ENERGYBINS" "$RUNPAR"; then
         EBINMAX[$i]=${EBINARRAY[$i+1]}
     done
 else
-    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
+    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
     declare -a EBINARRAY=( $ENBINS ) #convert to array
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
@@ -131,7 +135,7 @@ fi
 
 #####################################
 # zenith angle bins
-ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+ZEBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
 NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 
@@ -177,7 +181,7 @@ do
 
       echo "* ENERGYBINS ${EBINMIN[$i]} ${EBINMAX[$i]}" > $RFIL.runparameter
       echo "* ZENBINS  ${ZEBINARRAY[$j]} ${ZEBINARRAY[$j+1]}" >> $RFIL.runparameter
-      grep "*" $RUNPAR | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
+      echo "$RUNPAR_CONTENT" | grep "^\*" | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
 
       nTrainSignal=200000
       nTrainBackground=200000
@@ -188,41 +192,42 @@ do
 
       echo "#######################################################################################" >> $RFIL.runparameter
       # signal and background files (depending on on-axis or cone data set)
-      for ATMX in $ATM; do
-          SDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/$ANATYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}${DISPBDT}"
-          echo "Signal input directory: $SDIR"
-          if [[ ! -d $SDIR ]]; then
-              echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
-              exit 1
-          fi
-          if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-              for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
-              do
-                  if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
-                      if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root`
-                          for arg in $SIGNALLIST
-                          do
-                              echo "* SIGNALFILE SIMDIR/$(basename $arg)" >> $RFIL.runparameter
-                          done
+      # Collect all signal files first, then write in one batch
+      {
+          for ATMX in $ATM; do
+              SDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/$ANATYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}${DISPBDT}"
+              echo "Signal input directory: $SDIR"
+              if [[ ! -d $SDIR ]]; then
+                  echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
+                  exit 1
+              fi
+              shopt -s nullglob
+              if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+                  for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
+                  do
+                      if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
+                          if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
+                              for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root; do
+                                  echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                              done
+                          fi
                       fi
-                  fi
-              done
-          else
-              for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
-              do
-                  if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
-                      if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                          SIGNALLIST=`ls -1 $SDIR/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root`
-                          for arg in $SIGNALLIST
-                          do
-                              echo "* SIGNALFILE SIMDIR/$(basename $arg)" >> $RFIL.runparameter
-                          done
+                  done
+              else
+                  for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
+                  do
+                      if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
+                          if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
+                              for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root; do
+                                  echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                              done
+                          fi
                       fi
-                  fi
-              done
-          fi
-      done
+                  done
+              fi
+              shopt -u nullglob
+          done
+      } >> $RFIL.runparameter
       echo "#######################################################################################" >> $RFIL.runparameter
       BLIST="$ODIR/BackgroundRunlist_Ze${j}.list"
       rm -f ${BLIST}
@@ -230,10 +235,22 @@ do
           echo "Error, directory with background files ${BDIR}/Ze_${j} not found, exiting..."
           exit 1
       fi
-      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | while read -r arg; do
-          PF=$(get_run_prefix "$arg")
-          echo "* BACKGROUNDFILE DDIR/$PF/$arg"
-      done >> "$RFIL.runparameter"
+      # Optimized background file listing using awk instead of subshell per file
+      # This replaces the get_run_prefix() function call for each file
+      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | \
+      awk '{
+          filename = $0;
+          # Remove extension to get run number (equivalent to ${1%%.*})
+          sub(/\..*$/, "");
+          runn = $0 + 0;  # Force numeric conversion
+          # Check if run number < 100000
+          if (runn < 100000) {
+              prefix = substr($0, 1, 1);
+          } else {
+              prefix = substr($0, 1, 2);
+          }
+          print "* BACKGROUNDFILE DDIR/" prefix "/" filename;
+      }' >> "$RFIL.runparameter"
       # expect training files to be from pre-processing directory
       BCKFILEDIR="$VERITAS_PREPROCESSED_DATA_DIR/$ANATYPE/mscw"
 
@@ -248,14 +265,14 @@ do
       echo $FSCRIPT.sh
 
       # run locally or on cluster
-      SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-      SUBC=`eval "echo \"$SUBC\""`
+      SUBC=$($(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh)
+      SUBC=$(eval "echo \"$SUBC\"")
       if [[ $SUBC == *"ERROR"* ]]; then
             echo $SUBC
             exit
       fi
       if [[ $SUBC == *qsub* ]]; then
-         JOBID=`$SUBC $FSCRIPT.sh`
+         JOBID=$($SUBC $FSCRIPT.sh)
          # account for -terse changing the job number format
          if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2

@@ -8,7 +8,7 @@ h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 IRFVERSION="$EDVERSION"
 
-if [ $# -lt 2 ]; then
+if [ "$#" -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
@@ -148,7 +148,7 @@ do
         -e "s|VERSIONIRF|${IRFVERSION}|" \
         -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
-    chmod u+x $FSCRIPT.sh
+    chmod u+x "$FSCRIPT.sh"
     echo $FSCRIPT.sh
 
     # run locally or on cluster
