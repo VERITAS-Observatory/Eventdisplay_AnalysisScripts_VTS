@@ -21,8 +21,7 @@ fi
 echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 
-# make output directory if it doesn't exist
-mkdir -p ${ODIR}
+mkdir -p "${ODIR}"
 echo -e "Output files will be written to:\n ${ODIR}"
 
 check_conda_installation()
@@ -52,8 +51,11 @@ conda activate $env_name
 LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
 rm -f "$LOGFILE".log
 
-cd $EVNDISPSYS
-python $EVNDISPSYS/src/trainXGBoostforDirection.py $LLIST $TEL ${ODIR} $P $N >| ${LOGFILE} 2>&1
+python $EVNDISPSYS/python/trainXGBoostforDirection.py \
+    "$LLIST" \
+    $TEL \
+    "${ODIR}" \
+    $P $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
 conda list -n $env_name >> "${LOGFILE}"

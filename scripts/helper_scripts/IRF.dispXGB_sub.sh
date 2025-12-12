@@ -19,8 +19,7 @@ fi
 echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 
-# make output directory if it doesn't exist
-mkdir -p ${ODIR}
+mkdir -p "${ODIR}"
 echo -e "Output files will be written to:\n ${ODIR}"
 
 check_conda_installation()
@@ -74,8 +73,10 @@ echo "Output file $OFIL"
 
 rm -f "$OFIL".log
 
-cd $EVNDISPSYS
-python src/applyXGBoostforDirection.py "$MSCW_FILE" "$DISPDIR" "$OFIL.root" > "$OFIL.log" 2>&1
+python $EVNDISPSYS/python/applyXGBoostforDirection.py \
+    "$MSCW_FILE" \
+    "$DISPDIR" \
+    "$OFIL.root" > "$OFIL.log" 2>&1
 
 python --version >> "${OFIL}.log"
 conda list -n $env_name >> "${OFIL}.log"
