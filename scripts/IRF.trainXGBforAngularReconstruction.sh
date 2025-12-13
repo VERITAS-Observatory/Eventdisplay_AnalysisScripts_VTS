@@ -96,7 +96,7 @@ for ((tel=2; tel<=4; tel++)); do
 
     echo "Processing Telescope $tel Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
-    FSCRIPT="$LOGDIR/XGB.TEL${tel}ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
+    FSCRIPT="$LOGDIR/trainXGB.TEL${tel}ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
     sed -e "s|OUTPUTDIR|$ODIR|" \
         -e "s|MSCWLIST|$MSCWLIST|" \
         -e "s|TTYPE|$tel|" "$SUBSCRIPT" > "$FSCRIPT"
