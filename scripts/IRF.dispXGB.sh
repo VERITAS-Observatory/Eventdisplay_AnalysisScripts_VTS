@@ -5,7 +5,7 @@
 # qsub parameters
 h_cpu=11:59:00; h_vmem=8000M; tmpdir_size=25G
 
-if [ "$#" -lt 2 ]; then
+if [ "$#" -lt 3 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
