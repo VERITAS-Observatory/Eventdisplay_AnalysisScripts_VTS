@@ -22,7 +22,8 @@ required parameters:
                              (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
                              ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
-                             TRAINMVANGRES, EVNDISPCOMPRESS, TRAINXGBANGRES)
+                             TRAINMVANGRES, EVNDISPCOMPRESS,
+                             TRAINXGBANGRES, ANAXGBANGRES)
 
 optional parameters:
 
@@ -293,6 +294,14 @@ for VX in $EPOCH; do
                 done # cuts
             done
             continue
+       fi
+       #############################################
+       # Analyse XGBs base on MSCW files
+       if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB reconstruction reading from $MSCWDIR"
+            ./IRF.dispXGB.sh "${MSCWDIR}" "${MSCWDIR}" "xgb_v0.1.0"
+          continue
        fi
        #############################################
        # MVA training
