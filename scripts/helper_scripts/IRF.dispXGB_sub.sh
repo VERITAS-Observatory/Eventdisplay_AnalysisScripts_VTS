@@ -9,6 +9,7 @@ MSCW_FILE=FFILE
 ODIR=OODIR
 env_name="eventdisplay_v4"
 XGB=XXGB
+ANATYPE=ANALYSISTYPE
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -54,7 +55,8 @@ ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
 ZA=${ZA%deg}
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/AP/V6_2016_2017_ATM61/"
+read EPOCH ATM < <(./bin/printRunParameter "$MSCW_FILE" -runinfo | awk '{print $1, $3}')
+DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}/"
 if [[ "${ZA}" -lt "38" ]]; then
     DISPDIR="${DISPDIR}/SZE/"
 elif [[ "${ZA}" -lt "48" ]]; then
@@ -74,9 +76,9 @@ echo "Output file $OFIL"
 rm -f "$OFIL".log
 
 python $EVNDISPSYS/python/applyXGBoostforDirection.py \
-    "$MSCW_FILE" \
-    "$DISPDIR" \
-    "$OFIL.root" > "$OFIL.log" 2>&1
+    --input-file "$MSCW_FILE" \
+    --model-dir "$DISPDIR" \
+    --output-file "$OFIL.root" > "$OFIL.log" 2>&1
 
 python --version >> "${OFIL}.log"
 conda list -n $env_name >> "${OFIL}.log"

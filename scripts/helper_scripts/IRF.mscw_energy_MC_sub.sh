@@ -24,6 +24,7 @@ INDIR=INPUTDIR
 ODIR=OUTPUTDIR
 # Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
+XGBVERSION="VERSIONXGB"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -192,6 +193,71 @@ read_cutlist()
     echo $CUTLIST
 }
 
+# Required for DISP XGB
+check_conda_installation()
+{
+    if command -v conda &> /dev/null; then
+        echo "Found conda installation."
+    else
+        echo "Error: found no conda installation."
+        echo "exiting..."
+        exit
+    fi
+    env_info=$(conda info --envs)
+    if [[ "$env_info" == *"$env_name"* ]]; then
+        echo "Found conda environment '$env_name'"
+    else
+        echo "Error: the conda environment '$env_name' does not exist."
+        echo "exiting..."
+        exit
+    fi
+}
+
+###############################################
+# Run XGB DISP reconstruction
+###############################################
+run_xgb()
+{
+    check_conda_installation
+    source activate base
+    conda activate $env_name
+    MSCW_FILE="$outputfilename"
+    ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
+    ZA=${ZA%deg}
+    echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
+
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}/"
+    if [[ "${ZA}" -lt "38" ]]; then
+        DISPDIR="${DISPDIR}/SZE/"
+    elif [[ "${ZA}" -lt "48" ]]; then
+        DISPDIR="${DISPDIR}/MZE/"
+    elif [[ "${ZA}" -lt "58" ]]; then
+        DISPDIR="${DISPDIR}/LZE/"
+    else
+        DISPDIR="${DISPDIR}/XZE/"
+    fi
+    echo "DispXGB directory $DISPDIR"
+    echo "DispXGB options $XGBVERSION"
+
+    OFIL=$(basename $MSCW_FILE .root)
+    OFIL="${DDIR}/${OFIL}.${XGBVERSION}"
+    echo "Output file $OFIL"
+
+    rm -f "$OFIL".log
+
+    python $EVNDISPSYS/python/applyXGBoostforDirection.py \
+        --input-file "$MSCW_FILE" \
+        --model-dir "$DISPDIR" \
+        --output-file "$OFIL.root" \
+        --image-selection $1 > "$OFIL.log" 2>&1
+
+    python --version >> "${OFIL}.log"
+    conda list -n $env_name >> "${OFIL}.log"
+
+    outputfilename="$OFIL.root"
+    conda deactivate
+}
+
 CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
 
 # loop over 4 and 3-telescope combinations
@@ -248,7 +314,12 @@ PARAMFILE="
 * RERUN_STEREO_RECONSTRUCTION_3TEL $ID
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
-* SIMULATIONFILE_DATA $outputfilename"
+* SIMULATIONFILE_DATA $outputfilename
+* XGBFILESUFFIX $XGBVERSION"
+
+        if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            run_xgb $ID
+        fi
 
         # create makeEffectiveArea parameter file
         EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
@@ -265,10 +336,18 @@ PARAMFILE="
         $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
         echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
         $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
+        echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
+        if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            XGBLOGFILE="${DDIR}/${OFILE}.${XGBVERSION}.log"
+            if [[ -f "$XGBLOGFILE" ]]; then
+                $EVNDISPSYS/bin/logFile xgbLog $DDIR/$EAPARAMS.root "$XGBLOGFILE"
+            else
+                echo "XGB log file $XGBLOGFILE not found, skipping."
+            fi
+        fi
         rm -f $OSUBDIR/$EAPARAMS.log
         cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
         chmod -R g+w $OSUBDIR
         chmod g+w $OSUBDIR/$EAPARAMS.root
-
     done
 done
