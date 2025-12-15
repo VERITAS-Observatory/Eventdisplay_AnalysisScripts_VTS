@@ -12,7 +12,7 @@ IRF.dispXGB.sh <input file directory> <output directory> <XGB>
 
 required parameters:
 
-    <input file directory>  direction with input files (will use all *.mscw.root files)
+    <input file directory>  directory with input files (will use all *.mscw.root files)
 
     <output directory>      directory where fits.gz files are written
 
