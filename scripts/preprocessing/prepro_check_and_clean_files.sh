@@ -17,7 +17,7 @@ echo "Searching for errors for data type $FTYPE"
 
 # simplified search for mscw
 if [[ $FTYPE == "mscw" ]]; then
-    grep -i error ./mscw/*.log | grep -v BDTDispError | grep -v "BDT disp" | grep -v weighting
+    grep -i error ./mscw/*.log | grep -Ev 'BDTDispError|BDT disp|weighting'
     echo "Finalized error search for mscw"
     exit
 fi
