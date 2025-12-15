@@ -49,7 +49,7 @@ source activate base
 conda activate $env_name
 
 LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
-rm -f "$LOGFILE".log
+rm -f "$LOGFILE"
 
 python $EVNDISPSYS/python/trainXGBoostforDirection.py \
     "$LLIST" \
