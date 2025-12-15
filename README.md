@@ -8,7 +8,7 @@
 
 This repository contains scripts for analyzing VERITAS data and MC simulations.
 
-These scripts are part of the Eventdisplay packages and require additionally the following items installed:
+These scripts are part of the Eventdisplay packages and additionally require the following items installed:
 
 - binaries and libraries from the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
 - Eventdisplay analysis files with configuration files, calibrations files, and instrument response functions. From [Eventdisplay_AnalysisFiles_VTS](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS).
@@ -41,7 +41,9 @@ VERITAS IRFs are divided into epochs (e.g., summer/winter, throughput epochs, in
 
 Throughput corrections are defined in [ParameterFiles/ThroughputCorrection.runparameter](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/ParameterFiles/ThroughputCorrection.runparameter).
 
-Analysis scripts require a list of all V6 summer and winter periods, which are listed in [IRF_EPOCHS_WINTER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_WINTER.dat) and [IRF_EPOCHS_SUMMER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_SUMMER.dat). UV Filter IRF periods are defined in [IRF_EPOCHS_obsfilter.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_obsfilter.dat). No changes to the analysis scripts are required, except for updating the help message (list of epochs) in [./IRF.production.sh](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/scripts/IRF.production.sh).
+Analysis scripts require a list of all V6 summer and winter periods, which are listed in [IRF_EPOCHS_WINTER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_WINTER.dat) and [IRF_EPOCHS_SUMMER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_SUMMER.dat). UV Filter IRF periods are defined in [IRF_EPOCHS_obsfilter.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_obsfilter.dat).
+
+No changes to the analysis scripts are required, except for updating the help message (list of epochs) in [./IRF.production.sh](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/scripts/IRF.production.sh).
 
 Adding a new epoch usually requires re-running the mscw data analysis steps with updated lookup tables and dispBDTs, as these IRFs have changed. This step also updates the IRF flag in the mscw files.
 
@@ -93,7 +95,7 @@ cd $VERITAS_EVNDISP_AUX_DIR/DispBDTs
 
 #### Preparation
 
-Analyze data runs for the new period to the `mscw` stage using `./ANALYSIS.mscw_energy.sh`.
+Analyze data runs for the new period to reach the `mscw` stage using `./ANALYSIS.mscw_energy.sh`.
 
 Select background runs for the BDT training.
 
@@ -143,7 +145,7 @@ Effective area generation requires the MC-generated mscw files and well defined 
 ./IRF.generalproduction.sh CARE_24_20 EFFECTIVEAREAS
 ```
 
-This generates effective areas per bin in parameter spaces. To combine the effective areas for a single file per cut and epcoh, run:
+This generates effective areas per bin in parameter spaces. To combine the effective areas for a single file per cut and epoch, run:
 
 ```bash
 ./IRF.generalproduction.sh CARE_24_20 COMBINEEFFECTIVEAREAS

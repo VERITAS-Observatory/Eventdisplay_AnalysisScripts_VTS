@@ -16,6 +16,7 @@ CUTSFILE="GAMMACUTS"
 EFFAREAFILE=EFFFILE
 REDO3TEL="15"
 IRFVERSION="VERSIONIRF"
+XGBVERSION="VERSIONXGB"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -51,8 +52,15 @@ inspect_executables()
     fi
 }
 
+# cp XGB version to TMPDIR (if available)
+echo "XGB VERSION: $XGBVERSION"
+if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+    XGBFIL=$(basename $MCFILE .root)
+    XGBFIL="$(dirname $MCFILE)/${XGBFIL}.${XGBVERSION}.root"
+    cp -f -v "$XGBFIL" "$DDIR"/
+fi
 # cp MC file to TMPDIR
-cp -f "$MCFILE" "$DDIR"/
+cp -f -v "$MCFILE" "$DDIR"/
 MCFILE=`basename $MCFILE`
 MCFILE=${DDIR}/${MCFILE}
 
@@ -98,7 +106,8 @@ PARAMFILE="
 * RERUN_STEREO_RECONSTRUCTION_3TEL $REDO3TEL
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
-* SIMULATIONFILE_DATA $MCFILE"
+* SIMULATIONFILE_DATA $MCFILE
+* XGBFILESUFFIX $XGBVERSION"
 
 # create makeEffectiveArea parameter file
 EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"

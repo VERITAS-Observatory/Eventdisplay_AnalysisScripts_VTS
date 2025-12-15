@@ -22,7 +22,8 @@ required parameters:
                              (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
                              ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
-                             TRAINMVANGRES, EVNDISPCOMPRESS)
+                             TRAINMVANGRES, EVNDISPCOMPRESS,
+                             TRAINXGBANGRES, ANAXGBANGRES)
 
 optional parameters:
 
@@ -295,6 +296,14 @@ for VX in $EPOCH; do
             continue
        fi
        #############################################
+       # Analyse XGBs based on MSCW files
+       if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB reconstruction reading from $MSCWDIR"
+            ./IRF.dispXGB.sh "${MSCWDIR}" "${MSCWDIR}" "xgb_v0.1.0"
+          continue
+       fi
+       #############################################
        # MVA training
        # train per epoch and atmosphere and for each cut
        # (cut as sizesecondmax cut is applied)
@@ -355,7 +364,7 @@ for VX in $EPOCH; do
        for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
-            if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+            if [[ $IRFTYPE == "TRAINMVANGRES" ]] || [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB="150 200 250"
@@ -371,9 +380,18 @@ for VX in $EPOCH; do
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
                    FIXEDNSB="160 200 250"
                fi
-               $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
-                   $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $ANATYPE $UUID
+               if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
+                       $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       $SIMTYPE $ANATYPE $UUID
+               else
+                   # Explicitly remove 0.0 bin
+                   FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
+                   FIXEDNSB="160 200 250 350"
+                   $(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh \
+                       $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       $SIMTYPE $ANATYPE $UUID
+               fi
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do

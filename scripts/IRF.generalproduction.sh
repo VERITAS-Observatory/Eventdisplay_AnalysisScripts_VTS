@@ -20,7 +20,7 @@ required parameters:
 
     <IRF type>              type of instrument response function to produce.
                             EVNDISP,
-                            MAKETABLES, COMBINETABLES, TRAINMVANGRES,
+                            MAKETABLES, COMBINETABLES, TRAINMVANGRES, TRAINXGBANGRES
                             ANALYSETABLES,
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             TRAINTMVA, OPTIMIZETMVA,
