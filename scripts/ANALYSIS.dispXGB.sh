@@ -81,5 +81,5 @@ do
         echo "RUN $RUNN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
         "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
-	fi
+    fi
 done
