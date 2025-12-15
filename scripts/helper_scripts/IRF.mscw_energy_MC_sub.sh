@@ -1,6 +1,6 @@
 #!/bin/bash
-# Analyse MC files with lookup tables
-# (optional) Calculate effective areas
+# Analyse MC files with lookup tables (mscw_energy stage)
+# (optional) Calculate instrument response functions (effective areas) for 4 and 3-telescope combinations
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
