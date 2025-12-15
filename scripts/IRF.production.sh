@@ -296,7 +296,7 @@ for VX in $EPOCH; do
             continue
        fi
        #############################################
-       # Analyse XGBs base on MSCW files
+       # Analyse XGBs based on MSCW files
        if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB reconstruction reading from $MSCWDIR"
