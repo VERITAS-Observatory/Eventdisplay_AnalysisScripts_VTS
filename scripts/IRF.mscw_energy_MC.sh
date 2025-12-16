@@ -70,8 +70,10 @@ ANALYSIS_TYPE="${9:-}"
 DISPBDT="${10:-0}"
 EFFAREACUTLIST="${11:-NOEFFAREA}"
 UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
+XGBVERSION="None"
+XGBVERSION="xgb"
 
-echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT)"
+echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBVERSION)"
 
 TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
 if [[ ! -f "$TABFILE" ]]; then
@@ -106,6 +108,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
     -e "s|USEDISP|$DISPBDT|" \
     -e "s|VERSIONIRF|$EDVERSION|" \
+    -e "s|VERSIONXGB|$XGBVERSION|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \
