@@ -10,7 +10,7 @@ EVNIRFVERSION="v4N"
 
 if [ $# -lt 7 ]; then
 echo "
-XGB (BDT) training for angular resolution from MC mscw files for different zenith angle bins
+XGB (BDT) training for stereo reconstruction from MC mscw files for different zenith angle bins
 
 IRF.trainXGBforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
