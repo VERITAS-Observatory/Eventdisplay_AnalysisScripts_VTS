@@ -300,7 +300,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB reconstruction reading from $MSCWDIR"
-            ./IRF.dispXGB.sh "${MSCWDIR}" "${MSCWDIR}" "xgb"
+            ./IRF.dispXGB.sh "${MSCWDIR}" "${MSCWDIR}" "xgb" "${ANATYPE}"
           continue
        fi
        #############################################

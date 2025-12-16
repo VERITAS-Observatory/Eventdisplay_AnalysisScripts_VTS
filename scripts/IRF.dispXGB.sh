@@ -20,7 +20,7 @@ required parameters:
 "
 exit
 fi
-set -e
+# set -e
 # Parse command line arguments
 INPUTDIR=$1
 [[ "$2" ]] && ODIR=$2

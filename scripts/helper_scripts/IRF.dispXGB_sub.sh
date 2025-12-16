@@ -55,8 +55,10 @@ ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
 ZA=${ZA%deg}
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
-read EPOCH ATM < <(./bin/printRunParameter "$MSCW_FILE" -runinfo | awk '{print $1, $3}')
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}/"
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
+EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
+ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
+DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATMO}/"
 if [[ "${ZA}" -lt "38" ]]; then
     DISPDIR="${DISPDIR}/SZE/"
 elif [[ "${ZA}" -lt "48" ]]; then
