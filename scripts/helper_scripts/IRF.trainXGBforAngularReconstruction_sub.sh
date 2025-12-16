@@ -52,10 +52,10 @@ LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
 rm -f "$LOGFILE"
 
 python $EVNDISPSYS/python/trainXGBoostforDirection.py \
-    "$LLIST" \
-    $TEL \
-    "${ODIR}" \
-    $P $N >| "${LOGFILE}" 2>&1
+    --input_file_list "$LLIST" \
+    --ntel $TEL \
+    --output_dir "${ODIR}" \
+    --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
 conda list -n $env_name >> "${LOGFILE}"
