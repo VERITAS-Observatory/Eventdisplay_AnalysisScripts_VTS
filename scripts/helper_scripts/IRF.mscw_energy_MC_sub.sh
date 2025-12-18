@@ -24,7 +24,7 @@ INDIR=INPUTDIR
 ODIR=OUTPUTDIR
 # Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
-XGBVERSION="VERSIONXGB"
+XGBVERSION=VERSIONXGB
 env_name="eventdisplay_v4"
 
 # output directory
@@ -217,6 +217,14 @@ check_conda_installation()
 ###############################################
 # Run XGB DISP reconstruction
 ###############################################
+get_xgb_output_file()
+{
+    XGBOFIL=$(basename $MSCW_FILE .root)
+    XGBOFIL="${DDIR}/${XGBOFIL}.${XGBVERSION}_ImgSel${1}"
+    echo "$XGBOFIL"
+}
+
+
 run_xgb()
 {
     check_conda_installation
@@ -239,24 +247,23 @@ run_xgb()
     fi
     echo "DispXGB directory $DISPDIR"
     echo "DispXGB options $XGBVERSION"
+    XGBOFIL=$(get_xgb_output_file $1)
+    echo "XGB Output file $XGBOFIL"
+    echo "DispXGB inputfle $MSCW_FILE"
 
-    OFIL=$(basename $MSCW_FILE .root)
-    OFIL="${DDIR}/${OFIL}.${XGBVERSION}"
-    echo "Output file $OFIL"
-
-    rm -f "$OFIL".log
+    rm -f "$XGBOFIL".log
 
     python $EVNDISPSYS/python/applyXGBoostforDirection.py \
         --input-file "$MSCW_FILE" \
         --model-dir "$DISPDIR" \
-        --output-file "$OFIL.root" \
-        --image-selection $1 > "$OFIL.log" 2>&1
+        --output-file "$XGBOFIL.root" \
+        --image-selection $1 > "$XGBOFIL.log" 2>&1
 
-    python --version >> "${OFIL}.log"
-    conda list -n $env_name >> "${OFIL}.log"
+    python --version >> "${XGBOFIL}.log"
+    conda list -n $env_name >> "${XGBOFIL}.log"
 
-    outputfilename="$OFIL.root"
     conda deactivate
+    echo "Finished calculated XGB"
 }
 
 CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
@@ -265,7 +272,7 @@ CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
 for ID in 15 14 13 11 7; do
     # Gamma/hadron cut list (depends on analysis and observation type)
     for CUTSFILE in ${CUTLIST[@]}; do
-        echo "calculate effective areas $CUTSFILE (ID $ID)"
+        echo "Calculate effective areas $CUTSFILE (ID $ID)"
         EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
         if [[ $ID == "15" ]]; then
             EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID0-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
@@ -311,12 +318,12 @@ PARAMFILE="
 * RESPONSEMATRICESEBINS 200
 * AZIMUTHBINS 1
 * FILLMONTECARLOHISTOS 0
-* ENERGYSPECTRUMINDEX 27 1.6 0.2
+* ENERGYSPECTRUMINDEX 40 1.5 0.1
 * RERUN_STEREO_RECONSTRUCTION_3TEL $ID
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $outputfilename
-* XGBFILESUFFIX $XGBVERSION"
+* XGBFILESUFFIX ${XGBVERSION}_ImgSel${ID}"
 
         if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             run_xgb $ID
@@ -326,6 +333,8 @@ PARAMFILE="
         EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
         rm -f "$DDIR/$EAPARAMS.dat"
         eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+        echo "Run parameter file:"
+        cat $DDIR/$EAPARAMS.dat
 
         # calculate effective areas
         rm -f $OSUBDIR/$OFILE.root
@@ -339,7 +348,7 @@ PARAMFILE="
         $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
         echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
         if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
-            XGBLOGFILE="${DDIR}/${OFILE}.${XGBVERSION}.log"
+            XGBLOGFILE="$(get_xgb_output_file $ID).log"
             if [[ -f "$XGBLOGFILE" ]]; then
                 $EVNDISPSYS/bin/logFile xgbLog $DDIR/$EAPARAMS.root "$XGBLOGFILE"
             else
@@ -347,7 +356,7 @@ PARAMFILE="
             fi
         fi
         rm -f $OSUBDIR/$EAPARAMS.log
-        cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
+        cp -f -v $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
         chmod -R g+w $OSUBDIR
         chmod g+w $OSUBDIR/$EAPARAMS.root
     done
