@@ -301,12 +301,18 @@ for ID in 15 14 13 11 7; do
             exit 1
         fi
 
-        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}_XGB_v2"
+        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}_no_XGB"
         if [[ $DISPBDT == "1" ]]; then
             OSUBDIR="${OSUBDIR}_DISP"
         fi
         echo -e "Output files will be written to:\n $OSUBDIR"
         mkdir -p $OSUBDIR
+
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            XGBFILESUFFIX=${XGBVERSION}_ImgSel${ID}
+        else
+            XGBFILESUFFIX=None
+        fi
 
 PARAMFILE="
 * FILLINGMODE 0
@@ -323,7 +329,7 @@ PARAMFILE="
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $outputfilename
-* XGBFILESUFFIX ${XGBVERSION}_ImgSel${ID}"
+* XGBFILESUFFIX ${XGBFILESUFFIX}"
 
         if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             run_xgb $ID
