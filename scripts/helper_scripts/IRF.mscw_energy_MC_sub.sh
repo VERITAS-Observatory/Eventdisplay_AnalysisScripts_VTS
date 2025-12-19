@@ -253,7 +253,7 @@ run_xgb()
 
     rm -f "$XGBOFIL".log
 
-    python $EVNDISPSYS/python/applyXGBoostforDirection.py \
+    python $EVNDISPSYS/py/applyXGBoostforDirection.py \
         --input-file "$MSCW_FILE" \
         --model-dir "$DISPDIR" \
         --output-file "$XGBOFIL.root" \
@@ -301,7 +301,7 @@ for ID in 15 14 13 11 7; do
             exit 1
         fi
 
-        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
+        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}_XGB_v2"
         if [[ $DISPBDT == "1" ]]; then
             OSUBDIR="${OSUBDIR}_DISP"
         fi
@@ -325,7 +325,7 @@ PARAMFILE="
 * SIMULATIONFILE_DATA $outputfilename
 * XGBFILESUFFIX ${XGBVERSION}_ImgSel${ID}"
 
-        if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             run_xgb $ID
         fi
 
@@ -347,7 +347,7 @@ PARAMFILE="
         echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
         $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
         echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
-        if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             XGBLOGFILE="$(get_xgb_output_file $ID).log"
             if [[ -f "$XGBLOGFILE" ]]; then
                 $EVNDISPSYS/bin/logFile xgbLog $DDIR/$EAPARAMS.root "$XGBLOGFILE"

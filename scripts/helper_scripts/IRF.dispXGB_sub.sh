@@ -77,7 +77,7 @@ echo "Output file $OFIL"
 
 rm -f "$OFIL".log
 
-python $EVNDISPSYS/python/applyXGBoostforDirection.py \
+python $EVNDISPSYS/py/applyXGBoostforDirection.py \
     --input-file "$MSCW_FILE" \
     --model-dir "$DISPDIR" \
     --output-file "$OFIL.root" > "$OFIL.log" 2>&1

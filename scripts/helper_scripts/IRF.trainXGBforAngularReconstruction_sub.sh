@@ -51,7 +51,7 @@ conda activate $env_name
 LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
 rm -f "$LOGFILE"
 
-python $EVNDISPSYS/python/trainXGBoostforDirection.py \
+python $EVNDISPSYS/py/trainXGBoostforDirection.py \
     --input_file_list "$LLIST" \
     --ntel $TEL \
     --output_dir "${ODIR}" \

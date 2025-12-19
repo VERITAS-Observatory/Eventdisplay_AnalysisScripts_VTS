@@ -54,7 +54,7 @@ inspect_executables()
 
 # cp XGB version to TMPDIR (if available)
 echo "XGB VERSION: $XGBVERSION"
-if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
     XGBFIL=$(basename $MCFILE .root)
     XGBFIL="$(dirname $MCFILE)/${XGBFIL}.${XGBVERSION}.root"
     cp -f -v "$XGBFIL" "$DDIR"/
