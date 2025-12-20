@@ -7,7 +7,7 @@
 # parameters replaced by parent script using sed
 RUN=RRUN
 ODIR=OODIR
-env_name="eventdisplay_v4"
+env_name="eventdisplay_ml"
 XGB="XXGB"
 
 # temporary (scratch) directory

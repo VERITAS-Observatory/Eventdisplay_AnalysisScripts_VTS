@@ -25,7 +25,7 @@ ODIR=OUTPUTDIR
 # Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
 XGBVERSION=VERSIONXGB
-env_name="eventdisplay_v4"
+env_name="eventdisplay_ml"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"

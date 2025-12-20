@@ -8,7 +8,7 @@
 LLIST=MSCWLIST
 TEL=TTYPE
 ODIR=OUTPUTDIR
-env_name="eventdisplay_v4"
+env_name="eventdisplay_ml"
 P="0.5"
 N="1000000"
 
@@ -51,7 +51,7 @@ conda activate $env_name
 LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
 rm -f "$LOGFILE"
 
-python $EVNDISPSYS/py/trainXGBoostforDirection.py \
+python $EVNDISP_MLSYS/src/eventdisplay_ml/train_xgb_stereo \
     --input_file_list "$LLIST" \
     --ntel $TEL \
     --output_dir "${ODIR}" \

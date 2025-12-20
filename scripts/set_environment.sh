@@ -58,6 +58,7 @@ export EVNDISPSCRIPTS="$(pwd)"
 ########################################################################
 # software settings
 export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3
+export EVNDISP_MLSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/Eventdisplay-ML
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
     export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPVERSION}-rc3.sif"

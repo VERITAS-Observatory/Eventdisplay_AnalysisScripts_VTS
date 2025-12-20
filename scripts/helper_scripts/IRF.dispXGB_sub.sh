@@ -7,7 +7,7 @@
 # parameters replaced by parent script using sed
 MSCW_FILE=FFILE
 ODIR=OODIR
-env_name="eventdisplay_v4"
+env_name="eventdisplay_ml"
 XGB=XXGB
 ANATYPE=ANALYSISTYPE
 
