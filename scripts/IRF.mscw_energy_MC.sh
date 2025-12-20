@@ -3,7 +3,7 @@
 # Allow optionally to calculate instrument response functions (for 4 and 3-telescope combinations).
 
 # qsub parameters
-h_cpu=10:29:00; h_vmem=8000M; tmpdir_size=100G
+h_cpu=10:29:00; h_vmem=12000M; tmpdir_size=100G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -70,8 +70,8 @@ ANALYSIS_TYPE="${9:-}"
 DISPBDT="${10:-0}"
 EFFAREACUTLIST="${11:-NOEFFAREA}"
 UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
-XGBVERSION="None"
 XGBVERSION="xgb"
+XGBVERSION="None"
 
 echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBVERSION)"
 
