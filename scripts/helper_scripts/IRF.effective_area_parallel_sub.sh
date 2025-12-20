@@ -54,7 +54,7 @@ inspect_executables()
 
 # cp XGB version to TMPDIR (if available)
 echo "XGB VERSION: $XGBVERSION"
-if [[ ! -z $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
     XGBFIL=$(basename $MCFILE .root)
     XGBFIL="$(dirname $MCFILE)/${XGBFIL}.${XGBVERSION}.root"
     cp -f -v "$XGBFIL" "$DDIR"/
@@ -102,7 +102,7 @@ PARAMFILE="
 * RESPONSEMATRICESEBINS 200
 * AZIMUTHBINS 1
 * FILLMONTECARLOHISTOS 0
-* ENERGYSPECTRUMINDEX 20 1.6 0.2
+* ENERGYSPECTRUMINDEX 40 1.5 0.1
 * RERUN_STEREO_RECONSTRUCTION_3TEL $REDO3TEL
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5

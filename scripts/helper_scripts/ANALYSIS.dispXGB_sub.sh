@@ -88,7 +88,7 @@ echo "Output file $OFIL"
 rm -f "$OFIL".log
 
 cd $EVNDISPSYS
-python $EVNDISPSYS/python/applyXGBoostforDirection.py \
+python $EVNDISPSYS/py/applyXGBoostforDirection.py \
     "$MSCW_FILE" \
     "$DISPDIR" \
     "$OFIL.root" > "$OFIL.log" 2>&1

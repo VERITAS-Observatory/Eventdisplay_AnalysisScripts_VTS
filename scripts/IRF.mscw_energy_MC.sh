@@ -1,8 +1,9 @@
 #!/bin/bash
-# submit mscw_energy to analyse MC files with lookup tables
+# Analyze simulation evndisp files using mscw_energy to generate IRF components.
+# Allow optionally to calculate instrument response functions (for 4 and 3-telescope combinations).
 
 # qsub parameters
-h_cpu=10:29:00; h_vmem=8000M; tmpdir_size=100G
+h_cpu=10:29:00; h_vmem=12000M; tmpdir_size=100G
 
 # EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -10,7 +11,7 @@ EVNIRFVERSION="v4N"
 
 if [ $# -lt 8 ]; then
 echo "
-IRF generation: analyze simulation evndisp files using mscw_energy
+IRF generation: analyze simulation evndisp files using mscw_energy and optionally instrument response functions.
 
 IRF.mscw_energy_MC.sh <table file> <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type] [dispBDT] [cut list] [uuid]
 
@@ -69,8 +70,10 @@ ANALYSIS_TYPE="${9:-}"
 DISPBDT="${10:-0}"
 EFFAREACUTLIST="${11:-NOEFFAREA}"
 UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
+XGBVERSION="xgb"
+XGBVERSION="None"
 
-echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT)"
+echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBVERSION)"
 
 TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
 if [[ ! -f "$TABFILE" ]]; then
@@ -105,6 +108,7 @@ sed -e "s|ZENITHANGLE|$ZA|" \
     -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
     -e "s|USEDISP|$DISPBDT|" \
     -e "s|VERSIONIRF|$EDVERSION|" \
+    -e "s|VERSIONXGB|$XGBVERSION|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|TABLEFILE|$TABFILE|" \
     -e "s|INPUTDIR|$INDIR|" \

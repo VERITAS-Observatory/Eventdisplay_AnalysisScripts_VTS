@@ -20,11 +20,12 @@ required parameters:
 "
 exit
 fi
-set -e
+# set -e
 # Parse command line arguments
 INPUTDIR=$1
 [[ "$2" ]] && ODIR=$2
 [[ "$3" ]] && XGB=$3
+ANALYSIS_TYPE="${4:-}"
 
 # Read file list
 if [[ ! -d "$INPUTDIR" ]]; then
@@ -64,6 +65,7 @@ do
 
     sed -e "s|FFILE|$FILE|" \
         -e "s|XXGB|$XGB|" \
+        -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
         -e "s|OODIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
     chmod u+x "$FSCRIPT.sh"
