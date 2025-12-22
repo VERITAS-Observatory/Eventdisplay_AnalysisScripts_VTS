@@ -253,7 +253,7 @@ run_xgb()
 
     rm -f "$XGBOFIL".log
 
-    python $EVNDISPSYS/py/applyXGBoostforDirection.py \
+    eventdisplay-ml-apply-xgb-stereo \
         --input-file "$MSCW_FILE" \
         --model-dir "$DISPDIR" \
         --output-file "$XGBOFIL.root" \

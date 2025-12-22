@@ -87,8 +87,7 @@ echo "Output file $OFIL"
 
 rm -f "$OFIL".log
 
-cd $EVNDISPSYS
-python $EVNDISPSYS/py/applyXGBoostforDirection.py \
+eventdisplay-ml-apply-xgb-stereo \
     "$MSCW_FILE" \
     "$DISPDIR" \
     "$OFIL.root" > "$OFIL.log" 2>&1

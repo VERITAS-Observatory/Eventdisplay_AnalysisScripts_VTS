@@ -74,15 +74,15 @@ echo "DispXGB options $XGB"
 OFIL=$(basename $MSCW_FILE .root)
 OFIL="${ODIR}/${OFIL}.${XGB}"
 echo "Output file $OFIL"
+LOGFILE="$OFIL".log
+rm -f "$LOGFILE"
 
-rm -f "$OFIL".log
-
-python $EVNDISPSYS/py/applyXGBoostforDirection.py \
+eventdisplay-ml-apply-xgb-stereo \
     --input-file "$MSCW_FILE" \
     --model-dir "$DISPDIR" \
-    --output-file "$OFIL.root" > "$OFIL.log" 2>&1
+    --output-file "$OFIL.root" > "${LOGFILE}" 2>&1
 
-python --version >> "${OFIL}.log"
-conda list -n $env_name >> "${OFIL}.log"
+python --version >> "${LOGFILE}"
+conda list -n $env_name >> "${LOGFILE}"
 
 conda deactivate

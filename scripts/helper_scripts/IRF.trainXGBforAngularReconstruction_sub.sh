@@ -51,7 +51,7 @@ conda activate $env_name
 LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
 rm -f "$LOGFILE"
 
-python $EVNDISP_MLSYS/src/eventdisplay_ml/train_xgb_stereo \
+eventdisplay-ml-train-xgb-stereo \
     --input_file_list "$LLIST" \
     --ntel $TEL \
     --output_dir "${ODIR}" \
