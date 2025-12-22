@@ -88,9 +88,9 @@ echo "Output file $OFIL"
 rm -f "$OFIL".log
 
 eventdisplay-ml-apply-xgb-stereo \
-    "$MSCW_FILE" \
-    "$DISPDIR" \
-    "$OFIL.root" > "$OFIL.log" 2>&1
+    --input-file "$MSCW_FILE" \
+    --model-dir "$DISPDIR" \
+    --output-file "$OFIL.root" > "$OFIL.log" 2>&1
 
 python --version >> "${OFIL}.log"
 conda list -n $env_name >> "${OFIL}.log"
