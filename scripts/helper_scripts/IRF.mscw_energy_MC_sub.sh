@@ -301,7 +301,7 @@ for ID in 15 14 13 11 7; do
             exit 1
         fi
 
-        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}_no_XGB"
+        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
         if [[ $DISPBDT == "1" ]]; then
             OSUBDIR="${OSUBDIR}_DISP"
         fi
