@@ -8,20 +8,19 @@
 #
 
 h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
-# EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 7 ]; then
 echo "
-TMVA (BDT) training for gamma/hadron separation: submit jobs from a TMVA runparameter file
+TMVA (BDT) training for gamma/hadron separation: submit jobs from a TMVA run-parameter file
 
-IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA runparameter file> <output directory> <output file name> <sim type> <epoch> <atmosphere>
+IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA run-parameter file> <output directory> <output file name> <sim type> <epoch> <atmosphere>
 
 required parameters:
 
     <background file directory>     directory with background training (mscw) files
 
-    <TMVA runparameter file>        TMVA runparameter file with basic options (incl. whole range of
+    <TMVA run-parameter file>        TMVA run-parameter file with basic options (incl. whole range of
 	                                energy and zenith angle bins) and full path
 
     <output directory>              BDT files are written to this directory
@@ -60,12 +59,12 @@ PARTICLE_TYPE="gamma"
 UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
 
 echo "Background file directory: $BDIR"
-echo "Runparameters: $RUNPAR"
+echo "Run parameters: $RUNPAR"
 echo "Simulation type: $SIMTYPE"
 
 # Fixed list of NSB levels; redHV needs attention
 if [[ ${SIMTYPE} == *"RedHV"* ]]; then
-    echo "Fixed NSB levels not suitable for RedHV trainging"
+    echo "Fixed NSB levels not suitable for RedHV training"
     exit 1
 fi
 
@@ -78,7 +77,7 @@ if [[ ! -z $VERITAS_ANALYSIS_TYPE ]]; then
     fi
 fi
 
-# Check that list of background file directory exists
+# Check that background file directory exists
 if [[ ! -d "$BDIR" ]]; then
     echo "Error, directory with background files $BDIR not found, exiting..."
     exit 1
@@ -110,9 +109,9 @@ RUNPAR_CONTENT=$(cat "$RUNPAR")
 # energy bins
 if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) #convert to array
+    declare -a EBINARRAY=( $ENBINS ) # convert to array
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
+    NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
     for (( i=0; i < $NENE; i++ ))
     do
         EBINMIN[$i]=${EBINARRAY[$i]}
@@ -120,9 +119,9 @@ if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
     done
 else
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) #convert to array
+    declare -a EBINARRAY=( $ENBINS ) # convert to array
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
+    NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
     z="0"
     for (( i=0; i < $NENE; i+=2 ))
     do
@@ -141,7 +140,7 @@ NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 
 #####################################
 # zenith angle bins of MC simulation files
-ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 )
+ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65)
 
 
 ####################################
@@ -167,8 +166,8 @@ do
    echo "==========================================================================="
    echo " "
    echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINMIN[$i]} to ${EBINMAX[$i]} (in log TeV)"
-##############################################
-# loop over all zenith angle bins
+   ##############################################
+   # loop over all zenith angle bins
    for (( j=0; j < $NZEW; j++ ))
    do
       echo "---------------------------------------------------------------------------"
@@ -217,7 +216,7 @@ do
                   for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
                   do
                       if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
-                          if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
+                          if (( "${ZENITH_ANGLES[$l]}" != "00" )); then
                               for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root; do
                                   echo "* SIGNALFILE SIMDIR/${arg##*/}"
                               done
