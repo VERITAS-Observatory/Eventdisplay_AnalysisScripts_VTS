@@ -31,7 +31,10 @@ MINOBSTIME=600
 # Sources to avoid
 BRIGHTSOURCES=( Crab Mrk421 )
 
-echo "Reference values: ${MEPOCH} ${OBSMODE} ${MULT} ${BRIGHTSOURCES[*]} "
+echo "Reference values: ${MEPOCH} ${OBSMODE}"
+echo "Multiplicity cut: ${MULT}"
+echo "Minimum observing time: ${MINOBSTIME} s"
+echo "Avoiding bright sources: ${BRIGHTSOURCES[*]}"
 
 # zenith angle bins
 ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
@@ -57,7 +60,6 @@ linkFile()
     fi
 }
 
-
 for F in ${FLIST}
 do
     echo "LINKING file ${F}.root"
@@ -66,7 +68,10 @@ do
         echo "    found..."
         continue
     fi
-    RUNZENITH=$($EVNDISPSYS/bin/printRunParameter ${F}.root -zenith | awk '{print $4}')
+    RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${F}.root -runinfo)
+    echo "   RUNINFO $RUNINFO"
+
+    RUNZENITH=$(echo $RUNINFO | awk '{print $8}')
     ZEBIN=0
     for (( j=0; j < $NZEW; j++ ))
     do
@@ -75,9 +80,7 @@ do
             break;
         fi
     done
-    echo "   Zenith bin: ${ZEBIN}"
-    RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${F}.root -runinfo)
-    echo "   RUNINFO $RUNINFO"
+    echo "   Zenith bin: ${ZEBIN} for zenith angle ${RUNZENITH}"
 
     TMPMEPOCH=$(echo $RUNINFO | awk '{print $2}')
     if [[ ${TMPMEPOCH} != ${MEPOCH} ]]; then
@@ -115,7 +118,7 @@ do
         continue
     fi
     # ignore runs with zero wobble offsets
-    RUNWOBBLE=$($EVNDISPSYS/bin/printRunParameter ${F}.root -wobbleInt | awk '{print $3}')
+    RUNWOBBLE=$(echo "$RUNINFO" | awk '{print $10}')
     if [[ $RUNWOBBLE == "0" ]]; then
         echo "   SKIPPING WOBBLE $RUNWOBBLE"
         continue
