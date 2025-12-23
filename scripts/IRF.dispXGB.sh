@@ -25,7 +25,7 @@ fi
 INPUTDIR=$1
 [[ "$2" ]] && ODIR=$2
 [[ "$3" ]] && XGB=$3
-ANALYSIS_TYPE="${4:-}"
+ANALYSIS_TYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 
 # Read file list
 if [[ ! -d "$INPUTDIR" ]]; then

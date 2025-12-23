@@ -6,24 +6,28 @@
 
 ## Overview
 
-This repository contains scripts for analyzing VERITAS data and MC simulations.
+This repository contains scripts for analyzing VERITAS observational data and Monte Carlo (MC) simulations.
 
-These scripts are part of the Eventdisplay package and additionally require the following to be installed:
+The analysis scripts are part of the Eventdisplay package and additionally require the following to be installed:
 
-- binaries and libraries from the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4).
-- Eventdisplay analysis files (configuration files, calibration files, and instrument response functions) from [Eventdisplay_AnalysisFiles_VTS](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS).
+- Binaries and libraries from the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4)
+- Eventdisplay analysis files (configuration files, calibration files, and instrument response functions) from [Eventdisplay_AnalysisFiles_VTS](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS)
+- Converter to DL3 format: [V2DL3](https://github.com/VERITAS-Observatory/V2DL3/)
+- Optional: install [Eventdisplay-ML](https://github.com/Eventdisplay/Eventdisplay-ML) for machine-learning-based reconstruction methods
 
-These scripts are optimized for the DESY computing environment, utilizing HTCondor batch systems and Apptainer containers.
+These scripts are optimized for the DESY computing environment and use HTCondor batch systems and Apptainer containers.
 
 ## Usage
 
-Set the following environment variables:
+Set the following environment variables before running the scripts:
 
 - `$EVNDISPSYS`: Path to the Eventdisplay installation ([Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4)).
 - `$EVNDISPSCRIPTS`: Path to the `./scripts` directory of this repository ([scripts directory](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/tree/main/scripts)).
 - `$VERITAS_ANALYSIS_TYPE` (recommended): Specifies the reconstruction methods applied, e.g., `AP_DISP`, `NN_DISP`.
+- `$V2DL3SYS`: Path to the V2DL3 installation ([V2DL3](https://github.com/VERITAS-Observatory/V2DL3/)).
+- `$EVNDISP_MLSYS` (optional): Path to the Eventdisplay-ML installation ([Eventdisplay-ML](https://github.com/Eventdisplay/Eventdisplay-ML)).
 
-Additional environment variables, especially useful for batch systems, can be found in [./scripts/set_environment.sh](./scripts/set_environment.sh).
+See `./scripts/set_environment.sh` for additional environment variables useful for batch systems.
 
 Submission commands for various batch systems are available in [submissionCommands.dat](./scripts/submissionCommands.dat). Modify these commands according to your local requirements.
 
@@ -43,13 +47,13 @@ Throughput corrections are defined in [ParameterFiles/ThroughputCorrection.runpa
 
 Analysis scripts require a list of all V6 summer and winter periods, which are listed in [IRF_EPOCHS_WINTER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_WINTER.dat) and [IRF_EPOCHS_SUMMER.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_SUMMER.dat). UV Filter IRF periods are defined in [IRF_EPOCHS_obsfilter.dat](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS/blob/main/IRF_EPOCHS_obsfilter.dat).
 
-No changes to the analysis scripts are required, except for updating the help message (list of epochs) in [./scripts/IRF.production.sh](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/scripts/IRF.production.sh).
+No changes to the analysis scripts are required, except for updating the help message that lists epochs in `./scripts/IRF.production.sh`.
 
 Adding a new epoch usually requires re-running the mscw data-analysis steps with updated lookup tables and DispBDTs, as these IRFs have changed. This step also updates the IRF flag in the mscw files.
 
-### MC Analysis - evndisp Stage
+### Monte Carlo (MC) Analysis - evndisp Stage
 
-This stage requires the most computing resources and usually takes several days. MC simulation files are required in the directory structure outlined in [./scripts/IRF.production.sh](./scripts/IRF.production.sh).
+This stage requires the most computing resources and typically takes several days. MC simulation files are required in the directory structure outlined in `./scripts/IRF.production.sh`.
 
 Run the following steps for all analysis types (`AP`, `NN`):
 
@@ -60,7 +64,7 @@ Run the following steps for all analysis types (`AP`, `NN`):
 
 Results are stored in `$VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`. For DESY productions, move the evndisp files to `$VERITAS_IRFPRODUCTION_DIR/v4N/AP/CARE_24_20/V6_2022_2023w_ATM61_gamma/`.
 
-### MC Analysis - Lookup Table Filling
+### Monte Carlo (MC) Analysis - Lookup Table Filling
 
 Fill lookup tables per bin:
 
@@ -76,7 +80,7 @@ Then combine the tables with:
 
 Move the tables from `$VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/${VERITAS_ANALYSIS_TYPE:0:2}/Tables` to `$VERITAS_EVNDISP_AUX_DIR/Tables`.
 
-### MC Analysis - DispBDT Angular Reconstruction Training
+### Monte Carlo (MC) Analysis - DispBDT Angular Reconstruction Training
 
 ```bash
 ./IRF.generalproduction.sh CARE_24_20 TRAINMVANGRES
@@ -89,7 +93,7 @@ cd $VERITAS_EVNDISP_AUX_DIR/DispBDTs
 ./copy_DispBDT.sh
 ```
 
-(watch for and address any errors printed to the screen)
+Watch for errors and address them as needed.
 
 ### BDT Training
 
@@ -124,7 +128,7 @@ Requires as input:
 
 Cut optimization requires signal rates (from simulations) and background rates (from data). The `$EVNDISPSYS/bin/calculateCrabRateFromMC` tool is used to calculate rates after pre-selection cuts (note: check that `CALCULATERATEFILES="TRUE"` is set in `$EVNDISPSCRIPTS/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub.sh`).
 
-**Important:** This step currently does not work when using Apptainer.
+**Important:** This step currently does not work with Apptainer.
 
 1. Generate effective areas for *pre-selection cuts* using `PRESELECTEFFECTIVEAREAS` with the usual two-step process: first generate effective areas per observational bin and then combine them. Move the combined files to `$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas`.
 2. Generate background `anasum` files for *pre-selection cuts*. Use `$EVNDISPSCRIPTS/ANALYSIS.anasum_allcuts.sh` with the `PRECUTS` option to submit the corresponding jobs (use the same runs for background rate calculation as used for BDT training). Move these files into, e.g., `$VERITAS_IRFPRODUCTION_DIR/<eventdisplay version>/AP/BDTtraining/BackgroundRates/V6/NTel2-Moderate` (adjust epoch and cut directory name).

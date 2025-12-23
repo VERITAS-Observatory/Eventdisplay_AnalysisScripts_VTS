@@ -25,7 +25,7 @@ ODIR=OUTPUTDIR
 # Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
 XGBVERSION=VERSIONXGB
-env_name="eventdisplay_v4"
+env_name="eventdisplay_ml"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -253,7 +253,7 @@ run_xgb()
 
     rm -f "$XGBOFIL".log
 
-    python $EVNDISPSYS/py/applyXGBoostforDirection.py \
+    eventdisplay-ml-apply-xgb-stereo \
         --input-file "$MSCW_FILE" \
         --model-dir "$DISPDIR" \
         --output-file "$XGBOFIL.root" \
@@ -301,7 +301,7 @@ for ID in 15 14 13 11 7; do
             exit 1
         fi
 
-        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}_no_XGB"
+        OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
         if [[ $DISPBDT == "1" ]]; then
             OSUBDIR="${OSUBDIR}_DISP"
         fi

@@ -71,7 +71,6 @@ DISPBDT="${10:-0}"
 EFFAREACUTLIST="${11:-NOEFFAREA}"
 UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
 XGBVERSION="xgb"
-XGBVERSION="None"
 
 echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBVERSION)"
 

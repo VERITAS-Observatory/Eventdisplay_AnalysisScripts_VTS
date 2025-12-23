@@ -7,7 +7,7 @@
 # parameters replaced by parent script using sed
 RUN=RRUN
 ODIR=OODIR
-env_name="eventdisplay_v4"
+env_name="eventdisplay_ml"
 XGB="XXGB"
 
 # temporary (scratch) directory
@@ -87,11 +87,10 @@ echo "Output file $OFIL"
 
 rm -f "$OFIL".log
 
-cd $EVNDISPSYS
-python $EVNDISPSYS/py/applyXGBoostforDirection.py \
-    "$MSCW_FILE" \
-    "$DISPDIR" \
-    "$OFIL.root" > "$OFIL.log" 2>&1
+eventdisplay-ml-apply-xgb-stereo \
+    --input-file "$MSCW_FILE" \
+    --model-dir "$DISPDIR" \
+    --output-file "$OFIL.root" > "$OFIL.log" 2>&1
 
 python --version >> "${OFIL}.log"
 conda list -n $env_name >> "${OFIL}.log"
