@@ -68,7 +68,7 @@ if [[ $PROCESS == "apptainer"* ]]; then
 elif [[ $PROCESS == "al9" ]]; then
     unset EVNDISP_APPTAINER
     TDIR=`pwd`
-    export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root_v6.30.02.Linux-almalinux9.3-x86_64-gcc11.4/
+    export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root_v6.38.00.Linux-almalinux9.7-x86_64-gcc11.5/
     export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-c17/
     export EVNDISPSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/EventDisplay_${EVNDISPVERSION:0:4}-${PROCESS}
     cd "$ROOTSYS"
