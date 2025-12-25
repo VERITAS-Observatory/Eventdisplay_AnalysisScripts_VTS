@@ -160,14 +160,12 @@ get_run_prefix()
 SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_sub"
 
 ###############################################################
-# loop over all energy bins and submit a job for each bin
+# loop over all energy/zenith bins and submit a job for each bin
 for (( i=0; i < $NENE; i++ ))
 do
    echo "==========================================================================="
    echo " "
    echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINMIN[$i]} to ${EBINMAX[$i]} (in log TeV)"
-   ##############################################
-   # loop over all zenith angle bins
    for (( j=0; j < $NZEW; j++ ))
    do
       echo "---------------------------------------------------------------------------"
