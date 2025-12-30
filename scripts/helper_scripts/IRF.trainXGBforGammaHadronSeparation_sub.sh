@@ -52,7 +52,7 @@ check_conda_installation
 source activate base
 conda activate $env_name
 
-LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
+LOGFILE="${ODIR}/XGB_ntel${TEL}_ebin${EBIN}.log"
 rm -f "$LOGFILE"
 
 eventdisplay-ml-train-xgb-classify \
