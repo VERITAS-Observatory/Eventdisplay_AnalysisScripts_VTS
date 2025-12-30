@@ -4,9 +4,7 @@
 # qsub parameters
 h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 
-# EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
-EVNIRFVERSION="v4N"
 
 if [ $# -lt 7 ]; then
 echo "
