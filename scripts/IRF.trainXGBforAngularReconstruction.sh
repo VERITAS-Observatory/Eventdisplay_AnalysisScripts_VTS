@@ -71,11 +71,8 @@ mkdir -p "$LOGDIR"
 echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
 
-# training file name
-BDTFILE="mvaAngRes_${ZA}deg"
-
 # prepare list of input files
-MSCWLIST=$ODIR/${BDTFILE}.list
+MSCWLIST="$ODIR/xgbFiles_${ZA}deg.list"
 rm -f ${MSCWLIST}
 touch ${MSCWLIST}
 

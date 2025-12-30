@@ -54,6 +54,7 @@ rm -f "$LOGFILE"
 eventdisplay-ml-train-xgb-stereo \
     --input_file_list "$LLIST" \
     --ntel $TEL \
+    --model-prefix "${ODIR}/dispdir_bdt"
     --output_dir "${ODIR}" \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
