@@ -58,10 +58,10 @@ rm -f "$LOGFILE"
 eventdisplay-ml-train-xgb-classify \
     --input_signal_file_list "${SIGNALLIST}" \
     --input_background_file_list "${BCKLIST}" \
-    --ntel $TEL \
-    --model-prefix "${ODIR}/dispdir_bdt" \
+    --n_tel $TEL \
+    --model_prefix "${ODIR}/dispdir_bdt" \
     --energy_bin_number "${EBIN}" \
-    --model-parameters "${PARA}" \
+    --model_parameters "${PARA}" \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"

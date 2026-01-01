@@ -7,7 +7,6 @@
 # - fixed of NSB levels (adapted to stdHV settings)
 #
 
-# qsub parameters
 h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
@@ -154,39 +153,39 @@ for ((i=0; i<=2; i++)); do
       echo "Error, directory with background files ${BDIR}/Ze_${i} not found, exiting..."
       exit 1
   fi
-  find ${BDIR}/Ze_${i} -name "*.root" -printf "%f\n" | sort -R | head -n 100 >> "${BCKLIST}"
+  find ${BDIR}/Ze_${i} -name "*.root" | sort -R | head -n 100 >> "${BCKLIST}"
 done
 
 ###############################################################
-# loop over all energy bins and submit a job for each bin
-for (( i=0; i < $NENE; i++ ))
-do
-    echo "Energy Bin: $i"
+# loop over telescope multipliticity and energy bins and submit a job for each bin
+for ((tel=2; tel<=4; tel++)); do
+    for (( i=0; i < $NENE; i++ )); do
+        echo "NTEL $tel Energy Bin: $i"
 
-    # TODO ntel 4 fixed
-    FSCRIPT=$LOGDIR/XGBGAMMA"_$EPOCH""_ENERGY$i.sh"
-    sed -e "s|MSCWSIGNAL|$SIGNALLIST|"  \
-        -e "s|MSCWBCK|$BCKLIST|" \
-        -e "s|MODELPARA|$RUNPAR|" \
-        -e "s|ENERGYBIN|$i|" \
-        -e "s|TTYPE|4|" \
-        -e "s|OUTPUTDIR|${ODIR}|" $SUBSCRIPT > $FSCRIPT
+        FSCRIPT=$LOGDIR/XGBGAMMA"_$EPOCH""_TEL${tel}_ENERGY$i.sh"
+        sed -e "s|MSCWSIGNAL|$SIGNALLIST|"  \
+            -e "s|MSCWBCK|$BCKLIST|" \
+            -e "s|MODELPARA|$RUNPAR|" \
+            -e "s|ENERGYBIN|$i|" \
+            -e "s|TTYPE|$tel|" \
+            -e "s|OUTPUTDIR|${ODIR}|" $SUBSCRIPT > $FSCRIPT
 
-    chmod u+x $FSCRIPT
-    echo $FSCRIPT
+        chmod u+x $FSCRIPT
+        echo $FSCRIPT
 
-    # run locally or on cluster
-    SUBC=$($(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh)
-    SUBC=$(eval "echo \"$SUBC\"")
-    if [[ $SUBC == *"ERROR"* ]]; then
-        echo $SUBC
-        exit
-    fi
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
-    echo
-    echo "-------------------------------------------------------------------------------"
-    echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-    echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-    echo "-------------------------------------------------------------------------------"
-    echo
+        # run locally or on cluster
+        SUBC=$($(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh)
+        SUBC=$(eval "echo \"$SUBC\"")
+        if [[ $SUBC == *"ERROR"* ]]; then
+            echo $SUBC
+            exit
+        fi
+        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+        echo
+        echo "-------------------------------------------------------------------------------"
+        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "-------------------------------------------------------------------------------"
+        echo
+    done
 done

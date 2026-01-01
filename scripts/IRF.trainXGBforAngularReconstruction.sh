@@ -1,7 +1,6 @@
 #!/bin/bash
 # train XGB for angular reconstruction
 
-# qsub parameters
 h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)

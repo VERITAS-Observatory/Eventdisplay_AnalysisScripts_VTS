@@ -78,9 +78,9 @@ LOGFILE="$OFIL".log
 rm -f "$LOGFILE"
 
 eventdisplay-ml-apply-xgb-stereo \
-    --input-file "$MSCW_FILE" \
-    --model-dir "$DISPDIR" \
-    --output-file "$OFIL.root" > "${LOGFILE}" 2>&1
+    --input_file "$MSCW_FILE" \
+    --model_dir "$DISPDIR" \
+    --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
 conda list -n $env_name >> "${LOGFILE}"
