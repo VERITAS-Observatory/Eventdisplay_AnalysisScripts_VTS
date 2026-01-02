@@ -1,5 +1,5 @@
 #!/bin/bash
-# submit XGBoost analyse on mscw MC files.
+# XGBoost analysisi on mscw MC files.
 
 # qsub parameters
 h_cpu=11:59:00; h_vmem=8000M; tmpdir_size=25G
@@ -8,11 +8,12 @@ if [ "$#" -lt 4 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
-IRF.dispXGB.sh <input file directory> <output directory> <XGB>
+IRF.dispXGB.sh <analysis type> <input file directory> <output directory> <XGB>
 
 required parameters:
 
     <analysis type>         analysis type - 'stereo_analysis' or 'classification'
+
     <input file directory>  directory with input files (will use all *.mscw.root files)
 
     <output directory>      directory where fits.gz files are written
@@ -21,12 +22,11 @@ required parameters:
 "
 exit
 fi
-# set -e
 # Parse command line arguments
 XGB_TYPE=$1
 INPUTDIR=$2
-[[ "$2" ]] && ODIR=$3
-[[ "$3" ]] && XGB=$4
+[[ "$3" ]] && ODIR=$3
+[[ "$4" ]] && XGB=$4
 ANALYSIS_TYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 
 echo "XGB analysis type: $XGB_TYPE"
@@ -90,6 +90,7 @@ do
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${LOGDIR}/runscripts.$TIMETAG.dat
+        echo "RUN $RUNN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
