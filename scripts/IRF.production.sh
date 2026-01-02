@@ -23,7 +23,7 @@ required parameters:
                              ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
                              TRAINMVANGRES, EVNDISPCOMPRESS,
-                             TRAINXGBANGRES, ANAXGBANGRES)
+                             TRAINXGBANGRES, ANAXGBANGRES, GHXGBANGRES)
 
 optional parameters:
 
@@ -296,13 +296,23 @@ for VX in $EPOCH; do
             continue
        fi
        #############################################
-       # Analyse XGBs based on MSCW files
+       # Analyse XGBs based on MSCW files (directory, energy)
        if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB reconstruction reading from $MSCWDIR"
-            ./IRF.dispXGB.sh "${MSCWDIR}" "${MSCWDIR}" "xgb" "${ANATYPE}"
-          continue
+            ./IRF.dispXGB.sh "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}" "xgb_stereo" "${ANATYPE}"
+            continue
        fi
+       #############################################
+       # Classification XGB based on MSCW files
+       if [[ $IRFTYPE == "GHXGBANGRES" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB classification reading from $MSCWDIR"
+            ./IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}" "xgb_gh" "${ANATYPE}"
+            continue
+       fi
+       #############################################
+
        #############################################
        # MVA training
        # train per epoch and atmosphere and for each cut

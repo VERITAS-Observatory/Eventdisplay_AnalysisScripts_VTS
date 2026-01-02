@@ -4,7 +4,7 @@
 # qsub parameters
 h_cpu=11:59:00; h_vmem=8000M; tmpdir_size=25G
 
-if [ "$#" -lt 3 ]; then
+if [ "$#" -lt 4 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
@@ -12,6 +12,7 @@ IRF.dispXGB.sh <input file directory> <output directory> <XGB>
 
 required parameters:
 
+    <analysis type>         analysis type - 'stereo_analysis' or 'classification'
     <input file directory>  directory with input files (will use all *.mscw.root files)
 
     <output directory>      directory where fits.gz files are written
@@ -22,17 +23,20 @@ exit
 fi
 # set -e
 # Parse command line arguments
-INPUTDIR=$1
-[[ "$2" ]] && ODIR=$2
-[[ "$3" ]] && XGB=$3
+XGB_TYPE=$1
+INPUTDIR=$2
+[[ "$2" ]] && ODIR=$3
+[[ "$3" ]] && XGB=$4
 ANALYSIS_TYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+
+echo "XGB analysis type: $XGB_TYPE"
 
 # Read file list
 if [[ ! -d "$INPUTDIR" ]]; then
     echo "Error, input directory $INPUTDIR not found, exiting..."
     exit 1
 fi
-FILES=$(find "$INPUTDIR" -name "*.mscw.root" | sort -u)
+FILES=$(find "$INPUTDIR" -name "*.mscw.root" | sort -u | head -n 1)
 
 NFILES=$(find "$INPUTDIR" -name "*.mscw.root" | wc -l)
 if [ "$NFILES" -gt 0 ]; then
@@ -65,6 +69,7 @@ do
 
     sed -e "s|FFILE|$FILE|" \
         -e "s|XXGB|$XGB|" \
+        -e "s|XGB_TTYPE|$XGB_TTYPE|" \
         -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
         -e "s|OODIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 

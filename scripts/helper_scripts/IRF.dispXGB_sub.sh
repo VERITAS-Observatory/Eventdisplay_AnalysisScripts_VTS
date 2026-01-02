@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run XGB disp direction analysis on MC mscw file
+# Run XGB disp stereo and classification analysis on MC mscw file
 
 # Don't do set -e.
 # set -e
@@ -9,6 +9,7 @@ MSCW_FILE=FFILE
 ODIR=OODIR
 env_name="eventdisplay_ml"
 XGB=XXGB
+XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
 
 # temporary (scratch) directory
@@ -59,14 +60,21 @@ RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
 EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
 ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
 DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATMO}/"
-if [[ "${ZA}" -lt "38" ]]; then
-    DISPDIR="${DISPDIR}/SZE/"
-elif [[ "${ZA}" -lt "48" ]]; then
-    DISPDIR="${DISPDIR}/MZE/"
-elif [[ "${ZA}" -lt "58" ]]; then
-    DISPDIR="${DISPDIR}/LZE/"
+if [[ "{$XGB_TYPE}" == "stereo_analysis" ]]; then
+    if [[ "${ZA}" -lt "38" ]]; then
+        DISPDIR="${DISPDIR}/SZE/"
+    elif [[ "${ZA}" -lt "48" ]]; then
+        DISPDIR="${DISPDIR}/MZE/"
+    elif [[ "${ZA}" -lt "58" ]]; then
+        DISPDIR="${DISPDIR}/LZE/"
+    else
+        DISPDIR="${DISPDIR}/XZE/"
+    fi
+    DISPDIR="${DISPDIR}/dispdir_bdt"
+    ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
 else
-    DISPDIR="${DISPDIR}/XZE/"
+    DISPDIR="${DISPDIR}/gammahadron_bdt"
+    ML_EXEC="eventdisplay-ml-apply-xgb-classify"
 fi
 echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
@@ -77,9 +85,8 @@ echo "Output file $OFIL"
 LOGFILE="$OFIL".log
 rm -f "$LOGFILE"
 
-eventdisplay-ml-apply-xgb-stereo \
-    --input_file "$MSCW_FILE" \
-    --model_dir "$DISPDIR" \
+$ML_EXEC --input_file "$MSCW_FILE" \
+    --model_prefix "$DISPDIR" \
     --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
