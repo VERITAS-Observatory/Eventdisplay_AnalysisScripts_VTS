@@ -36,7 +36,7 @@ if [[ ! -d "$INPUTDIR" ]]; then
     echo "Error, input directory $INPUTDIR not found, exiting..."
     exit 1
 fi
-FILES=$(find "$INPUTDIR" -name "*.mscw.root" | sort -u | head -n 1)
+FILES=$(find "$INPUTDIR" -name "*.mscw.root" | sort -u)
 
 NFILES=$(find "$INPUTDIR" -name "*.mscw.root" | wc -l)
 if [ "$NFILES" -gt 0 ]; then
@@ -52,7 +52,7 @@ echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$(dirname $INPUTDIR)/submit-XGB-${DATE}-$(uuidgen)/"
+LOGDIR="$(dirname $INPUTDIR)/submit-XGB-${XGB_TYPE}-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGDIR}/x* 2>/dev/null
@@ -69,7 +69,7 @@ do
 
     sed -e "s|FFILE|$FILE|" \
         -e "s|XXGB|$XGB|" \
-        -e "s|XGB_TTYPE|$XGB_TTYPE|" \
+        -e "s|XGB_TTYPE|$XGB_TYPE|" \
         -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
         -e "s|OODIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 

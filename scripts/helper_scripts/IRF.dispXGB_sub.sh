@@ -45,7 +45,7 @@ check_conda_installation()
 
 check_conda_installation
 
-source activate base
+eval "$(conda shell.bash hook)"
 conda activate $env_name
 
 if [[ ! -e ${MSCW_FILE} ]]; then
@@ -58,9 +58,9 @@ echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
 RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
 EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
-ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
+ATMO=${FORCEDATMO:-$(echo "$RUNINFO" | awk '{print $3}')}
 DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATMO}/"
-if [[ "{$XGB_TYPE}" == "stereo_analysis" ]]; then
+if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
     elif [[ "${ZA}" -lt "48" ]]; then
@@ -72,9 +72,12 @@ if [[ "{$XGB_TYPE}" == "stereo_analysis" ]]; then
     fi
     DISPDIR="${DISPDIR}/dispdir_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
-else
+elif [[ "${XGB_TYPE}" == "classification" ]]; then
     DISPDIR="${DISPDIR}/gammahadron_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-classify"
+else
+    echo "Invalid XGB type: ${XGB_TYPE}"
+    exit
 fi
 echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
