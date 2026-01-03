@@ -1,12 +1,9 @@
 #!/bin/bash
 # train XGB for angular reconstruction
 
-# qsub parameters
 h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 
-# EventDisplay version
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
-EVNIRFVERSION="v4N"
 
 if [ $# -lt 7 ]; then
 echo "
@@ -63,19 +60,16 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     exit 1
 fi
 # output and log directories
-ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TrainXGB/ze${ZA}deg/"
-LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-trainXGB-RECID${RECID}-${UUID}"
+ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TrainXGBStereoAnalysis/ze${ZA}deg/"
+LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-trainXGBStereoAnalysis-RECID${RECID}-${UUID}"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 mkdir -p "$LOGDIR"
 echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
 
-# training file name
-BDTFILE="mvaAngRes_${ZA}deg"
-
 # prepare list of input files
-MSCWLIST=$ODIR/${BDTFILE}.list
+MSCWLIST="$ODIR/xgbFiles_${ZA}deg.list"
 rm -f ${MSCWLIST}
 touch ${MSCWLIST}
 
@@ -96,7 +90,7 @@ for ((tel=2; tel<=4; tel++)); do
 
     echo "Processing Telescope $tel Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
-    FSCRIPT="$LOGDIR/trainXGB.TEL${tel}ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
+    FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.TEL${tel}ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
     sed -e "s|OUTPUTDIR|$ODIR|" \
         -e "s|MSCWLIST|$MSCWLIST|" \
         -e "s|TTYPE|$tel|" "$SUBSCRIPT" > "$FSCRIPT"

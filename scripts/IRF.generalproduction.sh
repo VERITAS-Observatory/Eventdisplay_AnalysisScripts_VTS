@@ -1,11 +1,8 @@
 #!/bin/bash
 # IRF general production script (VERITAS) for large scale
 # productions process all epochs
-#
-#
 
 if [ $# -lt 2 ]; then
-# begin help message
 echo "
 IRF production for all epochs
 
@@ -15,21 +12,24 @@ required parameters:
 
     <sim type>              simulation type
                             Main types: GRISU, CARE_24_20, CARE_RedHV_Feb2024, CARE_UV_2212
+                            CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
                             V6 basic types: CARE_202404, CARE_RedHV_Feb2024
-                            Others: CARE_June2020, CARE_RedHV, CARE_202404
 
     <IRF type>              type of instrument response function to produce.
                             EVNDISP,
-                            MAKETABLES, COMBINETABLES, TRAINMVANGRES, TRAINXGBANGRES
+                            MAKETABLES, COMBINETABLES,
+                            TRAINMVANGRES,
+                            TRAINXGBANGRES, ANAXGBANGRES,
+                            TRAINXGBGH, ANAXGBGH,
                             ANALYSETABLES,
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             TRAINTMVA, OPTIMIZETMVA,
+                            ANATABLESEFFAREAS,
                             EFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
                             (EVNDISPCOMPRESS, MVAEVNDISP)
 
 --------------------------------------------------------------------------------
 "
-#end help message
 exit
 fi
 

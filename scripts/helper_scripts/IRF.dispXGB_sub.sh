@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run XGB disp direction analysis on MC mscw file
+# Run XGB disp stereo and classification analysis on MC mscw file
 
 # Don't do set -e.
 # set -e
@@ -8,7 +8,8 @@
 MSCW_FILE=FFILE
 ODIR=OODIR
 env_name="eventdisplay_ml"
-XGB=XXGB
+XGB="XXGB"
+XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
 
 # temporary (scratch) directory
@@ -44,43 +45,55 @@ check_conda_installation()
 
 check_conda_installation
 
-source activate base
+eval "$(conda shell.bash hook)"
 conda activate $env_name
 
 if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
 fi
-ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
-ZA=${ZA%deg}
-echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
-
 RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
-EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
-ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATMO}/"
-if [[ "${ZA}" -lt "38" ]]; then
-    DISPDIR="${DISPDIR}/SZE/"
-elif [[ "${ZA}" -lt "48" ]]; then
-    DISPDIR="${DISPDIR}/MZE/"
-elif [[ "${ZA}" -lt "58" ]]; then
-    DISPDIR="${DISPDIR}/LZE/"
+echo "RUNINFO $RUNINFO"
+ZA=$(echo $RUNINFO | awk '{print $8}')
+EPOCH=$(echo $RUNINFO | awk '{print $1}')
+ATM=$(echo $RUNINFO | awk '{print $3}')
+echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
+DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}"
+if [[ ! -d "${DISPDIR}" ]]; then
+    echo "Error finding model directory $DISPDIR"
+    exit
+fi
+OFIL=$(basename $MSCW_FILE .root)
+if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
+    if [[ "${ZA}" -lt "38" ]]; then
+        DISPDIR="${DISPDIR}/SZE/"
+    elif [[ "${ZA}" -lt "48" ]]; then
+        DISPDIR="${DISPDIR}/MZE/"
+    elif [[ "${ZA}" -lt "58" ]]; then
+        DISPDIR="${DISPDIR}/LZE/"
+    else
+        DISPDIR="${DISPDIR}/XZE/"
+    fi
+    DISPDIR="${DISPDIR}/dispdir_bdt"
+    ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
+    OFIL="${ODIR}/${OFIL}.${XGB}_stereo"
+elif [[ "${XGB_TYPE}" == "classification" ]]; then
+    DISPDIR="${DISPDIR}/gammahadron_bdt"
+    ML_EXEC="eventdisplay-ml-apply-xgb-classify"
+    OFIL="${ODIR}/${OFIL}.${XGB}_gh"
 else
-    DISPDIR="${DISPDIR}/XZE/"
+    echo "Invalid XGB type: ${XGB_TYPE}"
+    exit
 fi
 echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
-
-OFIL=$(basename $MSCW_FILE .root)
-OFIL="${ODIR}/${OFIL}.${XGB}"
 echo "Output file $OFIL"
 LOGFILE="$OFIL".log
 rm -f "$LOGFILE"
 
-eventdisplay-ml-apply-xgb-stereo \
-    --input-file "$MSCW_FILE" \
-    --model-dir "$DISPDIR" \
-    --output-file "$OFIL.root" > "${LOGFILE}" 2>&1
+$ML_EXEC --input_file "$MSCW_FILE" \
+    --model_prefix "$DISPDIR" \
+    --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
 conda list -n $env_name >> "${LOGFILE}"

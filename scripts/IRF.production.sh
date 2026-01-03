@@ -13,17 +13,22 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
+                            Main types: GRISU, CARE_24_20, CARE_RedHV_Feb2024, CARE_UV_2212
                             CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
                             V6 basic types: CARE_202404, CARE_RedHV_Feb2024
 
-    <IRF type>              type of instrument response function to produce
-                            (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
-                             ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
-                             TRAINMVANGRES, EVNDISPCOMPRESS,
-                             TRAINXGBANGRES, ANAXGBANGRES)
+    <IRF type>              type of instrument response function to produce.
+                            EVNDISP,
+                            MAKETABLES, COMBINETABLES,
+                            TRAINMVANGRES,
+                            TRAINXGBANGRES, ANAXGBANGRES,
+                            TRAINXGBGH, ANAXGBGH,
+                            ANALYSETABLES,
+                            PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
+                            TRAINTMVA, OPTIMIZETMVA,
+                            ANATABLESEFFAREAS,
+                            EFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
+                            (EVNDISPCOMPRESS, MVAEVNDISP)
 
 optional parameters:
 
@@ -156,7 +161,7 @@ elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
     NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
-    SIMDIR="${VERITAS_DATA_DIR}/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
+    SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
     NSB_LEVELS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
@@ -296,12 +301,31 @@ for VX in $EPOCH; do
             continue
        fi
        #############################################
-       # Analyse XGBs based on MSCW files
+       # Analyse XGBs based on MSCW files (directory, energy)
        if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB reconstruction reading from $MSCWDIR"
-            ./IRF.dispXGB.sh "${MSCWDIR}" "${MSCWDIR}" "xgb" "${ANATYPE}"
-          continue
+            ./IRF.dispXGB.sh "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}"
+            continue
+       fi
+       #############################################
+       # Classification XGB based on MSCW files
+       if [[ $IRFTYPE == "ANAXGBGH" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB classification reading from $MSCWDIR"
+            ./IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}"
+            continue
+       fi
+       #############################################
+       # XGB Classification Training
+       if [[ $IRFTYPE == "TRAINXGBGH" ]]; then
+           BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_DISP"
+           RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+           ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
+           echo "XGB Classification Training"
+           echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           ./IRF.trainXGBforGammaHadronSeparationTraining.sh "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           continue
        fi
        #############################################
        # MVA training

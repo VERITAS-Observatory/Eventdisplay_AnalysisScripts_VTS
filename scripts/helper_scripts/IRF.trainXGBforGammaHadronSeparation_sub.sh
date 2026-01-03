@@ -1,11 +1,15 @@
 #!/bin/bash
-# Train XGB disp direction analysis using MC mscw file
+# Train XGB for gamma/hadron separation
+#
 
 # Don't do set -e.
 # set -e
 
 # parameters replaced by parent script using sed
-LLIST=MSCWLIST
+SIGNALLIST=MSCWSIGNAL
+BCKLIST=MSCWBCK
+PARA=MODELPARA
+EBIN=ENERGYBIN
 TEL=TTYPE
 ODIR=OUTPUTDIR
 env_name="eventdisplay_ml"
@@ -14,7 +18,7 @@ N="1000000"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR/$(basename $MSCW_FILE .root)
+    TEMPDIR="$TMPDIR"
 else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
 fi
@@ -45,16 +49,19 @@ check_conda_installation()
 
 check_conda_installation
 
-source activate base
-conda activate $env_name
+eval "$(conda shell.bash hook)"
+conda activate "$env_name"
 
-LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
+LOGFILE="${ODIR}/XGB_ntel${TEL}_ebin${EBIN}.log"
 rm -f "$LOGFILE"
 
-eventdisplay-ml-train-xgb-stereo \
-    --input_file_list "$LLIST" \
+eventdisplay-ml-train-xgb-classify \
+    --input_signal_file_list "${SIGNALLIST}" \
+    --input_background_file_list "${BCKLIST}" \
     --n_tel $TEL \
-    --model_prefix "${ODIR}/dispdir_bdt" \
+    --model_prefix "${ODIR}/gammahadron_bdt" \
+    --energy_bin_number "${EBIN}" \
+    --model_parameters "${PARA}" \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"

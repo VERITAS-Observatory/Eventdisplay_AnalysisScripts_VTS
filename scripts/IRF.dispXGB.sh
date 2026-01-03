@@ -1,5 +1,5 @@
 #!/bin/bash
-# submit XGBoost analyse on mscw MC files.
+# XGBoost analysis on mscw MC files.
 
 # qsub parameters
 h_cpu=11:59:00; h_vmem=8000M; tmpdir_size=25G
@@ -8,24 +8,26 @@ if [ "$#" -lt 3 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
-IRF.dispXGB.sh <input file directory> <output directory> <XGB>
+IRF.dispXGB.sh <analysis type> <input file directory> <output directory>
 
 required parameters:
+
+    <analysis type>         analysis type - 'stereo_analysis' or 'classification'
 
     <input file directory>  directory with input files (will use all *.mscw.root files)
 
     <output directory>      directory where fits.gz files are written
-
-    <XGB>                   XGB model name (e.g. v7_noWeight_DirXGB_0.5_1000000)
 "
 exit
 fi
-# set -e
 # Parse command line arguments
-INPUTDIR=$1
-[[ "$2" ]] && ODIR=$2
-[[ "$3" ]] && XGB=$3
+XGB_TYPE=$1
+INPUTDIR=$2
+[[ "$3" ]] && ODIR=$3
+XGB="xgb"
 ANALYSIS_TYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
+
+echo "XGB analysis type: $XGB_TYPE"
 
 # Read file list
 if [[ ! -d "$INPUTDIR" ]]; then
@@ -48,7 +50,7 @@ echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
 DATE=`date +"%y%m%d"`
-LOGDIR="$(dirname $INPUTDIR)/submit-XGB-${DATE}-$(uuidgen)/"
+LOGDIR="$(dirname $INPUTDIR)/submit-XGB-${XGB_TYPE}-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGDIR}/x* 2>/dev/null
@@ -60,11 +62,12 @@ TIMETAG=`date +"%s"`
 for FILE in $FILES
 do
     echo "Now analysing $FILE"
-    FSCRIPT="$LOGDIR/dispXGB-$(basename $FILE .root)"
+    FSCRIPT="$LOGDIR/dispXGB-${XGB_TYPE}-$(basename $FILE .root)"
     rm -f $FSCRIPT.sh
 
     sed -e "s|FFILE|$FILE|" \
         -e "s|XXGB|$XGB|" \
+        -e "s|XGB_TTYPE|$XGB_TYPE|" \
         -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
         -e "s|OODIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
@@ -81,11 +84,5 @@ do
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
         echo "-------------------------------------------------------------------------------"
         echo
-    elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${LOGDIR}/runscripts.$TIMETAG.dat
-    elif [[ "$SUBC" == *simple* ]] ; then
-       "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
 done

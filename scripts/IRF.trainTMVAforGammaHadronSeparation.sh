@@ -191,39 +191,37 @@ do
       # signal and background files (depending on on-axis or cone data set)
       # Collect all signal files first, then write in one batch
       {
-          for ATMX in $ATM; do
-              SDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/$ANATYPE/$SIMTYPE/${EPOCH}_ATM${ATMX}_${PARTICLE_TYPE}/MSCW_RECID${RECID}${DISPBDT}"
-              echo "Signal input directory: $SDIR"
-              if [[ ! -d $SDIR ]]; then
-                  echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
-                  exit 1
-              fi
-              shopt -s nullglob
-              if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                  for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
-                  do
-                      if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
-                          if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                              for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root; do
-                                  echo "* SIGNALFILE SIMDIR/${arg##*/}"
-                              done
-                          fi
+          SDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/$ANATYPE/$SIMTYPE/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}/MSCW_RECID${RECID}${DISPBDT}"
+          echo "Signal input directory: $SDIR"
+          if [[ ! -d $SDIR ]]; then
+              echo -e "Error, could not locate directory of simulation files (input). Locations searched:\n $SDIR"
+              exit 1
+          fi
+          shopt -s nullglob
+          if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+              for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
+              do
+                  if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
+                      if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
+                          for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root; do
+                              echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                          done
                       fi
-                  done
-              else
-                  for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
-                  do
-                      if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
-                          if (( "${ZENITH_ANGLES[$l]}" != "00" )); then
-                              for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root; do
-                                  echo "* SIGNALFILE SIMDIR/${arg##*/}"
-                              done
-                          fi
+                  fi
+              done
+          else
+              for (( l=0; l < ${#ZENITH_ANGLES[@]}; l++ ))
+              do
+                  if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
+                      if (( "${ZENITH_ANGLES[$l]}" != "00" )); then
+                          for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root; do
+                              echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                          done
                       fi
-                  done
-              fi
-              shopt -u nullglob
-          done
+                  fi
+              done
+          fi
+          shopt -u nullglob
       } >> $RFIL.runparameter
       echo "#######################################################################################" >> $RFIL.runparameter
       BLIST="$ODIR/BackgroundRunlist_Ze${j}.list"
@@ -251,7 +249,7 @@ do
       # expect training files to be from pre-processing directory
       BCKFILEDIR="$VERITAS_PREPROCESSED_DATA_DIR/$ANATYPE/mscw"
 
-      FSCRIPT=$LOGDIR/$ONAME"_$EPOCH""_$i""_$j"
+      FSCRIPT="$LOGDIR"/"{$ONAME}_${EPOCH}_${ATM}_${i}_${j}"
       sed -e "s|RUNPARAM|$RFIL|"  \
           -e "s|MCDIRECTORY|$SDIR|" \
           -e "s|DATADIRECTORY|$BCKFILEDIR|" \
