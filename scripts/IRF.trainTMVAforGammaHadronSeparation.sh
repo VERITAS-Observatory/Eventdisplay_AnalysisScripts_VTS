@@ -249,7 +249,7 @@ do
       # expect training files to be from pre-processing directory
       BCKFILEDIR="$VERITAS_PREPROCESSED_DATA_DIR/$ANATYPE/mscw"
 
-      FSCRIPT="$LOGDIR"/"{$ONAME}_${EPOCH}_${ATM}_${i}_${j}"
+      FSCRIPT="$LOGDIR"/"${ONAME}_${EPOCH}_${ATM}_${i}_${j}"
       sed -e "s|RUNPARAM|$RFIL|"  \
           -e "s|MCDIRECTORY|$SDIR|" \
           -e "s|DATADIRECTORY|$BCKFILEDIR|" \

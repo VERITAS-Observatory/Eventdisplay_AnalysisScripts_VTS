@@ -7,7 +7,7 @@
 # - fixed of NSB levels (adapted to stdHV settings)
 #
 
-h_cpu=11:59:59; h_vmem=12000M; tmpdir_size=24G
+h_cpu=11:59:59; h_vmem=16000M; tmpdir_size=24G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 6 ]; then
