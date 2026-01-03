@@ -67,10 +67,16 @@ if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
 fi
-ZA=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -elevation | awk '{print $3}')
-echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
-
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/AP/V6_2016_2017_ATM61/"
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
+ZA=$(echo $RUNINFO | awk '{print $8}')
+EPOCH=$(echo $RUNINFO | awk '{print $1}')
+ATM=$(echo $RUNINFO | awk '{print $3}')
+echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
+DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}"
+if [[ ! -d "${DISPDIR}" ]]; then
+    echo "Error finding model directory $DISPDIR"
+    exit
+fi
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     if (( $(echo "90.-$ZA < 38" |bc -l) )); then
         DISPDIR="${DISPDIR}/SZE/"

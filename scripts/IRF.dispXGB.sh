@@ -58,7 +58,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGDIR}/x* 2>/dev/null
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.dispXGB_sub"
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.dispXGB_${XGB_TYPE}}_sub"
 TIMETAG=`date +"%s"`
 
 for FILE in $FILES
