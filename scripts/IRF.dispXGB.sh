@@ -84,12 +84,5 @@ do
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
         echo "-------------------------------------------------------------------------------"
         echo
-    elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${LOGDIR}/runscripts.$TIMETAG.dat
-        echo "RUN $RUNN OLOG $FSCRIPT.log"
-    elif [[ "$SUBC" == *simple* ]] ; then
-       "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
 done

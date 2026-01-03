@@ -305,7 +305,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB reconstruction reading from $MSCWDIR"
-            ./IRF.dispXGB.sh "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}" "xgb_stereo" "${ANATYPE}"
+            ./IRF.dispXGB.sh "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}"
             continue
        fi
        #############################################
@@ -313,7 +313,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBGH" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB classification reading from $MSCWDIR"
-            ./IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}" "xgb_gh" "${ANATYPE}"
+            ./IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}"
             continue
        fi
        #############################################

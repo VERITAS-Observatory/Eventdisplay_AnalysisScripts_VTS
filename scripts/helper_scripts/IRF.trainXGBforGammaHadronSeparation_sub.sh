@@ -18,7 +18,7 @@ N="1000000"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR/$(basename $MSCW_FILE .root)
+    TEMPDIR="$TMPDIR"
 else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
 fi

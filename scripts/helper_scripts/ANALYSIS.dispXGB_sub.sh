@@ -1,6 +1,5 @@
 #!/bin/bash
-# Run XGB disp stereo and classification analysis on MC data file
-
+# XGBoost analysis on mscw data files.
 # Don't do set -e.
 # set -e
 
