@@ -51,13 +51,13 @@ echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGDIR}/x* 2>/dev/null
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.dispXGB_${XGB_TYPE}_sub"
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.dispXGB_sub"
 TIMETAG=`date +"%s"`
 
 for RUNN in $FILES
 do
     echo "Now analysing run $RUNN"
-    FSCRIPT="$LOGDIR/dispXGB-$RUNN"
+    FSCRIPT="$LOGDIR/dispXGB-${XGB_TYPE}-$RUNN"
     rm -f $FSCRIPT.sh
 
     sed -e "s|RRUN|$RUNN|" \
