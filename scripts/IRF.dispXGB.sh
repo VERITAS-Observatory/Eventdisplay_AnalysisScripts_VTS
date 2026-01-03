@@ -1,14 +1,14 @@
 #!/bin/bash
-# XGBoost analysisi on mscw MC files.
+# XGBoost analysis on mscw MC files.
 
 # qsub parameters
 h_cpu=11:59:00; h_vmem=8000M; tmpdir_size=25G
 
-if [ "$#" -lt 4 ]; then
+if [ "$#" -lt 3 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
-IRF.dispXGB.sh <analysis type> <input file directory> <output directory> <XGB>
+IRF.dispXGB.sh <analysis type> <input file directory> <output directory>
 
 required parameters:
 
@@ -17,8 +17,6 @@ required parameters:
     <input file directory>  directory with input files (will use all *.mscw.root files)
 
     <output directory>      directory where fits.gz files are written
-
-    <XGB>                   XGB model name (e.g. v7_noWeight_DirXGB_0.5_1000000)
 "
 exit
 fi
@@ -26,7 +24,7 @@ fi
 XGB_TYPE=$1
 INPUTDIR=$2
 [[ "$3" ]] && ODIR=$3
-[[ "$4" ]] && XGB=$4
+XGB="xgb"
 ANALYSIS_TYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 
 echo "XGB analysis type: $XGB_TYPE"
@@ -58,7 +56,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGDIR}/x* 2>/dev/null
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.dispXGB_${XGB_TYPE}}_sub"
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.dispXGB_${XGB_TYPE}_sub"
 TIMETAG=`date +"%s"`
 
 for FILE in $FILES

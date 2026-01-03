@@ -52,14 +52,18 @@ if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
 fi
-ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
-ZA=${ZA%deg}
-echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
-
 RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
-EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
-ATMO=${FORCEDATMO:-$(echo "$RUNINFO" | awk '{print $3}')}
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATMO}/"
+echo "RUNINFO $RUNINFO"
+ZA=$(echo $RUNINFO | awk '{print $8}')
+EPOCH=$(echo $RUNINFO | awk '{print $1}')
+ATM=$(echo $RUNINFO | awk '{print $3}')
+echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
+DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}"
+if [[ ! -d "${DISPDIR}" ]]; then
+    echo "Error finding model directory $DISPDIR"
+    exit
+fi
+OFIL=$(basename $MSCW_FILE .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
@@ -72,18 +76,17 @@ if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     fi
     DISPDIR="${DISPDIR}/dispdir_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
+    OFIL="${ODIR}/${OFIL}.${XGB}_stereo"
 elif [[ "${XGB_TYPE}" == "classification" ]]; then
     DISPDIR="${DISPDIR}/gammahadron_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-classify"
+    OFIL="${ODIR}/${OFIL}.${XGB}_gh"
 else
     echo "Invalid XGB type: ${XGB_TYPE}"
     exit
 fi
 echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
-
-OFIL=$(basename $MSCW_FILE .root)
-OFIL="${ODIR}/${OFIL}.${XGB}"
 echo "Output file $OFIL"
 LOGFILE="$OFIL".log
 rm -f "$LOGFILE"

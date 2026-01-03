@@ -78,6 +78,7 @@ if [[ ! -d "${DISPDIR}" ]]; then
     echo "Error finding model directory $DISPDIR"
     exit
 fi
+OFIL=$(basename $MSCW_FILE .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
@@ -90,18 +91,17 @@ if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     fi
     DISPDIR="${DISPDIR}/dispdir_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
+    OFIL="${ODIR}/${OFIL}.${XGB}_stereo"
 elif [[ "${XGB_TYPE}" == "classification" ]]; then
     DISPDIR="${DISPDIR}/gammahadron_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-classify"
+    OFIL="${ODIR}/${OFIL}.${XGB}_gh"
 else
     echo "Invalid XGB type: ${XGB_TYPE}"
     exit
 fi
 echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
-
-OFIL=$(basename $MSCW_FILE .root)
-OFIL="${ODIR}/${OFIL}.${XGB}"
 echo "Output file $OFIL"
 LOGFILE="$OFIL".log
 rm -f "$LOGFILE"

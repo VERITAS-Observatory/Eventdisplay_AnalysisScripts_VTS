@@ -4,11 +4,11 @@
 # qsub parameters
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
-if [ "$#" -lt 4 ]; then
+if [ "$#" -lt 3 ]; then
 echo "
 Run XGBoost disp reconstruction on mscw files
 
-ANALYSIS.dispXGB.sh <analysis type> <run list> <output directory> <XGB>
+ANALYSIS.dispXGB.sh <analysis type> <run list> <output directory>
 
 required parameters:
 
@@ -17,8 +17,6 @@ required parameters:
     <runlist>               simple run list with one run number per line.
 
     <output directory>      directory where fits.gz files are written
-
-    <XGB>                   XGB model name (e.g. v7_noWeight_DirXGB_0.5_1000000)
 "
 exit
 fi
@@ -26,7 +24,7 @@ fi
 XGB_TYPE=$1
 RUNLIST=$2
 [[ "$3" ]] && ODIR=$3
-[[ "$4" ]] && XGB=$4
+XGB="xgb"
 ANALYSIS_TYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 
 echo "XGB analysis type: $XGB_TYPE"
@@ -53,7 +51,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGDIR}/x* 2>/dev/null
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.dispXGB_sub"
+SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.dispXGB_${XGB_TYPE}_sub"
 TIMETAG=`date +"%s"`
 
 for RUNN in $FILES
