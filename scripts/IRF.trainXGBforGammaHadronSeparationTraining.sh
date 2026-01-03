@@ -158,7 +158,7 @@ for ((i=0; i<=2; i++)); do
 done
 
 ###############################################################
-# loop over telescope multipliticity and energy bins and submit a job for each bin
+# loop over telescope multiplicity and energy bins and submit a job for each bin
 for ((tel=2; tel<=4; tel++)); do
     for (( i=0; i < $NENE; i++ )); do
         echo "NTEL $tel Energy Bin: $i"
