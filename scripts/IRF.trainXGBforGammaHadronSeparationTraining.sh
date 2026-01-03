@@ -14,7 +14,7 @@ if [ $# -lt 6 ]; then
 echo "
 XGB (BDT) training for gamma/hadron separation
 
-IRF.trainXGBforGammaHadronSeparation.sh <background file directory> <run-parameter file> <output directory> <sim type> <epoch> <atmosphere>
+IRF.trainXGBforGammaHadronSeparationTraining.sh <background file directory> <run-parameter file> <output directory> <sim type> <epoch> <atmosphere>
 
 required parameters:
 
