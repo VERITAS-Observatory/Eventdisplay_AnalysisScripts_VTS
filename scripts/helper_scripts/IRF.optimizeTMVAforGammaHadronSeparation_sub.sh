@@ -39,14 +39,11 @@ fi
 
 # effective area - fill path
 EFFAREA="$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA}"
-
 # epoch / ATM
 EPAT="${EPOCH}_ATM${ATM}"
-
 # output directory
 WDIR="${PREDIR}/Optimize-${CUT}/"
 mkdir -p ${WDIR}
-
 # rates files
 RATEFILE="${WDIR}/rates_${EPAT}"
 
@@ -67,7 +64,6 @@ then
         > ${RATEFILE}.log
 fi
 
-# optimize cuts
 echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${VERITAS_ANALYSIS_TYPE:0:2}/${EPAT}/${CUT}/"
 cd ${PREDIR}/${CUT}
