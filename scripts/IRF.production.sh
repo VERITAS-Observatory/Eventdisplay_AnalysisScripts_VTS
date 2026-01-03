@@ -13,18 +13,22 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
+                            Main types: GRISU, CARE_24_20, CARE_RedHV_Feb2024, CARE_UV_2212
                             CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
                             V6 basic types: CARE_202404, CARE_RedHV_Feb2024
 
-    <IRF type>              type of instrument response function to produce
-                            (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
-                             ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
-                             TRAINMVANGRES, EVNDISPCOMPRESS,
-                             TRAINXGBANGRES, ANAXGBANGRES,
-                             TRAINXGBGH, ANAXGBGH )
+    <IRF type>              type of instrument response function to produce.
+                            EVNDISP,
+                            MAKETABLES, COMBINETABLES,
+                            TRAINMVANGRES,
+                            TRAINXGBANGRES, ANAXGBANGRES,
+                            TRAINXGBGH, ANAXGBGH,
+                            ANALYSETABLES,
+                            PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
+                            TRAINTMVA, OPTIMIZETMVA,
+                            ANATABLESEFFAREAS,
+                            EFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
+                            (EVNDISPCOMPRESS, MVAEVNDISP)
 
 optional parameters:
 
