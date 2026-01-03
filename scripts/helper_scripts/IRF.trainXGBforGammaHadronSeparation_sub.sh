@@ -49,8 +49,8 @@ check_conda_installation()
 
 check_conda_installation
 
-source activate base
-conda activate $env_name
+eval "$(conda shell.bash hook)"
+conda activate "$env_name"
 
 LOGFILE="${ODIR}/XGB_ntel${TEL}_ebin${EBIN}.log"
 rm -f "$LOGFILE"
