@@ -23,7 +23,8 @@ required parameters:
                              ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
                              MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
                              TRAINMVANGRES, EVNDISPCOMPRESS,
-                             TRAINXGBANGRES, ANAXGBANGRES, GHXGBANGRES)
+                             TRAINXGBANGRES, ANAXGBANGRES,
+                             TRAINXGBGH, ANAXGBGH )
 
 optional parameters:
 
@@ -305,14 +306,23 @@ for VX in $EPOCH; do
        fi
        #############################################
        # Classification XGB based on MSCW files
-       if [[ $IRFTYPE == "GHXGBANGRES" ]]; then
+       if [[ $IRFTYPE == "ANAXGBGH" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB classification reading from $MSCWDIR"
             ./IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}" "xgb_gh" "${ANATYPE}"
             continue
        fi
        #############################################
-
+       # XGB Classification Training
+       if [[ $IRFTYPE == "TRAINXGBGH" ]]; then
+           BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_DISP"
+           RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+           ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
+           echo "XGB Classification Training"
+           echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           ./IRF.trainXGBforGammaHadronSeparationTraining.sh "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           continue
+       fi
        #############################################
        # MVA training
        # train per epoch and atmosphere and for each cut

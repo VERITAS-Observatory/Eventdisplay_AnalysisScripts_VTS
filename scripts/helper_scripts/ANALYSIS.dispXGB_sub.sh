@@ -68,6 +68,7 @@ if [[ ! -e ${MSCW_FILE} ]]; then
     exit
 fi
 RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
+echo "RUNINFO $RUNINFO"
 ZA=$(echo $RUNINFO | awk '{print $8}')
 EPOCH=$(echo $RUNINFO | awk '{print $1}')
 ATM=$(echo $RUNINFO | awk '{print $3}')
@@ -78,11 +79,11 @@ if [[ ! -d "${DISPDIR}" ]]; then
     exit
 fi
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
-    if (( $(echo "90.-$ZA < 38" |bc -l) )); then
+    if [[ "${ZA}" -lt "38" ]]; then
         DISPDIR="${DISPDIR}/SZE/"
-    elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
+    elif [[ "${ZA}" -lt "48" ]]; then
         DISPDIR="${DISPDIR}/MZE/"
-    elif (( $(echo "90.-$ZA < 58" |bc -l) )); then
+    elif [[ "${ZA}" -lt "58" ]]; then
         DISPDIR="${DISPDIR}/LZE/"
     else
         DISPDIR="${DISPDIR}/XZE/"

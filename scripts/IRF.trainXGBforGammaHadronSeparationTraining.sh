@@ -137,7 +137,7 @@ if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
 else
     for z in "${ZENITH_ANGLES[@]}"; do
         for n in "${NOISE_VALUES[@]}"; do
-            for f in "$SDIR"/"${z}deg_0.5wob_NOISE${n}.mscw.root"; do
+            for f in "$SDIR"/"${z}deg_*wob_NOISE${n}.mscw.root"; do
                 [[ -f "$f" ]] && echo "$f" >> "$SIGNALLIST"
             done
         done
