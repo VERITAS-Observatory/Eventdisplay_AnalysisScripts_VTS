@@ -1,7 +1,6 @@
 #!/bin/bash
 # Sync pre-processed Eventdisplay data with UCLA
 # This includes Eventdisplay data products
-# data products
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
@@ -24,8 +23,8 @@ VERSION="v491.0"
 VERSION="v490.7"
 BACKUP="$1"
 ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-ANATYPE="AP"
 ANATYPE="NN"
+ANATYPE="AP"
 
 echo "USER: $USER VERSION $VERSION ANATYPE $ANATYPE BACKUP $BACKUP"
 if [[ $VERSION = "v490.7"* ]]; then
