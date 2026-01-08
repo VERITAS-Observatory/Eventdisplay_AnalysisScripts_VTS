@@ -57,7 +57,7 @@ export EVNDISPSCRIPTS="$(pwd)"
 
 ########################################################################
 # software settings
-export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3
+export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3-v0.8.1
 export EVNDISP_MLSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/Eventdisplay-ML
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
