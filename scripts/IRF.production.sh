@@ -13,15 +13,22 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
+                            Main types: GRISU, CARE_24_20, CARE_RedHV_Feb2024, CARE_UV_2212
                             CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
+                            V6 basic types: CARE_202404, CARE_RedHV_Feb2024
 
-    <IRF type>              type of instrument response function to produce
-                            (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
-                             ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
-                             TRAINMVANGRES, EVNDISPCOMPRESS)
+    <IRF type>              type of instrument response function to produce.
+                            EVNDISP,
+                            MAKETABLES, COMBINETABLES,
+                            TRAINMVANGRES,
+                            TRAINXGBANGRES, ANAXGBANGRES,
+                            TRAINXGBGH, ANAXGBGH,
+                            ANALYSETABLES,
+                            PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
+                            TRAINTMVA, OPTIMIZETMVA,
+                            ANATABLESEFFAREAS,
+                            EFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
+                            (EVNDISPCOMPRESS, MVAEVNDISP)
 
 optional parameters:
 
@@ -294,6 +301,33 @@ for VX in $EPOCH; do
             continue
        fi
        #############################################
+       # Analyse XGBs based on MSCW files (directory, energy)
+       if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB reconstruction reading from $MSCWDIR"
+            ./IRF.dispXGB.sh "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}"
+            continue
+       fi
+       #############################################
+       # Classification XGB based on MSCW files
+       if [[ $IRFTYPE == "ANAXGBGH" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB classification reading from $MSCWDIR"
+            ./IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}"
+            continue
+       fi
+       #############################################
+       # XGB Classification Training
+       if [[ $IRFTYPE == "TRAINXGBGH" ]]; then
+           BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_DISP"
+           RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+           ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
+           echo "XGB Classification Training"
+           echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           ./IRF.trainXGBforGammaHadronSeparationTraining.sh "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           continue
+       fi
+       #############################################
        # MVA training
        # train per epoch and atmosphere and for each cut
        # (cut as sizesecondmax cut is applied)
@@ -322,18 +356,19 @@ for VX in $EPOCH; do
                                 continue
                             fi
                             echo "Size cut applied: $SIZECUT"
+                            RUNPAR="TMVA.BDT.runparameter"
                             if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/BDT.runparameter
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/"$RUNPAR"
                             else
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
+                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/"$RUNPAR" "$MVADIR"/"$RUNPAR"
                             fi
-                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
+                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/"$RUNPAR"
                             if [[ $CUTFIL = *"NTel3"* ]]; then
-                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/BDT.runparameter
+                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/"$RUNPAR"
                             fi
                             ./IRF.trainTMVAforGammaHadronSeparation.sh \
                                          "${TRAINDIR}" \
-                                         "$MVADIR"/BDT.runparameter \
+                                         "$MVADIR"/"$RUNPAR" \
                                          "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
                          # Cut optimization
                          elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
@@ -353,7 +388,7 @@ for VX in $EPOCH; do
        for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
-            if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+            if [[ $IRFTYPE == "TRAINMVANGRES" ]] || [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB="150 200 250"
@@ -369,9 +404,18 @@ for VX in $EPOCH; do
                elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
                    FIXEDNSB="160 200 250"
                fi
-               $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
-                   $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $ANATYPE $UUID
+               if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+                   $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
+                       $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       $SIMTYPE $ANATYPE $UUID
+               else
+                   # Explicitly remove 0.0 bin
+                   FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
+                   FIXEDNSB="160 200 250 350"
+                   $(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh \
+                       $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       $SIMTYPE $ANATYPE $UUID
+               fi
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do

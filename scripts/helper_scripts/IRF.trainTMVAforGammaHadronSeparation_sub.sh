@@ -1,7 +1,6 @@
 #!/bin/bash
 # script to train TMVA (BDTs) for gamma/hadron separation
 
-# parameters replaced by parent script using sed
 RXPAR=RUNPARAM
 SIMDIR=MCDIRECTORY
 DDIR=DATADIRECTORY

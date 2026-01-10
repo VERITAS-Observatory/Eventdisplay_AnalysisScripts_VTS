@@ -1,6 +1,6 @@
 #!/bin/bash
-# Analyse MC files with lookup tables
-# (optional) Calculate effective areas
+# Analyse MC files with lookup tables (mscw_energy stage)
+# (optional) Calculate instrument response functions (effective areas) for 4 and 3-telescope combinations
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
@@ -24,6 +24,8 @@ INDIR=INPUTDIR
 ODIR=OUTPUTDIR
 # Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
+XGBVERSION=VERSIONXGB
+env_name="eventdisplay_ml"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -192,13 +194,85 @@ read_cutlist()
     echo $CUTLIST
 }
 
+# Required for DISP XGB
+check_conda_installation()
+{
+    if command -v conda &> /dev/null; then
+        echo "Found conda installation."
+    else
+        echo "Error: found no conda installation."
+        echo "exiting..."
+        exit
+    fi
+    env_info=$(conda info --envs)
+    if [[ "$env_info" == *"$env_name"* ]]; then
+        echo "Found conda environment '$env_name'"
+    else
+        echo "Error: the conda environment '$env_name' does not exist."
+        echo "exiting..."
+        exit
+    fi
+}
+
+###############################################
+# Run XGB DISP reconstruction
+###############################################
+get_xgb_output_file()
+{
+    XGBOFIL=$(basename $MSCW_FILE .root)
+    XGBOFIL="${DDIR}/${XGBOFIL}.${XGBVERSION}_ImgSel${1}"
+    echo "$XGBOFIL"
+}
+
+
+run_xgb()
+{
+    check_conda_installation
+    source activate base
+    conda activate $env_name
+    MSCW_FILE="$outputfilename"
+    ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
+    ZA=${ZA%deg}
+    echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
+
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}/"
+    if [[ "${ZA}" -lt "38" ]]; then
+        DISPDIR="${DISPDIR}/SZE/"
+    elif [[ "${ZA}" -lt "48" ]]; then
+        DISPDIR="${DISPDIR}/MZE/"
+    elif [[ "${ZA}" -lt "58" ]]; then
+        DISPDIR="${DISPDIR}/LZE/"
+    else
+        DISPDIR="${DISPDIR}/XZE/"
+    fi
+    echo "DispXGB directory $DISPDIR"
+    echo "DispXGB options $XGBVERSION"
+    XGBOFIL=$(get_xgb_output_file $1)
+    echo "XGB Output file $XGBOFIL"
+    echo "DispXGB inputfle $MSCW_FILE"
+
+    rm -f "$XGBOFIL".log
+
+    eventdisplay-ml-apply-xgb-stereo \
+        --input-file "$MSCW_FILE" \
+        --model-dir "$DISPDIR" \
+        --output-file "$XGBOFIL.root" \
+        --image-selection $1 > "$XGBOFIL.log" 2>&1
+
+    python --version >> "${XGBOFIL}.log"
+    conda list -n $env_name >> "${XGBOFIL}.log"
+
+    conda deactivate
+    echo "Finished calculated XGB"
+}
+
 CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
 
 # loop over 4 and 3-telescope combinations
 for ID in 15 14 13 11 7; do
     # Gamma/hadron cut list (depends on analysis and observation type)
     for CUTSFILE in ${CUTLIST[@]}; do
-        echo "calculate effective areas $CUTSFILE (ID $ID)"
+        echo "Calculate effective areas $CUTSFILE (ID $ID)"
         EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
         if [[ $ID == "15" ]]; then
             EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID0-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
@@ -234,6 +308,12 @@ for ID in 15 14 13 11 7; do
         echo -e "Output files will be written to:\n $OSUBDIR"
         mkdir -p $OSUBDIR
 
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            XGBFILESUFFIX=${XGBVERSION}_ImgSel${ID}
+        else
+            XGBFILESUFFIX=None
+        fi
+
 PARAMFILE="
 * FILLINGMODE 0
 * ENERGYRECONSTRUCTIONMETHOD 0
@@ -244,16 +324,23 @@ PARAMFILE="
 * RESPONSEMATRICESEBINS 200
 * AZIMUTHBINS 1
 * FILLMONTECARLOHISTOS 0
-* ENERGYSPECTRUMINDEX 27 1.6 0.2
+* ENERGYSPECTRUMINDEX 40 1.5 0.1
 * RERUN_STEREO_RECONSTRUCTION_3TEL $ID
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
-* SIMULATIONFILE_DATA $outputfilename"
+* SIMULATIONFILE_DATA $outputfilename
+* XGBFILESUFFIX ${XGBFILESUFFIX}"
+
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            run_xgb $ID
+        fi
 
         # create makeEffectiveArea parameter file
         EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
         rm -f "$DDIR/$EAPARAMS.dat"
         eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+        echo "Run parameter file:"
+        cat $DDIR/$EAPARAMS.dat
 
         # calculate effective areas
         rm -f $OSUBDIR/$OFILE.root
@@ -265,10 +352,18 @@ PARAMFILE="
         $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
         echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
         $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
+        echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            XGBLOGFILE="$(get_xgb_output_file $ID).log"
+            if [[ -f "$XGBLOGFILE" ]]; then
+                $EVNDISPSYS/bin/logFile xgbLog $DDIR/$EAPARAMS.root "$XGBLOGFILE"
+            else
+                echo "XGB log file $XGBLOGFILE not found, skipping."
+            fi
+        fi
         rm -f $OSUBDIR/$EAPARAMS.log
-        cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
+        cp -f -v $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
         chmod -R g+w $OSUBDIR
         chmod g+w $OSUBDIR/$EAPARAMS.root
-
     done
 done
