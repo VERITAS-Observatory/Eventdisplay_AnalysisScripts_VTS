@@ -79,14 +79,14 @@ if [[ ! -d "${DISPDIR}" ]]; then
 fi
 OFIL=$(basename $MSCW_FILE .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
-    if [[ "${ZA}" -lt "38" ]]; then
-        DISPDIR="${DISPDIR}/SZE/"
-    elif [[ "${ZA}" -lt "48" ]]; then
-        DISPDIR="${DISPDIR}/MZE/"
-    elif [[ "${ZA}" -lt "58" ]]; then
-        DISPDIR="${DISPDIR}/LZE/"
+    if (( $(echo "$ZA < 38" | bc -l) )); then
+         DISPDIR="${DISPDIR}/SZE/"
+    elif (( $(echo "$ZA < 48" | bc -l) )); then
+         DISPDIR="${DISPDIR}/MZE/"
+    elif (( $(echo "$ZA < 58" | bc -l) )); then
+         DISPDIR="${DISPDIR}/LZE/"
     else
-        DISPDIR="${DISPDIR}/XZE/"
+         DISPDIR="${DISPDIR}/XZE/"
     fi
     DISPDIR="${DISPDIR}/dispdir_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
