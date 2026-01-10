@@ -67,8 +67,8 @@ SIMTYPE="$8"
 ANALYSIS_TYPE="${9:-}"
 DISPBDT="${10:-0}"
 UUID="${11:-$(date +"%y%m%d")-$(uuidgen)}"
-# XGBVERSION="None" --> no XGB applied
-XGBVERSION="xgb"
+XGBVERSION="None" --> no XGB applied
+# XGBVERSION="xgb"
 
 echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBVERSION)"
 

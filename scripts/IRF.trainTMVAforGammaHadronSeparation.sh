@@ -12,7 +12,7 @@ EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
 if [ $# -lt 7 ]; then
 echo "
-TMVA (BDT) training for gamma/hadron separation: submit jobs from a TMVA run-parameter file
+TMVA (BDT) training for gamma/hadron separation
 
 IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA run-parameter file> <output directory> <output file name> <sim type> <epoch> <atmosphere>
 
@@ -20,7 +20,7 @@ required parameters:
 
     <background file directory>     directory with background training (mscw) files
 
-    <TMVA run-parameter file>        TMVA run-parameter file with basic options (incl. whole range of
+    <run-parameter file>            run-parameter file with basic options (incl. whole range of
 	                                energy and zenith angle bins) and full path
 
     <output directory>              BDT files are written to this directory
@@ -33,7 +33,7 @@ required parameters:
     <epoch>                         array epoch e.g. V4, V5,
                                     V6 epochs: e.g., \"V6_2012_2013a V6_2012_2013b\"
 
-    <atmosphere>                    atmosphere model(s) (61 = winter, 62 = summer)
+    <atmosphere>                    atmosphere model (61 = winter, 62 = summer)
 
 --------------------------------------------------------------------------------
 "
@@ -41,8 +41,8 @@ exit
 fi
 
 # Run init script
-if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+if [ -z "$EVNDISP_APPTAINER" ]; then
+    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -56,7 +56,7 @@ ATM="$7"
 
 RECID="0"
 PARTICLE_TYPE="gamma"
-UUID="${12:-$(date +"%y%m%d")-$(uuidgen)}"
+UUID="${8:-$(date +"%y%m%d")-$(uuidgen)}"
 
 echo "Background file directory: $BDIR"
 echo "Run parameters: $RUNPAR"

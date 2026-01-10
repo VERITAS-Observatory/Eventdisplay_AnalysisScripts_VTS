@@ -164,7 +164,7 @@ elif [ ${SIMTYPE} == "CARE_RedHV" ]; then
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
 #    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz*.zst"
 # Used for processing of pre-2025 simulations (run number starting with 65...)
-#   VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_[0-5].vbf.zst"
+#   VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_*.vbf.zst"
     VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_65*.vbf.zst"
 # Used for 2025 additional MC production
 #    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_66*.zst"
@@ -193,7 +193,7 @@ rm -f "${FSCRIPT}.txt"
 touch "${FSCRIPT}.txt"
 
 for V in $VBFNAME; do
-    echo "$RUNNUM,$(basename $V)" >> "${FSCRIPT}.txt"
+    echo "$RUNNUM $(basename $V)" >> "${FSCRIPT}.txt"
     let "RUNNUM = ${RUNNUM} + 100"
 done
 
@@ -233,6 +233,6 @@ request_disk = $tmpdir_size
 getenv = True
 max_materialize = 50
 priority = 1
-queue RUNNUM VBFNAME from ${SUBSCRIPT}.txt
+queue RUNNUM, VBFNAME from ${SUBSCRIPT}.txt
 EOL
 fi
