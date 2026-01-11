@@ -53,7 +53,7 @@ inspect_executables()
     fi
 }
 
-# cp XGB version to TMPDIR (if available)
+# cp XGB files to TMPDIR (if available)
 for XGB in "$XGBSTEREOFILESUFFIX" "$XGBGAMMAHADRONFILESUFFIX"
 do
     echo "XGB $XGB"

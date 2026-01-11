@@ -118,8 +118,6 @@ if [ -z "$CUTSLISTFILE" ]; then
         CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_PRESELECTION_${ANATYPE}.dat"
     else
         CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_${ANATYPE}.dat"
-        # TODO TMP
-        CUTSLISTFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/IRF_GAMMAHADRONCUTS_XGB_${ANATYPE}.dat"
     fi
 fi
 # Modify by hand for extended cuts
@@ -209,9 +207,9 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
-    ZENITH_ANGLES=( 20 )
-    WOBBLE_OFFSETS=( 0.5 )
-    NSB_LEVELS=( 160 )
+    # ZENITH_ANGLES=( 20 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 160 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
     # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
