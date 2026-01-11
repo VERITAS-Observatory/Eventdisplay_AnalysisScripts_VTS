@@ -96,9 +96,10 @@ if [[ $IRFVERSION == *"v490"* ]]; then
 fi
 
 # XGB Reconstruction settings
+DIRECTIONRECONSTRUCTIONMETHOD="0"
 if [[ $CUTSFILE == *"XGB"* ]]; then
-   DIRECTIONRECONSTRUCTIONMETHOD=2
-   ENERGYRECONSTRUCTIONMETHOD=2
+   DIRECTIONRECONSTRUCTIONMETHOD="2"
+   ENERGYRECONSTRUCTIONMETHOD="2"
 fi
 
 # parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas

@@ -128,14 +128,15 @@ get_disp_dir()
         DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
     fi
     ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -zenith | awk '{print $4}')
+    # requires bc as printRunParameter returns a float
     if (( $(echo "$ZA < 38" | bc -l) )); then
-         DISPDIR="${DISPDIR}/SZE/"
+        DISPDIR="${DISPDIR}/SZE/"
     elif (( $(echo "$ZA < 48" | bc -l) )); then
-         DISPDIR="${DISPDIR}/MZE/"
+        DISPDIR="${DISPDIR}/MZE/"
     elif (( $(echo "$ZA < 58" | bc -l) )); then
-         DISPDIR="${DISPDIR}/LZE/"
+        DISPDIR="${DISPDIR}/LZE/"
     else
-         DISPDIR="${DISPDIR}/XZE/"
+        DISPDIR="${DISPDIR}/XZE/"
     fi
     echo "${VERITAS_EVNDISP_AUX_DIR}/${DISPDIR}/"
 }
