@@ -130,6 +130,14 @@ elif [[ $CUTS = "BDTExtended040hard2tel" ]]; then
     CUT="NTel2-Extended040-Hard-TMVA-BDT"
 elif [[ $CUTS = "BDTExtended050moderate2tel" ]]; then
     CUT="NTel2-Extended050-Moderate-TMVA-BDT"
+elif [[ $CUTS = "moderate2telXGB" ]]; then
+    CUT="NTel2-PointSource-Moderate-XGB-BDT"
+elif [[ $CUTS = "soft2telXGB" ]]; then
+    CUT="NTel2-PointSource-Soft-XGB-BDT"
+elif [[ $CUTS = "hard2telXGB" ]]; then
+    CUT="NTel2-PointSource-Hard-XGB-BDT"
+elif [[ $CUTS = "hard3telXGB" ]]; then
+    CUT="NTel3-PointSource-Hard-XGB-BDT"
 else
     echo "ERROR: unknown cut definition: $CUTS"
     exit 1
@@ -300,8 +308,6 @@ for RUN in ${RUNS[@]}; do
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
         echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit 50"
         echo "-------------------------------------------------------------------------------"
         echo

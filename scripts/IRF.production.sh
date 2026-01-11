@@ -16,6 +16,7 @@ required parameters:
                             Main types: GRISU, CARE_24_20, CARE_RedHV_Feb2024, CARE_UV_2212
                             CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
                             V6 basic types: CARE_202404, CARE_RedHV_Feb2024
+                            Other types: CARE_June2020, CARE_RedHV, CARE_UV
 
     <IRF type>              type of instrument response function to produce.
                             EVNDISP,

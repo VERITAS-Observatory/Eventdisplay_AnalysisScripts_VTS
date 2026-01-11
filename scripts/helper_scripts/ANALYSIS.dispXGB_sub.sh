@@ -79,11 +79,12 @@ if [[ ! -d "${DISPDIR}" ]]; then
 fi
 OFIL=$(basename $MSCW_FILE .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
-    if [[ "${ZA}" -lt "38" ]]; then
+    # requires bc as printRunParameter returns a float
+    if (( $(echo "$ZA < 38" | bc -l) )); then
         DISPDIR="${DISPDIR}/SZE/"
-    elif [[ "${ZA}" -lt "48" ]]; then
+    elif (( $(echo "$ZA < 48" | bc -l) )); then
         DISPDIR="${DISPDIR}/MZE/"
-    elif [[ "${ZA}" -lt "58" ]]; then
+    elif (( $(echo "$ZA < 58" | bc -l) )); then
         DISPDIR="${DISPDIR}/LZE/"
     else
         DISPDIR="${DISPDIR}/XZE/"

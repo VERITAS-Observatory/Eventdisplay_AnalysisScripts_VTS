@@ -127,12 +127,13 @@ get_disp_dir()
     else
         DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
     fi
-    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -elevation | awk '{print $3}')
-    if (( $(echo "90.-$ZA < 38" |bc -l) )); then
+    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -zenith | awk '{print $4}')
+    # requires bc as printRunParameter returns a float
+    if (( $(echo "$ZA < 38" | bc -l) )); then
         DISPDIR="${DISPDIR}/SZE/"
-    elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
+    elif (( $(echo "$ZA < 48" | bc -l) )); then
         DISPDIR="${DISPDIR}/MZE/"
-    elif (( $(echo "90.-$ZA < 58" |bc -l) )); then
+    elif (( $(echo "$ZA < 58" | bc -l) )); then
         DISPDIR="${DISPDIR}/LZE/"
     else
         DISPDIR="${DISPDIR}/XZE/"

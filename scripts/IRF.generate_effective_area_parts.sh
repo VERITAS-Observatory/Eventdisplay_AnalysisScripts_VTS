@@ -67,10 +67,10 @@ SIMTYPE="$8"
 ANALYSIS_TYPE="${9:-}"
 DISPBDT="${10:-0}"
 UUID="${11:-$(date +"%y%m%d")-$(uuidgen)}"
-XGBVERSION="None" --> no XGB applied
-# XGBVERSION="xgb"
+XGBSTEREOFILESUFFIX="xgb_stereo"
+XGBGAMMAHADRONFILESUFFIX="xgb_gh"
 
-echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBVERSION)"
+echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBSTEREOFILESUFFIX $XGBGAMMAHADRONFILESUFFIX)"
 
 
 if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
@@ -109,7 +109,8 @@ sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|VERSIONIRF|$IRFVERSION|" \
-    -e "s|VERSIONXGB|$XGBVERSION|" \
+    -e "s|STEREOXGB|$XGBSTEREOFILESUFFIX|" \
+    -e "s|GHXGB|$XGBGAMMAHADRONFILESUFFIX|" \
     -e "s|DATAFILE|$MCFILE|" \
     -e "s|GAMMACUTS|${CUTSFILE}|" $SUBSCRIPT.sh > $FSCRIPT
 
