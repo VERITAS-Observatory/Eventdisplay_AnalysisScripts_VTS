@@ -16,7 +16,8 @@ CUTSFILE="GAMMACUTS"
 EFFAREAFILE=EFFFILE
 REDO3TEL="15"
 IRFVERSION="VERSIONIRF"
-XGBVERSION="VERSIONXGB"
+XGBSTEREOFILESUFFIX="STEREOXGB"
+XGBGAMMAHADRONFILESUFFIX="GHXGB"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -53,12 +54,15 @@ inspect_executables()
 }
 
 # cp XGB version to TMPDIR (if available)
-echo "XGB VERSION: $XGBVERSION"
-if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
-    XGBFIL=$(basename $MCFILE .root)
-    XGBFIL="$(dirname $MCFILE)/${XGBFIL}.${XGBVERSION}.root"
-    cp -f -v "$XGBFIL" "$DDIR"/
-fi
+for XGB in "$XGBSTEREOFILESUFFIX" "$XGBGAMMAHADRONFILESUFFIX"
+do
+    echo "XGB $XGB"
+    if [[ -n $XGB ]] && [[ $XGB != "None" ]]; then
+        XGBFIL=$(basename $MCFILE .root)
+        XGBFIL="$(dirname $MCFILE)/${XGBFIL}.${XGB}.root"
+        cp -f -v "$XGBFIL" "$DDIR"/
+    fi
+done
 # cp MC file to TMPDIR
 cp -f -v "$MCFILE" "$DDIR"/
 MCFILE=`basename $MCFILE`
@@ -107,7 +111,8 @@ PARAMFILE="
 * CUTFILE $DDIR/$(basename $CUTSFILE)
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $MCFILE
-* XGBFILESUFFIX $XGBVERSION"
+* XGBSTEREOFILESUFFIX $XGBSTEREOFILESUFFIX
+* XGBGAMMAHADRONFILESUFFIX $XGBGAMMAHADRONFILESUFFIX"
 
 # create makeEffectiveArea parameter file
 EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
