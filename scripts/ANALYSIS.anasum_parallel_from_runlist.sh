@@ -132,6 +132,12 @@ elif [[ $CUTS = "BDTExtended050moderate2tel" ]]; then
     CUT="NTel2-Extended050-Moderate-TMVA-BDT"
 elif [[ $CUTS = "moderate2telXGB" ]]; then
     CUT="NTel2-PointSource-Moderate-XGB-BDT"
+elif [[ $CUTS = "soft2telXGB" ]]; then
+    CUT="NTel2-PointSource-Soft-XGB-BDT"
+elif [[ $CUTS = "hard2telXGB" ]]; then
+    CUT="NTel2-PointSource-Hard-XGB-BDT"
+elif [[ $CUTS = "hard3telXGB" ]]; then
+    CUT="NTel3-PointSource-Hard-XGB-BDT"
 else
     echo "ERROR: unknown cut definition: $CUTS"
     exit 1
