@@ -22,7 +22,7 @@ required parameters:
                             EVNDISP,
                             MAKETABLES, COMBINETABLES,
                             TRAINMVANGRES,
-                            TRAINXGBANGRES, ANAXGBANGRES,
+                            TRAINXGBANGRES, TRAINXGBANGRESBINNED, ANAXGBANGRES,
                             TRAINXGBGH, ANAXGBGH,
                             ANALYSETABLES,
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
@@ -170,8 +170,8 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     ######################################
     # TEST
     # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.0 )
-    # NSB_LEVELS=( 350 )
+    # WOBBLE_OFFSETS=( 0.5 )
+    # NSB_LEVELS=( 200 )
     ######################################
     # TRAINMVANGRES production
     # (assume 0.5 deg wobble is done)
@@ -385,6 +385,19 @@ for VX in $EPOCH; do
             continue
        fi
        #################################################
+       # zenith angle bin dependent analysis
+       #################################################
+       if [[ $IRFTYPE == "TRAINXGBANGRESBINNED" ]]; then
+           for ZAB in SZE MZE LZE XZE; do
+               # Explicitly remove 0.0 bin
+               FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
+               FIXEDNSB="160 200 250 350"
+                   $(dirname "$0")/IRF.trainXGBforAngularReconstructionBinned.sh \
+                       $VX $ATM $ZAB "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       $SIMTYPE $ANATYPE $UUID
+           done
+           continue
+       fi
        # zenith angle dependent analysis
        for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
