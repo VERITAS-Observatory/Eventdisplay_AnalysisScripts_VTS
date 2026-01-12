@@ -91,7 +91,6 @@ do
     done
 done
 echo "FILE LIST: ${MSCWLIST}"
-exit
 
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainXGBforAngularReconstruction_sub.sh"
 # loop over telescope multiplicities
