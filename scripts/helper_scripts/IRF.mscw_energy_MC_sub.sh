@@ -236,11 +236,11 @@ run_xgb()
     echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
     DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}/"
-    if [[ "${ZA}" -lt "38" ]]; then
+    if (( $(echo "$ZA < 38" | bc -l) )); then
         DISPDIR="${DISPDIR}/SZE/"
-    elif [[ "${ZA}" -lt "48" ]]; then
+    elif (( $(echo "$ZA < 48" | bc -l) )); then
         DISPDIR="${DISPDIR}/MZE/"
-    elif [[ "${ZA}" -lt "58" ]]; then
+    elif (( $(echo "$ZA < 58" | bc -l) )); then
         DISPDIR="${DISPDIR}/LZE/"
     else
         DISPDIR="${DISPDIR}/XZE/"
