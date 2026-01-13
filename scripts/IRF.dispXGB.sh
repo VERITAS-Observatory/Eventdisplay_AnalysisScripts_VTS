@@ -16,7 +16,7 @@ required parameters:
 
     <input file directory>  directory with input files (will use all *.mscw.root files)
 
-    <output directory>      directory where fits.gz files are written
+    <output directory>      directory where XGB files are written
 "
 exit
 fi
