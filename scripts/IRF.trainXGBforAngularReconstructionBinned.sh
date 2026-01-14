@@ -69,25 +69,32 @@ echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
 
 # prepare list of input files
-MSCWLIST="$ODIR/xgbFiles_${ZA}.list"
+MSCWLIST="$ODIR/xgbFiles.list"
 rm -f ${MSCWLIST}
 touch ${MSCWLIST}
 
 INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/MSCW_RECID0_DISP"
 
+STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+TRAIN_ANGLES=$(jq -r ".zenith[] | select(.id==\"$ZA\") | .train | join(\" \")" $STEREO_PAR)
+if [[ -z "$TRAIN_ANGLES" ]]; then
+    echo "Error: Bin ID $ZA_BIN not found in $JSON_FILE"
+    exit 1
+fi
+
 for W in ${WOBBLE}
 do
     for N in ${NOISE}
     do
-        if [[ ${ZA} == "SZE" ]]; then
-            ls -1 "$INDIR"/{00,20,30,35}"deg_${W}wob_NOISE${N}.mscw.root" >> "${MSCWLIST}"
-        elif [[ ${ZA} == "MZE" ]]; then
-            ls -1 "$INDIR"/{40,45}"deg_${W}wob_NOISE${N}.mscw.root" >> "${MSCWLIST}"
-        elif [[ ${ZA} == "LZE" ]]; then
-            ls -1 "$INDIR"/{50,55}"deg_${W}wob_NOISE${N}.mscw.root" >> "${MSCWLIST}"
-        elif [[ ${ZA} == "XZE" ]]; then
-            ls -1 "$INDIR"/{60,65}"deg_${W}wob_NOISE${N}.mscw.root" >> "${MSCWLIST}"
-        fi
+        for DEG in ${TRAIN_ANGLES}
+        do
+            FILE_PATH="${INDIR}/${DEG}deg_${W}wob_NOISE${N}.mscw.root"
+            if [[ -f "$FILE_PATH" ]]; then
+                echo "$FILE_PATH" >> "${MSCWLIST}"
+            else
+                echo "Warning: File not found: $FILE_PATH"
+            fi
+        done
     done
 done
 echo "FILE LIST: ${MSCWLIST}"
