@@ -66,7 +66,11 @@ fi
 OFIL=$(basename $MSCW_FILE .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
-    BIN_ID=$(jq -r --arg za "$ZA" '.zenith[] | select(($za|tonumber >= .eval_min) and ($za|tonumber < .eval_max)) | .id' "$STEREO_PAR")
+    BIN_ID=$(jq -r --arg za "$ZA" '
+      .zenith[]
+      | select(has("eval_min"))
+      | select(($za|tonumber) >= (.eval_min|tonumber) and ($za|tonumber) < (.eval_max|tonumber))
+      | .id' "$STEREO_PAR")
     if [[ -z "$BIN_ID" ]]; then
         echo "Error: No zenith bin found in $JSON_FILE for ZA=$ZA"
         exit 1
