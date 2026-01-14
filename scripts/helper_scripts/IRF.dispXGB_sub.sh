@@ -65,16 +65,13 @@ if [[ ! -d "${DISPDIR}" ]]; then
 fi
 OFIL=$(basename $MSCW_FILE .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
-    if (( $(echo "$ZA < 38" | bc -l) )); then
-        DISPDIR="${DISPDIR}/SZE/"
-    elif (( $(echo "$ZA < 48" | bc -l) )); then
-        DISPDIR="${DISPDIR}/MZE/"
-    elif (( $(echo "$ZA < 58" | bc -l) )); then
-        DISPDIR="${DISPDIR}/LZE/"
-    else
-        DISPDIR="${DISPDIR}/XZE/"
+    STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+    BIN_ID=$(jq -r --arg za "$ZA" '.zenith[] | select(($za|tonumber >= .eval_min) and ($za|tonumber < .eval_max)) | .id' "$STEREO_PAR")
+    if [[ -z "$BIN_ID" ]]; then
+        echo "Error: No zenith bin found in $JSON_FILE for ZA=$ZA"
+        exit 1
     fi
-    DISPDIR="${DISPDIR}/dispdir_bdt"
+    DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
     OFIL="${ODIR}/${OFIL}.${XGB}_stereo"
 elif [[ "${XGB_TYPE}" == "classification" ]]; then
