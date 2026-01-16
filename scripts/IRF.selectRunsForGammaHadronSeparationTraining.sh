@@ -119,20 +119,24 @@ do
     fi
 
     # Parse all fields at once into array (much more efficient than multiple awk calls)
+    # Format: MINOREPOCH TMPMEPOCH field3 TMPOBSMODE TMPMULT TMPOBSTIME field7 RUNZENITH field9 RUNWOBBLE TMPTARGET...
     read -ra RUNINFO_ARRAY <<< "$RUNINFO"
-    MINOREPOCH="${RUNINFO_ARRAY[0]}"
-    TMPMEPOCH="${RUNINFO_ARRAY[1]}"
-    # RUNINFO_ARRAY[2] is unused (typically a dash or placeholder)
-    # RUNINFO_ARRAY[3] is unused
-    TMPOBSMODE="${RUNINFO_ARRAY[3]}"
-    TMPMULT="${RUNINFO_ARRAY[4]}"
-    TMPOBSTIME="${RUNINFO_ARRAY[5]}"
-    # RUNINFO_ARRAY[6] and [7] may be other fields
-    RUNZENITH="${RUNINFO_ARRAY[7]}"
-    # RUNINFO_ARRAY[8] and [9] precede wobble
-    RUNWOBBLE="${RUNINFO_ARRAY[9]}"
-    # Target name is the rest (may contain spaces)
+    MINOREPOCH="${RUNINFO_ARRAY[0]:-}"
+    TMPMEPOCH="${RUNINFO_ARRAY[1]:-}"
+    TMPOBSMODE="${RUNINFO_ARRAY[3]:-}"
+    TMPMULT="${RUNINFO_ARRAY[4]:-}"
+    TMPOBSTIME="${RUNINFO_ARRAY[5]:-}"
+    RUNZENITH="${RUNINFO_ARRAY[7]:-}"
+    RUNWOBBLE="${RUNINFO_ARRAY[9]:-}"
+    # Target name is remaining fields (may contain spaces)
     TMPTARGET="${RUNINFO_ARRAY[*]:10}"
+
+    # Validate numeric fields to prevent bc errors
+    if [[ ! "$TMPOBSTIME" =~ ^[0-9]+\.?[0-9]*$ ]] || [[ ! "$RUNZENITH" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        [[ $VERBOSE -eq 1 ]] && echo "  ERROR: Invalid numeric values (time=$TMPOBSTIME, ze=$RUNZENITH)"
+        ((SKIPPED++))
+        continue
+    fi
 
     [[ $VERBOSE -eq 1 ]] && echo "  Run info: epoch=$TMPMEPOCH, mode=$TMPOBSMODE, ze=$RUNZENITH, target=$TMPTARGET"
 
@@ -142,8 +146,8 @@ do
     [[ "${TMPMULT}" != "${MULT}" ]] && { [[ $VERBOSE -eq 1 ]] && echo "  SKIP: mult ${TMPMULT}"; ((SKIPPED++)); continue; }
     [[ "${RUNWOBBLE}" == "0" ]] && { [[ $VERBOSE -eq 1 ]] && echo "  SKIP: wobble 0"; ((SKIPPED++)); continue; }
 
-    # Numeric comparisons
-    if (( $(echo "${TMPOBSTIME} < ${MINOBSTIME}" | bc -l) )); then
+    # Numeric comparison for observation time (integer comparison)
+    if (( TMPOBSTIME < MINOBSTIME )); then
         [[ $VERBOSE -eq 1 ]] && echo "  SKIP: obstime ${TMPOBSTIME} < ${MINOBSTIME}"
         ((SKIPPED++))
         continue
