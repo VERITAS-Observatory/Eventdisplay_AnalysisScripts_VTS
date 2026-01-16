@@ -9,17 +9,19 @@
 # files are linked to a new directory
 #
 
-if [ $# -ne 4 ]; then
-    echo "./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)>"
+if [ $# -lt 4 ] || [ $# -gt 5 ]; then
+    echo "./IRF.selectRunsForGammaHadronSeparationTraining.sh <major epoch> <source mscw directory> <target mscw directory> <TMVA run parameter file (full path)> [verbose: 0|1]"
      echo
      echo "files are sorted in epochs, observations mode, zenith angle bins defined in TMVA run parameter file"
      echo "this script has several hardwired parameters"
+     echo "verbose: 0=quiet (default), 1=show all processing details"
      exit
 fi
 
 MEPOCH="${1}"
 TARGETDIR="${3}"
 RUNPAR="${4}"
+VERBOSE="${5:-0}"  # Default to quiet mode
 
 # Observing mode
 OBSMODE="observing"
@@ -61,98 +63,136 @@ echo "Zenith angle definition: $ZEBINS"
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
 NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
 
+# Find files and store in array to handle filenames with spaces
 if [[ $MEPOCH == "V4" ]]; then
-    FLIST=$(find ${2} -name "[3,4]*[0-9].mscw.root"  | sed 's/\.root$//')
+    mapfile -t FLIST < <(find "${2}" -name "[3,4]*[0-9].mscw.root" | sed 's/\.root$//')
 elif [[ $MEPOCH == "V5" ]]; then
-    FLIST=$(find ${2} -name "[4,5,6]*[0-9].mscw.root"  | sed 's/\.root$//')
+    mapfile -t FLIST < <(find "${2}" -name "[4,5,6]*[0-9].mscw.root" | sed 's/\.root$//')
 else
-    FLIST=$(find "$2" -regextype posix-extended \
+    mapfile -t FLIST < <(find "${2}" -regextype posix-extended \
       -regex '.*/(6|7|8|9|1[0-5])[0-9]*\.mscw\.root' \
       | sed 's/\.root$//')
 fi
 
-echo $FLIST
-exit
+echo "Found ${#FLIST[@]} files to process"
 
-mkdir -p ${3}
+mkdir -p "${3}"
+
+# Pre-create zenith bin directories for efficiency
+for (( j=0; j < $NZEW; j++ )); do
+    mkdir -p "${TARGETDIR}/Ze_${j}"
+done
 
 linkFile()
 {
-    mkdir -p $(dirname "$1")
+    # Only create parent dir if needed (most are pre-created)
+    local parent=$(dirname "$1")
+    [[ -d "$parent" ]] || mkdir -p "$parent"
     if [[ ! -e "$1" ]]; then
         ln -s "$2" "$1"
     fi
 }
 
-for F in ${FLIST}
+# Process files
+PROCESSED=0
+SKIPPED=0
+LINKED=0
+
+for F in "${FLIST[@]}"
 do
-    echo "LINKING file ${F}.root"
-    BNAME=$(basename ${F}.root)
-    if [[ -e ${TARGETDIR}/${BNAME} ]]; then
-        echo "    found..."
-        continue
-    fi
-    RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${F}.root -runinfo)
-    echo "   RUNINFO $RUNINFO"
+    [[ $VERBOSE -eq 1 ]] && echo "Processing file ${F}.root"
+    BNAME=$(basename "${F}.root")
 
-    RUNZENITH=$(echo $RUNINFO | awk '{print $8}')
-    ZEBIN=0
-    for (( j=0; j < $NZEW; j++ ))
-    do
-        if [[ ${RUNZENITH} > ${ZEBINARRAY[$j]} ]] && [[ ${RUNZENITH} < ${ZEBINARRAY[$j+1]} ]]; then
-            ZEBIN=$j
-            break;
-        fi
-    done
-    echo "   Zenith bin: ${ZEBIN} for zenith angle ${RUNZENITH}"
+    # Skip if already linked
+    if [[ -e "${TARGETDIR}/${BNAME}" ]]; then
+        ((SKIPPED++))
+        [[ $VERBOSE -eq 1 ]] && echo "  Already linked, skipping..."
+        continue
+    fi
 
-    TMPMEPOCH=$(echo $RUNINFO | awk '{print $2}')
-    if [[ ${TMPMEPOCH} != ${MEPOCH} ]]; then
+    # Get run info once and parse into array for efficiency
+    RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${F}.root" -runinfo 2>/dev/null)
+    if [[ -z "$RUNINFO" ]]; then
+        [[ $VERBOSE -eq 1 ]] && echo "  ERROR: Could not read run info"
+        ((SKIPPED++))
         continue
     fi
-    MINOREPOCH=$(echo $RUNINFO | awk '{print $1}')
-    TMPOBSMODE=$(echo $RUNINFO | awk '{print $4}')
-    if [[ ${TMPOBSMODE} != ${OBSMODE} ]]; then
-        echo "   SKIPPING OBSMODE: ${TMPOBSMODE} ${OBSMODE}"
+
+    # Parse all fields at once into array (much more efficient than multiple awk calls)
+    read -ra RUNINFO_ARRAY <<< "$RUNINFO"
+    MINOREPOCH="${RUNINFO_ARRAY[0]}"
+    TMPMEPOCH="${RUNINFO_ARRAY[1]}"
+    # RUNINFO_ARRAY[2] is unused (typically a dash or placeholder)
+    # RUNINFO_ARRAY[3] is unused
+    TMPOBSMODE="${RUNINFO_ARRAY[3]}"
+    TMPMULT="${RUNINFO_ARRAY[4]}"
+    TMPOBSTIME="${RUNINFO_ARRAY[5]}"
+    # RUNINFO_ARRAY[6] and [7] may be other fields
+    RUNZENITH="${RUNINFO_ARRAY[7]}"
+    # RUNINFO_ARRAY[8] and [9] precede wobble
+    RUNWOBBLE="${RUNINFO_ARRAY[9]}"
+    # Target name is the rest (may contain spaces)
+    TMPTARGET="${RUNINFO_ARRAY[*]:10}"
+
+    [[ $VERBOSE -eq 1 ]] && echo "  Run info: epoch=$TMPMEPOCH, mode=$TMPOBSMODE, ze=$RUNZENITH, target=$TMPTARGET"
+
+    # Quick filters first (fail fast)
+    [[ "${TMPMEPOCH}" != "${MEPOCH}" ]] && { ((SKIPPED++)); continue; }
+    [[ "${TMPOBSMODE}" != "${OBSMODE}" ]] && { [[ $VERBOSE -eq 1 ]] && echo "  SKIP: obsmode ${TMPOBSMODE}"; ((SKIPPED++)); continue; }
+    [[ "${TMPMULT}" != "${MULT}" ]] && { [[ $VERBOSE -eq 1 ]] && echo "  SKIP: mult ${TMPMULT}"; ((SKIPPED++)); continue; }
+    [[ "${RUNWOBBLE}" == "0" ]] && { [[ $VERBOSE -eq 1 ]] && echo "  SKIP: wobble 0"; ((SKIPPED++)); continue; }
+
+    # Numeric comparisons
+    if (( $(echo "${TMPOBSTIME} < ${MINOBSTIME}" | bc -l) )); then
+        [[ $VERBOSE -eq 1 ]] && echo "  SKIP: obstime ${TMPOBSTIME} < ${MINOBSTIME}"
+        ((SKIPPED++))
         continue
     fi
-    TMPMULT=$(echo $RUNINFO | awk '{print $5}')
-    if [[ ${TMPMULT} != ${MULT} ]]; then
-        echo "   SKIPPING MULT ${TMPMULT} ${MULT}"
-        continue
-    fi
-    TMPOBSTIME=$(echo $RUNINFO | awk '{print $6}')
-    if (( $TMPOBSTIME <  $MINOBSTIME )); then
-        echo "   SKIPPING OBSTIME: $TMPOBSTIME $MINOBSTIME"
-        continue
-    fi
-    # need to take care of target with spaces in their names
-    TMPTARGET=$(echo "$RUNINFO" | awk '{$1=$2=$3=$4=$5=$6=""; print $0}' | awk '{$1=$1;print}')
-    echo "   TARGET $TMPTARGET"
-    BRK="FALSE"
-    for (( l=0; l < ${#BRIGHTSOURCES[@]}; l++ ))
-    do
-        if [[ "${TMPTARGET}" == "${BRIGHTSOURCES[$l]}" ]]; then
-            BRK="TRUE"
+
+    # Check bright sources
+    SKIP_SOURCE=0
+    for BSRC in "${BRIGHTSOURCES[@]}"; do
+        if [[ "${TMPTARGET}" == "${BSRC}" ]]; then
+            SKIP_SOURCE=1
+            [[ $VERBOSE -eq 1 ]] && echo "  SKIP: bright source ${TMPTARGET}"
             break
         fi
     done
-    if [[ $BRK == "TRUE" ]]; then
-        echo "   SKIPPING $TMPTARGET"
-        continue
-    fi
-    # ignore runs with zero wobble offsets
-    RUNWOBBLE=$(echo "$RUNINFO" | awk '{print $10}')
-    if [[ $RUNWOBBLE == "0" ]]; then
-        echo "   SKIPPING WOBBLE $RUNWOBBLE"
-        continue
-    fi
-    echo "   found $TMPTARGET $TMPOBSMODE $TMPMEPOCH $MINOREPOCH $TMPMULT $TMPOBSTIME $RUNZENITH (ZE bin ${ZEBIN}, W ${RUNWOBBLE})"
-    BNAME=$(basename ${F}.root)
+    [[ $SKIP_SOURCE -eq 1 ]] && { ((SKIPPED++)); continue; }
+
+    # Find zenith bin using numeric comparison (bc for float comparison)
+    ZEBIN=0
+    for (( j=0; j < $NZEW; j++ )); do
+        if (( $(echo "${RUNZENITH} > ${ZEBINARRAY[$j]}" | bc -l) )) && \
+           (( $(echo "${RUNZENITH} < ${ZEBINARRAY[$j+1]}" | bc -l) )); then
+            ZEBIN=$j
+            break
+        fi
+    done
+
+    [[ $VERBOSE -eq 1 ]] && echo "  ACCEPT: ${TMPTARGET} Ze=${RUNZENITH} (bin ${ZEBIN}), t=${TMPOBSTIME}s"
+
+    # Create minor epoch directory if needed
+    [[ -d "${TARGETDIR}/${MINOREPOCH}" ]] || mkdir -p "${TARGETDIR}/${MINOREPOCH}"
+    [[ -d "${TARGETDIR}/${MINOREPOCH}/Ze_${ZEBIN}" ]] || mkdir -p "${TARGETDIR}/${MINOREPOCH}/Ze_${ZEBIN}"
+
+    ((PROCESSED++))
+    BNAME=$(basename "${F}.root")
 
     ## linking
-    linkFile ${TARGETDIR}/${BNAME} ${F}.root
-    linkFile ${TARGETDIR}/Ze_${ZEBIN}/${BNAME} ${F}.root
-    linkFile ${TARGETDIR}/${MINOREPOCH}/${BNAME} ${F}.root
-    linkFile ${TARGETDIR}/${MINOREPOCH}/Ze_${ZEBIN}/${BNAME} ${F}.root
+    linkFile "${TARGETDIR}/${BNAME}" "${F}.root"
+    linkFile "${TARGETDIR}/Ze_${ZEBIN}/${BNAME}" "${F}.root"
+    linkFile "${TARGETDIR}/${MINOREPOCH}/${BNAME}" "${F}.root"
+    linkFile "${TARGETDIR}/${MINOREPOCH}/Ze_${ZEBIN}/${BNAME}" "${F}.root"
+    ((LINKED++))
 done
+
+# Summary
+echo
+echo "============================================"
+echo "Processing complete:"
+echo "  Total files found: ${#FLIST[@]}"
+echo "  Files processed:   $PROCESSED"
+echo "  Files linked:      $LINKED"
+echo "  Files skipped:     $SKIPPED"
+echo "============================================"
