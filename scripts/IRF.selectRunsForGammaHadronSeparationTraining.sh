@@ -119,17 +119,16 @@ do
     fi
 
     # Parse all fields at once into array (much more efficient than multiple awk calls)
-    # Format: MINOREPOCH TMPMEPOCH field3 TMPOBSMODE TMPMULT TMPOBSTIME field7 RUNZENITH field9 RUNWOBBLE TMPTARGET...
-    read -ra RUNINFO_ARRAY <<< "$RUNINFO"
+    # Format is TAB-separated: MINOREPOCH\tTMPMEPOCH\tfield3\tTMPOBSMODE\tTMPMULT\tTMPOBSTIME\tTMPTARGET\tRUNZENITH\tfield9\tRUNWOBBLE
+    IFS=$'\t' read -ra RUNINFO_ARRAY <<< "$RUNINFO"
     MINOREPOCH="${RUNINFO_ARRAY[0]:-}"
     TMPMEPOCH="${RUNINFO_ARRAY[1]:-}"
     TMPOBSMODE="${RUNINFO_ARRAY[3]:-}"
     TMPMULT="${RUNINFO_ARRAY[4]:-}"
     TMPOBSTIME="${RUNINFO_ARRAY[5]:-}"
+    TMPTARGET="${RUNINFO_ARRAY[6]:-}"  # Target name (may contain spaces)
     RUNZENITH="${RUNINFO_ARRAY[7]:-}"
     RUNWOBBLE="${RUNINFO_ARRAY[9]:-}"
-    # Target name is remaining fields (may contain spaces)
-    TMPTARGET="${RUNINFO_ARRAY[*]:10}"
 
     # Validate numeric fields to prevent bc errors
     if [[ ! "$TMPOBSTIME" =~ ^[0-9]+\.?[0-9]*$ ]] || [[ ! "$RUNZENITH" =~ ^[0-9]+\.?[0-9]*$ ]]; then
