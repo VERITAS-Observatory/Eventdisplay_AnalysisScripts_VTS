@@ -37,18 +37,27 @@ echo "Minimum observing time: ${MINOBSTIME} s"
 echo "Avoiding bright sources: ${BRIGHTSOURCES[*]}"
 
 # zenith angle bins
-ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
-echo "Zenith angle definition: $ZEBINS"
-declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
-NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
+if [[ "${RUNPAR##*.}" == "json" ]]; then
+    echo "Reading zenith bins from json file"
+else
+    ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+    echo "Zenith angle definition: $ZEBINS"
+    declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
+    NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
+fi
 
 if [[ $MEPOCH == "V4" ]]; then
     FLIST=$(find ${2} -name "[3,4]*[0-9].mscw.root"  | sed 's/\.root$//')
 elif [[ $MEPOCH == "V5" ]]; then
     FLIST=$(find ${2} -name "[4,5,6]*[0-9].mscw.root"  | sed 's/\.root$//')
 else
-    FLIST=$(find ${2} -name "[6-9, 10]*[0-9].mscw.root"  | sed 's/\.root$//')
+    FLIST=$(find "$2" -regextype posix-extended \
+      -regex '.*/(6|7|8|9|1[0-5])[0-9]*\.mscw\.root' \
+      | sed 's/\.root$//')
 fi
+
+echo $FLIST
+exit
 
 mkdir -p ${3}
 
