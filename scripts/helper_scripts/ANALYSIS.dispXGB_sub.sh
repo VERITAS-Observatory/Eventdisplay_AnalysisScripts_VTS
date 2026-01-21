@@ -1,5 +1,6 @@
 #!/bin/bash
-# XGBoost analysis on mscw data files.
+# XGBoost disp stereo and classification analysis on mscw data file
+
 # Don't do set -e.
 # set -e
 
