@@ -14,9 +14,9 @@ required parameters:
 
     <analysis type>         analysis type - 'stereo_analysis' or 'classification'
 
-    <runlist>               simple run list with one run number per line.
+    <runlist>               run list with one run number per line.
 
-    <output directory>      directory where fits.gz files are written
+    <output directory>      directory where XGB files are written
 "
 exit
 fi
@@ -36,8 +36,13 @@ if [[ ! -f "$RUNLIST" ]]; then
 fi
 FILES=$(cat "$RUNLIST")
 
-NRUNS=$(cat "$RUNLIST" | wc -l)
-echo "total number of runs to analyze: $NRUNS"
+NFILES=$(cat "$RUNLIST" | wc -l)
+if [ "$NFILES" -gt 0 ]; then
+    echo "total number of files to analyze: $NFILES"
+else
+    echo "Error, no input files found in $RUNLIST"
+    exit 1
+fi
 
 # make output directory if it doesn't exist
 mkdir -p $ODIR
