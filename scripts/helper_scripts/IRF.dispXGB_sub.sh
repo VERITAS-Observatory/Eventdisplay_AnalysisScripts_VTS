@@ -11,6 +11,7 @@ env_name="eventdisplay_ml"
 XGB="XXGB"
 XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
+MAXCORES=1
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -94,6 +95,7 @@ rm -f "$LOGFILE"
 
 $ML_EXEC --input_file "$MSCW_FILE" \
     --model_prefix "$DISPDIR" \
+    --max_cores $MAXCORES \
     --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
