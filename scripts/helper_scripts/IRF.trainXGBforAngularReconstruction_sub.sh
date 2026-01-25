@@ -48,13 +48,14 @@ check_conda_installation
 source activate base
 conda activate $env_name
 
-LOGFILE="${ODIR}/XGB_ntel${TEL}.log"
+PREFIX="${ODIR}/dispdir_bdt"
+LOGFILE="${PREFIX}_ntel${TEL}.log"
 rm -f "$LOGFILE"
 
 eventdisplay-ml-train-xgb-stereo \
     --input_file_list "$LLIST" \
     --n_tel $TEL \
-    --model_prefix "${ODIR}/dispdir_bdt" \
+    --model_prefix "${PREFIX}" \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"

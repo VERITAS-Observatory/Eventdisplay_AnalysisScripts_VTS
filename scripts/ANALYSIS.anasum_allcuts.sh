@@ -4,7 +4,7 @@
 #
 
 if [[ ${VERITAS_ANALYSIS_TYPE:0:2} == "AP" ]]; then
-    CUTS="moderate2tel soft2tel hard2tel hard3tel"
+    CUTS="moderate2tel soft2tel hard2tel hard3tel moderate2telXGB soft2telXGB hard2telXGB hard3telXGB"
 else
     CUTS="supersoftNN2tel"
 fi

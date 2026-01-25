@@ -37,7 +37,26 @@ echo "Minimum observing time: ${MINOBSTIME} s"
 echo "Avoiding bright sources: ${BRIGHTSOURCES[*]}"
 
 # zenith angle bins
-ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+if [[ "${RUNPAR##*.}" == "json" ]]; then
+    echo "Reading zenith bins from json file"
+    ZEBIN_EDGES=$(jq -r '.zenith_bins_deg[] | "\(.Ze_min) \(.Ze_max)"' "$RUNPAR" | awk '{print $1}')
+    ZEBIN_MAX=$(jq -r '.zenith_bins_deg[-1].Ze_max' "$RUNPAR")
+
+    # Combine into a single space-separated string of unique bin edges
+    ZEBINS=$(echo "$ZEBIN_EDGES" "$ZEBIN_MAX" | tr '\n' ' ' | awk '{
+        # Store unique values in order
+        split($0, arr);
+        prev = "";
+        for (i in arr) {
+            if (arr[i] != prev) {
+                printf "%s ", arr[i];
+                prev = arr[i];
+            }
+        }
+    }')
+else
+    ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+fi
 echo "Zenith angle definition: $ZEBINS"
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
 NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
@@ -47,8 +66,13 @@ if [[ $MEPOCH == "V4" ]]; then
 elif [[ $MEPOCH == "V5" ]]; then
     FLIST=$(find ${2} -name "[4,5,6]*[0-9].mscw.root"  | sed 's/\.root$//')
 else
-    FLIST=$(find ${2} -name "[6-9, 10]*[0-9].mscw.root"  | sed 's/\.root$//')
+    FLIST=$(find "$2" -regextype posix-extended \
+      -regex '.*/(6|7|8|9|1[0-5])[0-9]*\.mscw\.root' \
+      | sed 's/\.root$//')
 fi
+
+echo $FLIST
+exit
 
 mkdir -p ${3}
 

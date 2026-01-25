@@ -236,15 +236,17 @@ run_xgb()
     echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
     DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}/"
-    if [[ "${ZA}" -lt "38" ]]; then
-        DISPDIR="${DISPDIR}/SZE/"
-    elif [[ "${ZA}" -lt "48" ]]; then
-        DISPDIR="${DISPDIR}/MZE/"
-    elif [[ "${ZA}" -lt "58" ]]; then
-        DISPDIR="${DISPDIR}/LZE/"
-    else
-        DISPDIR="${DISPDIR}/XZE/"
+    STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+    BIN_ID=$(jq -r --arg za "$ZA" '
+      .zenith[]
+      | select(has("eval_min"))
+      | select(($za|tonumber) >= (.eval_min|tonumber) and ($za|tonumber) < (.eval_max|tonumber))
+      | .id' "$STEREO_PAR")
+    if [[ -z "$BIN_ID" ]]; then
+        echo "Error: No zenith bin found in $JSON_FILE for ZA=$ZA"
+        exit 1
     fi
+    DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"
     echo "DispXGB directory $DISPDIR"
     echo "DispXGB options $XGBVERSION"
     XGBOFIL=$(get_xgb_output_file $1)
