@@ -78,7 +78,7 @@ INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_
 STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
 TRAIN_ANGLES=$(jq -r ".zenith[] | select(.id==\"$ZA\") | .train | join(\" \")" $STEREO_PAR)
 if [[ -z "$TRAIN_ANGLES" ]]; then
-    echo "Error: Bin ID $ZA_BIN not found in $JSON_FILE"
+    echo "Error: Bin ID $ZA not found in $STEREO_PAR"
     exit 1
 fi
 
@@ -100,40 +100,36 @@ done
 echo "FILE LIST: ${MSCWLIST}"
 
 SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainXGBforAngularReconstruction_sub.sh"
-# loop over telescope multiplicities
-for ((tel=2; tel<=4; tel++)); do
 
-    echo "Processing Telescope $tel Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
+echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
-    FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.TEL${tel}ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
-    sed -e "s|OUTPUTDIR|$ODIR|" \
-        -e "s|MSCWLIST|$MSCWLIST|" \
-        -e "s|TTYPE|$tel|" "$SUBSCRIPT" > "$FSCRIPT"
+FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
+sed -e "s|OUTPUTDIR|$ODIR|" \
+    -e "s|MSCWLIST|$MSCWLIST|" "$SUBSCRIPT" > "$FSCRIPT"
 
-    chmod u+x "$FSCRIPT"
-    echo "$FSCRIPT"
+chmod u+x "$FSCRIPT"
+echo "$FSCRIPT"
 
-    # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
-    if [[ $SUBC == *"ERROR"* ]]; then
-        echo $SUBC
-        exit
-    fi
-    if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT`
-        echo "RUN $RUNNUM: JOBID $JOBID"
-    elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-        echo "-------------------------------------------------------------------------------"
-        echo
-    elif [[ $SUBC == *sbatch* ]]; then
-            $SUBC $FSCRIPT
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-    fi
-done
+# run locally or on cluster
+SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=`eval "echo \"$SUBC\""`
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo $SUBC
+    exit
+fi
+if [[ $SUBC == *qsub* ]]; then
+    JOBID=`$SUBC $FSCRIPT`
+    echo "RUN $RUNNUM: JOBID $JOBID"
+elif [[ $SUBC == *condor* ]]; then
+    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+    echo
+    echo "-------------------------------------------------------------------------------"
+    echo "Job submission using HTCondor - run the following script to submit jobs at once:"
+    echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+    echo "-------------------------------------------------------------------------------"
+    echo
+elif [[ $SUBC == *sbatch* ]]; then
+        $SUBC $FSCRIPT
+elif [[ $SUBC == *parallel* ]]; then
+    echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
+fi

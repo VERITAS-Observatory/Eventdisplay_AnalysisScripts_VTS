@@ -243,7 +243,7 @@ run_xgb()
       | select(($za|tonumber) >= (.eval_min|tonumber) and ($za|tonumber) < (.eval_max|tonumber))
       | .id' "$STEREO_PAR")
     if [[ -z "$BIN_ID" ]]; then
-        echo "Error: No zenith bin found in $JSON_FILE for ZA=$ZA"
+        echo "Error: No zenith bin found in $STEREO_PAR for ZA=$ZA"
         exit 1
     fi
     DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"

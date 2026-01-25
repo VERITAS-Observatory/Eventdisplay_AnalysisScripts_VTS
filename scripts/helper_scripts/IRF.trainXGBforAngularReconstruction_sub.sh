@@ -6,11 +6,11 @@
 
 # parameters replaced by parent script using sed
 LLIST=MSCWLIST
-TEL=TTYPE
 ODIR=OUTPUTDIR
 env_name="eventdisplay_ml"
 P="0.5"
-N="1000000"
+N="5000000"
+MAXCORES=48
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -49,13 +49,13 @@ source activate base
 conda activate $env_name
 
 PREFIX="${ODIR}/dispdir_bdt"
-LOGFILE="${PREFIX}_ntel${TEL}.log"
+LOGFILE="${PREFIX}.log"
 rm -f "$LOGFILE"
 
 eventdisplay-ml-train-xgb-stereo \
     --input_file_list "$LLIST" \
-    --n_tel $TEL \
     --model_prefix "${PREFIX}" \
+    --max_cores $MAXCORES \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"

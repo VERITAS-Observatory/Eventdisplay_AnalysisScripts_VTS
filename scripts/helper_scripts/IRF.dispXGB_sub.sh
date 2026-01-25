@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run XGB disp stereo and classification analysis on MC mscw file
+# XGBoost disp stereo and classification analysis on mscw MC file
 
 # Don't do set -e.
 # set -e
@@ -11,6 +11,7 @@ env_name="eventdisplay_ml"
 XGB="XXGB"
 XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
+MAXCORES=1
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -72,7 +73,7 @@ if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
       | select(($za|tonumber) >= (.eval_min|tonumber) and ($za|tonumber) < (.eval_max|tonumber))
       | .id' "$STEREO_PAR")
     if [[ -z "$BIN_ID" ]]; then
-        echo "Error: No zenith bin found in $JSON_FILE for ZA=$ZA"
+        echo "Error: No zenith bin found in $STEREO_PAR for ZA=$ZA"
         exit 1
     fi
     DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"
@@ -94,6 +95,7 @@ rm -f "$LOGFILE"
 
 $ML_EXEC --input_file "$MSCW_FILE" \
     --model_prefix "$DISPDIR" \
+    --max_cores $MAXCORES \
     --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
