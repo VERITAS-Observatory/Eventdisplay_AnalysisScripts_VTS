@@ -78,7 +78,7 @@ INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_
 STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
 TRAIN_ANGLES=$(jq -r ".zenith[] | select(.id==\"$ZA\") | .train | join(\" \")" $STEREO_PAR)
 if [[ -z "$TRAIN_ANGLES" ]]; then
-    echo "Error: Bin ID $ZA_BIN not found in $JSON_FILE"
+    echo "Error: Bin ID $ZA not found in $STEREO_PAR"
     exit 1
 fi
 
