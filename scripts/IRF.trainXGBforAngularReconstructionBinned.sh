@@ -60,7 +60,7 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     exit 1
 fi
 # output and log directories
-ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TrainXGBStereoAnalysisBinned_v0.5.0/${ZA}/"
+ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TrainXGBStereoAnalysisBinned/${ZA}/"
 LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-trainXGBStereoAnalysis-RECID${RECID}-${UUID}"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"

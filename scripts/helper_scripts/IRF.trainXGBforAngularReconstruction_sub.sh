@@ -10,7 +10,7 @@ ODIR=OUTPUTDIR
 env_name="eventdisplay_ml"
 P="0.5"
 N="5000000"
-MAXCORES=64
+MAXCORES=48
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
