@@ -145,8 +145,8 @@ do
     [[ "${TMPMULT}" != "${MULT}" ]] && { [[ $VERBOSE -eq 1 ]] && echo "  SKIP: mult ${TMPMULT}"; ((SKIPPED++)); continue; }
     [[ "${RUNWOBBLE}" == "0" ]] && { [[ $VERBOSE -eq 1 ]] && echo "  SKIP: wobble 0"; ((SKIPPED++)); continue; }
 
-    # Numeric comparison for observation time (integer comparison)
-    if (( TMPOBSTIME < MINOBSTIME )); then
+    # Numeric comparison for observation time (use bc for potential floats)
+    if (( $(echo "$TMPOBSTIME < $MINOBSTIME" | bc -l) )); then
         [[ $VERBOSE -eq 1 ]] && echo "  SKIP: obstime ${TMPOBSTIME} < ${MINOBSTIME}"
         ((SKIPPED++))
         continue
