@@ -45,8 +45,8 @@ check_conda_installation()
 
 check_conda_installation
 
-source activate base
-conda activate $env_name
+eval "$(conda shell.bash hook)"
+conda activate "$env_name"
 
 PREFIX="${ODIR}/dispdir_bdt"
 LOGFILE="${PREFIX}.log"
