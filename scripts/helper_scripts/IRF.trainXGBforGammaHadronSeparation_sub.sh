@@ -10,11 +10,11 @@ SIGNALLIST=MSCWSIGNAL
 BCKLIST=MSCWBCK
 PARA=MODELPARA
 EBIN=ENERGYBIN
-TEL=TTYPE
 ODIR=OUTPUTDIR
 env_name="eventdisplay_ml"
 P="0.5"
-N="1000000"
+N="5000000"
+MAXCORES=48
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -52,16 +52,17 @@ check_conda_installation
 eval "$(conda shell.bash hook)"
 conda activate "$env_name"
 
-LOGFILE="${ODIR}/XGB_ntel${TEL}_ebin${EBIN}.log"
+PREFIX="${ODIR}/gammahadron_bdt"
+LOGFILE="${PREFIX}_ebin${EBIN}.log"
 rm -f "$LOGFILE"
 
 eventdisplay-ml-train-xgb-classify \
     --input_signal_file_list "${SIGNALLIST}" \
     --input_background_file_list "${BCKLIST}" \
-    --n_tel $TEL \
-    --model_prefix "${ODIR}/gammahadron_bdt" \
+    --model_prefix "${PREFIX}" \
     --energy_bin_number "${EBIN}" \
     --model_parameters "${PARA}" \
+    --max_cores $MAXCORES \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"

@@ -15,6 +15,10 @@ VERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
 
 ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/${FTYPE}"
 
+if [[ $FTYPE == "xgb" ]]; then
+    ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/mscw"
+fi
+
 for F in 11 10 9 8 7 6 5 4 3; do
     OFDIR="$ODIR/$F"
     echo "Syncing $OFDIR with ${FTYPE}"
