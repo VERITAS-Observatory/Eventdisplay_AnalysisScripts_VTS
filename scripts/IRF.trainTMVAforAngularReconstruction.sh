@@ -8,12 +8,12 @@ h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 EVNIRFVERSION="v4N"
 
-if [ $# -lt 7 ]; then
+if [ $# -lt 8 ]; then
 echo "
 TMVA (BDT) training for angular resolution from MC ROOT files for different zenith angle bins
  (simulations that have been processed by evndisp_MC)
 
-IRF.trainTMVAforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
+IRF.trainTMVAforAngularReconstruction.sh <epoch> <atmosphere> <zenith> <offset angle> <NSB level> <Rec ID> <sim type> <analysis type>
 
 required parameters:
 
@@ -32,9 +32,7 @@ required parameters:
 
     <sim type>              simulation type (e.g. GRISU, CARE_June1425)
 
-optional parameters:
-
-    [analysis type]         type of analysis (default="")
+    <analysis type>         type of analysis (e.g., AP or NN)
 
     [uuid]                  UUID used for submit directory
 
@@ -85,14 +83,20 @@ touch ${EVNLIST}
 
 check_evndisp_directory()
 {
-    # input directory containing evndisp products
+    W=${1}
+    N=${2}
+    # input directory containing evndisp products (first check for curved, than normal atmosphere)
+    INDIRBASE="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
     if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-        INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${1}deg_NSB${2}MHz"
+        INDIR="${INDIRBASE}/ze${ZA}deg_curved_offset${W}deg_NSB${N}MHz"
     fi
     if [[ ! -d $INDIR ]]; then
-        echo "Error, could not locate input directory. Locations searched:"
-        echo "$INDIR"
-        exit 1
+        INDIR="${INDIRBASE}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
+        if [[ ! -d $INDIR ]]; then
+            echo "Error, could not locate input directory. Locations searched:"
+            echo "$INDIR"
+            exit 1
+        fi
     fi
     echo $INDIR
 }

@@ -64,12 +64,15 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     echo "Error: IRF production directory not found: $VERITAS_IRFPRODUCTION_DIR"
     exit 1
 fi
-# input directory containing evndisp products
-INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+# input directory containing evndisp products (first check for curved, than normal atmosphere)
+INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_curved_offset${WOBBLE}deg_NSB${NOISE}MHz"
 if [[ ! -d $INDIR ]]; then
-    echo "Error, could not locate input directory. Locations searched:"
-    echo "$INDIR"
-    exit 1
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    if [[ ! -d $INDIR ]]; then
+        echo "Error, could not locate input directory. Locations searched:"
+        echo "$INDIR"
+        exit 1
+    fi
 fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/Tables"
