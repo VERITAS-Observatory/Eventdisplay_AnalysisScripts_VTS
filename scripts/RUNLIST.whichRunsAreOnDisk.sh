@@ -75,7 +75,7 @@ fi
 RUNLISTTMP=`cat $RUNFILE`
 RUNLIST=$(echo "$RUNLISTTMP" | grep -oP "^\d+$" )
 if [ -z "$RUNLIST" ] ; then
-  >&2 echo "Error, RUNLIST.whichRunsAreOnDisk.sh : input file/pipe contains no runs, exiting..."
+  >&2 echo "Error, RUNLIST.whichRunsAreOnDisk.sh : input file/pipe $RUNLISTTMP contains no runs, exiting..."
   exit 1
 fi
 #echo "RUNLIST:$RUNLIST"
