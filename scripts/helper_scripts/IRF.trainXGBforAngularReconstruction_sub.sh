@@ -56,6 +56,8 @@ eventdisplay-ml-train-xgb-stereo \
     --input_file_list "$LLIST" \
     --model_prefix "${PREFIX}" \
     --max_cores $MAXCORES \
+    --observatory VERITAS \
+    --min_images 2 \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
