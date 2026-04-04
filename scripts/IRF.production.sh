@@ -22,9 +22,9 @@ required parameters:
                             EVNDISP,
                             MAKETABLES, COMBINETABLES,
                             TRAINMVANGRES,
-                            TRAINXGBANGRESBINNED, ANAXGBANGRES,
-                            TRAINXGBGH, ANAXGBGH,
                             ANALYSETABLES,
+                            TRAINXGBANGRES, ANAXGBANGRES,
+                            TRAINXGBGH, ANAXGBGH,
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             TRAINTMVA, OPTIMIZETMVA,
                             ANATABLESEFFAREAS,
@@ -387,7 +387,7 @@ for VX in $EPOCH; do
        #################################################
        # zenith angle bin dependent analysis
        #################################################
-       if [[ $IRFTYPE == "TRAINXGBANGRESBINNED" ]]; then
+       if [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
            STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
            IDS=$(jq -r '.zenith[].id' $STEREO_PAR)
            for ZAB in $IDS; do
@@ -404,7 +404,7 @@ for VX in $EPOCH; do
        for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
-            if [[ $IRFTYPE == "TRAINMVANGRES" ]] || [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
+            if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB="150 200 250"
