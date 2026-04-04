@@ -164,8 +164,8 @@ elif [ ${SIMTYPE} == "CARE_RedHV" ]; then
 elif [ ${SIMTYPE:0:4} == "CARE" ]; then
 #    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz*.zst"
 # Used for processing of pre-2025 simulations (run number starting with 65...)
-#   VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_*.vbf.zst"
-    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_65*.vbf.zst"
+   VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_*.vbf.zst"
+#    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_65*.vbf.zst"
 # Used for 2025 additional MC production
 #    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_66*.zst"
 fi
