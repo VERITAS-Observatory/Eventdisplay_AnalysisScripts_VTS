@@ -28,8 +28,17 @@ ADD_OPT="ADDITIONALOPTIONS"
 PEDNEVENTS="10000"
 TZERONEVENTS="10000"
 
+echo "--- DEBUG START ---"
+echo "Arg 1 (RUNNUM): >$1<"
+echo "Arg 2 (VBFNAME): >$2<"
+echo "--- DEBUG END ---"
+
 echo "PROCESS ID ${Process}"
 echo "SGE_ID ${SGE_TASK_ID}"
+if [[ -z "$RUNNUM" ]] || [[ -z "$VBFNAME" ]]; then
+    echo "Invalid input for run number ($RUNNUM) and VBF file name ($VBFNAME)."
+    exit
+fi
 
 # Output file name
 ONAME="$RUNNUM"
@@ -81,12 +90,12 @@ if [ -e "$V4N" ]; then
     TMPDIR="$DDIR/test"
     mkdir -p "$TMPDIR"
     VBF_BASENAME="${VBFNAME%.zst}"
-
+    echo "Checking processed files in $V4N"
     for file in "$V4N"/*.root.zst; do
         tmpfile="$TMPDIR/$(basename "${file%.zst}")"
         zstd -d -c "$file" > "$tmpfile"
         if $EVNDISPSYS/bin/logFile evndispLog "$tmpfile" | grep -q "$VBF_BASENAME"; then
-            echo "File $VBFNAME already processed ($(basename $tmpfile))"
+            echo "File $VBFNAME ($VBF_BASENAME) already processed ($(basename $tmpfile))"
             exit
         fi
     done

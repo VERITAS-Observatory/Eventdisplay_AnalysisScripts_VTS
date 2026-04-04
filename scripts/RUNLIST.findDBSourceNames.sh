@@ -73,7 +73,7 @@ while read -r RUNID SOURCEID; do
 			COUNT=$((COUNT+1))
 		fi
 	fi
-done < <($MYSQL -e " select run_id, source_id from VERITAS.tblRun_Info where source_id like '%$SEARCHSTR%' and run_type = 'observing' and observing_mode = 'wobble' ;")
+done < <($MYSQL -e " select run_id, source_id from VERITAS.tblRun_Info where source_id like '%$SEARCHSTR%';")
 
 # alphabetize our source list
 OLDIFS="$IFS"

@@ -13,6 +13,14 @@ echo "
 fi
 
 FTYPE="$1"
+echo "Searching for errors for data type $FTYPE"
+
+# simplified search for mscw
+if [[ $FTYPE == "mscw" ]]; then
+    grep -i error ./mscw/*.log | grep -Ev 'BDTDispError|BDT disp|weighting'
+    echo "Finalized error search for mscw"
+    exit
+fi
 
 # find all files with errors in the log file
 
@@ -24,7 +32,6 @@ move_list()
     done
 }
 
-echo "Searching for errors for data type $FTYPE"
 
 # find all runs with errors and move them
 FLIST=$(grep -irl "error" $FTYPE/*.log)

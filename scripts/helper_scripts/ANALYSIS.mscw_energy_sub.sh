@@ -17,12 +17,15 @@ IRFVERSION=VERSIONIRF
 # default simulation types
 SIMTYPE_DEFAULT_V4="GRISU"
 SIMTYPE_DEFAULT_V5="GRISU"
-SIMTYPE_DEFAULT_V6="CARE_24_20"
+SIMTYPE_DEFAULT_V6="CARE_202404"
 SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV_Feb2024"
 SIMTYPE_DEFAULT_V6_UV="CARE_UV_2212"
 if [[ $IRFVERSION == v490* ]]; then
     SIMTYPE_DEFAULT_V6="CARE_June2020"
     SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV"
+elif [[ $IRFVERSION == v491* ]]; then
+    SIMTYPE_DEFAULT_V6="CARE_24_20"
+    SIMTYPE_DEFAULT_V6_REDHV="CARE_RedHV_Feb2024"
 fi
 
 ANATYPE="AP"
@@ -124,12 +127,13 @@ get_disp_dir()
     else
         DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
     fi
-    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -elevation | awk '{print $3}')
-    if (( $(echo "90.-$ZA < 38" |bc -l) )); then
+    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -zenith | awk '{print $4}')
+    # requires bc as printRunParameter returns a float
+    if (( $(echo "$ZA < 38" | bc -l) )); then
         DISPDIR="${DISPDIR}/SZE/"
-    elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
+    elif (( $(echo "$ZA < 48" | bc -l) )); then
         DISPDIR="${DISPDIR}/MZE/"
-    elif (( $(echo "90.-$ZA < 58" |bc -l) )); then
+    elif (( $(echo "$ZA < 58" | bc -l) )); then
         DISPDIR="${DISPDIR}/LZE/"
     else
         DISPDIR="${DISPDIR}/XZE/"

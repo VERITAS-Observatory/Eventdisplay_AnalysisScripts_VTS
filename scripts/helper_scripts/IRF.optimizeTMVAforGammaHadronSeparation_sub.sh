@@ -28,24 +28,22 @@ ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
 OBSTIME="5."
 MINEVENTS="10."
 if [[ $CUT == *"Moderate"* ]]; then
-    OBSTIME="1.0"
-elif [[ $CUT == *"Soft"* ]]; then
-    OBSTIME="0.2"
-elif [[ $CUT == *"Hard"* ]]; then
     OBSTIME="5."
+elif [[ $CUT == *"Soft"* ]]; then
+    OBSTIME="1.0"
+    MINEVENTS="5."
+elif [[ $CUT == *"Hard"* ]]; then
+    OBSTIME="20."
     MINEVENTS="1."
 fi
 
 # effective area - fill path
 EFFAREA="$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA}"
-
 # epoch / ATM
 EPAT="${EPOCH}_ATM${ATM}"
-
 # output directory
 WDIR="${PREDIR}/Optimize-${CUT}/"
 mkdir -p ${WDIR}
-
 # rates files
 RATEFILE="${WDIR}/rates_${EPAT}"
 
@@ -66,11 +64,12 @@ then
         > ${RATEFILE}.log
 fi
 
-# optimize cuts
 echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${VERITAS_ANALYSIS_TYPE:0:2}/${EPAT}/${CUT}/"
 cd ${PREDIR}/${CUT}
 rm -f ${WDIR}/${EPAT}.optimised.dat
-root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat
-
-exit
+if [[ -f "$EVNDISPSYS/macros/optimizeBDTcuts.C" ]]; then
+    root -l -q -b "$EVNDISPSYS/macros/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat
+else
+    root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat
+fi
