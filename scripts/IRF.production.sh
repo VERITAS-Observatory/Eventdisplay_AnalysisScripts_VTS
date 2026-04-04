@@ -188,9 +188,12 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
 elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    # ZENITH_ANGLES=( 60 65 )
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(find -L "${SIMDIR}" -name "*.vbf.zst" | sed -n 's/.*_\([0-9]\+\)MHz_.*/\1/p' | sort -u)
-    WOBBLE_OFFSETS=$(find -L "$SIMDIR" -type f | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
+    ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
+    # Note! Assumes same NSB and WOBBLE offsets for flat and curved atmosphere
+    NSB_LEVELS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*vbf.zst | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
+    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*.vbf.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # NSB_LEVELS=( 300 )
@@ -207,7 +210,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
-    # ZENITH_ANGLES=( 20 )
+    # ZENITH_ANGLES=( 60 65 )
     # WOBBLE_OFFSETS=( 0.5 )
     # NSB_LEVELS=( 160 )
     # IRF comparison
@@ -233,7 +236,6 @@ fi
 echo "Zenith angle bins: ${ZENITH_ANGLES}"
 echo "NSB levels: ${NSB_LEVELS}"
 echo "Wobble offsets: ${WOBBLE_OFFSETS}"
-
 
 # read cut list file
 read_cutlist()
@@ -434,8 +436,12 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        SIMDIRZA="$SIMDIR"
-                       if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
+                       if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
+                          SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
+                          echo "Using curved atmosphere simulations from $SIMDIRZA"
+                      elif [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
+                          echo "Using flat atmosphere simulations from $SIMDIRZA"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
