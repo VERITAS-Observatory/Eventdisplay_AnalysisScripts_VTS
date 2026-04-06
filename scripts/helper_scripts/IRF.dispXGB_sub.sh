@@ -46,6 +46,10 @@ check_conda_installation()
 
 check_conda_installation
 
+# Avoid plugin/cache race conditions
+export CONDA_NO_PLUGINS=true
+export PYTHONPYCACHEPREFIX=$TEMPDIR/pycache_$(basename $MSCW_FILE .root)
+mkdir -p "$PYTHONPYCACHEPREFIX"
 eval "$(conda shell.bash hook)"
 conda activate $env_name
 
@@ -99,6 +103,4 @@ $ML_EXEC --input_file "$MSCW_FILE" \
     --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
-conda list -n $env_name >> "${LOGFILE}"
-
-conda deactivate
+python -m pip freeze >> "${LOGFILE}" || echo "pip freeze failed, continuing" >> "${LOGFILE}"
