@@ -3,16 +3,6 @@ set -euo pipefail
 
 BDIR="/pnfs/ifh.de/acs/veritas/diskonly/processed_data"
 IDIR="$VERITAS_DATA_DIR/shared/"
-<<<<<<< Updated upstream
-
-# DBTEXT
-echo "Syncing DBTEXT"
-rsync -av $IDIR/DBTEXT/* "$BDIR/DBTEXT/"
-
-# DBFITS
-echo "Syncing DBFITS"
-rsync -av $IDIR/DBFITS/* "$BDIR/DBFITS/"
-=======
 FLAGS=(-av --inplace)
 
 get_file_list() {
@@ -55,18 +45,8 @@ process_sync() {
 }
 
 # ---- Jobs ----
->>>>>>> Stashed changes
 
 echo "Syncing evndisp v490.7 AP"
-<<<<<<< Updated upstream
-rsync -av $IDIR/processed_data_v490.7/AP/evndisp/ "$BDIR/v490.7/AP/evndisp/"
-echo "Syncing evndisp v490.7 NN"
-rsync -av $IDIR/processed_data_v490.7/NN/evndisp/ "$BDIR/v490.7/NN/evndisp/"
-echo "Syncing DL3 v490.7 AP"
-rsync -av $IDIR/processed_data_v490.7/AP/dl3*.tar.gz "$BDIR/v490.7/DL3/"
-echo "Syncing DL3 v490.7 NN"
-rsync -av $IDIR/processed_data_v490.7/NN/dl3*.tar.gz "$BDIR/v490.7/DL3/"
-=======
 process_sync "$IDIR/processed_data_v490.7/AP/evndisp/" "$BDIR/v490.7/AP/evndisp/"
 
 echo "Syncing evndisp v490.7 NN"
@@ -77,16 +57,9 @@ process_sync "$IDIR/processed_data_v490.7/AP/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
 
 echo "Syncing DL3 v490.7 NN"
 process_sync "$IDIR/processed_data_v490.7/NN/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
->>>>>>> Stashed changes
 
 echo "Syncing DL3 v491.0"
-<<<<<<< Updated upstream
-rsync -av $IDIR/processed_data_v491.0/AP/dl3*.tar.gz "$BDIR/v491.0/"
-echo "Syncing mscw v491.0"
-rsync -av $IDIR/processed_data_v491.0/AP/mscw/* "$BDIR/v491.0/AP/mscw/"
-=======
 process_sync "$IDIR/processed_data_v491.0/AP/" "$BDIR/v491.0/" "dl3*.tar.gz"
 
 echo "Syncing mscw v491.0"
 process_sync "$IDIR/processed_data_v491.0/AP/mscw/" "$BDIR/v491.0/mscw/"
->>>>>>> Stashed changes
