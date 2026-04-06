@@ -37,20 +37,18 @@ process_sync() {
 
 # ---- Jobs ----
 
+# v490.7
 echo "Syncing evndisp v490.7 AP"
 process_sync "$IDIR/processed_data_v490.7/AP/evndisp/" "$BDIR/v490.7/AP/evndisp/"
-
 echo "Syncing evndisp v490.7 NN"
 process_sync "$IDIR/processed_data_v490.7/NN/evndisp/" "$BDIR/v490.7/NN/evndisp/"
-
 echo "Syncing DL3 v490.7 AP"
 process_sync "$IDIR/processed_data_v490.7/AP/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
-
 echo "Syncing DL3 v490.7 NN"
 process_sync "$IDIR/processed_data_v490.7/NN/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
 
+# v491.0
 echo "Syncing DL3 v491.0"
 process_sync "$IDIR/processed_data_v491.0/AP/" "$BDIR/v491.0/" "dl3*.tar.gz"
-
 echo "Syncing mscw v491.0"
 process_sync "$IDIR/processed_data_v491.0/AP/mscw/" "$BDIR/v491.0/mscw/"
