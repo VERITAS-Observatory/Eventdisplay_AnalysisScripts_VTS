@@ -1,9 +1,9 @@
 #!/bin/bash
-# Sync pre-processed Eventdisplay data with DESY dCache
-
+set -euo pipefail
 
 BDIR="/pnfs/ifh.de/acs/veritas/diskonly/processed_data"
 IDIR="$VERITAS_DATA_DIR/shared/"
+<<<<<<< Updated upstream
 
 # DBTEXT
 echo "Syncing DBTEXT"
@@ -12,9 +12,53 @@ rsync -av $IDIR/DBTEXT/* "$BDIR/DBTEXT/"
 # DBFITS
 echo "Syncing DBFITS"
 rsync -av $IDIR/DBFITS/* "$BDIR/DBFITS/"
+=======
+FLAGS=(-av --inplace)
 
-# v490.7
+get_file_list() {
+    local SRC="$1"
+    local DST="$2"
+    local FILTER="$3"
+
+    rsync -n "${FLAGS[@]}" --delete --itemize-changes \
+        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
+        "$SRC" "$DST" \
+    | awk '/^[<>ch\*]/ { $1=""; sub(/^ /,""); print }'
+}
+
+process_sync() {
+    local SRC="$1"
+    local DST="$2"
+    local FILTER="${3:-}"
+
+    echo "Scanning: $SRC -> $DST"
+    get_file_list "$SRC" "$DST" "$FILTER" | while IFS= read -r f; do
+        # skip any backup files in source
+        case "$f" in
+            *.back) continue ;;  # ignore backup files
+        esac
+
+        dst_file="$DST/$f"
+        mkdir -p "$(dirname "$dst_file")"
+
+        # remove any previous backup (only one)
+        [ -f "${dst_file}.back" ] && rm -f "${dst_file}.back"
+
+        # move current file to .back if it exists
+        [ -f "$dst_file" ] && mv "$dst_file" "${dst_file}.back"
+    done
+
+    echo "Syncing: $SRC -> $DST"
+    rsync "${FLAGS[@]}" \
+        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
+        "$SRC" "$DST"
+}
+
+# ---- Jobs ----
+>>>>>>> Stashed changes
+
 echo "Syncing evndisp v490.7 AP"
+<<<<<<< Updated upstream
 rsync -av $IDIR/processed_data_v490.7/AP/evndisp/ "$BDIR/v490.7/AP/evndisp/"
 echo "Syncing evndisp v490.7 NN"
 rsync -av $IDIR/processed_data_v490.7/NN/evndisp/ "$BDIR/v490.7/NN/evndisp/"
@@ -22,9 +66,27 @@ echo "Syncing DL3 v490.7 AP"
 rsync -av $IDIR/processed_data_v490.7/AP/dl3*.tar.gz "$BDIR/v490.7/DL3/"
 echo "Syncing DL3 v490.7 NN"
 rsync -av $IDIR/processed_data_v490.7/NN/dl3*.tar.gz "$BDIR/v490.7/DL3/"
+=======
+process_sync "$IDIR/processed_data_v490.7/AP/evndisp/" "$BDIR/v490.7/AP/evndisp/"
 
-# v491.0
+echo "Syncing evndisp v490.7 NN"
+process_sync "$IDIR/processed_data_v490.7/NN/evndisp/" "$BDIR/v490.7/NN/evndisp/"
+
+echo "Syncing DL3 v490.7 AP"
+process_sync "$IDIR/processed_data_v490.7/AP/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
+
+echo "Syncing DL3 v490.7 NN"
+process_sync "$IDIR/processed_data_v490.7/NN/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
+>>>>>>> Stashed changes
+
 echo "Syncing DL3 v491.0"
+<<<<<<< Updated upstream
 rsync -av $IDIR/processed_data_v491.0/AP/dl3*.tar.gz "$BDIR/v491.0/"
 echo "Syncing mscw v491.0"
 rsync -av $IDIR/processed_data_v491.0/AP/mscw/* "$BDIR/v491.0/AP/mscw/"
+=======
+process_sync "$IDIR/processed_data_v491.0/AP/" "$BDIR/v491.0/" "dl3*.tar.gz"
+
+echo "Syncing mscw v491.0"
+process_sync "$IDIR/processed_data_v491.0/AP/mscw/" "$BDIR/v491.0/mscw/"
+>>>>>>> Stashed changes
