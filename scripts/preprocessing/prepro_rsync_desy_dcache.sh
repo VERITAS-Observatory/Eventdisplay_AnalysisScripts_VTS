@@ -5,24 +5,15 @@ BDIR="/pnfs/ifh.de/acs/veritas/diskonly/processed_data"
 IDIR="$VERITAS_DATA_DIR/shared/"
 FLAGS=(-av --inplace)
 
-get_file_list() {
-    local SRC="$1"
-    local DST="$2"
-    local FILTER="$3"
-
-    rsync -n "${FLAGS[@]}" --delete --itemize-changes \
-        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
-        "$SRC" "$DST" \
-    | awk '/^[<>ch\*]/ { $1=""; sub(/^ /,""); print }'
-}
-
 process_sync() {
     local SRC="$1"
     local DST="$2"
     local FILTER="${3:-}"
 
     echo "Scanning: $SRC -> $DST"
-    get_file_list "$SRC" "$DST" "$FILTER" | while IFS= read -r f; do
+    rsync -av --dry-run --itemize-changes \
+        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
+        "$SRC/" "$DST/" | awk '/^>f/ {print $2}' | while IFS= read -r f; do
         # skip any backup files in source
         case "$f" in
             *.back) continue ;;  # ignore backup files
@@ -39,7 +30,7 @@ process_sync() {
     done
 
     echo "Syncing: $SRC -> $DST"
-    rsync "${FLAGS[@]}" \
+    rsync "${FLAGS[@]}" --size-only --dry-run \
         ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
         "$SRC" "$DST"
 }
