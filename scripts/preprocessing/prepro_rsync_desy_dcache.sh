@@ -10,7 +10,7 @@ process_sync() {
     local FILTER="${3:-}"
 
     echo "Scanning: $SRC -> $DST"
-    rsync -av --dry-run --size-only --itemize-changes \
+    rsync -av --dry-run --size-only --prune-empty-dirs --itemize-changes \
         ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
         "$SRC/" "$DST/" | awk '/^>f/ {print $2}' | while IFS= read -r f; do
         # skip any backup files in source
@@ -29,7 +29,7 @@ process_sync() {
     done || true
 
     echo "Syncing: $SRC -> $DST"
-    rsync -av --size-only \
+    rsync -av --size-only --prune-empty-dirs \
         ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
         "$SRC" "$DST"
 }
