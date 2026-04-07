@@ -1,30 +1,61 @@
 #!/bin/bash
-# Sync pre-processed Eventdisplay data with DESY dCache
-
+set -euo pipefail
 
 BDIR="/pnfs/ifh.de/acs/veritas/diskonly/processed_data"
 IDIR="$VERITAS_DATA_DIR/shared/"
 
-# DBTEXT
-echo "Syncing DBTEXT"
-rsync -av $IDIR/DBTEXT/* "$BDIR/DBTEXT/"
+process_sync() {
+    local SRC="$1"
+    local DST="$2"
+    local FILTER="${3:-}"
 
-# DBFITS
-echo "Syncing DBFITS"
-rsync -av $IDIR/DBFITS/* "$BDIR/DBFITS/"
+    echo "Scanning: $SRC -> $DST"
+    rsync -av --dry-run --size-only --prune-empty-dirs --itemize-changes \
+        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
+        "$SRC/" "$DST/" | awk '/^>f/ {print $2}' | while IFS= read -r f; do
+        # skip any backup files in source
+        case "$f" in
+            *.back) continue ;;  # ignore backup files
+        esac
+
+        dst_file="$DST/$f"
+        mkdir -p "$(dirname "$dst_file")"
+
+        # remove any previous backup (only one)
+        [ -f "${dst_file}.back" ] && rm -f -v "${dst_file}.back"
+
+        # move current file to .back if it exists
+        [ -f "$dst_file" ] && mv -v "$dst_file" "${dst_file}.back"
+    done || true
+
+    echo "Syncing: $SRC -> $DST"
+    rsync -av --size-only --prune-empty-dirs \
+        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
+        "$SRC" "$DST"
+}
+
+# ---- Jobs ----
 
 # v490.7
 echo "Syncing evndisp v490.7 AP"
-rsync -av $IDIR/processed_data_v490.7/AP/evndisp/ "$BDIR/v490.7/AP/evndisp/"
+process_sync "$IDIR/processed_data_v490.7/AP/evndisp/" "$BDIR/v490.7/AP/evndisp/"
 echo "Syncing evndisp v490.7 NN"
-rsync -av $IDIR/processed_data_v490.7/NN/evndisp/ "$BDIR/v490.7/NN/evndisp/"
+process_sync "$IDIR/processed_data_v490.7/NN/evndisp/" "$BDIR/v490.7/NN/evndisp/"
 echo "Syncing DL3 v490.7 AP"
-rsync -av $IDIR/processed_data_v490.7/AP/dl3*.tar.gz "$BDIR/v490.7/DL3/"
+process_sync "$IDIR/processed_data_v490.7/AP/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
 echo "Syncing DL3 v490.7 NN"
-rsync -av $IDIR/processed_data_v490.7/NN/dl3*.tar.gz "$BDIR/v490.7/DL3/"
+process_sync "$IDIR/processed_data_v490.7/NN/" "$BDIR/v490.7/DL3/" "dl3*.tar.gz"
 
 # v491.0
 echo "Syncing DL3 v491.0"
-rsync -av $IDIR/processed_data_v491.0/AP/dl3*.tar.gz "$BDIR/v491.0/"
+process_sync "$IDIR/processed_data_v491.0/AP/" "$BDIR/v491.0/DL3/" "dl3*.tar.gz"
 echo "Syncing mscw v491.0"
-rsync -av $IDIR/processed_data_v491.0/AP/mscw/* "$BDIR/v491.0/AP/mscw/"
+process_sync "$IDIR/processed_data_v491.0/AP/mscw/" "$BDIR/v491.0/AP/mscw/"
+
+# DBFITS
+echo "Syncing DBFITS"
+process_sync "$IDIR/DBFITS" "$BDIR/DBFITS"
+
+# DBTEXT
+echo "Syncing DBTEXT"
+process_sync "$IDIR/DBTEXT" "$BDIR/DBTEXT"
