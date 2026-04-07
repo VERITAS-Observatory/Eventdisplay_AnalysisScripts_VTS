@@ -59,6 +59,7 @@ rm -f "$LOGFILE"
 eventdisplay-ml-train-xgb-classify \
     --input_signal_file_list "${SIGNALLIST}" \
     --input_background_file_list "${BCKLIST}" \
+    --observatory VERITAS \
     --model_prefix "${PREFIX}" \
     --energy_bin_number "${EBIN}" \
     --model_parameters "${PARA}" \
