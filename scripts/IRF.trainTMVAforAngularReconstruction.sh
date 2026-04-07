@@ -93,7 +93,7 @@ check_evndisp_directory()
     if [[ ! -d $INDIR ]]; then
         INDIR="${INDIRBASE}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
         if [[ ! -d $INDIR ]]; then
-            echo "Error, could not locate input directory. Locations searched:"
+            echo "Error, could not locate input directory. Locations searched (plus curved):"
             echo "$INDIR"
             exit 1
         fi

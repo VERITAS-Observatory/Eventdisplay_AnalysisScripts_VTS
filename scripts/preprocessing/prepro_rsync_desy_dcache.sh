@@ -3,7 +3,6 @@ set -euo pipefail
 
 BDIR="/pnfs/ifh.de/acs/veritas/diskonly/processed_data"
 IDIR="$VERITAS_DATA_DIR/shared/"
-FLAGS="-av --delete-before --inplace"
 
 process_sync() {
     local SRC="$1"

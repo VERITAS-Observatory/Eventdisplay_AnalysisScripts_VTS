@@ -89,7 +89,7 @@ INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${E
 if [[ ! -d $INDIR ]]; then
     INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
     if [[ ! -d $INDIR ]]; then
-        echo "Error, could not locate input directory. Locations searched:"
+        echo "Error, could not locate input directory. Locations searched (plus curved):"
         echo "$INDIR"
         exit 1
     fi
