@@ -22,9 +22,9 @@ required parameters:
                             EVNDISP,
                             MAKETABLES, COMBINETABLES,
                             TRAINMVANGRES,
-                            TRAINXGBANGRESBINNED, ANAXGBANGRES,
-                            TRAINXGBGH, ANAXGBGH,
                             ANALYSETABLES,
+                            TRAINXGBANGRES, ANAXGBANGRES,
+                            TRAINXGBGH, ANAXGBGH,
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             TRAINTMVA, OPTIMIZETMVA,
                             ANATABLESEFFAREAS,
@@ -201,7 +201,7 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     # WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     set -- $ZENITH_ANGLES
     ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
     # assume same NSB and wobble offsets in all bins
@@ -389,7 +389,7 @@ for VX in $EPOCH; do
        #################################################
        # zenith angle bin dependent analysis
        #################################################
-       if [[ $IRFTYPE == "TRAINXGBANGRESBINNED" ]]; then
+       if [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
            STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
            IDS=$(jq -r '.zenith[].id' $STEREO_PAR)
            for ZAB in $IDS; do
@@ -406,7 +406,7 @@ for VX in $EPOCH; do
        for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
-            if [[ $IRFTYPE == "TRAINMVANGRES" ]] || [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
+            if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
                if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
                    FIXEDNSB="150 200 250"
