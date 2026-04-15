@@ -1,11 +1,7 @@
 #!/bin/bash
 # train XGB for gamma/hadron separation
 #
-# note the large amount of hardwired parameters in this scripts:
-# - zenith angles to be trained
 # - training at wobble offsets 0.5 deg only
-# - fixed of NSB levels (adapted to stdHV settings)
-#
 
 h_cpu=11:59:59; h_vmem=16000M; tmpdir_size=24G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
@@ -101,9 +97,9 @@ RUNPAR_CONTENT=$(cat "$RUNPAR")
 echo "Number of energy bins: $NENE"
 
 #####################################
-# zenith angle bins of MC simulation files
-ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65)
-NOISE_VALUES=(100 160 200 250 350 450)
+# zenith angle / NSB bins of MC simulation files
+ZENITH_ANGLES=($(jq -r '.input_zenith_angles[]' "$RUNPAR"))
+NOISE_VALUES=($(jq -r '.input_noise_values[]' "$RUNPAR"))
 
 ####################################
 # Run prefix
