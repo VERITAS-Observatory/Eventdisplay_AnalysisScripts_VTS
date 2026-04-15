@@ -4,7 +4,6 @@
 # Don't do set -e.
 # set -e
 
-# parameters replaced by parent script using sed
 MSCW_FILE=FFILE
 ODIR=OODIR
 env_name="eventdisplay_ml"

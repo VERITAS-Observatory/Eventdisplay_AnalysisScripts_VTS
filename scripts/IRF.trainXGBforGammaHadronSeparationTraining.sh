@@ -91,10 +91,11 @@ mkdir -p $LOGDIR
 mkdir -p $ODIR
 
 #####################################
-# energy bins
+# energy / zenith bins
 NENE=$(jq '.energy_bins_log10_tev | length' "$RUNPAR")
+NEZE=$(jq '.zenith_bins_deg | length' "$RUNPAR")
 RUNPAR_CONTENT=$(cat "$RUNPAR")
-echo "Number of energy bins: $NENE"
+echo "Number of energy / zenith bins: $NENE $NEZE"
 
 #####################################
 # zenith angle / NSB bins of MC simulation files
@@ -145,13 +146,16 @@ BCKLIST="${ODIR}/bck_files.list"
 echo "Background file list: $BCKLIST"
 rm -f "${BCKLIST}"
 touch "${BCKLIST}"
-for ((i=0; i<=2; i++)); do
+tmpfile=$(mktemp)
+for ((i=0; i<${NEZE}; i++)); do
   if [[ ! -d "${BDIR}/Ze_${i}" ]]; then
       echo "Error, directory with background files ${BDIR}/Ze_${i} not found, exiting..."
       exit 1
   fi
-  find ${BDIR}/Ze_${i} -name "*.root" | sort -R | head -n 1000 >> "${BCKLIST}"
+  find ${BDIR}/Ze_${i} -name "*.root" | shuf -n 1000 >> "${tmpfile}"
 done
+shuf "$tmpfile" > "${BCKLIST}"
+rm "$tmpfile"
 
 ###############################################################
 # loop over energy bins and submit a job for each bin
