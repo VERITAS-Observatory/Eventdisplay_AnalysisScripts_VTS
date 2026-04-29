@@ -96,7 +96,7 @@ if [[ ! -d $INDIR ]]; then
 fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
-LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MSCW-RECID${RECID}-${UUID}"
+LOGDIR="${ODIR}/submit-MSCW-RECID${RECID}-${UUID}"
 mkdir -p "$LOGDIR"
 echo "Input: $INDIR"
 echo "Output: $ODIR"
