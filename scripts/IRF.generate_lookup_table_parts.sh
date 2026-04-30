@@ -76,7 +76,7 @@ if [[ ! -d $INDIR ]]; then
 fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/Tables"
-LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MAKETABLES-${UUID}/"
+LOGDIR="${ODIR}/submit-MAKETABLES-${UUID}/"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 mkdir -p "$LOGDIR"
