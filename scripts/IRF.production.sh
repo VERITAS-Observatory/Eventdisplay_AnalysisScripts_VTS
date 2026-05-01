@@ -210,9 +210,9 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
-    # ZENITH_ANGLES=( 60 65 )
+    # ZENITH_ANGLES=( 50 55 60 65 )
     # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 160 )
+    # NSB_LEVELS=( 200 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
     # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
@@ -466,6 +466,7 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
+                            # TFILID=$TFIL$ANATYPE"_flat"
                             TFILID=$TFIL$ANATYPE
                             # run mscw only
                             EFFAREACUTLIST="NOEFFAREA"
