@@ -97,6 +97,8 @@ fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
 LOGDIR="${ODIR}/submit-MSCW-RECID${RECID}-${UUID}"
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
 mkdir -p "$LOGDIR"
 echo "Input: $INDIR"
 echo "Output: $ODIR"
