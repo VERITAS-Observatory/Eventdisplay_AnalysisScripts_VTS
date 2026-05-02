@@ -96,14 +96,23 @@ if [ $DISPBDT -eq 1 ]; then
     else
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}/"
     fi
+    # zenith angle dependent disp training; important at large zenith
     if [[ "${ZA}" -lt "38" ]]; then
-        DISPDIR="${DISPDIR}/SZE/"
+        DISPDIR="${DISPDIR}/20deg/"
     elif [[ "${ZA}" -lt "48" ]]; then
-        DISPDIR="${DISPDIR}/MZE/"
+        DISPDIR="${DISPDIR}/45deg/"
     elif [[ "${ZA}" -lt "58" ]]; then
-        DISPDIR="${DISPDIR}/LZE/"
+        DISPDIR="${DISPDIR}/55deg/"
+    elif [[ "${ZA}" -lt "62" ]]; then
+        DISPDIR="${DISPDIR}/60deg/"
+        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        fi
     else
-        DISPDIR="${DISPDIR}/XZE/"
+        DISPDIR="${DISPDIR}/65deg/"
+        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        fi
     fi
     # unzip XML files into DDIR
     cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
