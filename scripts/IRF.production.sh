@@ -436,10 +436,11 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        SIMDIRZA="$SIMDIR"
-                       if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
-                          SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
-                          echo "Using curved atmosphere simulations from $SIMDIRZA"
-                      elif [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
+                       # CURVED_ATMOSPHERE_MC
+                       # if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
+                       #   SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
+                       #    echo "Using curved atmosphere simulations from $SIMDIRZA"
+                       if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
                           echo "Using flat atmosphere simulations from $SIMDIRZA"
                        fi
@@ -466,7 +467,6 @@ for VX in $EPOCH; do
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
-                            # TFILID=$TFIL$ANATYPE"_flat"
                             TFILID=$TFIL$ANATYPE
                             # run mscw only
                             EFFAREACUTLIST="NOEFFAREA"

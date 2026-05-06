@@ -85,15 +85,16 @@ check_evndisp_directory()
 {
     W=${1}
     N=${2}
-    # input directory containing evndisp products (first check for curved, than normal atmosphere)
+    # input directory containing evndisp products
     INDIRBASE="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
     if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
-        INDIR="${INDIRBASE}/ze${ZA}deg_curved_offset${W}deg_NSB${N}MHz"
+        # CURVED_ATMOSPHERE_MC INDIR="${INDIRBASE}/ze${ZA}deg_curved_offset${W}deg_NSB${N}MHz"
+        INDIR="${INDIRBASE}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
     fi
     if [[ ! -d $INDIR ]]; then
         INDIR="${INDIRBASE}/ze${ZA}deg_offset${W}deg_NSB${N}MHz"
         if [[ ! -d $INDIR ]]; then
-            echo "Error, could not locate input directory. Locations searched (plus curved):"
+            echo "Error, could not locate input directory. Locations searched (minus curved):"
             echo "$INDIR"
             exit 1
         fi

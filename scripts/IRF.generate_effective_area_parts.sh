@@ -84,7 +84,7 @@ if [[ ${DISPBDT} == "1" ]]; then
 fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
-LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$IRFVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-EFFAREA-RECID${RECID}-${UUID}"
+LOGDIR="${ODIR}/submit-EFFAREA-RECID${RECID}-${UUID}"
 mkdir -p "$LOGDIR"
 echo "Input: $INDIR"
 echo "Output: $ODIR"

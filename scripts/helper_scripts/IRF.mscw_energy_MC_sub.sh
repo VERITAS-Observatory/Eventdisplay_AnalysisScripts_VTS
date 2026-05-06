@@ -94,7 +94,7 @@ if [ $DISPBDT -eq 1 ]; then
     elif [[ ${SIMTYPE} == *"UV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}_UV/"
     else
-        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}/"
+        DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}_flat/${EPOCH}_ATM${ATM}/"
     fi
     # zenith angle dependent disp training; important at large zenith
     if [[ "${ZA}" -lt "38" ]]; then
