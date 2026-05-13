@@ -383,10 +383,10 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        SIMDIRZA="$SIMDIR"
-                       if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
-                          SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
-                          echo "Using curved atmosphere simulations from $SIMDIRZA"
-                      elif [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
+                       # if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
+                       #   SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
+                       #    echo "Using curved atmosphere simulations from $SIMDIRZA"
+                       if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
                           echo "Using flat atmosphere simulations from $SIMDIRZA"
                        fi
