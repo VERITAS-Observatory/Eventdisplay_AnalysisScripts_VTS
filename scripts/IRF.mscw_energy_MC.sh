@@ -85,18 +85,21 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     exit 1
 fi
 # input directory containing evndisp products (first check for curved, than normal atmosphere)
-INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_curved_offset${WOBBLE}deg_NSB${NOISE}MHz"
+# CURVED_ATMOSPHERE_MC INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_curved_offset${WOBBLE}deg_NSB${NOISE}MHz"
+INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 if [[ ! -d $INDIR ]]; then
     INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
     if [[ ! -d $INDIR ]]; then
-        echo "Error, could not locate input directory. Locations searched (plus curved):"
+        echo "Error, could not locate input directory. Locations searched (minus curved):"
         echo "$INDIR"
         exit 1
     fi
 fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma"
-LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MSCW-RECID${RECID}-${UUID}"
+LOGDIR="${ODIR}/submit-MSCW-RECID${RECID}-${UUID}"
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
 mkdir -p "$LOGDIR"
 echo "Input: $INDIR"
 echo "Output: $ODIR"

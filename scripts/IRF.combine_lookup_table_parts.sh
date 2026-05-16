@@ -80,7 +80,7 @@ if [[ -f $OFILE ]]; then
 fi
 
 # run scripts and output are written into this directory
-LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/MSCW.MAKETABLES/${ANALYSIS_TYPE}/submit-COMBINETABLES-${UUID}/"
+LOGDIR="${ODIR}/submit-COMBINETABLES-${UUID}/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 

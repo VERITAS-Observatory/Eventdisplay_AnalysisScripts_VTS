@@ -210,9 +210,9 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
-    # ZENITH_ANGLES=( 60 65 )
+    # ZENITH_ANGLES=( 50 55 60 65 )
     # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 160 )
+    # NSB_LEVELS=( 200 )
     # IRF comparison
     # ZENITH_ANGLES=( 20 40 50 60 65 )
     # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
@@ -322,7 +322,7 @@ for VX in $EPOCH; do
        #############################################
        # XGB Classification Training
        if [[ $IRFTYPE == "TRAINXGBGH" ]]; then
-           BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_DISP"
+           BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_XGB"
            RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
            ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
            echo "XGB Classification Training"
@@ -436,10 +436,11 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        SIMDIRZA="$SIMDIR"
-                       if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
-                          SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
-                          echo "Using curved atmosphere simulations from $SIMDIRZA"
-                      elif [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
+                       # CURVED_ATMOSPHERE_MC
+                       # if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
+                       #   SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
+                       #    echo "Using curved atmosphere simulations from $SIMDIRZA"
+                       if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
                           echo "Using flat atmosphere simulations from $SIMDIRZA"
                        fi
