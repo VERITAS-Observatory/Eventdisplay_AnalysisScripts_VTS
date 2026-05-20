@@ -127,23 +127,35 @@ get_disp_dir()
     else
         DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
     fi
-    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -zenith | awk '{print $4}')
+    ZA=${1}
+    # zenith angle dependent disp training; important at large zenith
     # requires bc as printRunParameter returns a float
     if (( $(echo "$ZA < 38" | bc -l) )); then
-        DISPDIR="${DISPDIR}/SZE/"
+        DISPDIR="${DISPDIR}/20deg/"
     elif (( $(echo "$ZA < 48" | bc -l) )); then
-        DISPDIR="${DISPDIR}/MZE/"
+        DISPDIR="${DISPDIR}/45deg/"
     elif (( $(echo "$ZA < 58" | bc -l) )); then
-        DISPDIR="${DISPDIR}/LZE/"
+        DISPDIR="${DISPDIR}/55deg/"
+    elif (( $(echo "$ZA < 62" | bc -l) )); then
+        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/60deg/"
+        fi
     else
-        DISPDIR="${DISPDIR}/XZE/"
+        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/60deg/"
+        fi
     fi
     echo "${VERITAS_EVNDISP_AUX_DIR}/${DISPDIR}/"
 }
 
 if [[ $DISPBDT == "1" ]]; then
-    DISPDIR=$(get_disp_dir)
-    echo "DISPDIR (Elevation is $ZA deg): " $DISPDIR
+    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -zenith | awk '{print $4}')
+    DISPDIR=$(get_disp_dir ${ZA})
+    echo "DISPDIR (Zenith is $ZA deg): " $DISPDIR
 fi
 
 #################################
