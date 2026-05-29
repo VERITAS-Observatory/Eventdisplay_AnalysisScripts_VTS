@@ -187,7 +187,7 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     ######################################
 elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     # ZENITH_ANGLES=( 60 65 )
     set -- $ZENITH_ANGLES
     ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
