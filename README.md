@@ -4,11 +4,21 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/blob/main/LICENSE)
 [![CI](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/actions/workflows/CI.yml/badge.svg)](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisScripts_VTS/actions/workflows/CI.yml)
 
+This repository contains scripts for analyzing VERITAS observational data and Monte Carlo (MC) simulations.
+
+The analysis scripts are part of the Eventdisplay package and additionally require the following to be installed:
+
+- Binaries and libraries from the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4)
+- Eventdisplay analysis files (configuration files, calibration files, and instrument response functions) from [Eventdisplay_AnalysisFiles_VTS](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS)
+- Converter to DL3 format: [V2DL3](https://github.com/VERITAS-Observatory/V2DL3/)
+- Optional: install [Eventdisplay-ML](https://github.com/Eventdisplay/Eventdisplay-ML) for machine-learning-based reconstruction methods
+
+These scripts are optimized for the DESY computing environment and use HTCondor batch systems and Apptainer containers.
+
 ## Table of Contents
 
 - [Eventdisplay Analysis Scripts for VERITAS](#eventdisplay-analysis-scripts-for-veritas)
   - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
   - [Environment Variables](#environment-variables)
   - [Analysis Workflow](#analysis-workflow)
   - [Calibration (SPANALYSIS)](#calibration-spanalysis)
@@ -26,19 +36,6 @@
     - [Effective Area Generation](#effective-area-generation)
   - [Support](#support)
   - [License](#license)
-
-## Overview
-
-This repository contains scripts for analyzing VERITAS observational data and Monte Carlo (MC) simulations.
-
-The analysis scripts are part of the Eventdisplay package and additionally require the following to be installed:
-
-- Binaries and libraries from the [Eventdisplay package](https://github.com/VERITAS-Observatory/EventDisplay_v4)
-- Eventdisplay analysis files (configuration files, calibration files, and instrument response functions) from [Eventdisplay_AnalysisFiles_VTS](https://github.com/VERITAS-Observatory/Eventdisplay_AnalysisFiles_VTS)
-- Converter to DL3 format: [V2DL3](https://github.com/VERITAS-Observatory/V2DL3/)
-- Optional: install [Eventdisplay-ML](https://github.com/Eventdisplay/Eventdisplay-ML) for machine-learning-based reconstruction methods
-
-These scripts are optimized for the DESY computing environment and use HTCondor batch systems and Apptainer containers.
 
 ## Environment Variables
 
