@@ -2,6 +2,7 @@
 # script to combine anasum files processed in parallel mode
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=0:59:00; h_vmem=12000M; tmpdir_size=150G
 
 if [[ $# -lt 3 ]]; then
@@ -71,7 +72,7 @@ mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_combine_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_combine_sub"
 
 FSCRIPT="$LOGDIR/anasum_combine-$DATE-RUN$RUN-$(date +%s)"
 echo "Run script written to $FSCRIPT"
@@ -83,7 +84,7 @@ sed -e "s|RRUNLIST|$RUNLIST|" \
 chmod u+x "$FSCRIPT.sh"
 
 # run locally or on cluster
-SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
@@ -97,7 +98,7 @@ if [[ $SUBC == *qsub* ]]; then
         JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
     fi
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
     condor_submit $FSCRIPT.sh.condor
 echo "RUN $RUN JOBID $JOBID"
     echo "RUN $RUN SCRIPT $FSCRIPT.sh"

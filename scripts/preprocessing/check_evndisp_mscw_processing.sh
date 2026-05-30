@@ -43,5 +43,5 @@ echo "Checking runs from ${1} for data type ${DTYPE}"
 
 for F in ${FF}
 do
-    echo $F $(file_on_disk $F)
+    echo "$F $(file_on_disk "$F")"
 done

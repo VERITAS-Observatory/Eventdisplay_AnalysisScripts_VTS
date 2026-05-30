@@ -47,7 +47,7 @@ if find "${JDIR}" -name "*.condor" -print -quit | grep -q .; then
     echo "queue file matching files *.sh" >> ${SUBMITF}
 
     PDIR=$(pwd)
-    if [[ ${2} == "submit" ]]; then
+    if [ "${2}" = "submit" ]; then
         cd ${JDIR}
         condor_submit submit.txt requirements='OpSysAndVer=="AlmaLinux9"'
         cd ${PDIR}

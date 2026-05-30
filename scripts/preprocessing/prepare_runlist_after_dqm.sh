@@ -81,13 +81,14 @@ get_epoch()
 
 fill_run()
 {
+    epoch=$(get_epoch "$1")
     echo "$1" >> runlist.dat
     if [[ "$2" == "moonfilter" ]]; then
-        echo "$1" >> runlist$(get_epoch $1)_UV.dat
+        echo "$1" >> "runlist${epoch}_UV.dat"
     elif [[ "$2" == "reducedhv" ]]; then
-        echo "$1" >> runlist$(get_epoch $1)_redHV.dat
+        echo "$1" >> "runlist${epoch}_redHV.dat"
     else
-        echo "$1" >> runlist$(get_epoch $1).dat
+        echo "$1" >> "runlist${epoch}.dat"
     fi
 }
 
@@ -99,7 +100,7 @@ fill_timemask()
     TMASK_2=$(printf "%.0f" "$TMASK_2")
     TMASK="* $1 $TMASK_1 $((TMASK_2 - TMASK_1)) 0"
     echo "$TMASK" >> timemask.dat
-    echo "$TMASK" >> timemask$(get_epoch $1).dat
+    echo "$TMASK" >> "timemask$(get_epoch "$1").dat"
 }
 
 prepare_output_files

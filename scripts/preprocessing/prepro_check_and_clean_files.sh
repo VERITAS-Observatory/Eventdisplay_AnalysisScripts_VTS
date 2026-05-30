@@ -28,7 +28,7 @@ move_list()
 {
     mkdir -p "${FTYPE}"/"${1}"
     for F in ${2}; do
-        mv -f "${FTYPE}"/$(basename $F .log).* "${FTYPE}"/"${1}"/
+        mv -f "${FTYPE}/$(basename "$F" .log)."* "${FTYPE}/${1}/"
     done
 }
 
@@ -58,7 +58,7 @@ if [[ -n $FLIST ]]; then
     if [[ ! -z $file_count ]]; then
         echo "FOUND $file_count files without errors - cleaning error directory"
         for F in $FLIST; do
-            rm -f ${FTYPE}/error/$(basename $F .log).*
+            rm -f "${FTYPE}/error/$(basename "$F" .log)."*
         done
     fi
 fi

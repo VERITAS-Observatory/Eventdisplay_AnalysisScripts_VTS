@@ -20,7 +20,7 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pi
 	fi
 fi
 
-function echoerr(){ echo -e "${CORED}$@${CONORM}" 1>&2; } #for spitting out error text
+function echoerr(){ echo -e "${CORED}$*${CONORM}" 1>&2; } #for spitting out error text
 
 # list of run_id's to read in
 RUNFILE=$2

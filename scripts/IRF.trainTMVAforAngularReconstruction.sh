@@ -2,6 +2,7 @@
 # submit TMVA training for angular reconstruction
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 
 # EventDisplay version
@@ -43,7 +44,7 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -113,7 +114,7 @@ do
 done
 echo "FILE LIST: ${EVNLIST}"
 
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub.sh"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainTMVAforAngularReconstruction_sub.sh"
 for disp in BDTDispEnergy BDTDisp BDTDispError BDTDispSign
 do
     for ((tel=1; tel<=4; tel++)); do
@@ -134,7 +135,7 @@ do
         echo "$FSCRIPT"
 
         # run locally or on cluster
-        SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+        SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
         SUBC=`eval "echo \"$SUBC\""`
         if [[ $SUBC == *"ERROR"* ]]; then
             echo $SUBC
@@ -144,7 +145,7 @@ do
             JOBID=`$SUBC $FSCRIPT`
             echo "RUN $RUNNUM: JOBID $JOBID"
         elif [[ $SUBC == *condor* ]]; then
-            $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+            "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
             echo
             echo "-------------------------------------------------------------------------------"
             echo "Job submission using HTCondor - run the following script to submit jobs at once:"

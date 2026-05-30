@@ -3,6 +3,7 @@
 #
 #
 
+# shellcheck disable=SC2034
 h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=1G
 
 if [[ $# -lt 5 ]]; then
@@ -31,7 +32,7 @@ exit
 fi
 echo " "
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -91,7 +92,7 @@ fi
 # energy bins
 if grep -q "^\* ENERGYBINS" "$RUNPAR"; then
     ENBINS=$( cat "$RUNPAR" | grep "^\* ENERGYBINS" | sed -e 's/\* ENERGYBINS//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) #convert to array
+    mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
     for (( i=0; i < $NENE; i++ ))
@@ -101,7 +102,7 @@ if grep -q "^\* ENERGYBINS" "$RUNPAR"; then
     done
 else
     ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) #convert to array
+    mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
     z="0"
@@ -117,11 +118,11 @@ fi
 #####################################
 # zenith angle bins
 ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
-declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
+mapfile -t ZEBINARRAY <<< "$ZEBINS"
 NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub"
 
 FSCRIPT="$LOGDIR/IRF.optimizeTMVAforGammaHadronSeparation_sub_${EPOCH}_ATM${ATM}"
 sed -e "s|EFFFILE|$EFFFILE|"  \
@@ -137,7 +138,7 @@ chmod u+x $FSCRIPT.sh
 echo $FSCRIPT.sh
 
 # run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *"ERROR"* ]]; then
     echo $SUBC
@@ -152,7 +153,7 @@ if [[ $SUBC == *qsub* ]]; then
  fi
  echo "JOBID:  $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-   $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+   "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
    condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *sbatch* ]]; then
     $SUBC $FSCRIPT.sh

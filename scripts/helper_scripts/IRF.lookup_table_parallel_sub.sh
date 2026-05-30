@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 # fill lookup tables
 
 # set observatory environmental variables

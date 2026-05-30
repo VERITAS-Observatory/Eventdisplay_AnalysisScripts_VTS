@@ -149,7 +149,7 @@ do
             python --version >> ${ODIR}/${m}${p}/${RUN}.log
             conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/${RUN}.log
             PDIR=$(pwd)
-            cd ${PDIR}
+            cd "${PDIR}" || exit
         done
     done
 done

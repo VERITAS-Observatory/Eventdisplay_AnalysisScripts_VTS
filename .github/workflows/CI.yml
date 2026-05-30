@@ -37,3 +37,7 @@ jobs:
         run: |
           pip install pre-commit
           pre-commit run --all-files
+
+      - name: ShellCheck
+        run: |
+          find scripts -name "*.sh" | sort | xargs shellcheck --severity=warning

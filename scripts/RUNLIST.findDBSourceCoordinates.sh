@@ -34,7 +34,7 @@ fi
 
 # do the mysql query
 MYSQL="mysql -u readonly -h $MYSQLDB -A"
-while read -r EPOCH RA DEC NAME; do
+while read -r EPOCH RA DEC _; do
 	#echo "$EPOCH $RA $DEC $NAME"
 	if [[ "$EPOCH" == "2000" ]] ; then
 		SRCRADEG=$(  bc -l <<< "$RA  * 180.0 / 3.141592" ) # convert radians to degrees

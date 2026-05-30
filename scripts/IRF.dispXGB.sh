@@ -2,6 +2,7 @@
 # XGBoost analysis on mscw MC files.
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=11:59:00; h_vmem=8000M; tmpdir_size=25G
 
 if [ "$#" -lt 3 ]; then
@@ -56,7 +57,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 rm -f ${LOGDIR}/x* 2>/dev/null
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.dispXGB_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.dispXGB_sub"
 TIMETAG=`date +"%s"`
 
 for FILE in $FILES
@@ -74,10 +75,10 @@ do
     chmod u+x "$FSCRIPT.sh"
     echo $FSCRIPT.sh
 
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"

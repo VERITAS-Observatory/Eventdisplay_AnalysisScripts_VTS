@@ -50,13 +50,11 @@ anasum_time_cut()
     done
 }
 
-for E in ""
-do
-    RUNS=$(cat $RUNLIST)
+RUNS=$(cat "$RUNLIST")
 
-    for R in $RUNS
-    do
-        DBTEXTDIR=$(unpack_db_textdirectory ${R} ./tmp_dbtext/)
+for R in $RUNS
+do
+        unpack_db_textdirectory "${R}" ./tmp_dbtext/ >/dev/null
         RDQM="./tmp_dbtext/${R}/${R}.rundqm"
         if [[ -e ${RDQM} ]]; then
             RSTATUS=$(cut -d '|' -f 3 ${RDQM} | grep -v status)
@@ -79,8 +77,7 @@ do
             RTARGET="NOTARGET"
             RTYPE="NOTYPE"
         fi
-        echo $R $RSTATUS $RCUTMASK LENGTH: $RLENGTH WEATHER-$RWEATHER $RCATEGORY $RTARGET $RTYPE
-        anasum_time_cut $R "$RCUTMASK"
+        echo "$R $RSTATUS $RCUTMASK LENGTH: $RLENGTH WEATHER-$RWEATHER $RCATEGORY $RTARGET $RTYPE"
+        anasum_time_cut "$R" "$RCUTMASK"
 
-    done
 done

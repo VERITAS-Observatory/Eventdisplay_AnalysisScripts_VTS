@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # script to make DSTs
 
 # set observatory environmental variables

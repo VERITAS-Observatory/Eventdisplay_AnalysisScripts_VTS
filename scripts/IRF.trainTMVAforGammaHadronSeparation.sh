@@ -7,6 +7,7 @@
 # - fixed of NSB levels (adapted to stdHV settings)
 #
 
+# shellcheck disable=SC2034
 h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
@@ -42,7 +43,7 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -109,7 +110,7 @@ RUNPAR_CONTENT=$(cat "$RUNPAR")
 # energy bins
 if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) # convert to array
+    mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
     for (( i=0; i < $NENE; i++ ))
@@ -119,7 +120,7 @@ if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
     done
 else
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) # convert to array
+    mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
     z="0"
@@ -135,7 +136,7 @@ fi
 #####################################
 # zenith angle bins
 ZEBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
-declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
+mapfile -t ZEBINARRAY <<< "$ZEBINS"
 NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
 
 #####################################
@@ -157,7 +158,7 @@ get_run_prefix()
 }
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_sub"
 
 ###############################################################
 # loop over all energy/zenith bins and submit a job for each bin
@@ -260,7 +261,7 @@ do
       echo $FSCRIPT.sh
 
       # run locally or on cluster
-      SUBC=$($(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh)
+      SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
       SUBC=$(eval "echo \"$SUBC\"")
       if [[ $SUBC == *"ERROR"* ]]; then
             echo $SUBC
@@ -275,7 +276,7 @@ do
          fi
          echo "JOBID:  $JOBID"
       elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"

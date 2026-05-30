@@ -3,6 +3,7 @@
 # Allow optionally to calculate instrument response functions (for 4 and 3-telescope combinations).
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=10:29:00; h_vmem=12000M; tmpdir_size=100G
 
 # EventDisplay version
@@ -54,7 +55,7 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -106,7 +107,7 @@ echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
 
 # run script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.mscw_energy_MC_sub"
 FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-ID${RECID}-$DISPBDT.sh"
 rm -f "$FSCRIPT"
 sed -e "s|ZENITHANGLE|$ZA|" \
@@ -140,7 +141,7 @@ if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs:"
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
@@ -151,3 +152,4 @@ elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT" | tee "$FSCRIPT.log"
+fi

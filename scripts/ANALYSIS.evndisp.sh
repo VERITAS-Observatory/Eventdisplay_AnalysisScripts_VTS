@@ -2,6 +2,7 @@
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
 # EventDisplay version
@@ -121,9 +122,9 @@ mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.evndisp_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.evndisp_sub"
 # run locally or on cluster
-SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 SUBC=`eval "echo \"$SUBC\""`
 
 if [[ $SUBC == *parallel* ]]; then
@@ -266,7 +267,7 @@ do
             echo "RUN $FILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"

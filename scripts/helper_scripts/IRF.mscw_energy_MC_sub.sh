@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # Analyse MC files with lookup tables (mscw_energy stage)
 # (optional) Calculate instrument response functions (effective areas) for 4 and 3-telescope combinations
 
@@ -199,7 +200,7 @@ read_cutlist()
     fi
     CUTLISTFROMFILE=$(cat $CUTFILE)
     CUTLIST=""
-    for CUT in ${CUTLISTFROMFILE[@]}; do
+    for CUT in "${CUTLISTFROMFILE[@]}"; do
         CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
     done
     echo $CUTLIST
@@ -284,7 +285,7 @@ CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
 # loop over 4 and 3-telescope combinations
 for ID in 15 14 13 11 7; do
     # Gamma/hadron cut list (depends on analysis and observation type)
-    for CUTSFILE in ${CUTLIST[@]}; do
+    for CUTSFILE in "${CUTLIST[@]}"; do
         echo "Calculate effective areas $CUTSFILE (ID $ID)"
         EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
         if [[ $ID == "15" ]]; then

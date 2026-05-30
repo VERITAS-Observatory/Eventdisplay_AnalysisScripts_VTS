@@ -14,6 +14,7 @@ for C in $CUTLIST; do
         DDIR=dl3_${DDIR/point-like/pointlike}
         echo "Source directory: $D Targetdirectory: $DDIR"
 #        ./prepro_check_and_clean_files.sh "$D"
-        $(dirname "$(realpath "$0")")/prepro_move_v2dl3_files.sh "$D" "$DDIR"
+        script_dir=$(dirname "$(realpath "$0")")
+        "${script_dir}/prepro_move_v2dl3_files.sh" "$D" "$DDIR"
     done
 done

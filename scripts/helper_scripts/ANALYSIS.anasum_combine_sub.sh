@@ -13,7 +13,7 @@ RUNP=RRUNP
 OUTFILE=OOUTFILE
 
 mkdir -p ${DDIR}
-mkdir -p $(dirname "$OUTFILE")
+mkdir -p "$(dirname "$OUTFILE")"
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
     TEMPDIR=${TMPDIR}/ANASUM-$(uuidgen)
@@ -38,7 +38,8 @@ getNumberedDirectory()
 # copy file list, runparameter and time masks file to tmp disk
 cp -v "$RUNLIST" "$TEMPDIR"
 cp -v "$RUNP" "$TEMPDIR"
-cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
+TIMEMASKFILE=$(grep TIMEMASKFILE "$RUNP" | awk '{print $3}')
+cp -v "$(dirname "$RUNP")/${TIMEMASKFILE}" "$TEMPDIR"
 
 OUTPUTDATAFILE="$OUTFILE"
 OUTPUTLOGFILE="$OUTFILE.log"

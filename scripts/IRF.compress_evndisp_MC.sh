@@ -3,6 +3,7 @@
 #
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=0:29:00; h_vmem=4000M; tmpdir_size=20G
 
 if [ $# -lt 7 ]; then
@@ -76,7 +77,7 @@ if [[ ! -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     IDIR="$VERITAS_IRFPRODUCTION_DIR/${EDVERSION}/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_${PARTICLE_TYPE}"
 fi
 # input dir
-IPDIR=${IDIR}"/ze"$ZA"deg_offset"$WOBBLE"deg_NSB"$NOISE"MHz"
+IPDIR="${IDIR}/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 OPDIR=${IPDIR}
 mkdir -p "$OPDIR"
 chmod -R g+w "$OPDIR"
@@ -213,7 +214,7 @@ do
     echo "Setting TMPDIR_SIZE to $tmpdir_size"
 
     # Job submission script
-    SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.compress_evndisp_MC_sub"
+    SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.compress_evndisp_MC_sub"
 
     # make run script
     FSCRIPT="$LOGDIR/comp-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM-${RUNNUM}"
@@ -227,14 +228,14 @@ do
     let "RUNNUM = ${RUNNUM} + 100"
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=`eval "echo \"$SUBC\""`
     echo "$SUBC"
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
         echo "RUN $RUNNUM: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"

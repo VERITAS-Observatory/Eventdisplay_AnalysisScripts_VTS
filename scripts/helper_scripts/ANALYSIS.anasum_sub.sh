@@ -217,7 +217,8 @@ fi
 cp -v "$FLIST" "$TEMPDIR"
 FLIST="${TEMPDIR}/$(basename $FLIST)"
 cp -v "$RUNP" "$TEMPDIR"
-cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
+TIMEMASKFILE=$(grep TIMEMASKFILE "$RUNP" | awk '{print $3}')
+cp -v "$(dirname "$RUNP")/${TIMEMASKFILE}" "$TEMPDIR"
 RUNP="${TEMPDIR}/$(basename $RUNP)"
 
 #################################

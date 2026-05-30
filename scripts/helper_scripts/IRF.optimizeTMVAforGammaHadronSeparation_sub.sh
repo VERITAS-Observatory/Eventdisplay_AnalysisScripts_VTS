@@ -66,7 +66,7 @@ fi
 echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${VERITAS_ANALYSIS_TYPE:0:2}/${EPAT}/${CUT}/"
 rm -f "${MVADIR}/rates.log"
-cd ${PREDIR}/${CUT}
+cd "${PREDIR}/${CUT}" || exit
 rm -f ${WDIR}/${EPAT}.optimised.dat
 if [[ -f "$EVNDISPSYS/macros/optimizeBDTcuts.C" ]]; then
     root -l -q -b "$EVNDISPSYS/macros/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat

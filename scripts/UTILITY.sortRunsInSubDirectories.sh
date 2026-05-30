@@ -34,7 +34,7 @@ getNumberedDirectory()
     echo ${ODIR}
 }
 
-FLIST=$(find ${DDIR} -name [0-9]*.*${SUFF})
+FLIST=$(find "${DDIR}" -name "[0-9]*.*${SUFF}")
 
 for F in ${FLIST}
 do

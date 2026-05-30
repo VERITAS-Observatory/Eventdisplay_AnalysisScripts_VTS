@@ -2,6 +2,7 @@
 # script to analyse data files with lookup tables
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 
 # EventDisplay version
@@ -84,7 +85,7 @@ mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.mscw_energy_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.mscw_energy_sub"
 TIMETAG=`date +"%s"`
 
 # directory schema
@@ -152,7 +153,7 @@ do
     echo $FSCRIPT.sh
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=`eval "echo \"$SUBC\""`
     echo "Submission command: $SUBC"
     if [[ $SUBC == *qsub* ]]; then
@@ -170,7 +171,7 @@ do
             echo "RUN $RUNN ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"

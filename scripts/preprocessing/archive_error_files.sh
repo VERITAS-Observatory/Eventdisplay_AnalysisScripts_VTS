@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # Move Eventdisplay data products from all stages
 # into an runs_with_issues directory.
 # runs are given in a run list
@@ -48,6 +49,7 @@ do
 
     for F in $FF
     do
-        mv -v ${DDIR}/$(get_suffix $F)/${F}* ${ODIR}/$(get_suffix $F)/
+        suffix=$(get_suffix "$F")
+        mv -v "${DDIR}/${suffix}/${F}"* "${ODIR}/${suffix}/"
     done
 done

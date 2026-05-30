@@ -2,6 +2,7 @@
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=11:59:00; h_vmem=2000M; tmpdir_size=25G
 
 if [ ! -n "$1" ] || [ ! -n "$2" ] || [ "$1" = "-h" ]; then
@@ -68,7 +69,7 @@ LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.LGAINPED"
 mkdir -p $LOGDIR
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/SPANALYSIS.lowgainped_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/SPANALYSIS.lowgainped_sub"
 
 
 NRUNS=`cat $RLIST | wc -l `
@@ -103,7 +104,7 @@ do
 	fi
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *"ERROR"* ]]; then
         echo $SUBC
@@ -125,7 +126,7 @@ do
             echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh

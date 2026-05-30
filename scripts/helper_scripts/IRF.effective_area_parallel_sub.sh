@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # calculate effective areas
 #
 # v490: possible issue with "RERUN_STEREO_RECONSTRUCTION_3TEL" option

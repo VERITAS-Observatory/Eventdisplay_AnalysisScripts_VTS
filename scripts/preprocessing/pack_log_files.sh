@@ -21,7 +21,7 @@ DLIST="${2}"
 
 DDIRS=$(cat "$DLIST")
 
-cd "${PDIR}"
+cd "${PDIR}" || exit
 
 for DIR in $DDIRS; do
     echo $DIR

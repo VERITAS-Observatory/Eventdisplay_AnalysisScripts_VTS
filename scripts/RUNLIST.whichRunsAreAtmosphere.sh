@@ -3,7 +3,7 @@
 
 # check to see if input is from terminal, or from a pipe
 ISPIPEFILE=`readlink /dev/fd/0`
-if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} && $# < 2 ]]; then # its a terminal (not a pipe)
+if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} && $# -lt 2 ]]; then # its a terminal (not a pipe)
     echo
     echo "From a runlist or pipe, prints the run numbers that are of a particular atmosphere."
     echo " $ `basename $0` [w|21|s|22] <file of runs>" ; echo
@@ -62,7 +62,8 @@ function IsWinter {
 		local PARAMFILE="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
 
 		# get only lines that start with '*'
-		local ATMOTHRESH=$( cat $PARAMFILE | grep -P "^\s??\*" | grep "ATMOSPHERE" )
+		local ATMOTHRESH
+		ATMOTHRESH=$(grep -P "^\s??\*" "$PARAMFILE" | grep "ATMOSPHERE")
 		#echo "$ATMOTHRESH"
 
 		# flag for if we found the atmo
@@ -117,13 +118,13 @@ function IsWinter {
 			[ "$date" -gt "20121029" ] && [ "$date" -lt "20130425" ] ; then
 			#echo true
 			echo 1  # winter
-		elif [ "$date" -ge "20130425" -o "$date" -le "20071026" ] ; then
+		elif [ "$date" -ge "20130425" ] || [ "$date" -le "20071026" ] ; then
 			# don't have specific dates for summer/winter boundary, so we will generalize to the months
 			# may through october inclusive is 'summer'
-			if   [ "$month" -ge 5 -a "$month" -le 10 ] ; then
+			if   [ "$month" -ge 5 ] && [ "$month" -le 10 ] ; then
 				echo 2 # summer
 			# november through april inclusive is 'winter'
-			elif [ "$month" -le 4 -o "$month" -ge 11 ] ; then
+			elif [ "$month" -le 4 ] || [ "$month" -ge 11 ] ; then
 				echo 1 # winter
 			else
 				echo 3 # unassignable
@@ -175,7 +176,7 @@ while read -r RUNID RUNDATE ; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
 
 		# decode the date tag
-		read YY MM DD HH MI SE <<< ${RUNDATE//[-:]/ }
+		read -r YY MM DD _ _ _ <<< "${RUNDATE//[-:]/ }"
 		#echo "  YEARMONTHDAY:$YY$MM$DD"
 
 		# get the atmosphere code

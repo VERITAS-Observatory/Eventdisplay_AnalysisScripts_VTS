@@ -2,6 +2,7 @@
 # script run eventdisplay laser analysis with a queue system
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=11:29:00; h_vmem=2000M; tmpdir_size=5G
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -32,7 +33,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 CDIR=$(dirname "$0")
 
@@ -57,7 +58,7 @@ echo "Log files will be written to: $LOGDIR"
 mkdir -p $LOGDIR
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/ANALYSIS.evndisp_laser_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.evndisp_laser_sub"
 
 #########################################
 # loop over all files in files loop
@@ -88,7 +89,7 @@ for RUN in $RUNNUMS; do
     echo $FSCRIPT.sh
 
     # run locally or on cluster
-    SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
@@ -101,7 +102,7 @@ for RUN in $RUNNUMS; do
 
         echo "RUN $RUN: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *sbatch* ]]; then
         $SUBC $FSCRIPT.sh

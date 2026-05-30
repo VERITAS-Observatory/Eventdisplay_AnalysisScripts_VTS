@@ -3,6 +3,7 @@
 # (output need to be combined afterwards)
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=13:29:00; h_vmem=8000M; tmpdir_size=20G
 
 # EventDisplay version
@@ -52,7 +53,7 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -102,7 +103,7 @@ echo "Cuts: $CUTSFILE $CUTS_NAME"
 echo "MC file: $MCFILE"
 echo "Eff area file: $EFFAREAFILE"
 # run script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_parallel_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.effective_area_parallel_sub"
 FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}.sh"
 rm -f "$FSCRIPT"
 sed -e "s|OUTPUTDIR|$ODIR|" \
@@ -128,7 +129,7 @@ if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs:"
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # combine effective areas
 
 # set observatory environmental variables

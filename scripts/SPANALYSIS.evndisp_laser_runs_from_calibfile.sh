@@ -19,7 +19,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -38,7 +38,7 @@ do
     DFILE=`find -L $DDIR -name "$RUN.cvbf"`
 
     if [[ -f $DFILE ]]; then
-        $(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh $DTEL $DFILE
+        "$(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh" $DTEL $DFILE
     else
 	    echo "Missing laser/flasher file $DFILE, please download it"
     fi

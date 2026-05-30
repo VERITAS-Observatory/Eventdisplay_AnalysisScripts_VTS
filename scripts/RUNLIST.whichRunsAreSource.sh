@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # from a run list, prints the list of runs that target a specific source
 
 # variables for coloring terminal output

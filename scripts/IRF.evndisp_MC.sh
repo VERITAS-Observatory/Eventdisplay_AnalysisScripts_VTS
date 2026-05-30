@@ -2,6 +2,7 @@
 # submit evndisp for grisu/care simulations
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=47:59:00; h_vmem=8000M; tmpdir_size=50G
 DATE=$(date +"%y%m%d")
 
@@ -53,7 +54,7 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -198,7 +199,7 @@ for V in $VBFNAME; do
 done
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.evndisp_MC_sub.sh"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.evndisp_MC_sub.sh"
 sed -e "s|DATADIR|$SIMDIR|" \
     -e "s|ZENITHANGLE|$ZA|" \
     -e "s|ATMOSPHERE|$ATM|" \

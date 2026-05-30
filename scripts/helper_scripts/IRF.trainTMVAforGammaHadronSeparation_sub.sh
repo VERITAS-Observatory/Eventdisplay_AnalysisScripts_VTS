@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # script to train TMVA (BDTs) for gamma/hadron separation
 
 RXPAR=RUNPARAM
@@ -51,14 +52,15 @@ inspect_executables()
     fi
 }
 
-rm -f "$LDIR"/$(basename $RXPAR)"_preselect.log"
-eval "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS > "$LDIR"/$(basename $RXPAR)"_preselect.log"
+BASE_RXPAR=$(basename "$RXPAR")
+rm -f "$LDIR/${BASE_RXPAR}_preselect.log"
+"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS > "$LDIR/${BASE_RXPAR}_preselect.log"
 
-rm -f "$LDIR"/$(basename $RXPAR)".log"
-eval "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR"/$(basename $RXPAR)".log"
+rm -f "$LDIR/${BASE_RXPAR}.log"
+"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR/${BASE_RXPAR}.log"
 
-echo "$(inspect_executables)" >> "$LDIR"/$(basename $RXPAR)".log"
-eval "$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
+echo "$(inspect_executables)" >> "$LDIR/${BASE_RXPAR}.log"
+"$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
 
 # remove unnecessary *.C files
 CDIR=`dirname $RXPAR`

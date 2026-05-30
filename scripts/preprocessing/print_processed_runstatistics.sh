@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # Print processed run statistics for the different
 # stages of Eventdisplay
 

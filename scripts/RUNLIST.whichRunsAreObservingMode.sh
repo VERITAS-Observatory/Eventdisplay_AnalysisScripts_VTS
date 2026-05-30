@@ -67,7 +67,7 @@ while read -r RUNID RUNMODE ; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
 
 	        #echo "$RUNID :: $RUNWOBANGLE"
-	        if [ "$RUNMODE" ] && [[ "$RUNMODE" == $MODE ]] ; then
+	        if [ "$RUNMODE" ] && [[ "$RUNMODE" == "$MODE" ]] ; then
 	            echo "$RUNID"
 	        fi
 	fi

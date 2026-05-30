@@ -40,7 +40,7 @@ for R in $RUNS; do
     LOGFIL="${LOGDIR}/${R}.mscw.log"
     if [[ -e $LOGFIL ]]; then
         TELSTRING=$(grep "Mean pedvar per telescope" ${LOGFIL})
-        pedvars=($(echo "$TELSTRING" | awk '{for(i=5;i<=NF;i++) print $i}'))
+        mapfile -t pedvars < <(echo "$TELSTRING" | awk '{for(i=5;i<=NF;i++) print $i}')
         T="T"
         for i in "${!pedvars[@]}"; do
             telescope=$((i + 1))

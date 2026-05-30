@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 # train TMVA (BDTs) for angular reconstruction
 
 # set observatory environmental variables

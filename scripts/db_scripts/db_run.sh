@@ -69,7 +69,7 @@ get_file_status()
 get_start_time()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
-    if [[ "$1" == "DB" ]]; then
+    if [[ "${1:-}" == "DB" ]]; then
         field_name="db_start_time"
     else
         field_name="data_start_time"
@@ -92,7 +92,7 @@ get_start_time()
 get_end_time()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
-    if [[ "$1" == "DB" ]]; then
+    if [[ "${1:-}" == "DB" ]]; then
         field_name="db_end_time"
     else
         field_name="data_end_time"
@@ -165,8 +165,10 @@ hasbitset()
 get_source_id()
 {
     OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
-    if [[ ! -e ${OFIL} ]] && [[ -e $(getDBTextFileDirectory ${RUN}).tar.gz ]]; then
-        OFIL=$(tar -xzf $(getDBTextFileDirectory ${RUN}).tar.gz ${RUN}/${RUN}.runinfo -O)
+    local tar_file
+    tar_file="$(getDBTextFileDirectory "${RUN}").tar.gz"
+    if [[ ! -e ${OFIL} ]] && [[ -e ${tar_file} ]]; then
+        OFIL=$(tar -xzf "$tar_file" "${RUN}/${RUN}.runinfo" -O)
     else
         OFIL=$(cat $OFIL)
     fi
@@ -205,7 +207,7 @@ read_run_from_DB()
         if [[ $USETIME -eq "0" ]]; then
             cmd="./db_${TTOOL}.sh ${RRUN} ${TELID}"
         else
-            cmd="./db_${TTOOL}.sh \"$(get_start_time)\" \"$(get_end_time)\" ${TELID}"
+            cmd="./db_${TTOOL}.sh \"$(get_start_time "")\" \"$(get_end_time "")\" ${TELID}"
         fi
         eval "$cmd" > ${OFIL}
         echo "${TTOOL} file (written): ${OFIL}"
@@ -219,7 +221,7 @@ read_run_from_DB()
 read_laser_run_and_dqm()
 {
     read_run_from_DB laserrun
-    LASERRUN=($(get_laser_run))
+    mapfile -t LASERRUN < <(get_laser_run)
     for L in "${LASERRUN[@]}"
     do
         if [[ -n ${L} ]]; then
@@ -262,7 +264,7 @@ read_pixel_data()
 
 read_laser_calibration()
 {
-    LASERRUN=($(get_laser_run))
+    mapfile -t LASERRUN < <(get_laser_run)
     for L in "${LASERRUN[@]}"
     do
         excluded_telescopes=$(get_excluded_telescopes ${L})

@@ -47,7 +47,8 @@ check_conda_installation
 
 # Avoid plugin/cache race conditions
 export CONDA_NO_PLUGINS=true
-export PYTHONPYCACHEPREFIX=$TEMPDIR/pycache_$(basename $MSCW_FILE .root)
+PYTHONPYCACHEPREFIX="${TEMPDIR}/pycache_$(basename "$MSCW_FILE" .root)"
+export PYTHONPYCACHEPREFIX
 mkdir -p "$PYTHONPYCACHEPREFIX"
 eval "$(conda shell.bash hook)"
 conda activate $env_name

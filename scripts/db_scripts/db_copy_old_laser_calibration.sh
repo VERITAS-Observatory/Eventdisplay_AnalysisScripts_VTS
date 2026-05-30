@@ -49,7 +49,7 @@ if [[ ! -e ${DBTEXTFILE} ]]; then
     exit
 fi
 mkdir -p tmp_update_laser_run
-cd tmp_update_laser_run
+cd tmp_update_laser_run || exit
 cp -v ${DBTEXTFILE} .
 tar -xzf ${DBTEXTFILE}
 
@@ -65,4 +65,4 @@ do
     done
 done
 
-cd ..
+cd .. || exit

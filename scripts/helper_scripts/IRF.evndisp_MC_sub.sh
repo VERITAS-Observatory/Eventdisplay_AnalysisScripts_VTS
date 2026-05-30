@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 # script to run evndisp for simulations on one of the cluster nodes (VBF)
 
 # set observatory environmental variables

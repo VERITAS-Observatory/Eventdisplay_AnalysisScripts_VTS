@@ -2,6 +2,7 @@
 # calculate radial acceptances
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=04:29:00; h_vmem=6000M; tmpdir_size=10G
 
 if [[ $# != 6 ]]; then
@@ -48,7 +49,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -86,10 +87,10 @@ echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.radial_acceptance_sub.sh"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.radial_acceptance_sub.sh"
 
 # loop over all files/cases
-for CUTS in ${CUTLIST[@]}; do
+for CUTS in "${CUTLIST[@]}"; do
     for VX in $EPOCH; do
         for ID in $RECID; do
             echo "Now generating radial acceptance for $CUTS, epoch $VX, Rec ID $ID"
@@ -149,7 +150,7 @@ for CUTS in ${CUTLIST[@]}; do
             echo "Script submitted to cluster: $FSCRIPT.sh"
 
             # run locally or on cluster
-            SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+            SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
             echo "$LOGDIR"
             SUBC=`eval "echo \"$SUBC\""`
             if [[ $SUBC == *"ERROR"* ]]; then
@@ -161,7 +162,7 @@ for CUTS in ${CUTLIST[@]}; do
                 JOBID=`$SUBC $FSCRIPT.sh`
                 echo "JOBID: $JOBID"
             elif [[ $SUBC == *condor* ]]; then
-                $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+                "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
                 condor_submit $FSCRIPT.sh.condor
 	        elif [[ $SUBC == *sbatch* ]]; then
 	         	$SUBC $FSCRIPT.sh

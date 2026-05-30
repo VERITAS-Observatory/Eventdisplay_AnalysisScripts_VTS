@@ -106,7 +106,7 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     done
     echo "DBTEXT directory $(ls -l $TMP_DBTEXTDIRECTORY)"
 
-    OPT=( -dbtextdirectory ${TMP_DBTEXTDIRECTORY} -epochfile VERITAS.Epochs.runparameter )
+    OPT=(-dbtextdirectory "${TMP_DBTEXTDIRECTORY}" -epochfile VERITAS.Epochs.runparameter)
     echo "${OPT[@]}"
 fi
 
@@ -142,15 +142,15 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     # preference to VERITAS_DATA_DIR_2
     if [[ -e ${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf ]]; then
         if [ -n "$EVNDISP_APPTAINER" ]; then
-            OPT+=( -sourcefile /opt/VERITAS_DATA_DIR_2/data/${RUNDATE}/${RUN}.cvbf )
+            OPT+=(-sourcefile "/opt/VERITAS_DATA_DIR_2/data/${RUNDATE}/${RUN}.cvbf")
         else
-            OPT+=( -sourcefile ${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf )
+            OPT+=(-sourcefile "${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf")
         fi
     elif [[ -e ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf ]]; then
         if [ -n "$EVNDISP_APPTAINER" ]; then
-            OPT+=( -sourcefile /opt/VERITAS_DATA_DIR/data/${RUNDATE}/${RUN}.cvbf )
+            OPT+=(-sourcefile "/opt/VERITAS_DATA_DIR/data/${RUNDATE}/${RUN}.cvbf")
         else
-            OPT+=( -sourcefile ${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf )
+            OPT+=(-sourcefile "${VERITAS_DATA_DIR}/data/${RUNDATE}/${RUN}.cvbf")
         fi
     else
         RUNONDISK="file not found"
@@ -173,7 +173,7 @@ echo "CVBF FILE FOUND - data dir: $VERITAS_DATA_DIR $VERITAS_DATA_DIR_2"
 if [[ $TELTOANA == "1234" ]]; then
 	echo "Telescope combination saved in the DB is analyzed (default)"
 else
-	OPT+=( -teltoana=$TELTOANA )
+	OPT+=("-teltoana=$TELTOANA")
 	echo "Analyzed telescope configuration: $TELTOANA "
 fi
 
@@ -195,7 +195,7 @@ fi
 ## use text file for calibration information
 if [[ $CALIB == "4" ]]; then
 ## use text file for calibration information
-	OPT+=( -calibrationfile $CALIBFILE )
+	OPT+=(-calibrationfile "$CALIBFILE")
 else
 ## read gain and toffsets from VOFFLINE DB (default)
 	OPT+=( "-readCalibDB" )

@@ -3,6 +3,7 @@
 #
 # - training at wobble offsets 0.5 deg only
 
+# shellcheck disable=SC2034
 h_cpu=11:59:59; h_vmem=16000M; tmpdir_size=24G
 EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
 
@@ -36,7 +37,7 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -99,8 +100,8 @@ echo "Number of energy / zenith bins: $NENE $NEZE"
 
 #####################################
 # zenith angle / NSB bins of MC simulation files
-ZENITH_ANGLES=($(jq -r '.input_zenith_angles[]' "$RUNPAR"))
-NOISE_VALUES=($(jq -r '.input_noise_values[]' "$RUNPAR"))
+mapfile -t ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$RUNPAR")
+mapfile -t NOISE_VALUES < <(jq -r '.input_noise_values[]' "$RUNPAR")
 
 ####################################
 # Run prefix
@@ -116,7 +117,7 @@ get_run_prefix()
 }
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainXGBforGammaHadronSeparation_sub.sh"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainXGBforGammaHadronSeparation_sub.sh"
 
 SIGNALLIST="${ODIR}/signal_files.list"
 rm -f "${SIGNALLIST}"
@@ -173,13 +174,13 @@ for (( i=0; i < $NENE; i++ )); do
     echo $FSCRIPT
 
     # run locally or on cluster
-    SUBC=$($(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh)
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
         echo $SUBC
         exit
     fi
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
     echo
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs at once:"

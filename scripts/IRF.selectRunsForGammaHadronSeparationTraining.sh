@@ -60,7 +60,7 @@ else
     ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
 fi
 echo "Zenith angle definition: $ZEBINS"
-declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
+mapfile -t ZEBINARRAY <<< "$ZEBINS"
 NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
 
 # Find files and store in array to handle filenames with spaces
@@ -86,7 +86,8 @@ done
 linkFile()
 {
     # Only create parent dir if needed (most are pre-created)
-    local parent=$(dirname "$1")
+    local parent
+    parent=$(dirname "$1")
     [[ -d "$parent" ]] || mkdir -p "$parent"
     if [[ ! -e "$1" ]]; then
         ln -s "$2" "$1"

@@ -41,7 +41,7 @@ get_date()
 fill_laser_run()
 {
     mkdir -p tmp_update_laser_run
-    cd tmp_update_laser_run
+    cd tmp_update_laser_run || exit
     cp ${2} .
     TFILE=$(basename ${2})
     tar -xzf ${TFILE}
@@ -49,7 +49,7 @@ fill_laser_run()
     echo "Updating laser file ${1}/${1}.laserrun"
     echo "run_id|excluded_telescopes|config_mask" >> ${1}/${1}.laserrun
     echo "${3}|0|15" >> ${1}/${1}.laserrun
-    cd ..
+    cd .. || exit
 }
 
 DBTEXTFILE=$(get_db_text_tar_file ${1})
@@ -66,7 +66,7 @@ if [ -z "${LASERSTRING}" ]; then
     LASERRUN=$(grep ${OBSDATE} ${2})
     if [ -n "${LASERRUN}" ]; then
         echo "   FOUND ${LASERRUN} ${OBSDATE}"
-        fill_laser_run ${1} ${DBTEXTFILE} $(echo "$LASERRUN" | cut -d ' ' -f 2)
+        fill_laser_run "${1}" "${DBTEXTFILE}" "$(echo "$LASERRUN" | cut -d ' ' -f 2)"
     else
         echo "   NOT FOUND ${OBSDATE}"
     fi

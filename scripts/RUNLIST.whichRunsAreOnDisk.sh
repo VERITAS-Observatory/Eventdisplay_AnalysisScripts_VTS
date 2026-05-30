@@ -6,7 +6,7 @@ DATFLAG=false # flat to print full date of run
 HELPFLAG=false # if true, print help text and exit
 PRINTPATH=false # if true, print full path of file on disl
 DOWNLOADFLAG=true
-RAWDATASERVER=$(grep "\* VTSRAWDATA" $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter  | awk {'print $3'})
+RAWDATASERVER=$(grep "\* VTSRAWDATA" $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter  | awk '{print $3}')
 #echo "INP:'`basename $0`' '$1' '$2' '$3'"
 
 ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
@@ -114,7 +114,7 @@ while read -r RUNID RUNDATE ; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
 
 		# decode the date tag
-		read YY MM DD HH MI SE <<< ${RUNDATE//[-:]/ }
+		read -r YY MM DD _ _ _ <<< "${RUNDATE//[-:]/ }"
 		#echo "  YEARMONTHDAY:$YY$MM$DD"
 
 		# generate the filename

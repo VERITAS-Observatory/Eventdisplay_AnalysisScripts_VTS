@@ -70,8 +70,6 @@ bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
 [[ "$8" ]] && ELEVSTRING="$8"  || ELEVSTRING=""
 [[ "$9" ]] && AZIMSTRING="$9"  || AZIMSTRING=""
 
-START_DATE="${DATE_BEG} 00:00:00"
-END_DATE_STR="and db_end_time <= '${DATE_END} 00:00:00'"
 
 # Configuration for number of telescopes
 if [[ $ALLOW_THREE_TEL == 0 ]]; then
@@ -184,6 +182,6 @@ while read -r RUNID; do
 		FINALARRAY+=("$RUNID")
 		echo "$RUNID"
 	fi
-done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status = 'good_run' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"$DQMCATEGORY\" or ( \"$DQMCATEGORY\" = \"%\" and data_category is null )  ) and usable_duration >= '00:${MIN_DURATION}:00' and run_id in ${RUN_IDS[@]}")
+done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status = 'good_run' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"$DQMCATEGORY\" or ( \"$DQMCATEGORY\" = \"%\" and data_category is null )  ) and usable_duration >= '00:${MIN_DURATION}:00' and run_id in ${RUN_IDS[*]}")
 
 exit

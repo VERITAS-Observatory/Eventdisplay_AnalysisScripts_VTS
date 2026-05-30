@@ -2,6 +2,7 @@
 # script to analyse data files with anasum
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=8:00:00; h_vmem=4000M; tmpdir_size=10G
 
 if [[ $# -lt 3 ]]; then
@@ -36,7 +37,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -73,7 +74,7 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/ANALYSIS.anasum_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_sub"
 
 TIMETAG=`date +"%s"`
 
@@ -87,7 +88,7 @@ sed -e "s|FILELIST|$FLIST|" \
 chmod u+x "$FSCRIPT.sh"
 echo "$FSCRIPT.sh"
 
-SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 # run locally or on cluster (expand shell variables in submission string)
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *"ERROR"* ]]; then
@@ -104,7 +105,7 @@ if [[ $SUBC == *qsub* ]]; then
     fi
     echo "RUN $AFILE JOBID $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
     condor_submit $FSCRIPT.sh.condor
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat

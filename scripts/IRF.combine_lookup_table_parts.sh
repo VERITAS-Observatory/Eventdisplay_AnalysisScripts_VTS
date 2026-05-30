@@ -2,6 +2,7 @@
 # script to combine several table file into one
 
 # job requirements
+# shellcheck disable=SC2034
 h_cpu=20:29:00; h_vmem=12000M; tmpdir_size=10G
 
 # EventDisplay version
@@ -39,7 +40,7 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 fi
 [[ $? != "0" ]] && exit 1
 
@@ -97,7 +98,7 @@ echo "$FLIST"
 echo "LOOKUPTABLE $OFILE"
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_combine_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.lookup_table_combine_sub"
 
 # make run script
 FSCRIPT="$LOGDIR/TABLES-COMBINE.$OFILE.$DATE.MC"
@@ -110,7 +111,7 @@ chmod u+x "$FSCRIPT.sh"
 echo "Run script written to: $FSCRIPT"
 
 # run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
@@ -120,7 +121,7 @@ if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
     echo
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs at once:"

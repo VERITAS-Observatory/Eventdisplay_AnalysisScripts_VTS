@@ -2,6 +2,7 @@
 # script to analyse data files with anasum (parallel analysis) from a simple run list
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
 # EventDisplay version
@@ -219,7 +220,7 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.anasum_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_sub"
 TIMETAG=`date +"%s"`
 
 # directory schema
@@ -238,7 +239,7 @@ getNumberedDirectory()
 
 #########################################
 # loop over all files in files loop
-for RUN in ${RUNS[@]}; do
+for RUN in "${RUNS[@]}"; do
 
     # check if file already has been processed
     if [[ $SKIP == "1" ]]; then
@@ -292,7 +293,7 @@ for RUN in ${RUNS[@]}; do
     chmod u+x "$FSCRIPT.sh"
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *"ERROR"* ]]; then
         echo "$SUBC"
@@ -306,7 +307,7 @@ for RUN in ${RUNS[@]}; do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit 50"
         echo "-------------------------------------------------------------------------------"

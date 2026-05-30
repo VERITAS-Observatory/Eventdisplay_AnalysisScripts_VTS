@@ -44,7 +44,7 @@ if [[ "$METHOD" == "irfperiod" ]]; then
     AVAILABLEEPOCHS=$( echo "$EPOCHTHRESH" | awk '{ print $3 }' )
     DESIREDPERIODS=$( echo "$INPUTEPOCH" | sed 's/\,/ /g' | sed 's/\;/ /g' | tr " " "\n" )
     # loop over runs in runlist
-    for run in ${RUNLIST[@]}; do
+    for run in "${RUNLIST[@]}"; do
         # loop through all epochs in the list of available epochs
         for epoch in $AVAILABLEEPOCHS; do
             # check if the run is in the list of desired epochs
@@ -82,7 +82,7 @@ if [[ "$METHOD" == "useparamfile" ]] ; then
 	#echo "MAXEPOCH:$MAXEPOCH"
 
 	# loop over runs in runlist
-	for run in ${RUNLIST[@]} ; do
+	for run in $RUNLIST ; do
 
 		# loop through all epochs between min and max
 		for epoch in $(seq $MINEPOCH $MAXEPOCH) ; do
@@ -120,14 +120,14 @@ if [[ "$METHOD" == "hardcoded" ]] ; then
         if [[ "$INPUTEPOCH" == *6* ]] ; then V6FLAG=true ; fi
 	# first run of V5 : 46642
 	# first run of V6 : 63373
-	for i in ${RUNLIST[@]} ; do
+	for i in $RUNLIST ; do
 		if $V4FLAG ; then
 			if [ "$i" -le "46641" ] ; then
 				echo "$i"
 			fi
 		fi
 		if $V5FLAG ; then
-			if [ "$i" -ge "46642" -a "$i" -le "63372" ] ; then
+			if [ "$i" -ge "46642" ] && [ "$i" -le "63372" ] ; then
 				echo "$i"
 			fi
 		fi

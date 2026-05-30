@@ -2,6 +2,7 @@
 # script to make DST files from a raw data file
 
 # qsub parameters
+# shellcheck disable=SC2034
 h_cpu=11:29:00; h_vmem=4000M; tmpdir_size=40G
 
 if [[ $# -lt 2 ]]; then
@@ -39,7 +40,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
 [[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
@@ -80,7 +81,7 @@ fi
 
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/SPANALYSIS.make_DST_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/SPANALYSIS.make_DST_sub"
 
 #########################################
 # loop over all files in files loop
@@ -99,13 +100,13 @@ for RUN in $RUNNUMS; do
     echo $FSCRIPT.sh
 
     # run locally or on cluster
-    SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=`eval "echo \"$SUBC\""`
     if [[ $SUBC == *qsub* ]]; then
         JOBID=`$SUBC $FSCRIPT.sh`
 		echo "RUN $RUN: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         condor_submit $FSCRIPT.sh.condor
     elif [[ $SUBC == *sbatch* ]]; then
             $SUBC $FSCRIPT.sh

@@ -24,8 +24,8 @@ do
     RUN=$(basename $L)
     TDIR=$(get_run_directory $RUN)
     echo $RUN $TDIR/$RUN
-    cd $TDIR
+    cd "$TDIR" || exit
     tar -czf ${RUN}.tar.gz ${RUN}
 done
 
-cd ${PDIR}
+cd "${PDIR}" || exit

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 #
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then

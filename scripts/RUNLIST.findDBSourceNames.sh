@@ -76,8 +76,7 @@ while read -r RUNID SOURCEID; do
 done < <($MYSQL -e " select run_id, source_id from VERITAS.tblRun_Info where source_id like '%$SEARCHSTR%';")
 
 # alphabetize our source list
-OLDIFS="$IFS"
-IFS=$'\n' sorted=($(sort <<<"${RUNINFOARRAY[*]}"))
+mapfile -t sorted < <(sort <<<"${RUNINFOARRAY[*]}")
 printf "%s\n" "${sorted[@]}"
 
 exit
