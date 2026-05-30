@@ -1,12 +1,12 @@
 repos:
   # https://pycqa.github.io/isort/docs/configuration/black_compatibility.html#integration-with-pre-commit
   - repo: https://github.com/pycqa/isort
-    rev: 8.0.1
+    rev: 9.0.0a3
     hooks:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
   - repo: https://github.com/psf/black
-    rev: 26.3.1
+    rev: 26.5.1
     hooks:
       - id: black
         args: ["--line-length=100"]
@@ -24,6 +24,9 @@ repos:
       - id: end-of-file-fixer
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
+      - id: no-commit-to-branch
+        args: [--branch=main]
+
   # codespell
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.2
