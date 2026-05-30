@@ -137,7 +137,7 @@ get_disp_dir()
     elif (( $(echo "$ZA < 58" | bc -l) )); then
         DISPDIR="${DISPDIR}/55deg/"
     elif (( $(echo "$ZA < 62" | bc -l) )); then
-        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+        if [[ ${SIMTYPE_RUN} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
             DISPDIR="${DISPDIR}/55deg/"
         else
             DISPDIR="${DISPDIR}/60deg/"
