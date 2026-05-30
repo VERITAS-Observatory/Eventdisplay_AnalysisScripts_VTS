@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # read a calibration file produced by write_analysis_scripts.pl
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then

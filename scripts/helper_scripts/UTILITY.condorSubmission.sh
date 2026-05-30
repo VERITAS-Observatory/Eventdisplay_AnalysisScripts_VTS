@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # prepare a condor job submission file
 
 if [ "$1" = "-h" ]; then

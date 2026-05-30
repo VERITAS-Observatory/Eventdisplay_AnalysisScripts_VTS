@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters

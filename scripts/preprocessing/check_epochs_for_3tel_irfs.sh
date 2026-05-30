@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Read mscw log files and derive epoch lists for summer / winter
 
 if [ ! -n "$1" ]; then

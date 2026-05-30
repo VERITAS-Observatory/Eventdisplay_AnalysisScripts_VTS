@@ -40,4 +40,4 @@ jobs:
 
       - name: ShellCheck
         run: |
-          find scripts -name "*.sh" | sort | xargs shellcheck --severity=warning
+          find scripts -name "*.sh" | sort | xargs shellcheck --severity=info

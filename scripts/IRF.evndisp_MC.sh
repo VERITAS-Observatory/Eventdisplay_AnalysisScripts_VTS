@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # submit evndisp for grisu/care simulations
 
 # qsub parameters

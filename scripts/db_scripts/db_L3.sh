@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 #
 
 if [ $# -lt 2 ] || [ "$1" = "-h" ]; then

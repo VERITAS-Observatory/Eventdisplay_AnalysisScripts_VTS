@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Sync pre-processed DBFITS and DBTEXT files with UCLA
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Copy gain and toff files and adapt them
 # according to the DBtext standard
 # Required for old V4 files with no entries

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Prepare Eventdisplay data products of a certain
 # type from a run list into tar balls
 #

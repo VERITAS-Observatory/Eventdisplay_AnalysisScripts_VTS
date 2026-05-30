@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to combine several table file into one
 
 # job requirements

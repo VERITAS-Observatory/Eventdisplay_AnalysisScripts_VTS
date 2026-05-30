@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # generate noise files from a vbf file with pedestal events
 #
 # noise files are used in simulations which does not include

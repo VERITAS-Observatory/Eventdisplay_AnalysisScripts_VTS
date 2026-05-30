@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # submit TMVA training for angular reconstruction
 
 # qsub parameters
@@ -109,7 +110,7 @@ do
     do
         check_evndisp_directory $W $N
         # choose a random file from all files
-        ls -1 $INDIR/*[0-9].root.zst | sort -R | head -n 1 >> ${EVNLIST}
+        find "$INDIR" -maxdepth 1 -name "*[0-9].root.zst" | sort -R | head -n 1 >> "${EVNLIST}"
     done
 done
 echo "FILE LIST: ${EVNLIST}"

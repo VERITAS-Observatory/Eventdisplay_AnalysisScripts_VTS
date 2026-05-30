@@ -1,9 +1,10 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2086
 # train TMVA (BDTs) for angular reconstruction
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -42,13 +43,13 @@ fi
 
 # decompress
 NLIST=${ONAME}.list
-echo $NLIST
-for F in $(cat $LLIST)
+echo "$NLIST"
+while IFS= read -r F
 do
-    IDIR=$(dirname $F)
-    OF=${DDIR}/$(basename $IDIR)_$(basename $F)
-    cp -v -f $F ${OF}
-done
+    IDIR=$(dirname "$F")
+    OF=${DDIR}/$(basename "$IDIR")_$(basename "$F")
+    cp -v -f "$F" "${OF}"
+done < "$LLIST"
 find $DDIR -name "*.root.zst" -exec zstd -f -d {} \;
 ls -1 $DDIR
 ls -1 $DDIR/*.root > ${DDIR}/$NLIST

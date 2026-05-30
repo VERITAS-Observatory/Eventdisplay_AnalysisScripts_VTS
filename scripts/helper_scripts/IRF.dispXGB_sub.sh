@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # XGBoost disp stereo and classification analysis on mscw MC file
 
 # Don't do set -e.

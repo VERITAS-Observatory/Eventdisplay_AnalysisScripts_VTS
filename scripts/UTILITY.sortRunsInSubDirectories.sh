@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # sort and move files with file names [runnumber].*suffix
 # into subdirectories starting with the first (two) digits
 # of the run number.

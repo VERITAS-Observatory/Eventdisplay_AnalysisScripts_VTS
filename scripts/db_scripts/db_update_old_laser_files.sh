@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Update a laser rfiles for very early V4 runs
 # Some of these runs have no entries for the
 # laser file in the database

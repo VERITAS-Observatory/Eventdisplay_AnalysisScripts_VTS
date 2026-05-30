@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2086
 # from a run list, prints the list of runs that target a specific source
 
 # variables for coloring terminal output
@@ -96,8 +96,6 @@ if $HELPFLAG ; then
     exit
 fi
 
-function echoerr(){ echo "$@" 1>&2; } #for spitting out error text
-
 # list of run_id's to read in
 if [ ! -e $RUNFILE ] ; then
 	echo "File '$RUNFILE' could not be found in $PWD , sorry."
@@ -107,7 +105,7 @@ RUNLIST=`cat $RUNFILE`
 #echo "RUNLIST:$RUNLIST"
 
 # get database url from parameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
 
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"

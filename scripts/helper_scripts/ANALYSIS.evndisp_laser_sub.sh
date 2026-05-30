@@ -1,6 +1,8 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to analyse laser files
 
+# shellcheck source=/dev/null
 # set observatory environmental variables
 source $EVNDISPSYS/setObservatory.sh VTS
 

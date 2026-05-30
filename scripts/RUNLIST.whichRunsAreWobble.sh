@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22) or winter(21)
 
 CONORM="\e[0m"
@@ -36,7 +37,7 @@ SOUTFLAG=false
 EASTFLAG=false
 WESTFLAG=false
 
-LOWARG=`echo "$1" | tr '[A-Z]' '[a-z]'` # make all uppercase letters in arg 1 lowercase, for easier handling
+LOWARG=`echo "$1" | tr '[:upper:]' '[:lower:]'` # make all uppercase letters in arg 1 lowercase, for easier handling
 #echo "\$LOWARG: '$LOWARG'"
 if [[ "$LOWARG" == *n* ]] ; then NORTFLAG=true ; fi
 if [[ "$LOWARG" == *s* ]] ; then SOUTFLAG=true ; fi
@@ -44,7 +45,7 @@ if [[ "$LOWARG" == *e* ]] ; then EASTFLAG=true ; fi
 if [[ "$LOWARG" == *w* ]] ; then WESTFLAG=true ; fi
 
 # get database url from parameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
 
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"

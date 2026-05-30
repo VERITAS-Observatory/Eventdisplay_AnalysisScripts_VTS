@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Analyze simulation evndisp files using mscw_energy to generate IRF components.
 # Allow optionally to calculate instrument response functions (for 4 and 3-telescope combinations).
 

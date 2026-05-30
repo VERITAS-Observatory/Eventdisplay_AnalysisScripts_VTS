@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Error checks in log files for preprocessing
 #
 
@@ -19,9 +20,9 @@ echo "Checking runs in ${1} for data type ${DTYPE}"
 check_evndisp_log_files()
 {
     # check number of log files of all stages
-    PNLOG=$(ls -1 ${1}/*.ped.log | wc -l)
-    TNLOG=$(ls -1 ${1}/*.tzero.log | wc -l)
-    ANLOG=$(ls -1 ${1}/*[0-9].log | wc -l)
+    PNLOG=$(find "$1" -maxdepth 1 -name "*.ped.log" | wc -l)
+    TNLOG=$(find "$1" -maxdepth 1 -name "*.tzero.log" | wc -l)
+    ANLOG=$(find "$1" -maxdepth 1 -name "*[0-9].log" | wc -l)
     echo "Number of log files: ped $PNLOG tzero $TNLOG evndisp $ANLOG"
     echo "Ped files: "
     echo "--------------------"
@@ -46,7 +47,7 @@ check_evndisp_log_files()
 
 check_mscw_log_files()
 {
-    NFIL=$(ls -1 ${1}/*.mscw.root | wc -l)
+    NFIL=$(find "$1" -maxdepth 1 -name "*.mscw.root" | wc -l)
     echo "Number of mscw file: $NFIL"
     echo "Container revisions: $(grep -h org.opencontainers.image.revision ${1}/*.mscw.log | sort -u)"
     echo "Errors in mscw log files:"

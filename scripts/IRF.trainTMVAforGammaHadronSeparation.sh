@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # train BDTs for gamma/hadron separation
 #
 # note the large amount of hardwired parameters in this scripts:
@@ -255,7 +256,7 @@ do
           -e "s|MCDIRECTORY|$SDIR|" \
           -e "s|DATADIRECTORY|$BCKFILEDIR|" \
           -e "s|OUTPUTDIR|${ODIR}|" \
-          -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
+          -e "s|OUTNAME|$ODIR/${ONAME}_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
       chmod u+x $FSCRIPT.sh
       echo $FSCRIPT.sh

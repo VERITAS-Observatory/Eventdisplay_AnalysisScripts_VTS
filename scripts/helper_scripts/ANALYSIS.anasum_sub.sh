@@ -1,7 +1,9 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to analyse one run with anasum
 
 # set observatory environmental variables
+# shellcheck source=/dev/null
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi

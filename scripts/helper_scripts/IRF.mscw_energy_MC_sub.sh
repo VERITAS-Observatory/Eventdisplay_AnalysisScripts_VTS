@@ -1,10 +1,11 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2086
 # Analyse MC files with lookup tables (mscw_energy stage)
 # (optional) Calculate instrument response functions (effective areas) for 4 and 3-telescope combinations
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 set -e
@@ -240,6 +241,7 @@ get_xgb_output_file()
 run_xgb()
 {
     check_conda_installation
+# shellcheck source=/dev/null
     source activate base
     conda activate $env_name
     MSCW_FILE="$outputfilename"

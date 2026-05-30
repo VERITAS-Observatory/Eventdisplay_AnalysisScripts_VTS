@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # from a run list, prints the list of runs that are considered V4 runs, before T1 was moved
 
 #echo "\$#:$#   \$1:$1   \$2:$2   \$3:$3   \$4:$4"

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Print DQM information in one single line
 # for each run using DBText files
 #

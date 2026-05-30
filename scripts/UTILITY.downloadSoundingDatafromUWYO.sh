@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # download sounding (balloon) data from UWYO for VERITAS
 # combine the monthly data into one file and create a list of files (in this case just the total file)
 

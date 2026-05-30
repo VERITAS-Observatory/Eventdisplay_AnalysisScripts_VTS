@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 if [ $# -lt 2 ]; then
 echo "
 ./prepro_move_preprocessed_files.sh <source dl3 directory> <target directory>
@@ -21,7 +22,7 @@ ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/"
 for F in 11 10 9 8 7 6 5 4 3; do
     OFDIR="$ODIR/$DDIR/$F"
     echo "Syncing $OFDIR with ${FTYPE}"
-    NFIL=$(ls -1 ${FTYPE}/${F}*.fits.gz 2>/dev/null | wc -l)
+    NFIL=$(find "$FTYPE" -maxdepth 1 -name "${F}*.fits.gz" 2>/dev/null | wc -l)
     if [[ $NFIL -gt 0 ]]; then
         mkdir -p "$OFDIR"
         rsync -av --remove-source-files  ${FTYPE}/${F}*.fits.gz $ODIR/$DDIR/${F}/

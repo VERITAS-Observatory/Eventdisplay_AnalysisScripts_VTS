@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 if [ $# -lt 1 ]; then
 echo "
 ./prepro_move_preprocessed_files.sh <analysis type>
@@ -23,7 +24,7 @@ for F in 11 10 9 8 7 6 5 4 3; do
     OFDIR="$ODIR/$F"
     echo "Syncing $OFDIR with ${FTYPE}"
     mkdir -p "$OFDIR"
-    NFIL=$(ls -1 ${FTYPE}/${F}*.root 2>/dev/null | wc -l)
+    NFIL=$(find "$FTYPE" -maxdepth 1 -name "${F}*.root" 2>/dev/null | wc -l)
     if [[ $NFIL -gt 0 ]]; then
         rsync -av --remove-source-files ${FTYPE}/${F}*.root $OFDIR/
         rsync -av --remove-source-files ${FTYPE}/${F}*.log $OFDIR/

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 # begin help message

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # XGBoost analysis on mscw data files.
 
 # qsub parameters

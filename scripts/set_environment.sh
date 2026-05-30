@@ -73,11 +73,13 @@ elif [[ $PROCESS == "al9" ]]; then
     export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-c17/
     export EVNDISPSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/EventDisplay_${EVNDISPVERSION:0:4}-${PROCESS}
     cd "$ROOTSYS" || return
+# shellcheck source=/dev/null
     source ./bin/thisroot.sh
     export PATH=$PATH:${VBFSYS}/bin/
     export LD_LIBRARY_PATH="$VBFSYS/lib:$LD_LIBRARY_PATH"
     export SOFASYS=${EVNDISPSYS}/sofa
     cd "${EVNDISPSYS}" || return
+# shellcheck source=/dev/null
     source ./setObservatory.sh VTS
     cd "${TDIR}" || return
 fi

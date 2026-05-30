@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Prepare run lists and time cuts using the
 # DQM information.
 #
@@ -153,7 +154,7 @@ do
         fi
         # skip laser and flasher runs
         if [[ $RTARGET == "laser" ]] || [[ $RTARGET == "flasher" ]]; then
-            echo "   RUN $R $TARGET target (FLASHER CUT APPLIED)"
+            echo "   RUN $R $RTARGET target (FLASHER CUT APPLIED)"
             continue
         fi
         if [[ -z $(tar -tzf ${DBTEXTFILE} | grep "${DQMFILE}") ]]; then

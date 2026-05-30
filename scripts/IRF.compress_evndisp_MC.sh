@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # submit cleanup job after running evndisp
 #
 
@@ -120,9 +121,6 @@ NOISEFILE="NO_NOISEFILE"
 #######################################################
 # GRISU simulations
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    if [[ -z $VERITAS_EVNDISP_AUX_DIR ]]; then
-        VERITAS_EVNDISP_AUX_DIR=$VERITAS_EVNDISP_AUX_DIR
-    fi
     # Input files (observe that these might need some adjustments)
     if [[ ${EPOCH:0:2} == "V4" ]]; then
         if [[ $ATM == "21" ]]; then
@@ -194,7 +192,7 @@ do
     SIMDIR=$(dirname ${V})
 
     # size of VBF file
-    FF=$(ls -ls -Llh ${V} | awk '{print $1}' | sed 's/,/./g')
+    FF=$(du -shL "${V}" | awk '{print $1}' | sed 's/,/./g')
     V=$(basename ${V})
     echo "SIMDIR: $SIMDIR"
     echo "VBFILE: ${V} $FF"

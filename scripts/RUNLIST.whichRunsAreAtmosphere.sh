@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22/62) or winter(21/61)
 
 # check to see if input is from terminal, or from a pipe
@@ -31,7 +32,7 @@ RUNLIST=`cat $RUNFILE`
 
 SUMMFLAG=false
 WINTFLAG=false
-LOWARG=`echo "$1" | tr '[A-Z]' '[a-z]'` # make all uppercase letters in arg 1 lowercase, for easier handling
+LOWARG=`echo "$1" | tr '[:upper:]' '[:lower:]'` # make all uppercase letters in arg 1 lowercase, for easier handling
 #echo "\$LOWARG: '$LOWARG'"
 if [[ "$LOWARG" == *w* ]] || [[ "$LOWARG" == "21" ]] || [[ "$LOWARG" == "61" ]] ; then
 	WINTFLAG=true
@@ -73,9 +74,7 @@ function IsWinter {
 		local ATMOCODE=""
 		local MINDATE=""
 		local MAXDATE=""
-		(IFS='
-'
-		for line in $ATMOTHRESH ; do
+		while IFS= read -r line ; do
 			#echoerr "line:$line"
 			ATMOCODE=$( echo "$line" | awk '{ print $3 }' | grep -oP "\d+" )
 			MINDATE=$(  echo "$line" | awk '{ print $4 }' | tr -d '-' | grep -oP "\d+" )
@@ -99,8 +98,7 @@ function IsWinter {
 					break
 				fi
 			fi
-		done
-		)
+		done <<< "$ATMOTHRESH"
 		# 3 = did not find valid atmo range
 		if [ ! $FOUNDATMO ] ; then
 			echo 3
@@ -142,7 +140,7 @@ function badAtmosphere {
 }
 
 # get database url from parameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
 
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"

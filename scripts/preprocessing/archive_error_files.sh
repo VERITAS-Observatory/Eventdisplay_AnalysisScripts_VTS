@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2086
 # Move Eventdisplay data products from all stages
 # into an runs_with_issues directory.
 # runs are given in a run list

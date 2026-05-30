@@ -1,8 +1,9 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2086
 # script to make DSTs
 
 # set observatory environmental variables
+# shellcheck source=/dev/null
 source $EVNDISPSYS/setObservatory.sh VTS
 
 # parameters replaced by parent script using sed

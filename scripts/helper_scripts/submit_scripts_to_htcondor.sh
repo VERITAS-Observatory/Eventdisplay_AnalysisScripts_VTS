@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2086
 #
 # submit a list of scripts to HTCondor job submission system
 #

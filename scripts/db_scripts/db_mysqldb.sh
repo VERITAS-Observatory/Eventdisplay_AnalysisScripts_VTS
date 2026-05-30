@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 #
 
 if [ "$1" = "-h" ]; then
@@ -13,7 +14,7 @@ fi
 
 # get url of veritas db
 PARAFILE="${VERITAS_EVNDISP_AUX_DIR}/ParameterFiles/EVNDISP.global.runparameter"
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' ${PARAFILE} | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' ${PARAFILE} | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
 if [ ! -n "$MYSQLDB" ] ; then
     echo "Error: DBSERVER parameters not found in ${PARAFILE}"
     exit 1

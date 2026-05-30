@@ -1,11 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2086
 # calculate effective areas
 #
 # v490: possible issue with "RERUN_STEREO_RECONSTRUCTION_3TEL" option
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 

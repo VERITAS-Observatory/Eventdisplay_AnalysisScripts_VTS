@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to combine anasum files processed in parallel mode
 
 # qsub parameters
@@ -74,7 +75,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_combine_sub"
 
-FSCRIPT="$LOGDIR/anasum_combine-$DATE-RUN$RUN-$(date +%s)"
+FSCRIPT="$LOGDIR/anasum_combine-$DATE-$(basename "$OUTFILE")-$(date +%s)"
 echo "Run script written to $FSCRIPT"
 
 sed -e "s|RRUNLIST|$RUNLIST|" \
@@ -100,11 +101,11 @@ if [[ $SUBC == *qsub* ]]; then
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
     condor_submit $FSCRIPT.sh.condor
-echo "RUN $RUN JOBID $JOBID"
-    echo "RUN $RUN SCRIPT $FSCRIPT.sh"
+echo "OUTFILE $OUTFILE JOBID $JOBID"
+    echo "OUTFILE $OUTFILE SCRIPT $FSCRIPT.sh"
     if [[ $SUBC != */dev/null* ]] ; then
-        echo "RUN $RUN OLOG $FSCRIPT.sh.o$JOBID"
-        echo "RUN $RUN ELOG $FSCRIPT.sh.e$JOBID"
+        echo "OUTFILE $OUTFILE OLOG $FSCRIPT.sh.o$JOBID"
+        echo "OUTFILE $OUTFILE ELOG $FSCRIPT.sh.e$JOBID"
     fi
 elif [[ $SUBC == *sbatch* ]]; then
     $SUBC $FSCRIPT.sh

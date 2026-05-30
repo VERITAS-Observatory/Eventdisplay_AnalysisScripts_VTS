@@ -1,9 +1,10 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2154
+# shellcheck disable=SC2034,SC2154,SC2086
 # fill lookup tables
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -80,8 +81,8 @@ elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
         exit
     fi
 fi
-rm -f "$DDIR/$OFILE.list"
-ls -1 "$DDIR"/*[0-9].root > "$DDIR/$OFILE.list"
+rm -f "$DDIR/$TABFILE.list"
+find "$DDIR" -maxdepth 1 -name "*[0-9].root" > "$DDIR/$TABFILE.list"
 
 # Redo stereo reconstruction with diff cuts on images (versions after v490)
 MOPT=""
@@ -96,7 +97,7 @@ logfile="$ODIR/$TABFILE.log"
 $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
-                            -inputfilelist "$DDIR/$OFILE.list" \
+                            -inputfilelist "$DDIR/$TABFILE.list" \
                             -tablefile "${DDIR}/$TABFILE.root" \
                             -ze=$ZA $MOPT \
                             -arrayrecid=$RECID \

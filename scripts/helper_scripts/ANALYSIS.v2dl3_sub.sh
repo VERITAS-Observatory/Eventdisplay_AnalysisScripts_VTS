@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to run V2DL3
 # (convert anasum output to FITS-DL3)
 # run point-like and full-enclosure analysis
@@ -52,6 +53,7 @@ check_conda_installation()
 }
 
 check_conda_installation
+# shellcheck source=/dev/null
 
 source activate base
 conda activate v2dl3Eventdisplay-${V2DL3VERSION}

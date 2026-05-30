@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Generates a simple run list (one run per line) with quality cuts
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -112,7 +113,7 @@ MAXAZIM=$( echo "$AZIMSTRING" | cut -d '-' -f 2 )
 #echo "MAXAZIM:'$MAXAZIM'"
 
 # Get VERITAS database URL from EVNDISP.global.runparameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
 if [ ! -n "$MYSQLDB" ]; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit 1
@@ -129,7 +130,7 @@ TIMESEGMENTS=$( $EVNDISPSYS/bin/VTS.getObservingTimesWithinTimeAzElBounds "$DATE
 # which runs fall into these time segments
 TIMESEGCONDITION=""
 segmentiter=0
-while read lin ; do
+while read -r lin ; do
   segmentiter=$((segmentiter+1))
   #echo "$segmentiter - lin:'$lin'"
   mjdstart=$( echo "$lin" | cut -d ' ' -f 1 )

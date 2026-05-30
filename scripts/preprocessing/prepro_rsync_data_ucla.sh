@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Sync pre-processed Eventdisplay data with UCLA
 # This includes Eventdisplay data products
 

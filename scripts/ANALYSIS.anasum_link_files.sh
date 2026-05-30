@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to link pre-processed anasum files to an anasum output directory
 
 

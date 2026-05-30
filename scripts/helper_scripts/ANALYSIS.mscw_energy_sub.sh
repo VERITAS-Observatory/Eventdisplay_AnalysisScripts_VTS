@@ -1,7 +1,9 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # analyse MC files with lookup tables
 
 # set observatory environmental variables
+# shellcheck source=/dev/null
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to analyse data files with anasum (parallel analysis) from a simple run list
 
 # qsub parameters
@@ -151,7 +152,7 @@ fi
 # remove PointSource and ExtendedSource string from cut file name for radial acceptances names
 if [[ $CUT == *PointSource-* ]] ; then
     CUTRADACC=${CUT/-PointSource-/"-"}
-    echo $CUTRACACC
+    echo $CUTRADACC
 elif [[ $CUT == *"Extended"* ]]; then
     CUTRADACC=${CUT/-PointSource-/"-"}
 elif [[ $CUT == *ExtendedSource-* ]]; then

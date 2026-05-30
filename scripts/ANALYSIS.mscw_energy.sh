@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to analyse data files with lookup tables
 
 # qsub parameters

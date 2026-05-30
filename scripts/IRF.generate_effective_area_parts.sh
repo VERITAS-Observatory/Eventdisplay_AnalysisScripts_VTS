@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # calculate effective areas for a given point in the parameter space
 # (output need to be combined afterwards)
 

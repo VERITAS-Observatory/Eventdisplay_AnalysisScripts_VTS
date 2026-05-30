@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script run eventdisplay laser analysis with a queue system
 
 # qsub parameters

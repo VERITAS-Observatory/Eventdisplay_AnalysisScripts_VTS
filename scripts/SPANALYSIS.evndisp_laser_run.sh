@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # analyze a laser/flasher run (calculate pedestals, calculate gains)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then

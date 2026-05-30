@@ -1,6 +1,8 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script put log files into evndisp file and compress output
 
+# shellcheck source=/dev/null
 # set observatory environmental variables
 source "$EVNDISPSYS"/setObservatory.sh VTS
 

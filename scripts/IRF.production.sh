@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2178,SC2128
+# shellcheck disable=SC2178,SC2128,SC2086
 # IRF production script (VERITAS)
 
 # EventDisplay version
@@ -149,25 +149,25 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     WOBBLE_OFFSETS=( 0.5 )
 elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
+    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
 elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
+    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
 elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
+    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | sort | uniq)
     set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # ZENITH_ANGLES=( 20 )
@@ -188,13 +188,13 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     ######################################
 elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     # ZENITH_ANGLES=( 60 65 )
     set -- $ZENITH_ANGLES
     ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
     # Note! Assumes same NSB and WOBBLE offsets for flat and curved atmosphere
-    NSB_LEVELS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*vbf.zst | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*.vbf.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -name "*vbf.zst" -exec basename {} \; | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -name "*.vbf.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # NSB_LEVELS=( 300 )
@@ -202,12 +202,12 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     # WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     set -- $ZENITH_ANGLES
     ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
     # assume same NSB and wobble offsets in all bins
-    NSB_LEVELS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find "${SIMDIR}" -path "*${ze_first_bin}*/*" -type f -exec basename {} \; | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}" -path "*${ze_first_bin}*/*" -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )

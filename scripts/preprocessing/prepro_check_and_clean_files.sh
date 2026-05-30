@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 if [ $# -lt 1 ]; then
 echo "
 ./prepro_check_and_clean_files.sh <analysis type>
@@ -64,7 +65,7 @@ if [[ -n $FLIST ]]; then
 fi
 
 echo "Aux data (and NOTFOUND)"
-NAUX=$(ls -1 "$FTYPE"/*.NOTFOUND 2>/dev/null | wc -l)
+NAUX=$(find "$FTYPE" -maxdepth 1 -name "*.NOTFOUND" 2>/dev/null | wc -l)
 if [[ $NAUX -gt 0 ]]; then
     mkdir -p "$FTYPE"/aux
     mv -f "$FTYPE"/*.NOTFOUND "$FTYPE"/aux/

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # fill lookup tables for a given point in the parameter space
 # (generated tables need to be combined afterwards)
 

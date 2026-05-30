@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Check if runs read from a run list are processed already with
 # evndisp or mscw files
 #

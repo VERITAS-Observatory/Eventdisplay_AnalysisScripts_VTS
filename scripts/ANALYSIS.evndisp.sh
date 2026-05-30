@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters
@@ -99,6 +100,7 @@ fi
 # VPM is on by default
 VPM=1
 # directory with DB text
+# shellcheck disable=SC2153
 DBTEXTDIRECTORY="${VERITAS_DATA_DIR}/shared/DBTEXT"
 # hardwired alternative data directory
 VERITAS_DATA_DIR_2="/lustre/fs23/group/veritas/data"
@@ -302,6 +304,7 @@ if [[ $SUBC == *parallel* ]]; then
     cat $LOGDIR/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/' >> Run_me.sh
     echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC" >> Run_me.sh
     chmod +x Run_me.sh
+# shellcheck source=/dev/null
     source Run_me.sh
     rm Run_me.sh
 fi

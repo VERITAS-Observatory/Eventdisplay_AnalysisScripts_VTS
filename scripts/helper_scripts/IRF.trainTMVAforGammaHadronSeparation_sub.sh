@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2086
 # script to train TMVA (BDTs) for gamma/hadron separation
 
 RXPAR=RUNPARAM
@@ -9,6 +9,7 @@ ODIR=OUTPUTDIR
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 

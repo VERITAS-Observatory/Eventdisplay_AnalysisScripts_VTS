@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to run V2DL3
 # (convert anasum output to FITS-DL3)
 # run point-like and full-enclosure analysis
@@ -61,8 +62,8 @@ rm -f ${LOGDIR}/x* 2>/dev/null
 sort -u "${RUNLIST}" -o "${LOGDIR}/$(basename "${RUNLIST}")"
 (cd "${LOGDIR}" && split -l $SPLITRUN "${LOGDIR}/$(basename ${RUNLIST})")
 
-FILELISTS=$(ls ${LOGDIR}/x*)
-NFILELISTS=$(ls ${LOGDIR}/x* | wc -l)
+FILELISTS=$(find "$LOGDIR" -maxdepth 1 -name "x*" | sort)
+NFILELISTS=$(find "$LOGDIR" -maxdepth 1 -name "x*" | wc -l)
 
 echo -e "Processing $NFILELISTS file lists (equal to number of jobs)"
 

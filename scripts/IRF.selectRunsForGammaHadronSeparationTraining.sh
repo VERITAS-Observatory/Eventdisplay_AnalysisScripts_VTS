@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # select mscw files for BDT gamma/hadron separation training
 #
 # selection is based on

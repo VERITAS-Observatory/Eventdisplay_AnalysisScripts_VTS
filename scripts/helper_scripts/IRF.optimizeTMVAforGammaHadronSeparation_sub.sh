@@ -1,8 +1,10 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to calculate signal and background rates and
 # optimize BDTs with TMVA
 #
 
+# shellcheck source=/dev/null
 # set observatory environmental variables
 source $EVNDISPSYS/setObservatory.sh VTS
 

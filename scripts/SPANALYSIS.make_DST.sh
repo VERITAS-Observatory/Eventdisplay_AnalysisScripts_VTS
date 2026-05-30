@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # script to make DST files from a raw data file
 
 # qsub parameters

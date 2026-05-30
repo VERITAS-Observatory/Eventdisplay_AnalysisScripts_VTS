@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # combine effective area files into one
 
 # job requirements

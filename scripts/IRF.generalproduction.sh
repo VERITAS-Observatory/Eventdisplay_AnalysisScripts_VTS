@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # IRF general production script (VERITAS) for large scale
 # productions process all epochs
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Run anasum or V2DL3 over all standard cuts
 #
 #

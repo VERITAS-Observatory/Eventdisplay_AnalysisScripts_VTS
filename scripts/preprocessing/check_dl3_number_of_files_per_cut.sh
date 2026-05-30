@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Check the number of files DL3 processing
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "

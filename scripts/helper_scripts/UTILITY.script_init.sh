@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # simple script to make sure environmental variables are set correctly
 
 # Check that the EVNDISP environmental variables are set
@@ -23,6 +24,7 @@ if [[ -z $VERITAS_USER_LOG_DIR ]]; then
     exit 1
 fi
 
+# shellcheck source=/dev/null
 # set the right observatory (environmental variables)
 source $EVNDISPSYS/setObservatory.sh VTS -q
 

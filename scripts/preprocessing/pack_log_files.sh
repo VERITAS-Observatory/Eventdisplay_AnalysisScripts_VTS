@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 # Pack log files in production directories into
 # individual tar ball depending on the data level
 #

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 #
 # Extract information from VERITAS database required
 # for evndisp analysis for a list of runs
