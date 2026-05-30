@@ -39,7 +39,7 @@ optional parameters:
                              V6_2014_2015 V6_2015_2016 V6_2016_2017 V6_2017_2018 V6_2018_2019 V6_2019_2020
                              V6_2019_2020w V6_2020_2020s V6_2020_2021w V6_2021_2021s V6_2021_2022w
                              V6_2022_2022s V6_2022_2023w V6_2023_2023s V6_2023_2024w V6_2024_2024s
-                             V6_2024_2025w V6_2025_2025s \")
+                             V6_2024_2025w V6_2025_2025s V6_2025_2026w \")
 
     [atmosphere]            atmosphere model(s) (21/61 = winter, 22/62 = summer)
                             (default: \"61 62\")
@@ -187,7 +187,7 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     ######################################
 elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
+    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     # ZENITH_ANGLES=( 60 65 )
     set -- $ZENITH_ANGLES
     ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
