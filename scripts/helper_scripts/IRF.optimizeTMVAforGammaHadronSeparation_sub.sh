@@ -54,7 +54,6 @@ then
     rm -f ${RATEFILE}.log
 
     # calculate rates from Crab Nebula and from background rates
-    rm -f ${MVADIR}/rates.log
     "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
         ${EFFAREA} \
         ${RATEFILE}.root \
@@ -66,6 +65,7 @@ fi
 
 echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${VERITAS_ANALYSIS_TYPE:0:2}/${EPAT}/${CUT}/"
+rm -f "${MVADIR}/rates.log"
 cd ${PREDIR}/${CUT}
 rm -f ${WDIR}/${EPAT}.optimised.dat
 if [[ -f "$EVNDISPSYS/macros/optimizeBDTcuts.C" ]]; then

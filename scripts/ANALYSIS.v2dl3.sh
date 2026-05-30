@@ -54,7 +54,7 @@ DATE=`date +"%y%m%d"`
 LOGDIR="$VERITAS_USER_LOG_DIR/V2DL3-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
-rm -f ${LOGIDR}/x* 2>/dev/null
+rm -f ${LOGDIR}/x* 2>/dev/null
 
 # split run list into smaller run lists
 sort -u "${RUNLIST}" -o "${LOGDIR}/$(basename "${RUNLIST}")"
@@ -98,11 +98,11 @@ do
             JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
         fi
 
-        echo "RUN $AFILE JOBID $JOBID"
-        echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
+        echo "RUN $J JOBID $JOBID"
+        echo "RUN $J SCRIPT $FSCRIPT.sh"
         if [[ $SUBC != */dev/null* ]] ; then
-            echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
-            echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
+            echo "RUN $J OLOG $FSCRIPT.sh.o$JOBID"
+            echo "RUN $J ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
         $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
@@ -116,7 +116,7 @@ do
         $SUBC $FSCRIPT.sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
-        echo "RUN $AFILE OLOG $FSCRIPT.log"
+        echo "RUN $J OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
 	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 	fi

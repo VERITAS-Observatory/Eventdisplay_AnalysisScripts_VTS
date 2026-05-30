@@ -74,7 +74,7 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 
-if [[ -f $OFILE ]]; then
+if [[ -f "$ODIR/$OFILE" ]]; then
     echo "ERROR: table file $ODIR/$OFILE exists; move it or delete it"
     exit 1
 fi

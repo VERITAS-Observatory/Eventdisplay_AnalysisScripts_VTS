@@ -80,6 +80,7 @@ fi
 
 if [[ ! -e $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFFILE} ]]; then
     echo "Error - effective area file not found ${EFFFILE}"
+    exit 1
 fi
 if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/TMVA.BDT.V4.runparameter"
@@ -88,8 +89,8 @@ else
 fi
 #####################################
 # energy bins
-if grep -q "^* ENERGYBINS" "$RUNPAR"; then
-    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINS 1" | sed -e 's/* ENERGYBINS 1//' | sed -e 's/ /\n/g')
+if grep -q "^\* ENERGYBINS" "$RUNPAR"; then
+    ENBINS=$( cat "$RUNPAR" | grep "^\* ENERGYBINS" | sed -e 's/\* ENERGYBINS//' | sed -e 's/ /\n/g')
     declare -a EBINARRAY=( $ENBINS ) #convert to array
     count1=1
     NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins

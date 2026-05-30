@@ -14,7 +14,7 @@ MAXCORES=48
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR/$(basename $MSCW_FILE .root)
+    TEMPDIR=$TMPDIR/XGB-$(basename $LLIST .list)-$(uuidgen)
 else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
 fi

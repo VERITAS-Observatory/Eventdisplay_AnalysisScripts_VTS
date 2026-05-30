@@ -137,13 +137,13 @@ get_disp_dir()
     elif (( $(echo "$ZA < 58" | bc -l) )); then
         DISPDIR="${DISPDIR}/55deg/"
     elif (( $(echo "$ZA < 62" | bc -l) )); then
-        if [[ ${SIMTYPE_RUN} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+        if [[ ${HVSETTINGS} == "obsLowHV" ]]; then  # fix for incomplete RedHV MC set
             DISPDIR="${DISPDIR}/55deg/"
         else
             DISPDIR="${DISPDIR}/60deg/"
         fi
     else
-        if [[ ${SIMTYPE_RUN} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+        if [[ ${HVSETTINGS} == "obsLowHV" ]]; then  # fix for incomplete RedHV MC set
             DISPDIR="${DISPDIR}/55deg/"
         else
             DISPDIR="${DISPDIR}/60deg/"
@@ -206,7 +206,7 @@ $EVNDISPSYS/bin/mscw_energy         \
 echo "$(inspect_executables)" >> ${MSCWLOGFILE}
 
 # write DISP directory into log file (as tmp directories are used)
-if [[ DISPBDT != "NOTSET" ]]; then
+if [[ $DISPBDT != "NOTSET" ]]; then
     echo "" >> ${MSCWLOGFILE}
     echo "dispBDT XML files read from ${DISPDIR}" >> ${MSCWLOGFILE}
 fi

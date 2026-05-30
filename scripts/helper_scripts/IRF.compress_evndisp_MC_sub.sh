@@ -45,7 +45,7 @@ add_log_file()
 
 compress_file()
 {
-    if command -v zstd /dev/null; then
+    if command -v zstd &>/dev/null; then
         zstd ${1}
         zstd --test ${1}.zst
     else
