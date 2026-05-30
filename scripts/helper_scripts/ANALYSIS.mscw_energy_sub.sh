@@ -143,7 +143,7 @@ get_disp_dir()
             DISPDIR="${DISPDIR}/60deg/"
         fi
     else
-        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+        if [[ ${SIMTYPE_RUN} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
             DISPDIR="${DISPDIR}/55deg/"
         else
             DISPDIR="${DISPDIR}/60deg/"
