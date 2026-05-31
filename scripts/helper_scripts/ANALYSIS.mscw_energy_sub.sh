@@ -35,8 +35,8 @@ if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 fi
 
-INDIR=`dirname $INFILE`
-BFILE=`basename $INFILE .root`
+INDIR=$(dirname $INFILE)
+BFILE=$(basename $INFILE .root)
 INFILEPATH="$INFILE"
 
 # temporary directory
@@ -69,9 +69,9 @@ fi
 
 echo "READING RUNINFO from $INFILEPATH"
 RUNINFO=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH updated-runinfo)
-EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
-ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
-HVSETTINGS=`echo $RUNINFO | awk '{print $(4)}'`
+EPOCH=$(echo $RUNINFO | awk '{print $(1)}')
+ATMO=${FORCEDATMO:-$(echo $RUNINFO | awk '{print $(3)}')}
+HVSETTINGS=$(echo $RUNINFO | awk '{print $(4)}')
 if [[ $ATMO == *error* ]]; then
     echo "error finding atmosphere; skipping run $BFILE"
     exit
@@ -205,16 +205,18 @@ $EVNDISPSYS/bin/mscw_energy         \
     -inputfile $DDIR/$BFILE.root \
     -writeReconstructedEventsOnly=1 &> ${MSCWLOGFILE}
 
-echo "$(inspect_executables)" >> ${MSCWLOGFILE}
+inspect_executables >> ${MSCWLOGFILE}
 
 # write DISP directory into log file (as tmp directories are used)
 if [[ $DISPBDT != "NOTSET" ]]; then
     echo "" >> ${MSCWLOGFILE}
     echo "dispBDT XML files read from ${DISPDIR}" >> ${MSCWLOGFILE}
 fi
-echo "EVNDISP file: ${INFILE}" >> ${MSCWLOGFILE}
-echo "VERITAS_EVNDISP_AUX: ${VERITAS_EVNDISP_AUX_DIR}" >> ${MSCWLOGFILE}
-echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}" >> ${MSCWLOGFILE}
+{
+    echo "EVNDISP file: ${INFILE}"
+    echo "VERITAS_EVNDISP_AUX: ${VERITAS_EVNDISP_AUX_DIR}"
+    echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}"
+} >> "${MSCWLOGFILE}"
 
 # move logfiles into output file
 if [[ -e ${MSCWLOGFILE} ]]; then

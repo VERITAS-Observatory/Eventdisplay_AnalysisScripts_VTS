@@ -80,7 +80,7 @@ echo "Found ${#FLIST[@]} files to process"
 mkdir -p "${3}"
 
 # Pre-create zenith bin directories for efficiency
-for (( j=0; j < $NZEW; j++ )); do
+for (( j=0; j < NZEW; j++ )); do
     mkdir -p "${TARGETDIR}/Ze_${j}"
 done
 
@@ -167,7 +167,7 @@ do
 
     # Find zenith bin using numeric comparison (bc for float comparison)
     ZEBIN=0
-    for (( j=0; j < $NZEW; j++ )); do
+    for (( j=0; j < NZEW; j++ )); do
         if (( $(echo "${RUNZENITH} > ${ZEBINARRAY[$j]}" | bc -l) )) && \
            (( $(echo "${RUNZENITH} < ${ZEBINARRAY[$j+1]}" | bc -l) )); then
             ZEBIN=$j

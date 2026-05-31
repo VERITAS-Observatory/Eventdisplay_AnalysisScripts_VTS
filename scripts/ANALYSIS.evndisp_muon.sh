@@ -7,7 +7,7 @@
 h_cpu=11:59:00; h_vmem=2000M; tmpdir_size=25G
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$($EVNDISPSYS/bin/evndisp --version | tr -d .)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 # begin help message
@@ -67,8 +67,7 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # create extra stdout for duplication of command output
 # look for ">&5" below
@@ -110,19 +109,19 @@ if [ ! -f "$RLIST" ] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-FILES=`cat $RLIST`
+FILES=$(cat $RLIST)
 
 # Output directory for error/output
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANADATA"
 mkdir -p $LOGDIR
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.evndisp_sub"
 
-TIMETAG=`date +"%s"`
+TIMETAG=$(date +"%s")
 
-NRUNS=`cat $RLIST | wc -l `
+NRUNS=$(cat $RLIST | wc -l )
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -172,9 +171,9 @@ do
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        JOBID=$($SUBC $FSCRIPT.sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2

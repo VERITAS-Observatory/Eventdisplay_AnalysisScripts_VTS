@@ -27,11 +27,11 @@ MONTH=( 01 02 03 04 05 06 07 08 09 10 11 12 )
 DAY=(   31 28 31 30 31 30 31 31 30 31 30 30 )
 NMONTH=${#MONTH[@]}
 
-for (( y = $YEAR1; y <= $YEAR2; y++ ))
+for (( y = YEAR1; y <= YEAR2; y++ ))
 do
     echo "Fetching $y"
 
-    for (( i = 0 ; i < $NMONTH; i++ ))
+    for (( i = 0 ; i < NMONTH; i++ ))
     do
         M=${MONTH[$i]}
         D=${DAY[$i]}

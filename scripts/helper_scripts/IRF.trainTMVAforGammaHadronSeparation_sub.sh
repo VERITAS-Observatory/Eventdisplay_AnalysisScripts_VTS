@@ -60,9 +60,9 @@ rm -f "$LDIR/${BASE_RXPAR}_preselect.log"
 rm -f "$LDIR/${BASE_RXPAR}.log"
 "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR/${BASE_RXPAR}.log"
 
-echo "$(inspect_executables)" >> "$LDIR/${BASE_RXPAR}.log"
+inspect_executables >> "$LDIR/${BASE_RXPAR}.log"
 "$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
 
 # remove unnecessary *.C files
-CDIR=`dirname $RXPAR`
+CDIR=$(dirname $RXPAR)
 rm -f -v "$CDIR"/$ONAME*.C

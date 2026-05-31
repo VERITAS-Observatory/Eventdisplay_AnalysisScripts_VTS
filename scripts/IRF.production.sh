@@ -70,9 +70,8 @@ cd "$(dirname "$0")" || exit
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
 SIMTYPE="$1"
@@ -84,7 +83,7 @@ IRFTYPE="$2"
 [[ "$7" ]] && SIMDIR="$7" || SIMDIR=""
 
 # uuid for this job batch
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 UUID=${DATE}-$(uuidgen)
 
 # version string for aux files
@@ -264,7 +263,7 @@ CUTTYPES="NTel2-PointSource-Moderate
 if [[ $ANATYPE = "NN"* ]]; then
     CUTTYPES="NTel2-PointSource-SuperSoft"
 fi
-CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
+CUTTYPES=$(echo $CUTTYPES |tr '\r' ' ')
 CUTTYPES=${CUTTYPES//$'\n'/}
 
 echo "===== Start submission ====="

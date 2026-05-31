@@ -140,11 +140,11 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
     echo "" >> $FLIST
     # preparing effective area and radial acceptance names
     RUNINFO=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" -runinfo)
-    EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
-    MAJOREPOCH=`echo $RUNINFO | awk '{print $(2)}'`
-    ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
+    EPOCH=$(echo "$RUNINFO" | awk '{print $(1)}')
+    MAJOREPOCH=$(echo $RUNINFO | awk '{print $(2)}')
+    ATMO=${FORCEDATMO:-$(echo $RUNINFO | awk '{print $(3)}')}
     OBSL=$(echo $RUNINFO | awk '{print $4}')
-    TELTOANA=`echo $RUNINFO | awk '{print "T"$(5)}'`
+    TELTOANA=$(echo $RUNINFO | awk '{print "T"$(5)}')
 
     ATMO=$(prepare_atmo_string $ATMO $EPOCH $OBSL)
 
@@ -231,9 +231,11 @@ $EVNDISPSYS/bin/anasum   \
     -d $INDIR            \
     -o $OUTPUTDATAFILE   &> $OUTPUTLOGFILE
 
-echo "$(inspect_executables)" >> ${OUTPUTLOGFILE}
-echo "INDIR ${INDIR}" >> ${OUTPUTLOGFILE}
-echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}" >> ${OUTPUTLOGFILE}
+{
+    inspect_executables
+    echo "INDIR ${INDIR}"
+    echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}"
+} >> "${OUTPUTLOGFILE}"
 
 if [[ -e "$OUTPUTLOGFILE" ]]; then
     $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$(dirname $OUTPUTDATAFILE)/$(basename $OUTPUTLOGFILE)"

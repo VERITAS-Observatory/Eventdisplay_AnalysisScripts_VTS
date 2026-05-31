@@ -46,9 +46,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # date used in run scripts / log file directories
 DATE=$(date +"%y%m%d")
@@ -65,7 +64,7 @@ SIMTYPE=$5
 [[ "${9}" ]] && UUID=${9} || UUID=${DATE}-$(uuidgen)
 
 # Generate EA base file name based on cuts file
-CUTS_NAME=`basename $CUTSFILE`
+CUTS_NAME=$(basename $CUTSFILE)
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
 CUTS_NAME=${CUTS_NAME%%.dat}
 
@@ -140,13 +139,13 @@ echo "Run script written to: $FSCRIPT"
 
 # run locally or on cluster
 SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
+    JOBID=$($SUBC $FSCRIPT.sh)
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"

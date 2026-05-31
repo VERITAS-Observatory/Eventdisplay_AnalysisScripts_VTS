@@ -32,8 +32,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RUNNUM=$1
@@ -51,7 +50,7 @@ fi
 CALIBDIR="$VERITAS_USER_DATA_DIR/"
 
 # Check if source vbf file exists
-SF=`find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf"`
+SF=$(find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf")
 if [ ${#SF} = 0 ]; then
     echo "ERROR: VERITAS source (VBF laser/flasher) file $RUNNUM.cvbf not found in $VERITAS_DATA_DIR/data/"
     exit 1
@@ -67,7 +66,7 @@ if [[ $RUNMODE == 2 ]]; then
 fi
 
 # calculate gains, looping over all telescopes
-TELTOANA=`echo $TELTOANA | fold -w1`
+TELTOANA=$(echo $TELTOANA | fold -w1)
 for i in $TELTOANA; do
     echo "Calculating gains for run $RUNNUM, telescope $i"
     $EVNDISPSYS/bin/evndisp -teltoana=$i $OPT

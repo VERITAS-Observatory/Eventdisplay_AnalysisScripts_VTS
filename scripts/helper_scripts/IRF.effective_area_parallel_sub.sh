@@ -67,14 +67,14 @@ do
 done
 # cp MC file to TMPDIR
 cp -f -v "$MCFILE" "$DDIR"/
-MCFILE=`basename $MCFILE`
+MCFILE=$(basename $MCFILE)
 MCFILE=${DDIR}/${MCFILE}
 
 # Check that cuts file exists
 CUTSFILE=${CUTSFILE%%.dat}
-CUTS_NAME=`basename $CUTSFILE`
+CUTS_NAME=$(basename $CUTSFILE)
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-if [[ "$CUTSFILE" == `basename $CUTSFILE` ]]; then
+if [[ "$CUTSFILE" == $(basename $CUTSFILE) ]]; then
     CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
 else
     CUTSFILE="$CUTSFILE.dat"
@@ -134,7 +134,7 @@ rm -f $OSUBDIR/$OFILE.root
 $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
 echo "Filling log file into root file"
-echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
 cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
 $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
 rm -f $OSUBDIR/$EAPARAMS.log

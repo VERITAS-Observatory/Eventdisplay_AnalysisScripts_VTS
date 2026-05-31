@@ -52,7 +52,7 @@ mkdir -p $ODIR
 echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/V2DL3-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
@@ -69,7 +69,7 @@ echo -e "Processing $NFILELISTS file lists (equal to number of jobs)"
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.v2dl3_sub"
-TIMETAG=`date +"%s"`
+TIMETAG=$(date +"%s")
 
 for J in ${FILELISTS}
 do
@@ -87,13 +87,13 @@ do
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
         echo "$SUBC"
         exit
     fi
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        JOBID=$($SUBC $FSCRIPT.sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2

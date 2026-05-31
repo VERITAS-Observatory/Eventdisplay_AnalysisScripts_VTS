@@ -45,9 +45,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 EPOCH="$1"
 ATM="$2"
@@ -137,13 +136,13 @@ do
 
         # run locally or on cluster
         SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-        SUBC=`eval "echo \"$SUBC\""`
+        SUBC=$(eval "echo \"$SUBC\"")
         if [[ $SUBC == *"ERROR"* ]]; then
             echo $SUBC
             exit
         fi
         if [[ $SUBC == *qsub* ]]; then
-            JOBID=`$SUBC $FSCRIPT`
+            JOBID=$($SUBC $FSCRIPT)
             echo "RUN $RUNNUM: JOBID $JOBID"
         elif [[ $SUBC == *condor* ]]; then
             "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"

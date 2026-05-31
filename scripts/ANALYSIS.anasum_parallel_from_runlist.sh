@@ -63,9 +63,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
 RUNLIST=$1
@@ -202,7 +201,7 @@ NRUNS=$(cat "$RUNLIST" | sort -u | wc -l)
 echo "total number of runs to analyze: $NRUNS"
 
 # Check that run parameter file exists
-if [[ "$RUNP" == `basename $RUNP` ]]; then
+if [[ "$RUNP" == $(basename $RUNP) ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
@@ -211,7 +210,7 @@ if [[ ! -f "$RUNP" ]]; then
 fi
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.${CUTS}-${DATE}-$(uuidgen)"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
@@ -222,7 +221,7 @@ mkdir -p "$ODIR"
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_sub"
-TIMETAG=`date +"%s"`
+TIMETAG=$(date +"%s")
 
 # directory schema
 getNumberedDirectory()
@@ -295,13 +294,13 @@ for RUN in "${RUNS[@]}"; do
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
         echo "$SUBC"
         exit
     fi
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        JOBID=$($SUBC $FSCRIPT.sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2

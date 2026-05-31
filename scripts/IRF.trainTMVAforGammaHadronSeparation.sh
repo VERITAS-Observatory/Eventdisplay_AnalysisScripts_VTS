@@ -44,9 +44,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 BDIR="$1"
 RUNPAR="$2"
@@ -86,7 +85,7 @@ if [[ ! -d "$BDIR" ]]; then
 fi
 
 # Check that TMVA run parameter file exists
-if [[ "$RUNPAR" == `basename $RUNPAR` ]]; then
+if [[ "$RUNPAR" == $(basename $RUNPAR) ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
 if [[ ! -f "$RUNPAR" ]]; then
@@ -94,7 +93,7 @@ if [[ ! -f "$RUNPAR" ]]; then
     exit 1
 fi
 
-RXPAR=`basename $RUNPAR .runparameter`
+RXPAR=$(basename $RUNPAR .runparameter)
 echo "Original TMVA run parameter file: $RXPAR.runparameter "
 
 LOGDIR="$ODIR/TMVA.ANADATA.${UUID}"
@@ -113,23 +112,23 @@ if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
-    for (( i=0; i < $NENE; i++ ))
+    NENE=$(( ${#EBINARRAY[@]}-count1 )) # get number of bins
+    for (( i=0; i < NENE; i++ ))
     do
-        EBINMIN[$i]=${EBINARRAY[$i]}
-        EBINMAX[$i]=${EBINARRAY[$i+1]}
+        EBINMIN[i]=${EBINARRAY[i]}
+        EBINMAX[i]=${EBINARRAY[i+1]}
     done
 else
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
+    NENE=$(( ${#EBINARRAY[@]}-count1 )) # get number of bins
     z="0"
-    for (( i=0; i < $NENE; i+=2 ))
+    for (( i=0; i < NENE; i+=2 ))
     do
-        EBINMIN[$z]=${EBINARRAY[$i]}
-        EBINMAX[$z]=${EBINARRAY[$i+1]}
-        let "z = ${z} + 1"
+        EBINMIN[z]=${EBINARRAY[i]}
+        EBINMAX[z]=${EBINARRAY[i+1]}
+        (( z++ ))
     done
     NENE=$((${#EBINMAX[@]}))
 fi
@@ -138,7 +137,7 @@ fi
 # zenith angle bins
 ZEBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
 mapfile -t ZEBINARRAY <<< "$ZEBINS"
-NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
+NZEW=$(( ${#ZEBINARRAY[@]}-count1 )) #get number of bins
 
 #####################################
 # zenith angle bins of MC simulation files
@@ -163,15 +162,15 @@ SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_
 
 ###############################################################
 # loop over all energy/zenith bins and submit a job for each bin
-for (( i=0; i < $NENE; i++ ))
+for (( i=0; i < NENE; i++ ))
 do
    echo "==========================================================================="
    echo " "
-   echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINMIN[$i]} to ${EBINMAX[$i]} (in log TeV)"
-   for (( j=0; j < $NZEW; j++ ))
+   echo "Energy Bin: $((i+count1)) of $NENE: ${EBINMIN[$i]} to ${EBINMAX[$i]} (in log TeV)"
+   for (( j=0; j < NZEW; j++ ))
    do
       echo "---------------------------------------------------------------------------"
-      echo "Zenith Bin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
+      echo "Zenith Bin: $((j+count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
 
       # updating the run parameter file for each parameter space
       RFIL=$ODIR/$RXPAR"_$i""_$j"
@@ -185,11 +184,11 @@ do
       nTrainSignal=200000
       nTrainBackground=200000
 
-      echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
-
-      echo "* OUTPUTFILE ODIR ${ONAME}_${i}_${j}" >> $RFIL.runparameter
-
-      echo "#######################################################################################" >> $RFIL.runparameter
+      {
+          echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground"
+          echo "* OUTPUTFILE ODIR ${ONAME}_${i}_${j}"
+          echo "#######################################################################################"
+      } >> "$RFIL.runparameter"
       # signal and background files (depending on on-axis or cone data set)
       # Collect all signal files first, then write in one batch
       {

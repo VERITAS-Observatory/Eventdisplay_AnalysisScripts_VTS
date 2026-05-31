@@ -34,7 +34,7 @@ compare_log_file()
 add_log_file()
 {
      # first check if logFile is already included in evndisp file
-     LCON=$($EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root | grep "Error: log file object" | wc -l)
+     LCON=$($EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root | grep -c "Error: log file object")
      if [[ ${LCON} == 1 ]]; then
          echo "writing log file ${2}"
          if [[ -f ${2} ]]; then

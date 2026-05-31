@@ -66,9 +66,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # create extra stdout for duplication of command output
 # look for ">&5" below
@@ -112,13 +111,13 @@ if [ ! -f "$RLIST" ] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-FILES=`cat "$RLIST"`
+FILES=$(cat "$RLIST")
 
-NRUNS=`cat "$RLIST" | wc -l `
+NRUNS=$(cat "$RLIST" | wc -l )
 echo "total number of runs to analyze: $NRUNS"
 echo
 # run scripts are written into this directory
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/EVN.${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
@@ -127,7 +126,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.evndisp_sub"
 # run locally or on cluster
 SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$(eval "echo \"$SUBC\"")
 
 if [[ $SUBC == *parallel* ]]; then
    touch $LOGDIR/runscripts.sh
@@ -255,7 +254,7 @@ do
     fi
 
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        JOBID=$($SUBC $FSCRIPT.sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -299,10 +298,12 @@ if [[ $SUBC == *parallel* ]]; then
     echo "$LOGDIR/runscripts.sh"
     echo
     chmod +x $LOGDIR/runscripts.sh
-    echo "echo \"==================================\"" >> Run_me.sh
-    echo "echo \"List of scripts to run\"" >> Run_me.sh
-    cat $LOGDIR/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/' >> Run_me.sh
-    echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC" >> Run_me.sh
+    {
+        echo "echo \"==================================\""
+        echo "echo \"List of scripts to run\""
+        cat $LOGDIR/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/'
+        echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC"
+    } >> Run_me.sh
     chmod +x Run_me.sh
 # shellcheck source=/dev/null
     source Run_me.sh

@@ -256,7 +256,7 @@ read_pixel_data()
 {
     read_run_from_DB L1_TriggerInfo
 
-    for (( j=0; j<${NTEL}; j++ ));
+    for (( j=0; j<NTEL; j++ ));
     do
         read_run_from_DB FADCsettings ${RUN} $j 1
         read_run_from_DB HVsettings ${RUN} $j 1
@@ -269,7 +269,7 @@ read_laser_calibration()
     for L in "${LASERRUN[@]}"
     do
         excluded_telescopes=$(get_excluded_telescopes ${L})
-        for (( j=1; j<=${NTEL}; j++ ));
+        for (( j=1; j<=NTEL; j++ ));
         do
             bittest=$(hasbitset $excluded_telescopes $j)
             if [[ $bittest == "1" ]] && [[ $excluded_telescopes != "0" ]]; then
@@ -283,7 +283,7 @@ read_laser_calibration()
 
 read_pointing()
 {
-    for (( j=0; j<${NTEL}; j++ ));
+    for (( j=0; j<NTEL; j++ ));
     do
         read_run_from_DB VPM ${RUN} $j 1
         read_run_from_DB rawpointing ${RUN} $j 1

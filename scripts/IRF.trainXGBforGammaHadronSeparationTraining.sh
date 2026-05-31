@@ -38,9 +38,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 BDIR="$1"
 RUNPAR="$2"
@@ -78,7 +77,7 @@ if [[ ! -d "$BDIR" ]]; then
 fi
 
 # Check that XGB run parameter file exists
-if [[ "$RUNPAR" == `basename $RUNPAR` ]]; then
+if [[ "$RUNPAR" == $(basename $RUNPAR) ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
 if [[ ! -f "$RUNPAR" ]]; then
@@ -149,7 +148,7 @@ echo "Background file list: $BCKLIST"
 rm -f "${BCKLIST}"
 touch "${BCKLIST}"
 tmpfile=$(mktemp)
-for ((i=0; i<${NEZE}; i++)); do
+for ((i=0; i<NEZE; i++)); do
   if [[ ! -d "${BDIR}/Ze_${i}" ]]; then
       echo "Error, directory with background files ${BDIR}/Ze_${i} not found, exiting..."
       exit 1
@@ -161,7 +160,7 @@ rm "$tmpfile"
 
 ###############################################################
 # loop over energy bins and submit a job for each bin
-for (( i=0; i < $NENE; i++ )); do
+for (( i=0; i < NENE; i++ )); do
     echo "Energy Bin: $i"
 
     FSCRIPT=$LOGDIR/XGBGAMMA"_$EPOCH""_ENERGY$i.sh"

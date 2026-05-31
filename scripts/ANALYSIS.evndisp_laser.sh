@@ -34,8 +34,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 CDIR=$(dirname "$0")
 
 # Parse command line arguments
@@ -48,12 +47,12 @@ if [[ ! -f "$RLIST" ]] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-RUNNUMS=`cat $RLIST`
+RUNNUMS=$(cat $RLIST)
 echo "Laser files to analyze:"
 echo $RUNNUMS
 
 # Output directory for error/output from batch system
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANADATA"
 echo "Log files will be written to: $LOGDIR"
 mkdir -p $LOGDIR
@@ -65,7 +64,7 @@ SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.evndisp_laser_sub"
 # loop over all files in files loop
 for RUN in $RUNNUMS; do
     # check if laser file exists
-    #DFILE=`find -L $VERITAS_DATA_DIR/data/ -name "$RUN.cvbf"`
+    #DFILE=$(find -L $VERITAS_DATA_DIR/data/ -name "$RUN.cvbf")
     #if [ -z "$DFILE" ]; then
     #    echo "Error: laser vbf file not found for run $RUN"
     #    continue
@@ -91,9 +90,9 @@ for RUN in $RUNNUMS; do
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        JOBID=$($SUBC $FSCRIPT.sh)
 
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then

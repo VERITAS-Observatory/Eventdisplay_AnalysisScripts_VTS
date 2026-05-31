@@ -53,7 +53,7 @@ ls -1 "${DDIR}"/*.root > "$DDIR/$FLIST"
 $EVNDISPSYS/bin/combineLookupTables "$DDIR/$FLIST" "$DDIR/$OFILE.root" median &> "$ODIR/$OFILE.log"
 
 # log files
-echo "$(inspect_executables)" >> "$ODIR/$OFILE.log"
+inspect_executables >> "$ODIR/$OFILE.log"
 cp -v "$ODIR/$OFILE.log" "$DDIR/$OFILE.log"
 $EVNDISPSYS/bin/logFile makeTableCombineLog "$DDIR/$OFILE.root" "$DDIR/$OFILE.log"
 $EVNDISPSYS/bin/logFile makeTableFileList "$DDIR/$OFILE.root" "$DDIR/$FLIST"

@@ -4,19 +4,19 @@
 
 #echo "\$#:$#   \$1:$1   \$2:$2   \$3:$3   \$4:$4"
 
-ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
+ISPIPEFILE=$(readlink /dev/fd/0) # check to see if input is from terminal, or from a pipe
 #echo "\$ISPIPEFILE: '$ISPIPEFILE'"
 if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pipe)
 	if ! [ $# -eq 2 ] ; then # the human didn't add any arguments, and we must tell them so
 		echo "Prints the run numbers that are of the specific run versions runs."
 		echo "  for just V4 runs, do"
-		echo "    $ `basename $0` 4 <file of runs>"
+		echo "    $ $(basename $0) 4 <file of runs>"
 		echo "  for just V5 runs, do"
-		echo "    $ `basename $0` 5 <file of runs>"
+		echo "    $ $(basename $0) 5 <file of runs>"
 		echo "  for just V6_2014 and V6_2015 (scaling tests, do not use in production) runs, do"
-		echo "    $ `basename $0` 6_2014,6_2015 <file of runs>"
+		echo "    $ $(basename $0) 6_2014,6_2015 <file of runs>"
 		echo "  to print all V5 and V6 runs, do"
-		echo "    $ `basename $0` 5,6 <file of runs>"
+		echo "    $ $(basename $0) 5,6 <file of runs>"
 		exit
 	fi
 fi
@@ -29,7 +29,7 @@ if [ ! -e $RUNFILE ] ; then
 	echo "File $RUNFILE could not be found in $PWD , sorry."
 	exit
 fi
-RUNLIST=`cat $RUNFILE`
+RUNLIST=$(cat $RUNFILE)
 #echo "RUNLIST:$RUNLIST"
 
 # how should we get the array epochs?

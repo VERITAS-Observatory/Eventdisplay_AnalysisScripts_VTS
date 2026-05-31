@@ -49,13 +49,12 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$($EVNDISPSYS/bin/evndisp --version | tr -d .)
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 
 # Parse command line arguments
 SIMDIR=$1
@@ -104,7 +103,7 @@ elif [ ${SIMTYPE:0:4} = "CARE" ]; then
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
 fi
 
-INT_WOBBLE=`echo "$WOBBLE*100" | bc | awk -F '.' '{print $1}'`
+INT_WOBBLE=$(echo "$WOBBLE*100" | bc | awk -F '.' '{print $1}')
 if [[ ${#INT_WOBBLE} -lt 2 ]]; then
    INT_WOBBLE="000"
 elif [[ ${#INT_WOBBLE} -lt 3 ]]; then
@@ -207,7 +206,7 @@ do
        TMSF=$(echo "${FF%?}*25.0" | bc)
     fi
 
-    TMUNI=$(echo "${FF: -1}")
+    TMUNI="${FF: -1}"
     tmpdir_size=${TMSF%.*}$TMUNI
     echo "Setting TMPDIR_SIZE to $tmpdir_size"
 
@@ -223,14 +222,14 @@ do
     chmod u+x $FSCRIPT.sh
     echo $FSCRIPT.sh
 
-    let "RUNNUM = ${RUNNUM} + 100"
+    (( RUNNUM += 100 ))
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     echo "$SUBC"
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        JOBID=$($SUBC $FSCRIPT.sh)
         echo "RUN $RUNNUM: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
         "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"

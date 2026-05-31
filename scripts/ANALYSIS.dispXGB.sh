@@ -51,7 +51,7 @@ mkdir -p $ODIR
 echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/XGB-${XGB_TYPE}-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
@@ -59,7 +59,7 @@ rm -f ${LOGDIR}/x* 2>/dev/null
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.dispXGB_sub"
-TIMETAG=`date +"%s"`
+TIMETAG=$(date +"%s")
 
 for RUNN in $FILES
 do
@@ -77,7 +77,7 @@ do
     echo $FSCRIPT.sh
 
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *condor* ]]; then
         "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo

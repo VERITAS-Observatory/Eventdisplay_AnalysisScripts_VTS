@@ -8,9 +8,9 @@ HELPFLAG=false # if true, print help text and exit
 PRINTPATH=false # if true, print full path of file on disl
 DOWNLOADFLAG=true
 RAWDATASERVER=$(grep "\* VTSRAWDATA" $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter  | awk '{print $3}')
-#echo "INP:'`basename $0`' '$1' '$2' '$3'"
+#echo "INP:'$(basename $0)' '$1' '$2' '$3'"
 
-ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
+ISPIPEFILE=$(readlink /dev/fd/0) # check to see if input is from terminal, or from a pipe
 if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pipe)
 	if [ "$#" -eq "1" ] ; then # format is "exe <fname>"
 		RUNFILE=$1
@@ -22,7 +22,7 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pi
 			PRINTPATH=true
 			RUNFILE=$2
 		else
-			echo " Error: `basename $0` doesn't understand flag $1.  Only acceptable flag is -n"
+			echo " Error: $(basename $0) doesn't understand flag $1.  Only acceptable flag is -n"
 			HELPFLAG=true
 		fi
 	else
@@ -43,7 +43,7 @@ else # it is a pipe
             DATFLAG=true
 			RUNFILE=$2
 		else
-			echo " Error: `basename $0` doesn't understand flag $1.  Only acceptable flag is -n"
+			echo " Error: $(basename $0) doesn't understand flag $1.  Only acceptable flag is -n"
 			HELPFLAG=true
 		fi
 	else
@@ -55,13 +55,13 @@ fi
 if $HELPFLAG ; then
 	echo
 	echo "Prints the run numbers that ARE stored on disk." ; echo
-	echo " $ `basename $0` <file of runs>" ; echo
+	echo " $ $(basename $0) <file of runs>" ; echo
 	echo "Prints the full path of runs that ARE stored on disk." ; echo
-	echo " $ `basename $0` -p <file of runs>" ; echo
+	echo " $ $(basename $0) -p <file of runs>" ; echo
 	echo "Prints the run numbers that are NOT stored on disk" ; echo
-	echo " $ `basename $0` -n <file of runs>" ; echo
-	echo " $ cat <file of runs> | `basename $0`" ; echo
-	echo " $ cat <file of runs> | `basename $0` -n" ; echo
+	echo " $ $(basename $0) -n <file of runs>" ; echo
+	echo " $ cat <file of runs> | $(basename $0)" ; echo
+	echo " $ cat <file of runs> | $(basename $0) -n" ; echo
 	exit
 fi
 
@@ -73,7 +73,7 @@ if [ ! -e $RUNFILE ] ; then
 	echo "File '$RUNFILE' could not be found, sorry."
 	exit
 fi
-RUNLISTTMP=`cat $RUNFILE`
+RUNLISTTMP=$(cat $RUNFILE)
 RUNLIST=$(echo "$RUNLISTTMP" | grep -oP "^\d+$" )
 if [ -z "$RUNLIST" ] ; then
   >&2 echo "Error, RUNLIST.whichRunsAreOnDisk.sh : input file/pipe $RUNLISTTMP contains no runs, exiting..."
@@ -83,7 +83,7 @@ fi
 #echo "Files not on disk:"
 
 # find the veritas db url
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit
@@ -97,7 +97,7 @@ MYSQL="mysql -u readonly -h $MYSQLDB -A"
 COUNT=0
 SUB=""
 for ARUN in $RUNLIST ; do
-	if (( $ARUN > 0 )); then
+	if (( ARUN > 0 )); then
 		if [[ "$COUNT" -eq 0 ]] ; then
 			SUB="run_id = $ARUN"
 		else

@@ -128,12 +128,14 @@ $EVNDISPSYS/bin/anasum \
 RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${OUTPUTDATAFILE}.root -runinfo)
 TMPTARGET=$(echo $RUNINFO | cut -d\  -f7- )
 if [[ ${TMPTARGET} == "Crab" ]]; then
-    echo "========================== SENSITIVITY ESTIMATE ==========================" >> ${OUTFILE}.log
-    $EVNDISPSYS/bin/printCrabSensitivity ${OUTPUTDATAFILE}.root >> ${OUTFILE}.log
-    echo "========================== ==========================" >> ${OUTFILE}.log
+    {
+        echo "========================== SENSITIVITY ESTIMATE =========================="
+        $EVNDISPSYS/bin/printCrabSensitivity ${OUTPUTDATAFILE}.root
+        echo "========================== =========================="
+    } >> "${OUTFILE}.log"
 fi
 
-echo "$(inspect_executables)" >> ${OUTFILE}.log
+inspect_executables >> ${OUTFILE}.log
 
 # log file into root file
 $EVNDISPSYS/bin/logFile \

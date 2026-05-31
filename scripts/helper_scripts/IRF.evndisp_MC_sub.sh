@@ -217,7 +217,7 @@ if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
     rm -f $ODIR/$RUNNUM.ped.log
     PEDOPT="-runmode=1 -calibrationnevents=${PEDNEVENTS}"
     $EVNDISPSYS/bin/evndisp $MCOPT $PEDOPT &> "$ODIR/$RUNNUM.ped.log"
-    echo "$(inspect_executables)" >> "$ODIR/$RUNNUM.ped.log"
+    inspect_executables >> "$ODIR/$RUNNUM.ped.log"
     if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.ped.log;
     then
         echo "   successful pedestal analysis"
@@ -239,7 +239,7 @@ if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
 fi
 echo "$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT" &> $ODIR/$RUNNUM.tzero.log
 $EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT &>> $ODIR/$RUNNUM.tzero.log
-echo "$(inspect_executables)" &>> "$ODIR/$RUNNUM.tzero.log"
+inspect_executables &>> "$ODIR/$RUNNUM.tzero.log"
 if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.tzero.log;
 then
     echo "   successful tzero analysis"
@@ -267,7 +267,7 @@ fi
 echo "Analysing MC file for run $RUNNUM"
 echo "$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT" &> $ODIR/$ONAME.log
 $EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
-echo "$(inspect_executables)" >> "$ODIR/$ONAME.log"
+inspect_executables >> "$ODIR/$ONAME.log"
 
 #################################################################################
 # cleanup
@@ -284,7 +284,7 @@ echo "EVNDISP log file written to $ODIR/$ONAME.log"
 add_log_file()
 {
      # first check if logFile is already included in evndisp file
-     LCON=$($EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root | grep "Error: log file object" | wc -l)
+     LCON=$($EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root | grep -c "Error: log file object")
      if [[ ${LCON} == 1 ]]; then
          echo "writing log file ${2}"
          if [[ -f ${2} ]]; then

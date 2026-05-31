@@ -5,18 +5,18 @@
 CONORM="\e[0m"
 CORED='\e[1;31m'
 
-ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
+ISPIPEFILE=$(readlink /dev/fd/0) # check to see if input is from terminal, or from a pipe
 if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pipe)
 	if ! [ $# -eq 2 ] ; then # the human didn't add any arguments, and we must tell them so
 		echo
 		echo "From a runlist or pipe, prints the run numbers that are of a particular wobble or wobbles."
-		echo " $ `basename $0` [nsew] <file of runs>" ; echo
+		echo " $ $(basename $0) [nsew] <file of runs>" ; echo
 		echo "Print list of only north wobble runs:"
-		echo " $ `basename $0` n myrunlist.dat" ; echo
+		echo " $ $(basename $0) n myrunlist.dat" ; echo
 		echo "Print list of only south and east wobble runs:"
-		echo " $ `basename $0` se myrunlist.dat" ; echo
+		echo " $ $(basename $0) se myrunlist.dat" ; echo
 		echo "Works with pipes : "
-		echo " $ cat myrunlist.dat | `basename $0` w" ; echo
+		echo " $ cat myrunlist.dat | $(basename $0) w" ; echo
 		exit
 	fi
 fi
@@ -29,7 +29,7 @@ if [ ! -e $RUNFILE ] ; then
 	echoerr "File $RUNFILE could not be found in $PWD , sorry."
 	exit 1
 fi
-RUNLIST=`cat $RUNFILE`
+RUNLIST=$(cat $RUNFILE)
 #echo "RUNLIST:$RUNLIST"
 
 NORTFLAG=false
@@ -37,7 +37,7 @@ SOUTFLAG=false
 EASTFLAG=false
 WESTFLAG=false
 
-LOWARG=`echo "$1" | tr '[:upper:]' '[:lower:]'` # make all uppercase letters in arg 1 lowercase, for easier handling
+LOWARG=$(echo "$1" | tr '[:upper:]' '[:lower:]') # make all uppercase letters in arg 1 lowercase, for easier handling
 #echo "\$LOWARG: '$LOWARG'"
 if [[ "$LOWARG" == *n* ]] ; then NORTFLAG=true ; fi
 if [[ "$LOWARG" == *s* ]] ; then SOUTFLAG=true ; fi
@@ -45,7 +45,7 @@ if [[ "$LOWARG" == *e* ]] ; then EASTFLAG=true ; fi
 if [[ "$LOWARG" == *w* ]] ; then WESTFLAG=true ; fi
 
 # get database url from parameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
@@ -61,7 +61,7 @@ MYSQL="mysql -u readonly -h $MYSQLDB -A"
 COUNT=0
 SUB=""
 for ARUN in $RUNLIST ; do
-	if (( $ARUN > 0 )); then
+	if (( ARUN > 0 )); then
 		if [[ "$COUNT" -eq 0 ]] ; then
 			SUB="run_id = $ARUN"
 		else

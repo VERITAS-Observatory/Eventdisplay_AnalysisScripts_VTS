@@ -3,15 +3,15 @@
 # from a run list, prints the list of runs that were taken in a specific observing mode (observing, obsLowHV, obsFilter,...)
 #
 
-ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
+ISPIPEFILE=$(readlink /dev/fd/0) # check to see if input is from terminal, or from a pipe
 if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pipe)
 	if ! [ $# -eq 2 ] ; then # the human didn't add any arguments, and we must tell them so
 		echo
 		echo "From a runlist or pipe, prints the run numbers that have been taken in a particular observing mode."
 		echo "Usage: "
-		echo " $ `basename $0` <mode> <file of runs>"
+		echo " $ $(basename $0) <mode> <file of runs>"
 		echo "or"
-		echo " $ cat myrunlist.dat | `basename $0` <mode>" ; echo
+		echo " $ cat myrunlist.dat | $(basename $0) <mode>" ; echo
 		echo "   <mode> = observing for regular runs"
 		echo "            obsLowHV for runs taken with reduced HV"
 		echo "            obsFilter for runs taken with UV filters"
@@ -28,13 +28,13 @@ if [ ! -e $RUNFILE ] ; then
 	echoerr "File $RUNFILE could not be found in $PWD , sorry."
 	exit 1
 fi
-RUNLIST=`cat $RUNFILE`
+RUNLIST=$(cat $RUNFILE)
 #echo "RUNLIST:$RUNLIST"
 
 MODE="$1"
 
 # get database url from parameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
@@ -50,7 +50,7 @@ MYSQL="mysql -u readonly -h $MYSQLDB -A"
 COUNT=0
 SUB=""
 for ARUN in $RUNLIST ; do
-	if (( $ARUN > 0 )); then
+	if (( ARUN > 0 )); then
 		if [[ "$COUNT" -eq 0 ]] ; then
 			SUB="run_id = $ARUN"
 		else

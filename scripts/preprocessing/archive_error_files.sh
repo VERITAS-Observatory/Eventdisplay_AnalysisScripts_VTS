@@ -16,7 +16,7 @@ fi
 
 RUNLIST=${1}
 
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$($EVNDISPSYS/bin/evndisp --version | tr -d .)
 # list of data products
 DP="evndisp mscw anasum_moderate2tel"
 # archive directory

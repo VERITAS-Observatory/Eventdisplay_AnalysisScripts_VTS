@@ -50,8 +50,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RLIST=$1
@@ -61,7 +60,7 @@ EPOCH=$4
 SIM=$5
 RECID="$6"
 # make radial acceptance version
-IRFVERSION=`$EVNDISPSYS/bin/makeRadialAcceptance --version | tr -d . | sed -e 's/[a-Z]*$//'`
+IRFVERSION=$($EVNDISPSYS/bin/makeRadialAcceptance --version | tr -d . | sed -e 's/[a-Z]*$//')
 # version string for aux files
 AUX="auxv01"
 
@@ -82,7 +81,7 @@ fi
 CUTLIST=$(IFS=$'\r\n'; cat "$CUTLISTFILE")
 
 # run scripts and logs are written into this directory
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/RADIAL"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
@@ -111,7 +110,7 @@ for CUTS in "${CUTLIST[@]}"; do
 
             # Check that cuts file exists
             CUTSFILE=${CUTS%%.dat}.dat
-            if [[ "$CUTSFILE" == `basename $CUTSFILE` ]]; then
+            if [[ "$CUTSFILE" == $(basename $CUTSFILE) ]]; then
                 CUTSFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/$CUTSFILE"
             fi
             if [[ ! -f "$CUTSFILE" ]]; then
@@ -121,7 +120,7 @@ for CUTS in "${CUTLIST[@]}"; do
             fi
 
             METH="${VERITAS_ANALYSIS_TYPE/_/-}"
-	        CUTSNAME=`basename $CUTSFILE`
+	        CUTSNAME=$(basename $CUTSFILE)
             # Generate base file name based on cuts file, extended and point source radial acceptances are the same
             CUTSNAME=${CUTSNAME##ANASUM.GammaHadron-}
             CUTSNAME=${CUTSNAME%%.dat}
@@ -153,14 +152,14 @@ for CUTS in "${CUTLIST[@]}"; do
             # run locally or on cluster
             SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
             echo "$LOGDIR"
-            SUBC=`eval "echo \"$SUBC\""`
+            SUBC=$(eval "echo \"$SUBC\"")
             if [[ $SUBC == *"ERROR"* ]]; then
                 echo $SUBC
                 exit
             fi
             if [[ $SUBC == *qsub* ]]; then
                 echo "$SUBC" "$FSCRIPT.sh"
-                JOBID=`$SUBC $FSCRIPT.sh`
+                JOBID=$($SUBC $FSCRIPT.sh)
                 echo "JOBID: $JOBID"
             elif [[ $SUBC == *condor* ]]; then
                 "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"

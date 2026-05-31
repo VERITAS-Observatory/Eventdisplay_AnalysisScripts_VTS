@@ -55,9 +55,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 
 SIMDIR="$1"
@@ -196,7 +195,7 @@ touch "${FSCRIPT}.txt"
 
 for V in $VBFNAME; do
     echo "$RUNNUM $(basename $V)" >> "${FSCRIPT}.txt"
-    let "RUNNUM = ${RUNNUM} + 100"
+    (( RUNNUM += 100 ))
 done
 
 # Job submission script

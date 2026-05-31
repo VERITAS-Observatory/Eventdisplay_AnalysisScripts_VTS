@@ -56,5 +56,5 @@ echo "File list: $ODIR/$OFILE.list"
 $EVNDISPSYS/bin/combineEffectiveAreas "$OPTODIR/$OFILE.list" ${OPTODIR}/$OFILE DL3reduced &> ${ODIR}/$OFILE.log
 
 # log files
-echo "$(inspect_executables)" >> "$ODIR/$OFILE.log"
+inspect_executables >> "$ODIR/$OFILE.log"
 $EVNDISPSYS/bin/logFile effAreaCombineLog "${OPTODIR}/$OFILE.root" "${OPTODIR}/$OFILE.log"

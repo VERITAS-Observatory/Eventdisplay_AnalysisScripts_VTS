@@ -27,8 +27,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RUNNUM=$1

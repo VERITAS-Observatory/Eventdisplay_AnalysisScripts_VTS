@@ -188,7 +188,7 @@ if [[ $CALIB == "1" || $CALIB == "2" || $CALIB == "4" || $CALIB == "5" ]]; then
         -reconstructionparameter "$ACUTS" \
         "${OPT[@]}" \
         -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.ped.log"
-    echo "$(inspect_executables)" >> "$LOGDIR/$RUN.ped.log"
+    inspect_executables >> "$LOGDIR/$RUN.ped.log"
     echo "RUN$RUN PEDLOG $LOGDIR/$RUN.ped.log"
 fi
 
@@ -221,7 +221,7 @@ if [[ $CALIB == "1" || $CALIB == "3" || $CALIB == "4" || $CALIB == "5" ]]; then
         -reconstructionparameter "$ACUTS" \
         "${OPT[@]}" \
         -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log"
-    echo "$(inspect_executables)" >> "$LOGDIR/$RUN.tzero.log"
+    inspect_executables >> "$LOGDIR/$RUN.tzero.log"
     echo "RUN$RUN TZEROLOG $LOGDIR/$RUN.tzero.log"
 fi
 
@@ -256,7 +256,7 @@ LOGFILE="$LOGDIR/$RUN.log"
         -outputfile "$TEMPDIR/$RUN.root" \
         "${OPT[@]}" \
         -calibrationdirectory "$CALDIR" &> "$LOGFILE"
-    echo "$(inspect_executables)" >> "$LOGFILE"
+    inspect_executables >> "$LOGFILE"
     echo "RUN$RUN EVNDISPLOG $LOGFILE"
 fi
 

@@ -26,8 +26,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RUNLIST=$1
@@ -55,8 +54,8 @@ getNumberedDirectory()
     echo ${NDIR}
 }
 
-RUNS=`cat "$RUNLIST"`
-NRUNS=`cat "$RUNLIST" | wc -l `
+RUNS=$(cat "$RUNLIST")
+NRUNS=$(cat "$RUNLIST" | wc -l )
 echo "total number of runs to be linked: $NRUNS"
 
 for RUN in "${RUNS[@]}"; do

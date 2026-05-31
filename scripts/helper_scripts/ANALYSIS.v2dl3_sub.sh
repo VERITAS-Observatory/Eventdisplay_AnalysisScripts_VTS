@@ -23,8 +23,8 @@ echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 
 # run list
-FILES=`cat "$RUNLIST"`
-NRUNS=`cat "$RUNLIST" | wc -l `
+FILES=$(cat "$RUNLIST")
+NRUNS=$(cat "$RUNLIST" | wc -l )
 echo "total number of runs to analyze: $NRUNS"
 echo
 

@@ -172,7 +172,7 @@ if [ $DISPBDT -eq 1 ]; then
     echo "Reading DISPBDT XML files from ${DISPDIR}" >> $logfile
 fi
 
-echo "$(inspect_executables)" >> "$logfile"
+inspect_executables >> "$logfile"
 cp -v "$logfile" "$DDIR/$OFILE.log"
 $EVNDISPSYS/bin/logFile mscwTableLog $outputfilename "$DDIR/$OFILE.log"
 
@@ -363,7 +363,7 @@ PARAMFILE="
         $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
 
         echo "Filling effAreaLog file into root file: $OSUBDIR/$EAPARAMS.log"
-        echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+        inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
         cp "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
         $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
         echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"

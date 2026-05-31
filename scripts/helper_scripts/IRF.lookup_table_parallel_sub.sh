@@ -103,6 +103,6 @@ $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -arrayrecid=$RECID \
                             -woff=$WOBBLE &> "$logfile"
 
-echo "$(inspect_executables)" >> "$logfile"
+inspect_executables >> "$logfile"
 $EVNDISPSYS/bin/logFile makeTableLog "${DDIR}/$TABFILE.root" "$logfile"
 mv -v -f "${DDIR}/$TABFILE.root" "${ODIR}/$TABFILE.root"

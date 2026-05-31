@@ -33,8 +33,7 @@ exit
 fi
 echo " "
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 PREDIR=$1
@@ -62,7 +61,7 @@ fi
 
 #####################################
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$PREDIR/${CUTTYPE}/$DATE/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
@@ -95,23 +94,23 @@ if grep -q "^\* ENERGYBINS" "$RUNPAR"; then
     ENBINS=$( cat "$RUNPAR" | grep "^\* ENERGYBINS" | sed -e 's/\* ENERGYBINS//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
-    for (( i=0; i < $NENE; i++ ))
+    NENE=$(( ${#EBINARRAY[@]}-count1 )) #get number of bins
+    for (( i=0; i < NENE; i++ ))
     do
-        EBINMIN[$i]=${EBINARRAY[$i]}
-        EBINMAX[$i]=${EBINARRAY[$i+1]}
+        EBINMIN[i]=${EBINARRAY[i]}
+        EBINMAX[i]=${EBINARRAY[i+1]}
     done
 else
     ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
+    NENE=$(( ${#EBINARRAY[@]}-count1 )) #get number of bins
     z="0"
-    for (( i=0; i < $NENE; i+=2 ))
+    for (( i=0; i < NENE; i+=2 ))
     do
-        EBINMIN[$z]=${EBINARRAY[$i]}
-        EBINMAX[$z]=${EBINARRAY[$i+1]}
-        let "z = ${z} + 1"
+        EBINMIN[z]=${EBINARRAY[i]}
+        EBINMAX[z]=${EBINARRAY[i+1]}
+        (( z++ ))
     done
     NENE=$((${#EBINMAX[@]}))
 fi
@@ -120,7 +119,7 @@ fi
 # zenith angle bins
 ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
 mapfile -t ZEBINARRAY <<< "$ZEBINS"
-NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
+NZEW=$(( ${#ZEBINARRAY[@]}-count1 )) #get number of bins
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub"
@@ -140,13 +139,13 @@ echo $FSCRIPT.sh
 
 # run locally or on cluster
 SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
     echo $SUBC
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
- JOBID=`$SUBC $FSCRIPT.sh`
+ JOBID=$($SUBC $FSCRIPT.sh)
  # account for -terse changing the job number format
  if [[ $SUBC != *-terse* ]] ; then
     echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2

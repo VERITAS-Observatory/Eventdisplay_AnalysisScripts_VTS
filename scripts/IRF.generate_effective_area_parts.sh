@@ -54,9 +54,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 CUTSFILE="$1"
 EPOCH="$2"
@@ -127,7 +126,7 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit 1
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT`
+    JOBID=$($SUBC $FSCRIPT)
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
