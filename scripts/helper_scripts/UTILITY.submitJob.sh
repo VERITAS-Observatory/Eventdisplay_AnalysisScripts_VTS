@@ -31,14 +31,15 @@ submit_job() {
         "$subc_dir/UTILITY.condorSubmission.sh" "$fscript" "${h_vmem-}" "${tmpdir_size-}"
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
+        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} ${CONDOR_SUBMIT_ARGS:-submit}"
         echo "-------------------------------------------------------------------------------"
     elif [[ "$SUBC" == *sbatch* ]]; then
         "${subc_arr[@]}" "$fscript"
     elif [[ "$SUBC" == *parallel* ]]; then
         echo "$parallel_line" >> "$parallel_file"
     elif [[ "$SUBC" == *simple* ]]; then
-        "$fscript" |& tee "$fscript.log"
+        local logfile="${fscript%.sh}.log"
+        "$fscript" |& tee "$logfile"
     elif [[ "$SUBC" == *test* ]]; then
         echo "TESTING SCRIPT $fscript"
     fi

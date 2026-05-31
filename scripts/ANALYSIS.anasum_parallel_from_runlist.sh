@@ -300,6 +300,7 @@ for RUN in "${RUNS[@]}"; do
         echo "$SUBC"
         exit
     fi
+    CONDOR_SUBMIT_ARGS="submit 50"
     submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$TMPLOGDIR/runscripts.$TIMETAG.dat"
     if [[ $SUBC == *parallel* ]]; then
         echo "RUN $RUN OLOG $FSCRIPT.log"

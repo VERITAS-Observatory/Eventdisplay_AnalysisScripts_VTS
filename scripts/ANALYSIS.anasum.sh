@@ -97,9 +97,7 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit
 fi
 submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.$TIMETAG.dat"
-submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.$TIMETAG.dat"
 if [[ $SUBC == *qsub* ]]; then
     echo "RUN $AFILE JOBID $JOBID"
 fi
-run_parallel_jobs "$LOGDIR/runscripts.$TIMETAG.dat"
 run_parallel_jobs "$LOGDIR/runscripts.$TIMETAG.dat"

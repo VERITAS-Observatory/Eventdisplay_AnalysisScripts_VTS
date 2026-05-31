@@ -102,8 +102,6 @@ if [[ $SUBC == *"ERROR"* ]]; then
 fi
 RUNSCRIPT_LIST="$LOGDIR/runscripts.$(date +"%s").dat"
 submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$RUNSCRIPT_LIST"
-RUNSCRIPT_LIST="$LOGDIR/runscripts.$(date +"%s").dat"
-submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$RUNSCRIPT_LIST"
 if [[ $SUBC == *qsub* ]]; then
     echo "OUTFILE $OUTFILE JOBID $JOBID"
     echo "OUTFILE $OUTFILE SCRIPT $FSCRIPT.sh"

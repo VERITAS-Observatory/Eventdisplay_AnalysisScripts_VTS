@@ -93,6 +93,7 @@ do
         echo "$SUBC"
         exit
     fi
+        CONDOR_SUBMIT_ARGS="submit 5"
         submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.$TIMETAG.dat"
         if [[ $SUBC == *qsub* ]]; then
             echo "RUN $J JOBID $JOBID"
