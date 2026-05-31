@@ -26,21 +26,21 @@ MONTH=( 01 02 03 04 05 06 07 08 09 10 11 12 )
 DAY=(   31 28 31 30 31 30 31 31 30 31 30 30 )
 NMONTH=${#MONTH[@]}
 
-for (( y = $YEAR1; y <= $YEAR2; y++ ))
+for (( y = YEAR1; y <= YEAR2; y++ ))
 do
     echo "Fetching $y"
 
-    for (( i = 0 ; i < $NMONTH; i++ ))
+    for (( i = 0 ; i < NMONTH; i++ ))
     do
         M=${MONTH[$i]}
         D=${DAY[$i]}
         ONAME="sounding_${y}${M}"
-        echo $M   $D   $ONAME
+        echo "$M"   "$D"   "$ONAME"
 
-        wget --output-document=$ONAME.dat2 "http://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR=${y}&MONTH=${M}&FROM=0100&TO=${D}12&STNM=${USM}&REPLOT=1"
+        wget --output-document="$ONAME".dat2 "http://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR=${y}&MONTH=${M}&FROM=0100&TO=${D}12&STNM=${USM}&REPLOT=1"
 
-        sed -e :a -e 's/<[^>]*>//g;/</N;//ba' $ONAME.dat2 > $ONAME.dat
-        rm -f $ONAME.dat2
+        sed -e :a -e 's/<[^>]*>//g;/</N;//ba' "$ONAME".dat2 > "$ONAME".dat
+        rm -f "$ONAME".dat2
 
     done
 done

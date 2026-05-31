@@ -3,8 +3,9 @@
 # optimize BDTs with TMVA
 #
 
+# shellcheck source=/dev/null
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+source "$EVNDISPSYS"/setObservatory.sh VTS
 
 EFFAREA=EFFFILE
 PREDIR=ODIR
@@ -22,8 +23,8 @@ else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/${CUT}/"
 fi
 echo "Temporary directory: $TEMPDIR"
-mkdir -p $TEMPDIR
-ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
+mkdir -p "$TEMPDIR"
+ls -1 ${PREDIR}/${CUT}/*.anasum.root > "${TEMPDIR}"/anasum.list
 
 OBSTIME="5."
 MINEVENTS="10."
@@ -55,17 +56,18 @@ then
 
     # calculate rates from Crab Nebula and from background rates
     "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
-        ${EFFAREA} \
+        "${EFFAREA}" \
         ${RATEFILE}.root \
         ${DEADTIME} \
         ${TMVAPARFILES} \
-        ${TEMPDIR}/anasum.list \
+        "${TEMPDIR}"/anasum.list \
         > ${RATEFILE}.log
 fi
 
 echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${VERITAS_ANALYSIS_TYPE:0:2}/${EPAT}/${CUT}/"
-cd ${PREDIR}/${CUT}
+rm -f "${MVADIR}/rates.log"
+cd "${PREDIR}/${CUT}" || exit
 rm -f ${WDIR}/${EPAT}.optimised.dat
 if [[ -f "$EVNDISPSYS/macros/optimizeBDTcuts.C" ]]; then
     root -l -q -b "$EVNDISPSYS/macros/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat

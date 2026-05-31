@@ -28,13 +28,13 @@ move_list()
 {
     mkdir -p "${FTYPE}"/"${1}"
     for F in ${2}; do
-        mv -f "${FTYPE}"/$(basename $F .log).* "${FTYPE}"/"${1}"/
+        mv -f "${FTYPE}/$(basename "$F" .log)."* "${FTYPE}/${1}/"
     done
 }
 
 
 # find all runs with errors and move them
-FLIST=$(grep -irl "error" $FTYPE/*.log)
+FLIST=$(grep -irl "error" "$FTYPE"/*.log)
 if [[ -n $FLIST ]]; then
     file_count=$(echo "$FLIST" | wc -w)
     if [[ ! -z $file_count ]]; then
@@ -43,7 +43,7 @@ if [[ -n $FLIST ]]; then
     move_list error "$FLIST"
 fi
 # find all runs with segmentation faults
-FLIST=$(grep -rl "segmentation" $FTYPE/*.log)
+FLIST=$(grep -rl "segmentation" "$FTYPE"/*.log)
 if [[ -n $FLIST ]]; then
     file_count=$(echo "$FLIST" | wc -w)
     if [[ ! -z $file_count ]]; then
@@ -52,19 +52,19 @@ if [[ -n $FLIST ]]; then
     move_list error "$FLIST"
 fi
 # find all runs without errors and remove them from error directory
-FLIST=$(grep -iL "error" $FTYPE/*.log)
+FLIST=$(grep -iL "error" "$FTYPE"/*.log)
 if [[ -n $FLIST ]]; then
     file_count=$(echo "$FLIST" | wc -w)
     if [[ ! -z $file_count ]]; then
         echo "FOUND $file_count files without errors - cleaning error directory"
         for F in $FLIST; do
-            rm -f ${FTYPE}/error/$(basename $F .log).*
+            rm -f "${FTYPE}/error/$(basename "$F" .log)."*
         done
     fi
 fi
 
 echo "Aux data (and NOTFOUND)"
-NAUX=$(ls -1 "$FTYPE"/*.NOTFOUND 2>/dev/null | wc -l)
+NAUX=$(find "$FTYPE" -maxdepth 1 -name "*.NOTFOUND" 2>/dev/null | wc -l)
 if [[ $NAUX -gt 0 ]]; then
     mkdir -p "$FTYPE"/aux
     mv -f "$FTYPE"/*.NOTFOUND "$FTYPE"/aux/

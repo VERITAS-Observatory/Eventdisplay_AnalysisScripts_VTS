@@ -3,6 +3,7 @@
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -31,7 +32,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
 fi
 
 inspect_executables()
@@ -39,7 +39,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l "${EVNDISPSYS}"/bin/evndisp
     fi
 }
 
@@ -48,13 +48,13 @@ xargs -a "$ODIR/$FLIST" cp -t "$DDIR"
 ls -1 "${DDIR}"/*.root > "$DDIR/$FLIST"
 
 # combine the tables
-$EVNDISPSYS/bin/combineLookupTables "$DDIR/$FLIST" "$DDIR/$OFILE.root" median &> "$ODIR/$OFILE.log"
+"$EVNDISPSYS"/bin/combineLookupTables "$DDIR/$FLIST" "$DDIR/$OFILE.root" median &> "$ODIR/$OFILE.log"
 
 # log files
-echo "$(inspect_executables)" >> "$ODIR/$OFILE.log"
+inspect_executables >> "$ODIR/$OFILE.log"
 cp -v "$ODIR/$OFILE.log" "$DDIR/$OFILE.log"
-$EVNDISPSYS/bin/logFile makeTableCombineLog "$DDIR/$OFILE.root" "$DDIR/$OFILE.log"
-$EVNDISPSYS/bin/logFile makeTableFileList "$DDIR/$OFILE.root" "$DDIR/$FLIST"
+"$EVNDISPSYS"/bin/logFile makeTableCombineLog "$DDIR/$OFILE.root" "$DDIR/$OFILE.log"
+"$EVNDISPSYS"/bin/logFile makeTableFileList "$DDIR/$OFILE.root" "$DDIR/$FLIST"
 
 # cleanup
 mv -f -v "$DDIR/$OFILE.root" "$ODIR/$OFILE.root"

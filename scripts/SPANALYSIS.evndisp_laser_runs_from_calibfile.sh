@@ -19,8 +19,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 CALIBFILE=$1
@@ -28,17 +27,17 @@ CALIBFILE=$1
 # locations of vbf files
 DDIR="$VERITAS_DATA_DIR/data/"
 
-FILES=`grep LASER $CALIBFILE | awk '{print $2"_"$3}'`
+FILES=$(grep LASER "$CALIBFILE" | awk '{print $2"_"$3}')
 
 for AFILE in $FILES
 do
     RUN=${AFILE:0:5}
     DTEL=${AFILE:6}
-    echo $AFILE $RUN $DTEL
-    DFILE=`find -L $DDIR -name "$RUN.cvbf"`
+    echo "$AFILE" "$RUN" "$DTEL"
+    DFILE=$(find -L "$DDIR" -name "$RUN.cvbf")
 
     if [[ -f $DFILE ]]; then
-        $(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh $DTEL $DFILE
+        "$(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh" "$DTEL" "$DFILE"
     else
 	    echo "Missing laser/flasher file $DFILE, please download it"
     fi

@@ -3,8 +3,9 @@
 #
 # - training at wobble offsets 0.5 deg only
 
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:59; h_vmem=16000M; tmpdir_size=24G
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 6 ]; then
 echo "
@@ -36,9 +37,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 BDIR="$1"
 RUNPAR="$2"
@@ -76,7 +76,7 @@ if [[ ! -d "$BDIR" ]]; then
 fi
 
 # Check that XGB run parameter file exists
-if [[ "$RUNPAR" == `basename $RUNPAR` ]]; then
+if [[ "$RUNPAR" == $(basename "$RUNPAR") ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
 if [[ ! -f "$RUNPAR" ]]; then
@@ -87,20 +87,19 @@ fi
 LOGDIR="$ODIR/XGB.ANADATA.${UUID}"
 echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
-mkdir -p $LOGDIR
-mkdir -p $ODIR
+mkdir -p "$LOGDIR"
+mkdir -p "$ODIR"
 
 #####################################
 # energy / zenith bins
 NENE=$(jq '.energy_bins_log10_tev | length' "$RUNPAR")
 NEZE=$(jq '.zenith_bins_deg | length' "$RUNPAR")
-RUNPAR_CONTENT=$(cat "$RUNPAR")
 echo "Number of energy / zenith bins: $NENE $NEZE"
 
 #####################################
 # zenith angle / NSB bins of MC simulation files
-ZENITH_ANGLES=($(jq -r '.input_zenith_angles[]' "$RUNPAR"))
-NOISE_VALUES=($(jq -r '.input_noise_values[]' "$RUNPAR"))
+mapfile -t ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$RUNPAR")
+mapfile -t NOISE_VALUES < <(jq -r '.input_noise_values[]' "$RUNPAR")
 
 ####################################
 # Run prefix
@@ -116,7 +115,7 @@ get_run_prefix()
 }
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.trainXGBforGammaHadronSeparation_sub.sh"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainXGBforGammaHadronSeparation_sub.sh"
 
 SIGNALLIST="${ODIR}/signal_files.list"
 rm -f "${SIGNALLIST}"
@@ -134,7 +133,7 @@ if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
 else
     for z in "${ZENITH_ANGLES[@]}"; do
         for n in "${NOISE_VALUES[@]}"; do
-            for f in "$SDIR"/${z}deg_*wob_NOISE${n}.mscw.root; do
+            for f in "$SDIR"/"${z}"deg_*wob_NOISE"${n}".mscw.root; do
 
                 [[ -f "$f" ]] && echo "$f" >> "$SIGNALLIST"
             done
@@ -147,19 +146,19 @@ echo "Background file list: $BCKLIST"
 rm -f "${BCKLIST}"
 touch "${BCKLIST}"
 tmpfile=$(mktemp)
-for ((i=0; i<${NEZE}; i++)); do
+for ((i=0; i<NEZE; i++)); do
   if [[ ! -d "${BDIR}/Ze_${i}" ]]; then
       echo "Error, directory with background files ${BDIR}/Ze_${i} not found, exiting..."
       exit 1
   fi
-  find ${BDIR}/Ze_${i} -name "*.root" | shuf -n 1000 >> "${tmpfile}"
+  find "${BDIR}"/Ze_${i} -name "*.root" | shuf -n 1000 >> "${tmpfile}"
 done
 shuf "$tmpfile" > "${BCKLIST}"
 rm "$tmpfile"
 
 ###############################################################
 # loop over energy bins and submit a job for each bin
-for (( i=0; i < $NENE; i++ )); do
+for (( i=0; i < NENE; i++ )); do
     echo "Energy Bin: $i"
 
     FSCRIPT=$LOGDIR/XGBGAMMA"_$EPOCH""_ENERGY$i.sh"
@@ -167,19 +166,19 @@ for (( i=0; i < $NENE; i++ )); do
         -e "s|MSCWBCK|$BCKLIST|" \
         -e "s|MODELPARA|$RUNPAR|" \
         -e "s|ENERGYBIN|$i|" \
-        -e "s|OUTPUTDIR|${ODIR}|" $SUBSCRIPT > $FSCRIPT
+        -e "s|OUTPUTDIR|${ODIR}|" "$SUBSCRIPT" > "$FSCRIPT"
 
-    chmod u+x $FSCRIPT
-    echo $FSCRIPT
+    chmod u+x "$FSCRIPT"
+    echo "$FSCRIPT"
 
     # run locally or on cluster
-    SUBC=$($(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh)
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
-        echo $SUBC
+        echo "$SUBC"
         exit
     fi
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
     echo
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs at once:"

@@ -27,8 +27,8 @@ unpack_db_textdirectory()
     fi
     DBRUNFIL="${DBTEXTDIRECTORY}/${SRUN}/${RRUN}.tar.gz"
     if [[ -e ${DBRUNFIL} ]]; then
-        mkdir -p ${TMP_DBTEXTDIRECTORY}/
-        tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/
+        mkdir -p "${TMP_DBTEXTDIRECTORY}"/
+        tar -xzf "${DBRUNFIL}" -C "${TMP_DBTEXTDIRECTORY}"/
     fi
     echo "${TMP_DBTEXTDIRECTORY}/${RRUN}/"
 }
@@ -50,18 +50,16 @@ anasum_time_cut()
     done
 }
 
-for E in ""
-do
-    RUNS=$(cat $RUNLIST)
+RUNS=$(cat "$RUNLIST")
 
-    for R in $RUNS
-    do
-        DBTEXTDIR=$(unpack_db_textdirectory ${R} ./tmp_dbtext/)
+for R in $RUNS
+do
+        unpack_db_textdirectory "${R}" ./tmp_dbtext/ >/dev/null
         RDQM="./tmp_dbtext/${R}/${R}.rundqm"
         if [[ -e ${RDQM} ]]; then
-            RSTATUS=$(cut -d '|' -f 3 ${RDQM} | grep -v status)
-            RCUTMASK=$(cut -d '|' -f 7 ${RDQM} | grep -v status)
-            RCATEGORY=$(cut -d '|' -f 2 ${RDQM} | grep -v data_category)
+            RSTATUS=$(cut -d '|' -f 3 "${RDQM}" | grep -v status)
+            RCUTMASK=$(cut -d '|' -f 7 "${RDQM}" | grep -v status)
+            RCATEGORY=$(cut -d '|' -f 2 "${RDQM}" | grep -v data_category)
         else
             RSTATUS="NODQMFILE"
             RCUTMASK="NULL"
@@ -69,18 +67,17 @@ do
         fi
         RINF="./tmp_dbtext/${R}/${R}.runinfo"
         if [[ -e ${RINF} ]]; then
-            RLENGTH=$(cut -d '|' -f 9 ${RINF} | grep -v duration)
-            RWEATHER=$(cut -d '|' -f 10 ${RINF} | grep -v weather)
-            RTARGET=$(cut -d '|' -f 20 ${RINF} | grep -v source_id)
-            RTYPE=$(cut -d '|' -f 2 ${RINF} | grep -v run_type)
+            RLENGTH=$(cut -d '|' -f 9 "${RINF}" | grep -v duration)
+            RWEATHER=$(cut -d '|' -f 10 "${RINF}" | grep -v weather)
+            RTARGET=$(cut -d '|' -f 20 "${RINF}" | grep -v source_id)
+            RTYPE=$(cut -d '|' -f 2 "${RINF}" | grep -v run_type)
         else
             RLENGTH="NORUNINFOFILE"
             RWEATHER="NULL"
             RTARGET="NOTARGET"
             RTYPE="NOTYPE"
         fi
-        echo $R $RSTATUS $RCUTMASK LENGTH: $RLENGTH WEATHER-$RWEATHER $RCATEGORY $RTARGET $RTYPE
-        anasum_time_cut $R "$RCUTMASK"
+        echo "$R $RSTATUS $RCUTMASK LENGTH: $RLENGTH WEATHER-$RWEATHER $RCATEGORY $RTARGET $RTYPE"
+        anasum_time_cut "$R" "$RCUTMASK"
 
-    done
 done

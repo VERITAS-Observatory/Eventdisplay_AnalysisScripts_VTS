@@ -2,8 +2,9 @@
 # script to combine anasum runs
 #
 # set observatory environmental variables
+# shellcheck source=/dev/null
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    source $EVNDISPSYS/setObservatory.sh VTS
+    source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
 # parameters replaced by parent script using sed
@@ -13,14 +14,14 @@ RUNP=RRUNP
 OUTFILE=OOUTFILE
 
 mkdir -p ${DDIR}
-mkdir -p $(dirname "$OUTFILE")
+mkdir -p "$(dirname "$OUTFILE")"
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
     TEMPDIR=${TMPDIR}/ANASUM-$(uuidgen)
 else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/ANASUM-$(uuidgen)"
 fi
-mkdir -p $TEMPDIR
+mkdir -p "$TEMPDIR"
 echo "TEMPDIR: $TEMPDIR"
 
 getNumberedDirectory()
@@ -32,13 +33,14 @@ getNumberedDirectory()
     else
         ODIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${ODIR}
+    echo "${ODIR}"
 }
 
 # copy file list, runparameter and time masks file to tmp disk
 cp -v "$RUNLIST" "$TEMPDIR"
 cp -v "$RUNP" "$TEMPDIR"
-cp -v $(dirname $RUNP)/$(grep TIMEMASKFILE $RUNP | awk '{print $3}') "$TEMPDIR"
+TIMEMASKFILE=$(grep TIMEMASKFILE "$RUNP" | awk '{print $3}')
+cp -v "$(dirname "$RUNP")/${TIMEMASKFILE}" "$TEMPDIR"
 
 OUTPUTDATAFILE="$OUTFILE"
 OUTPUTLOGFILE="$OUTFILE.log"
@@ -52,7 +54,7 @@ for R in $RUNS; do
     if [[ -e "$DDIR/$R.anasum.root" ]]; then
         cp -f -v "$DDIR/$R.anasum.root" "$TEMPDIR"
     else
-        FIL="$(getNumberedDirectory $R ${DDIR})/${R}.anasum.root"
+        FIL="$(getNumberedDirectory "$R" ${DDIR})/${R}.anasum.root"
         if [[ -e "$FIL" ]]; then
             cp -f -v "$FIL" "$TEMPDIR"
         else
@@ -70,7 +72,7 @@ fi
 # determine if this is a short or long run list
 # (use VERSION string to identify long run list)
 NV=$(grep -c "VERSION" ${RUNLIST})
-if [ $NV -eq 0 ]; then
+if [ "$NV" -eq 0 ]; then
     RUNLISTSTRING="-k"
 else
     RUNLISTSTRING="-l"
@@ -100,7 +102,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/anasum
+        ls -l "${EVNDISPSYS}"/bin/anasum
     fi
 }
 echo "TEMPDIR: ${TEMPDIR}"
@@ -114,28 +116,30 @@ echo "RUNP ${RUNP}"
 echo "OUTPUTDATAFILE ${OUTPUTDATAFILE}"
 echo "OUTPUTLOGFILE ${OUTPUTLOGFILE}"
 
-$EVNDISPSYS/bin/anasum \
+"$EVNDISPSYS"/bin/anasum \
     -i 1 \
-    ${RUNLISTSTRING} ${RUNLIST} \
-    -d ${TEMPDIR} \
-    -f ${RUNP} \
-    -o ${OUTPUTDATAFILE}.root 2>&1 | tee ${OUTPUTLOGFILE}
+    ${RUNLISTSTRING} "${RUNLIST}" \
+    -d "${TEMPDIR}" \
+    -f "${RUNP}" \
+    -o "${OUTPUTDATAFILE}".root 2>&1 | tee ${OUTPUTLOGFILE}
 
 # for Crab runs: print sensitivity estimate
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${OUTPUTDATAFILE}.root -runinfo)
-TMPTARGET=$(echo $RUNINFO | cut -d\  -f7- )
+RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "${OUTPUTDATAFILE}".root -runinfo)
+TMPTARGET=$(echo "$RUNINFO" | cut -d\  -f7- )
 if [[ ${TMPTARGET} == "Crab" ]]; then
-    echo "========================== SENSITIVITY ESTIMATE ==========================" >> ${OUTFILE}.log
-    $EVNDISPSYS/bin/printCrabSensitivity ${OUTPUTDATAFILE}.root >> ${OUTFILE}.log
-    echo "========================== ==========================" >> ${OUTFILE}.log
+    {
+        echo "========================== SENSITIVITY ESTIMATE =========================="
+        "$EVNDISPSYS"/bin/printCrabSensitivity "${OUTPUTDATAFILE}".root
+        echo "========================== =========================="
+    } >> "${OUTFILE}.log"
 fi
 
-echo "$(inspect_executables)" >> ${OUTFILE}.log
+inspect_executables >> ${OUTFILE}.log
 
 # log file into root file
-$EVNDISPSYS/bin/logFile \
+"$EVNDISPSYS"/bin/logFile \
     anasumLog \
-    ${OUTPUTDATAFILE}.root \
-    ${OUTPUTDATAFILE}.log
+    "${OUTPUTDATAFILE}".root \
+    "${OUTPUTDATAFILE}".log
 
 exit

@@ -2,10 +2,11 @@
 # script to combine several table file into one
 
 # job requirements
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=20:29:00; h_vmem=12000M; tmpdir_size=10G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 4 ]; then
 echo "
@@ -39,9 +40,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # date used in run scripts / log file directories
 DATE=$(date +"%y%m%d")
@@ -87,8 +87,8 @@ mkdir -p "$LOGDIR"
 # Create list of partial table files
 FLIST=$OFILE.list
 rm -f "$ODIR/$FLIST"
-ls -1 $INDIR/*ID${RECID}.root > "$ODIR/$FLIST"
-NFIL=`cat "$ODIR/$FLIST" | wc -l`
+ls -1 "$INDIR"/*ID"${RECID}".root > "$ODIR/$FLIST"
+NFIL=$(cat "$ODIR/$FLIST" | wc -l)
 if [[ $NFIL = "0" ]]; then
    echo "No lookup table root files found"
    exit
@@ -97,30 +97,31 @@ echo "$FLIST"
 echo "LOOKUPTABLE $OFILE"
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_combine_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.lookup_table_combine_sub"
 
 # make run script
 FSCRIPT="$LOGDIR/TABLES-COMBINE.$OFILE.$DATE.MC"
 
 sed -e "s|TABLELIST|$FLIST|" \
     -e "s|OUTPUTFILE|$OFILE|" \
-    -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|OUTPUTDIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
 chmod u+x "$FSCRIPT.sh"
 echo "Run script written to: $FSCRIPT"
 
 # run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT".sh)
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
     echo
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs at once:"
@@ -128,6 +129,6 @@ elif [[ $SUBC == *condor* ]]; then
     echo "-------------------------------------------------------------------------------"
     echo
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
 fi
 echo "LOG/SUBMIT DIR: ${LOGDIR}"

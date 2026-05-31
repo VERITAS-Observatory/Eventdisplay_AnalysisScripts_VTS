@@ -1,9 +1,10 @@
 #!/bin/bash
 # train XGB for angular reconstruction
 
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 7 ]; then
 echo "
@@ -41,9 +42,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 EPOCH="$1"
 ATM="$2"
@@ -70,13 +70,13 @@ echo "Logs: $LOGDIR"
 
 # prepare list of input files
 MSCWLIST="$ODIR/xgbFiles.list"
-rm -f ${MSCWLIST}
-touch ${MSCWLIST}
+rm -f "${MSCWLIST}"
+touch "${MSCWLIST}"
 
 INDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
 
 STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
-TRAIN_ANGLES=$(jq -r ".zenith[] | select(.id==\"$ZA\") | .train | join(\" \")" $STEREO_PAR)
+TRAIN_ANGLES=$(jq -r ".zenith[] | select(.id==\"$ZA\") | .train | join(\" \")" "$STEREO_PAR")
 if [[ -z "$TRAIN_ANGLES" ]]; then
     echo "Error: Bin ID $ZA not found in $STEREO_PAR"
     exit 1
@@ -99,7 +99,7 @@ do
 done
 echo "FILE LIST: ${MSCWLIST}"
 
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/IRF.trainXGBforAngularReconstruction_sub.sh"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainXGBforAngularReconstruction_sub.sh"
 
 echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
@@ -111,17 +111,18 @@ chmod u+x "$FSCRIPT"
 echo "$FSCRIPT"
 
 # run locally or on cluster
-SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
-    echo $SUBC
+    echo "$SUBC"
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT`
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT")
     echo "RUN $RUNNUM: JOBID $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
     echo
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs at once:"
@@ -129,7 +130,8 @@ elif [[ $SUBC == *condor* ]]; then
     echo "-------------------------------------------------------------------------------"
     echo
 elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT"
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 fi

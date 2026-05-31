@@ -1,8 +1,10 @@
 #!/bin/bash
+# shellcheck disable=SC2154
 # fill lookup tables
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -47,7 +49,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
 fi
 
 inspect_executables()
@@ -55,14 +56,14 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/mscw_energy
+        ls -l "${EVNDISPSYS}"/bin/mscw_energy
     fi
 }
 
 
 if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Copying evndisp root files to ${DDIR}"
-    find ${INDIR} -name "*[0-9].root" -exec cp -v {} ${DDIR} \;
+    find ${INDIR} -name "*[0-9].root" -exec cp -v {} "${DDIR}" \;
 elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     if command -v zstd &>/dev/null; then
         echo "Copying evndisp root.zst files to ${DDIR}"
@@ -70,37 +71,44 @@ elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
         for F in $FLIST
         do
             echo "unpacking $F"
-            cp -v -f $F ${DDIR}/
-            ofile=$(basename $F .zst)
-            zstd -d ${DDIR}/${ofile}.zst -o ${DDIR}/${ofile}
+            cp -v -f "$F" "${DDIR}"/
+            ofile=$(basename "$F" .zst)
+            zstd -d "${DDIR}"/"${ofile}".zst -o "${DDIR}"/"${ofile}"
         done
     else
         echo "Error: no zstd installation"
         exit
     fi
 fi
-rm -f "$DDIR/$OFILE.list"
-ls -1 "$DDIR"/*[0-9].root > "$DDIR/$OFILE.list"
+rm -f "$DDIR/$TABFILE.list"
+find "$DDIR" -maxdepth 1 -name "*[0-9].root" > "$DDIR/$TABFILE.list"
 
 # Redo stereo reconstruction with diff cuts on images (versions after v490)
-MOPT=""
+MOPT=()
 if [[ $IRFVERSION != v490* ]]; then
-    MOPT="-redo_stereo_reconstruction -minangle_stereo_reconstruction=10"
-    MOPT="$MOPT -maxloss=0.4 -use_evndisp_selected_images=0"
-    MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
+    MOPT=(
+        -redo_stereo_reconstruction
+        -minangle_stereo_reconstruction=10
+        -maxloss=0.4
+        -use_evndisp_selected_images=0
+        -maxdist=1.75
+        -minntubes=5
+        -minwidth=0.02
+        -minsize=100
+    )
 fi
 
 echo "Running mscw_energy (table filling)"
 logfile="$ODIR/$TABFILE.log"
-$EVNDISPSYS/bin/mscw_energy -filltables=1 \
+"$EVNDISPSYS"/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
-                            -inputfilelist "$DDIR/$OFILE.list" \
+                            -inputfilelist "$DDIR/$TABFILE.list" \
                             -tablefile "${DDIR}/$TABFILE.root" \
-                            -ze=$ZA $MOPT \
+                            -ze=$ZA "${MOPT[@]}" \
                             -arrayrecid=$RECID \
                             -woff=$WOBBLE &> "$logfile"
 
-echo "$(inspect_executables)" >> "$logfile"
-$EVNDISPSYS/bin/logFile makeTableLog "${DDIR}/$TABFILE.root" "$logfile"
+inspect_executables >> "$logfile"
+"$EVNDISPSYS"/bin/logFile makeTableLog "${DDIR}/$TABFILE.root" "$logfile"
 mv -v -f "${DDIR}/$TABFILE.root" "${ODIR}/$TABFILE.root"

@@ -23,9 +23,9 @@ echo "USER: $USER BACKUP $BACKUP"
 rsync -avz -e ssh \
       --backup --suffix="$BACKUP" \
      ./DBFITS \
-     ${USER}:/home/maierg/processed_Eventdisplay/
+     "${USER}":/home/maierg/processed_Eventdisplay/
 
 rsync -avz -e ssh \
       --backup --suffix="$BACKUP" \
      ./DBTEXT \
-     ${USER}:/home/maierg/processed_Eventdisplay/
+     "${USER}":/home/maierg/processed_Eventdisplay/

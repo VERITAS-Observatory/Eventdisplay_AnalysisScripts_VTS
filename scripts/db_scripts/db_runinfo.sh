@@ -25,4 +25,4 @@ RUNSTART=$1
 [[ "$2" ]] && RUNSTOPP=$2 || RUNSTOPP=$1
 QUERY="select * from tblRun_Info where run_id>=${RUNSTART} and run_id<=${RUNSTOPP};"
 
-$($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}" | sed 's/\t/|/g'
+$("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}" | sed 's/\t/|/g'

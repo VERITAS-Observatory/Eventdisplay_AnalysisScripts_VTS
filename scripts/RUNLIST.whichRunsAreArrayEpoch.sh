@@ -3,19 +3,19 @@
 
 #echo "\$#:$#   \$1:$1   \$2:$2   \$3:$3   \$4:$4"
 
-ISPIPEFILE=`readlink /dev/fd/0` # check to see if input is from terminal, or from a pipe
+ISPIPEFILE=$(readlink /dev/fd/0) # check to see if input is from terminal, or from a pipe
 #echo "\$ISPIPEFILE: '$ISPIPEFILE'"
 if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pipe)
 	if ! [ $# -eq 2 ] ; then # the human didn't add any arguments, and we must tell them so
 		echo "Prints the run numbers that are of the specific run versions runs."
 		echo "  for just V4 runs, do"
-		echo "    $ `basename $0` 4 <file of runs>"
+		echo "    $ $(basename "$0") 4 <file of runs>"
 		echo "  for just V5 runs, do"
-		echo "    $ `basename $0` 5 <file of runs>"
+		echo "    $ $(basename "$0") 5 <file of runs>"
 		echo "  for just V6_2014 and V6_2015 (scaling tests, do not use in production) runs, do"
-		echo "    $ `basename $0` 6_2014,6_2015 <file of runs>"
+		echo "    $ $(basename "$0") 6_2014,6_2015 <file of runs>"
 		echo "  to print all V5 and V6 runs, do"
-		echo "    $ `basename $0` 5,6 <file of runs>"
+		echo "    $ $(basename "$0") 5,6 <file of runs>"
 		exit
 	fi
 fi
@@ -24,11 +24,11 @@ INPUTEPOCH="$1"
 
 # list of run_id's to read in
 RUNFILE=$2
-if [ ! -e $RUNFILE ] ; then
+if [ ! -e "$RUNFILE" ] ; then
 	echo "File $RUNFILE could not be found in $PWD , sorry."
 	exit
 fi
-RUNLIST=`cat $RUNFILE`
+RUNLIST=$(cat "$RUNFILE")
 #echo "RUNLIST:$RUNLIST"
 
 # how should we get the array epochs?
@@ -40,11 +40,11 @@ if [[ "$METHOD" == "irfperiod" ]]; then
     PARAMFILE="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
 
     # get only lines that start with '*'
-    EPOCHTHRESH=$( cat $PARAMFILE | grep -P "^\s??\*" | grep "EPOCH" | grep -P "V\d" )
+    EPOCHTHRESH=$( cat "$PARAMFILE" | grep -P "^\s??\*" | grep "EPOCH" | grep -P "V\d" )
     AVAILABLEEPOCHS=$( echo "$EPOCHTHRESH" | awk '{ print $3 }' )
     DESIREDPERIODS=$( echo "$INPUTEPOCH" | sed 's/\,/ /g' | sed 's/\;/ /g' | tr " " "\n" )
     # loop over runs in runlist
-    for run in ${RUNLIST[@]}; do
+    for run in "${RUNLIST[@]}"; do
         # loop through all epochs in the list of available epochs
         for epoch in $AVAILABLEEPOCHS; do
             # check if the run is in the list of desired epochs
@@ -69,7 +69,7 @@ if [[ "$METHOD" == "useparamfile" ]] ; then
 	PARAMFILE="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
 
 	# get only lines that start with '*'
-	EPOCHTHRESH=$( cat $PARAMFILE | grep -P "^\s??\*" | grep "EPOCH" | grep -P "V\d" )
+	EPOCHTHRESH=$( cat "$PARAMFILE" | grep -P "^\s??\*" | grep "EPOCH" | grep -P "V\d" )
 	#echo "$EPOCHTHRESH"
 
 	# find out what are the smallest and largest epochs to work with
@@ -82,10 +82,10 @@ if [[ "$METHOD" == "useparamfile" ]] ; then
 	#echo "MAXEPOCH:$MAXEPOCH"
 
 	# loop over runs in runlist
-	for run in ${RUNLIST[@]} ; do
+	for run in $RUNLIST ; do
 
 		# loop through all epochs between min and max
-		for epoch in $(seq $MINEPOCH $MAXEPOCH) ; do
+		for epoch in $(seq "$MINEPOCH" "$MAXEPOCH") ; do
 
 			# check to see if the user wants each epoch
 			if [[ $INPUTEPOCH == *$epoch* ]] ; then
@@ -120,14 +120,14 @@ if [[ "$METHOD" == "hardcoded" ]] ; then
         if [[ "$INPUTEPOCH" == *6* ]] ; then V6FLAG=true ; fi
 	# first run of V5 : 46642
 	# first run of V6 : 63373
-	for i in ${RUNLIST[@]} ; do
+	for i in $RUNLIST ; do
 		if $V4FLAG ; then
 			if [ "$i" -le "46641" ] ; then
 				echo "$i"
 			fi
 		fi
 		if $V5FLAG ; then
-			if [ "$i" -ge "46642" -a "$i" -le "63372" ] ; then
+			if [ "$i" -ge "46642" ] && [ "$i" -le "63372" ] ; then
 				echo "$i"
 			fi
 		fi

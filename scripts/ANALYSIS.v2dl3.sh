@@ -5,6 +5,7 @@
 #
 
 # qsub parameters
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
 if [ "$#" -lt 3 ]; then
@@ -46,52 +47,53 @@ echo "total number of runs to analyze: $NRUNS"
 echo
 
 # make output directory if it doesn't exist
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/V2DL3-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
-rm -f ${LOGDIR}/x* 2>/dev/null
+rm -f "${LOGDIR}"/x* 2>/dev/null
 
 # split run list into smaller run lists
 sort -u "${RUNLIST}" -o "${LOGDIR}/$(basename "${RUNLIST}")"
-(cd "${LOGDIR}" && split -l $SPLITRUN "${LOGDIR}/$(basename ${RUNLIST})")
+(cd "${LOGDIR}" && split -l "$SPLITRUN" "${LOGDIR}/$(basename "${RUNLIST}")")
 
-FILELISTS=$(ls ${LOGDIR}/x*)
-NFILELISTS=$(ls ${LOGDIR}/x* | wc -l)
+FILELISTS=$(find "$LOGDIR" -maxdepth 1 -name "x*" | sort)
+NFILELISTS=$(find "$LOGDIR" -maxdepth 1 -name "x*" | wc -l)
 
 echo -e "Processing $NFILELISTS file lists (equal to number of jobs)"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.v2dl3_sub"
-TIMETAG=`date +"%s"`
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.v2dl3_sub"
+TIMETAG=$(date +"%s")
 
 for J in ${FILELISTS}
 do
     echo "Submitting analysis for file list $J"
 
-    FSCRIPT="$LOGDIR/V2DL3-$(basename $J)"
-    rm -f $FSCRIPT.sh
+    FSCRIPT="$LOGDIR/V2DL3-$(basename "$J")"
+    rm -f "$FSCRIPT".sh
     echo "Run script written to $FSCRIPT"
 
     sed -e "s|RRUNLIST|$J|" \
         -e "s|OODIR|$ODIR|" \
-        -e "s|CCUT|$CUT|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|CCUT|$CUT|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
     chmod u+x "$FSCRIPT.sh"
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
         echo "$SUBC"
         exit
     fi
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -105,7 +107,7 @@ do
             echo "RUN $J ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
@@ -113,7 +115,8 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
 	elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
         echo "RUN $J OLOG $FSCRIPT.log"
@@ -124,5 +127,6 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
+    # shellcheck disable=SC2086
     cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
 fi

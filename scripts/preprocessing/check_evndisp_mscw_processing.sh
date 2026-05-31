@@ -12,9 +12,9 @@ echo "
 exit
 fi
 
-FF=$(cat ${1})
+FF=$(cat "${1}")
 DTYPE=${2}
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFMINORVERSION)
 
 file_on_disk()
 {
@@ -43,5 +43,5 @@ echo "Checking runs from ${1} for data type ${DTYPE}"
 
 for F in ${FF}
 do
-    echo $F $(file_on_disk $F)
+    echo "$F $(file_on_disk "$F")"
 done

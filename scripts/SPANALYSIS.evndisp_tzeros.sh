@@ -28,8 +28,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RUNNUM=$1
@@ -40,24 +39,24 @@ fi
 [[ "$3" ]] && CALDB=$3   || CALDB="1"
 
 # Check if source vbf file exists
-SF=`find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf"`
+SF=$(find -L "$VERITAS_DATA_DIR"/data -name "$RUNNUM.cvbf")
 if [[ ${#SF} = 0 ]]; then
     echo "ERROR: VERITAS source file $RUNNUM.cvbf not found in $VERITAS_DATA_DIR/data/"
     exit 1
 fi
 
 if [[ $CALDB == "1" ]]; then
-    OPT="$OPT -readCalibDB"
+    OPT=(-readCalibDB)
 else
-    OPT="$OPT -nocalibnoproblem"
+    OPT=(-nocalibnoproblem)
 fi
-echo $OPT
+echo "${OPT[*]}"
 
 # run options
-OPT="-runmode=7 -runnumber=$RUNNUM -teltoana=$TELTOANA $OPT"
+OPT=("-runmode=7" "-runnumber=$RUNNUM" "-teltoana=$TELTOANA" "${OPT[@]}")
 
 # Run evndisp
-echo "$EVNDISPSYS/bin/evndisp $OPT"
-$EVNDISPSYS/bin/evndisp $OPT
+echo "$EVNDISPSYS/bin/evndisp ${OPT[*]}"
+"$EVNDISPSYS"/bin/evndisp "${OPT[@]}"
 
 exit

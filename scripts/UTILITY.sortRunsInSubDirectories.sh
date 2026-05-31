@@ -30,16 +30,16 @@ getNumberedDirectory()
     else
         ODIR="${TDIR}/${TRUN:0:2}/"
     fi
-    mkdir -p ${ODIR}
-    echo ${ODIR}
+    mkdir -p "${ODIR}"
+    echo "${ODIR}"
 }
 
-FLIST=$(find ${DDIR} -name [0-9]*.*${SUFF})
+FLIST=$(find "${DDIR}" -name "[0-9]*.*${SUFF}")
 
 for F in ${FLIST}
 do
-    RUNN=$(basename ${F})
+    RUNN=$(basename "${F}")
     RUNN="${RUNN%%.*}"
-    ODIR=$(getNumberedDirectory $RUNN)
-    mv -f -v ${F} ${ODIR}
+    ODIR=$(getNumberedDirectory "$RUNN")
+    mv -f -v "${F}" "${ODIR}"
 done

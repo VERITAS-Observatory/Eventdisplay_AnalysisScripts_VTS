@@ -2,6 +2,7 @@
 # script to analyse data files with anasum
 
 # qsub parameters
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=8:00:00; h_vmem=4000M; tmpdir_size=10G
 
 if [[ $# -lt 3 ]]; then
@@ -36,8 +37,7 @@ exit
 fi
 
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 FLIST=$1
@@ -54,7 +54,7 @@ if [[ ! -f "$FLIST" ]]; then
 fi
 
 # Check that run parameter file exists
-if [[ "$RUNP" == `basename $RUNP` ]]; then
+if [[ "$RUNP" == $(basename "$RUNP") ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
@@ -63,7 +63,7 @@ if [[ ! -f "$RUNP" ]]; then
 fi
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/ANASUM.ANADATA"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p "$LOGDIR"
@@ -73,9 +73,9 @@ echo -e "Output files will be written to:\n $ODIR"
 mkdir -p "$ODIR"
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/ANALYSIS.anasum_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_sub"
 
-TIMETAG=`date +"%s"`
+TIMETAG=$(date +"%s")
 
 FSCRIPT="$LOGDIR/ANA.$ONAME-$(date +%s)"
 sed -e "s|FILELIST|$FLIST|" \
@@ -87,15 +87,16 @@ sed -e "s|FILELIST|$FLIST|" \
 chmod u+x "$FSCRIPT.sh"
 echo "$FSCRIPT.sh"
 
-SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 # run locally or on cluster (expand shell variables in submission string)
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT".sh)
 
     # account for -terse changing the job number format
     if [[ $SUBC != *-terse* ]] ; then
@@ -104,12 +105,13 @@ if [[ $SUBC == *qsub* ]]; then
     fi
     echo "RUN $AFILE JOBID $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    condor_submit $FSCRIPT.sh.condor
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
+    condor_submit "$FSCRIPT".sh.condor
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
-    cat $LOGDIR/runscripts.$TIMETAG.dat | $SUBC
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts."$TIMETAG".dat
+    # shellcheck disable=SC2086
+    cat "$LOGDIR"/runscripts."$TIMETAG".dat | $SUBC
 
 elif [[ $SUBC == *simple* ]]; then
-	"$FSCRIPT.sh" |& tee $FSCRIPT.log
+	"$FSCRIPT.sh" |& tee "$FSCRIPT".log
 fi

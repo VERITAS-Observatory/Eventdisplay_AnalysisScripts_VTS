@@ -13,12 +13,10 @@ query_run_list.sh: query DB and write DBTEXT files
 exit
 fi
 
-RUNS=$(cat $1)
+RUNS=$(cat "$1")
 [[ "$2" ]] && OVERW=$2 || OVERW="0"
-
-IDIR="$VERITAS_DATA_DIR/shared/DBTEXT/"
 
 for R in $RUNS
 do
-    ./db_run.sh ${R} ${OVERW}
+    ./db_run.sh "${R}" "${OVERW}"
 done

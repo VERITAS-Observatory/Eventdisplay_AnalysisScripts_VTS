@@ -3,10 +3,11 @@
 # Allow optionally to calculate instrument response functions (for 4 and 3-telescope combinations).
 
 # qsub parameters
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=10:29:00; h_vmem=12000M; tmpdir_size=100G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 EVNIRFVERSION="v4N"
 
 if [ $# -lt 8 ]; then
@@ -54,9 +55,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 TABFILE=${1%.root}.root
 EPOCH="$2"
@@ -74,7 +74,7 @@ XGBVERSION="xgb"
 
 echo "IRF.mscw_energy_MC for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBVERSION)"
 
-TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
+TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$(basename "$TABFILE")"
 if [[ ! -f "$TABFILE" ]]; then
     echo "Error: table file not found: $TABFILE"
     exit 1
@@ -106,7 +106,7 @@ echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
 
 # run script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.mscw_energy_MC_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.mscw_energy_MC_sub"
 FSCRIPT="$LOGDIR/MSCW-$EPOCH-$ATM-$ZA-$WOBBLE-$NOISE-ID${RECID}-$DISPBDT.sh"
 rm -f "$FSCRIPT"
 sed -e "s|ZENITHANGLE|$ZA|" \
@@ -137,16 +137,18 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit 1
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT`
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT")
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT $h_vmem $tmpdir_size
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs:"
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
 elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT
+    # shellcheck disable=SC2086
+    $SUBC "$FSCRIPT"
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then

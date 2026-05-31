@@ -19,7 +19,7 @@ allowed_processing_types=("apptainer" "apptainer-dev" "al9")
 FOUND_PROCESS="FALSE"
 for item in "${allowed_processing_types[@]}";
 do
-    if [[ $item == $PROCESS ]]; then
+    if [[ $item == "$PROCESS" ]]; then
         FOUND_PROCESS="TRUE"
     fi
 done
@@ -53,7 +53,8 @@ export VERITAS_USER_DATA_DIR=${USERLUSTDIR}
 # user log
 export VERITAS_USER_LOG_DIR=${USERLUSTDIR}/LOGS/VERITAS
 # EVENTDISPLAY script directory (this directory)
-export EVNDISPSCRIPTS="$(pwd)"
+EVNDISPSCRIPTS="$(pwd)"
+export EVNDISPSCRIPTS
 
 ########################################################################
 # software settings
@@ -67,16 +68,18 @@ if [[ $PROCESS == "apptainer"* ]]; then
     # Alma Linux 9 (al9) processing
 elif [[ $PROCESS == "al9" ]]; then
     unset EVNDISP_APPTAINER
-    TDIR=`pwd`
+    TDIR=$(pwd)
     export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root_v6.30.02.Linux-almalinux9.3-x86_64-gcc11.4/
     export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-c17/
     export EVNDISPSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/EventDisplay_${EVNDISPVERSION:0:4}-${PROCESS}
-    cd "$ROOTSYS"
+    cd "$ROOTSYS" || return
+# shellcheck source=/dev/null
     source ./bin/thisroot.sh
     export PATH=$PATH:${VBFSYS}/bin/
     export LD_LIBRARY_PATH="$VBFSYS/lib:$LD_LIBRARY_PATH"
     export SOFASYS=${EVNDISPSYS}/sofa
-    cd ${EVNDISPSYS}
+    cd "${EVNDISPSYS}" || return
+# shellcheck source=/dev/null
     source ./setObservatory.sh VTS
-    cd "${TDIR}"
+    cd "${TDIR}" || return
 fi

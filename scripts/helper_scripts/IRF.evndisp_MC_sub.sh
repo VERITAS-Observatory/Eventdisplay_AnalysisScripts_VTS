@@ -1,8 +1,10 @@
 #!/bin/bash
+# shellcheck disable=SC2154
 # script to run evndisp for simulations on one of the cluster nodes (VBF)
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -10,14 +12,17 @@ fi
 RUNNUM="${1}"
 SIMDIR=DATADIR
 ZA=ZENITHANGLE
+# shellcheck disable=SC2034  # template placeholder, replaced by sed before job submission
 WOB=DECIMALWOBBLE
 WOG=INTEGERWOBBLE
 NOISE=NOISELEVEL
 EPOCH=ARRAYEPOCH
+# shellcheck disable=SC2034  # template placeholder, replaced by sed before job submission
 ATM=ATMOSPHERE
 ACUTS="RECONSTRUCTIONRUNPARAMETERFILE"
 SIMTYPE=SIMULATIONTYPE
 ODIR=OUTPUTDIR
+# shellcheck disable=SC2034  # template placeholder, replaced by sed before job submission
 TELTOANA="1234"
 VBFNAME="$2"
 NOISEFILE=NOISEFFILE
@@ -95,8 +100,8 @@ if [ -e "$V4N" ]; then
     for file in "$V4N"/*.root.zst; do
         tmpfile="$TMPDIR/$(basename "${file%.zst}")"
         zstd -d -c "$file" > "$tmpfile"
-        if $EVNDISPSYS/bin/logFile evndispLog "$tmpfile" | grep -q "$VBF_BASENAME"; then
-            echo "File $VBFNAME ($VBF_BASENAME) already processed ($(basename $tmpfile))"
+        if "$EVNDISPSYS"/bin/logFile evndispLog "$tmpfile" | grep -q "$VBF_BASENAME"; then
+            echo "File $VBFNAME ($VBF_BASENAME) already processed ($(basename "$tmpfile"))"
             exit
         fi
     done
@@ -112,7 +117,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l "${EVNDISPSYS}"/bin/evndisp
     fi
 }
 
@@ -129,7 +134,11 @@ else
 fi
 
 # Amplitude correction factor options
-AMPCORR="-traceamplitudecorrection ThroughputCorrection.runparameter -pedestalDefaultPedestal=$PEDLEV"
+AMPCORR=(
+    -traceamplitudecorrection
+    ThroughputCorrection.runparameter
+    "-pedestalDefaultPedestal=$PEDLEV"
+)
 # CARE simulations: add Gaussian noise of 3.6 mV/ (7.84 mV/dc)  / 2
 # Current (2018) CARE simulations:
 #    no electronic noise included - therefore add
@@ -137,7 +146,7 @@ AMPCORR="-traceamplitudecorrection ThroughputCorrection.runparameter -pedestalDe
 #    Derived for GrIsu many years ago - source not entirely clear
 #    add Gaussian noise of 3.6 mV/ (7.84 mV/dc)  / 2
 if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
-    AMPCORR="$AMPCORR -injectGaussianNoise=0.229592"
+    AMPCORR+=("-injectGaussianNoise=0.229592")
 fi
 
 # detector configuration
@@ -146,7 +155,7 @@ fi
 [[ ${EPOCH:0:2} == "V6" ]] && CFG="EVN_V6_Upgrade_20121127_v420.txt"
 
 CALDIR=${DDIR}
-mkdir -p ${CALDIR}/Calibration
+mkdir -p "${CALDIR}"/Calibration
 echo "Calibration directory: ${CALDIR}"
 
 ##################3
@@ -155,17 +164,17 @@ if [[ -f "${SIMDIR}/$VBFNAME" ]]; then
    ZTYPE=${VBFNAME##*.}
    if [[ $ZTYPE == "gz" ]]; then
        echo " (vbf is gzipped)"
-       VBF_FILE=$(basename $SIMDIR/${VBFNAME} .gz)
-       gunzip -f -q -c $SIMDIR/${VBFNAME} > ${DDIR}/${VBF_FILE}
+       VBF_FILE=$(basename $SIMDIR/"${VBFNAME}" .gz)
+       gunzip -f -q -c $SIMDIR/"${VBFNAME}" > "${DDIR}"/"${VBF_FILE}"
    elif [[ $ZTYPE == "bz2" ]]; then
        echo " (vbf is bzipped)"
-       VBF_FILE=$(basename $SIMDIR/${VBFNAME} .bz2)
-       bunzip2 -f -q -c $SIMDIR/${VBFNAME} > ${DDIR}/${VBF_FILE}
+       VBF_FILE=$(basename $SIMDIR/"${VBFNAME}" .bz2)
+       bunzip2 -f -q -c $SIMDIR/"${VBFNAME}" > "${DDIR}"/"${VBF_FILE}"
    elif [[ $ZTYPE == "zst" ]]; then
        echo " (vbf is zst-compressed)"
        if hash zstd 2>/dev/null; then
-           VBF_FILE=$(basename $SIMDIR/${VBFNAME} .zst)
-           zstd -d -f ${SIMDIR}/${VBFNAME} -o ${DDIR}/${VBF_FILE}
+           VBF_FILE=$(basename $SIMDIR/"${VBFNAME}" .zst)
+           zstd -d -f ${SIMDIR}/"${VBFNAME}" -o "${DDIR}"/"${VBF_FILE}"
        else
             echo "no zstd installed; exiting"
             exit
@@ -175,7 +184,7 @@ if [[ -f "${SIMDIR}/$VBFNAME" ]]; then
        exit
     fi
 fi
-ls -lh $DDIR/
+ls -lh "$DDIR"/
 
 # check that the uncompressed vbf file exists
 if [[ ! -f "$DDIR/$VBF_FILE" ]]; then
@@ -187,23 +196,41 @@ VBF_FILE="$DDIR/$VBF_FILE"
 
 #######################################
 # option for all steps of the analysis
-MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG"
-MCOPT="$MCOPT -reconstructionparameter $ACUTS -sourcefile $VBF_FILE"
-MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory ${CALDIR}"
-MCOPT="$MCOPT $AMPCORR"
-MCOPT="$MCOPT ${ADD_OPT}"
+read -r -a ADD_OPT_ARR <<< "$ADD_OPT"
+MCOPT=(
+    "-runnumber=$RUNNUM"
+    -sourcetype=2
+    -epoch
+    "$EPOCH"
+    "-camera=$CFG"
+)
+MCOPT+=(
+    -reconstructionparameter
+    "$ACUTS"
+    -sourcefile
+    "$VBF_FILE"
+)
+MCOPT+=(
+    -deadchannelfile
+    "$DEAD"
+    -donotusedbinfo
+    -calibrationdirectory
+    "${CALDIR}"
+)
+MCOPT+=("${AMPCORR[@]}")
+MCOPT+=("${ADD_OPT_ARR[@]}")
 
 # Low gain calibration
 LOWGAINCALIBRATIONFILE=NOFILE
 if [[ ${SIMTYPE:0:4} = "CARE" ]]; then
    if [[ $EDVERSION = "v4"* ]]; then
        if [[ ! -f ${CALDIR}/Calibration/calibrationlist.LowGainForCare.dat ]]; then
-          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.dat ${CALDIR}/Calibration/calibrationlist.LowGainForCare.dat
+          cp -f "$VERITAS_EVNDISP_AUX_DIR"/Calibration/calibrationlist.LowGainForCare.dat "${CALDIR}"/Calibration/calibrationlist.LowGainForCare.dat
        fi
        LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.dat
    else
        if [[ ! -f ${CALDIR}/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ]]; then
-          cp -f $VERITAS_EVNDISP_AUX_DIR/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat ${CALDIR}/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
+          cp -f "$VERITAS_EVNDISP_AUX_DIR"/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat "${CALDIR}"/Calibration/calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
        fi
        LOWGAINCALIBRATIONFILE=calibrationlist.LowGainForCare.${EPOCH:0:2}.dat
    fi
@@ -214,11 +241,11 @@ fi
 # (CARE only, GRISU used external noise file)
 if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
     echo "Calculating pedestals for run $RUNNUM"
-    rm -f $ODIR/$RUNNUM.ped.log
-    PEDOPT="-runmode=1 -calibrationnevents=${PEDNEVENTS}"
-    $EVNDISPSYS/bin/evndisp $MCOPT $PEDOPT &> "$ODIR/$RUNNUM.ped.log"
-    echo "$(inspect_executables)" >> "$ODIR/$RUNNUM.ped.log"
-    if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.ped.log;
+    rm -f $ODIR/"$RUNNUM".ped.log
+    PEDOPT=("-runmode=1" "-calibrationnevents=${PEDNEVENTS}")
+    "$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${PEDOPT[@]}" &> "$ODIR/$RUNNUM.ped.log"
+    inspect_executables >> "$ODIR/$RUNNUM.ped.log"
+    if grep -Fq "END OF ANALYSIS, exiting" $ODIR/"$RUNNUM".ped.log;
     then
         echo "   successful pedestal analysis"
     else
@@ -230,17 +257,28 @@ fi
 ###############################################
 # calculate tzeros
 echo "Calculating average tzeros for run $RUNNUM"
-TZEROPT="-runmode=7 -calibrationnevents=${TZERONEVENTS} -pedestalnoiselevel=$NOISE "
-TZEROPT="$TZEROPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE}"
-rm -f $ODIR/$RUNNUM.tzero.log
+TZEROPT=(
+    "-runmode=7"
+    "-calibrationnevents=${TZERONEVENTS}"
+    "-pedestalnoiselevel=$NOISE"
+    "-lowgainpedestallevel=$LOWPEDLEV"
+    -lowgaincalibrationfile
+    "${LOWGAINCALIBRATIONFILE}"
+)
+rm -f $ODIR/"$RUNNUM".tzero.log
 ### eventdisplay GRISU run options
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-   TZEROPT="$TZEROPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
+   TZEROPT+=(
+       -pedestalfile
+       "$NOISEFILE"
+       "-pedestalseed=$RUNNUM"
+       "-pedestalDefaultPedestal=$PEDLEV"
+   )
 fi
-echo "$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT" &> $ODIR/$RUNNUM.tzero.log
-$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT &>> $ODIR/$RUNNUM.tzero.log
-echo "$(inspect_executables)" &>> "$ODIR/$RUNNUM.tzero.log"
-if grep -Fq "END OF ANALYSIS, exiting" $ODIR/$RUNNUM.tzero.log;
+echo "$EVNDISPSYS/bin/evndisp ${MCOPT[*]} ${TZEROPT[*]}" &> $ODIR/"$RUNNUM".tzero.log
+"$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${TZEROPT[@]}" &>> $ODIR/"$RUNNUM".tzero.log
+inspect_executables &>> "$ODIR/$RUNNUM.tzero.log"
+if grep -Fq "END OF ANALYSIS, exiting" $ODIR/"$RUNNUM".tzero.log;
 then
     echo "   successful tzero analysis"
 else
@@ -254,25 +292,37 @@ fi
 
 #####################
 # general analysis options
-ANAOPT=" -writenomctree -outputfile $DDIR/$ONAME.root"
-ANAOPT="$ANAOPT -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE} -lowgainpedestallevel=$PEDLEV"
+ANAOPT=(
+    -writenomctree
+    -outputfile
+    "$DDIR/$ONAME.root"
+    -lowgaincalibrationfile
+    "${LOWGAINCALIBRATIONFILE}"
+    "-lowgainpedestallevel=$PEDLEV"
+)
 #
 ######################
 ## options for GRISU (handling of low-gain values)
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
+    ANAOPT+=(
+        -simu_hilo_from_simfile
+        -pedestalfile
+        "$NOISEFILE"
+        "-pedestalseed=$RUNNUM"
+        "-pedestalDefaultPedestal=$PEDLEV"
+    )
 fi
 #################################################################################
 # run evndisp
 echo "Analysing MC file for run $RUNNUM"
-echo "$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT" &> $ODIR/$ONAME.log
-$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/$ONAME.log
-echo "$(inspect_executables)" >> "$ODIR/$ONAME.log"
+echo "$EVNDISPSYS/bin/evndisp ${MCOPT[*]} ${ANAOPT[*]}" &> $ODIR/"$ONAME".log
+"$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${ANAOPT[@]}" &>> $ODIR/"$ONAME".log
+inspect_executables >> "$ODIR/$ONAME.log"
 
 #################################################################################
 # cleanup
 ls -lh "$DDIR"
-cp -r -f -v ${CALDIR}/Calibration ${ODIR}/
+cp -r -f -v "${CALDIR}"/Calibration ${ODIR}/
 rm -f -v "$VBF_FILE"
 
 echo "EVNDISP output root file written to $ODIR/$ONAME.root"
@@ -284,11 +334,11 @@ echo "EVNDISP log file written to $ODIR/$ONAME.log"
 add_log_file()
 {
      # first check if logFile is already included in evndisp file
-     LCON=$($EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root | grep "Error: log file object" | wc -l)
+     LCON=$("$EVNDISPSYS"/bin/logFile "$1" "$DDIR"/"$ONAME".root | grep -c "Error: log file object")
      if [[ ${LCON} == 1 ]]; then
          echo "writing log file ${2}"
          if [[ -f ${2} ]]; then
-             $EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root ${2}
+             "$EVNDISPSYS"/bin/logFile "$1" "$DDIR"/"$ONAME".root "${2}"
          fi
      else
          echo "log file ${2} already in $DDIR/$ONAME.root"
@@ -305,36 +355,36 @@ add_log_file evndisptzeroLog "$DDIR/$ONAME.tzero.log"
 ### check that log files are filled correctly
 compare_log_file()
 {
-    $EVNDISPSYS/bin/logFile $1 $DDIR/$ONAME.root > ${DDIR}/${1}.log
+    "$EVNDISPSYS"/bin/logFile "$1" "$DDIR"/"$ONAME".root > "${DDIR}"/"${1}".log
     if cmp -s "${2}" "${DDIR}/${1}.log"; then
         echo "FILES ${1} ${2} are the same, removing"
         rm -f "${2}"
     else
-        touch $ODIR/$ONAME.${1}.errorlog
-        echo "Error, ${1} ${2} differ" >> $ODIR/$ONAME.${1}.errorlog
+        touch $ODIR/"$ONAME"."${1}".errorlog
+        echo "Error, ${1} ${2} differ" >> $ODIR/"$ONAME"."${1}".errorlog
     fi
 }
 
-compare_log_file evndispLog $ODIR/$ONAME.log
-if [ -e $ODIR/$ONAME.ped.log ]; then
-    compare_log_file evndisppedLog $ODIR/$ONAME.ped.log
+compare_log_file evndispLog $ODIR/"$ONAME".log
+if [ -e $ODIR/"$ONAME".ped.log ]; then
+    compare_log_file evndisppedLog $ODIR/"$ONAME".ped.log
 fi
-compare_log_file evndisptzeroLog $ODIR/$ONAME.tzero.log
+compare_log_file evndisptzeroLog $ODIR/"$ONAME".tzero.log
 
 ### compress evndisp root file
 compress_file()
 {
     if command -v zstd &>/dev/null; then
-        zstd ${1}
-        zstd --test ${1}.zst
+        zstd "${1}"
+        zstd --test "${1}".zst
     else
         echo "Error: zstd compressing executable not found"
         exit
     fi
 }
 
-compress_file $DDIR/$ONAME.root
-mv -f -v $DDIR/$ONAME.root.zst ${ODIR}/
+compress_file "$DDIR"/"$ONAME".root
+mv -f -v "$DDIR"/"$ONAME".root.zst ${ODIR}/
 
 ### set group permissions
 chmod g+w "$ODIR/$ONAME.root.zst"

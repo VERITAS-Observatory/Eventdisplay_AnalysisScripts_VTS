@@ -26,15 +26,13 @@ get_run_directory()
     fi
     echo "${SRUN}"
 }
-LDIR=$(find ${DBTEXTDIR} -type d -name "[0-9][0-9][0-9]*")
-
 PDIR=$(pwd)
 
-FILES=$(cat $FLIST)
+FILES=$(cat "$FLIST")
 
 for RUN in $FILES
 do
-    SUBDIR=$(get_run_directory $RUN)
+    SUBDIR=$(get_run_directory "$RUN")
 
     ORG_FILE="${DBTEXTDIR}/${SUBDIR}/${RUN}.tar.gz"
     if [[ ! -e "${ORG_FILE}" ]]; then
@@ -48,14 +46,14 @@ do
     fi
 
     # copy and unpack tar ball
-    cd ${NEWDIR}/${SUBDIR}/
-    cp ${ORG_FILE} .
-    tar -xvzf ${RUN}.tar.gz
-    rm -f ${RUN}.tar.gz
+    cd "${NEWDIR}/${SUBDIR}/" || exit
+    cp "${ORG_FILE}" .
+    tar -xvzf "${RUN}".tar.gz
+    rm -f "${RUN}".tar.gz
     # pack again with all files
-    tar -cvzf ${RUN}.tar.gz ${RUN}
+    tar -cvzf "${RUN}".tar.gz "${RUN}"
 
-    cd ${PDIR}
+    cd "${PDIR}" || exit
 done
 
-cd ${PDIR}
+cd "${PDIR}" || exit

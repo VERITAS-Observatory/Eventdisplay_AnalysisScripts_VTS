@@ -2,10 +2,11 @@
 # script to analyse data files with lookup tables
 
 # qsub parameters
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 IRFVERSION="$EDVERSION"
 
 if [ "$#" -lt 2 ]; then
@@ -43,9 +44,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # create extra stdout for duplication of command output
 # look for ">&5" below
@@ -70,18 +70,18 @@ NRUNS=$(cat "$RUNLIST" | wc -l)
 echo "total number of runs to analyze: $NRUNS"
 
 # make output directory if it doesn't exist
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/MSCW.${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.mscw_energy_sub"
-TIMETAG=`date +"%s"`
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.mscw_energy_sub"
+TIMETAG=$(date +"%s")
 
 # directory schema
 getNumberedDirectory()
@@ -93,7 +93,7 @@ getNumberedDirectory()
     else
         ODIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${ODIR}
+    echo "${ODIR}"
 }
 
 
@@ -108,7 +108,7 @@ do
     if [[ $SKIP == "1" ]]; then
         TMPDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
         if [[ -d "$TMPDIR" ]]; then
-            TMPMDIR=$(getNumberedDirectory $RUNN "$TMPDIR")
+            TMPMDIR=$(getNumberedDirectory "$RUNN" "$TMPDIR")
             if [ -e "$TMPMDIR/$RUNN.mscw.root" ]; then
                 echo "RUN $RUNN already processed; skipping (FOUND IN $TMPMDIR/$RUNN.mscw.root)"
                 continue
@@ -119,7 +119,7 @@ do
 
     # EVNDISP file
     if [ ! -e "$BFILE" ]; then
-        TMPINDIR=$(getNumberedDirectory $RUNN ${INPUTDIR})
+        TMPINDIR=$(getNumberedDirectory "$RUNN" "${INPUTDIR}")
         if [ ! -e "$TMPINDIR/$RUNN.root" ]; then
             echo "ERR: File $BFILE does not exist" >> mscw.errors.log
             continue
@@ -133,26 +133,27 @@ do
     # directory (e.g., on afs)
     if [[ ${NRUNS} -gt 1000 ]]; then
         TMPLOGDIR=${LOGDIR}/MSCW_${RUNN:0:1}
-        mkdir -p ${TMPLOGDIR}
+        mkdir -p "${TMPLOGDIR}"
     fi
     FSCRIPT="$TMPLOGDIR/MSCW.data-ID$ID-$RUNN"
-    rm -f $FSCRIPT.sh
+    rm -f "$FSCRIPT".sh
 
     sed -e "s|RECONSTRUCTIONID|$ID|" \
         -e "s|OUTPUTDIRECTORY|$ODIR|" \
         -e "s|BDTDISP|${DISPBDT}|" \
         -e "s|VERSIONIRF|${IRFVERSION}|" \
-        -e "s|EVNDISPFILE|$BFILE|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|EVNDISPFILE|$BFILE|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
     chmod u+x "$FSCRIPT.sh"
-    echo $FSCRIPT.sh
+    echo "$FSCRIPT".sh
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+    SUBC=$(eval "echo \"$SUBC\"")
     echo "Submission command: $SUBC"
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -166,7 +167,7 @@ do
             echo "RUN $RUNN ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
@@ -174,9 +175,10 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${TMPLOGDIR}/runscripts.$TIMETAG.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "${TMPLOGDIR}"/runscripts."$TIMETAG".dat
         echo "RUN $RUNN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
         "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
@@ -185,7 +187,8 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat $TMPLOGDIR/runscripts.$TIMETAG.dat | $SUBC
+    # shellcheck disable=SC2086
+    cat "$TMPLOGDIR"/runscripts."$TIMETAG".dat | $SUBC
 fi
 
 echo "LOG/SUBMIT DIR: ${TMPLOGDIR}"

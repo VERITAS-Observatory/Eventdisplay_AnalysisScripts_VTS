@@ -2,6 +2,7 @@
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=2000M; tmpdir_size=25G
 
 if [ ! -n "$1" ] || [ ! -n "$2" ] || [ "$1" = "-h" ]; then
@@ -36,11 +37,7 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
-
-# EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # create extra stdout for duplication of command output
 # look for ">&5" below
@@ -50,8 +47,8 @@ exec 5>&1
 RLIST=$1
 SUMSTART=$2
 [[ "$3" ]] && ODIR=$3 || ODIR="$VERITAS_EVNDISP_AUX_DIR"
-mkdir -p $ODIR
-[[ "$4" ]] && SUMWINDOW=$4   || SUMWINNDOW=20
+mkdir -p "$ODIR"
+[[ "$4" ]] && SUMWINDOW=$4 || SUMWINDOW=20
 [[ "$5" ]] && TELTOANA=$5 || TELTOANA=1234
 [[ "$6" ]] && NEVENTS=$6 || NEVENTS=-1
 
@@ -60,18 +57,18 @@ if [ ! -f "$RLIST" ] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-FILES=`cat $RLIST`
+FILES=$(cat "$RLIST")
 
 # Output directory for error/output
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.LGAINPED"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/SPANALYSIS.lowgainped_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/SPANALYSIS.lowgainped_sub"
 
 
-NRUNS=`cat $RLIST | wc -l `
+NRUNS=$(cat "$RLIST" | wc -l )
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -88,10 +85,10 @@ do
 	-e "s|NNNN|$NEVENTS|" 		    \
 	-e  "s|CALIBFIRST|$SUMSTART|" 	    \
 	-e  "s|CALIBSUMWINDOW|$SUMWINDOW|"  \
-	$SUBSCRIPT.sh > $FSCRIPT.sh
+	"$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-    chmod u+x $FSCRIPT.sh
-    echo $FSCRIPT.sh
+    chmod u+x "$FSCRIPT".sh
+    echo "$FSCRIPT".sh
 	# output selected input during submission:
 	echo "calibrationsumwindow $SUMWINDOW, start at $SUMSTART, $NEVENTS events "
 	echo "Output: $ODIR"
@@ -103,15 +100,16 @@ do
 	fi
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
-        echo $SUBC
+        echo "$SUBC"
         exit
     fi
-    echo $SUBC
+    echo "$SUBC"
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -125,19 +123,21 @@ do
             echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
         fi
     elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        condor_submit $FSCRIPT.sh.condor
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
+        condor_submit "$FSCRIPT".sh.condor
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     fi
 done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat $LOGDIR/runscripts.dat | $SUBC
+    # shellcheck disable=SC2086
+    cat "$LOGDIR"/runscripts.dat | $SUBC
 fi
 
 exit

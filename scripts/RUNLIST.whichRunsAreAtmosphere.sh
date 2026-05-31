@@ -2,18 +2,18 @@
 # from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22/62) or winter(21/61)
 
 # check to see if input is from terminal, or from a pipe
-ISPIPEFILE=`readlink /dev/fd/0`
-if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} && $# < 2 ]]; then # its a terminal (not a pipe)
+ISPIPEFILE=$(readlink /dev/fd/0)
+if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} && $# -lt 2 ]]; then # its a terminal (not a pipe)
     echo
     echo "From a runlist or pipe, prints the run numbers that are of a particular atmosphere."
-    echo " $ `basename $0` [w|21|s|22] <file of runs>" ; echo
+    echo " $ $(basename "$0") [w|21|s|22] <file of runs>" ; echo
     echo "w = 21 = 61 = winter, s = 22 = 62 = summer" ; echo
     echo "Print list of summer runs:"
-    echo " $ `basename $0` s myrunlist.dat" ; echo
+    echo " $ $(basename "$0") s myrunlist.dat" ; echo
     echo "Print list of winter runs:"
-    echo " $ `basename $0` 61 myrunlist.dat" ; echo
+    echo " $ $(basename "$0") 61 myrunlist.dat" ; echo
     echo "Works with pipes : "
-    echo " $ cat myrunlist.dat | `basename $0` w" ; echo
+    echo " $ cat myrunlist.dat | $(basename "$0") w" ; echo
     echo "Summer/winter transition dates taken from $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
     exit
 fi
@@ -22,16 +22,16 @@ function echoerr(){ echo "$@" 1>&2; } #for spitting out error text
 
 # list of run_id's to read in
 RUNFILE=$2
-if [ ! -e $RUNFILE ] ; then
+if [ ! -e "$RUNFILE" ] ; then
 	echo "File $RUNFILE could not be found in $PWD , sorry."
 	exit
 fi
-RUNLIST=`cat $RUNFILE`
+RUNLIST=$(cat "$RUNFILE")
 #echo "RUNLIST:$RUNLIST"
 
 SUMMFLAG=false
 WINTFLAG=false
-LOWARG=`echo "$1" | tr '[A-Z]' '[a-z]'` # make all uppercase letters in arg 1 lowercase, for easier handling
+LOWARG=$(echo "$1" | tr '[:upper:]' '[:lower:]') # make all uppercase letters in arg 1 lowercase, for easier handling
 #echo "\$LOWARG: '$LOWARG'"
 if [[ "$LOWARG" == *w* ]] || [[ "$LOWARG" == "21" ]] || [[ "$LOWARG" == "61" ]] ; then
 	WINTFLAG=true
@@ -62,7 +62,8 @@ function IsWinter {
 		local PARAMFILE="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
 
 		# get only lines that start with '*'
-		local ATMOTHRESH=$( cat $PARAMFILE | grep -P "^\s??\*" | grep "ATMOSPHERE" )
+		local ATMOTHRESH
+		ATMOTHRESH=$(grep -P "^\s??\*" "$PARAMFILE" | grep "ATMOSPHERE")
 		#echo "$ATMOTHRESH"
 
 		# flag for if we found the atmo
@@ -72,9 +73,7 @@ function IsWinter {
 		local ATMOCODE=""
 		local MINDATE=""
 		local MAXDATE=""
-		(IFS='
-'
-		for line in $ATMOTHRESH ; do
+		while IFS= read -r line ; do
 			#echoerr "line:$line"
 			ATMOCODE=$( echo "$line" | awk '{ print $3 }' | grep -oP "\d+" )
 			MINDATE=$(  echo "$line" | awk '{ print $4 }' | tr -d '-' | grep -oP "\d+" )
@@ -98,8 +97,7 @@ function IsWinter {
 					break
 				fi
 			fi
-		done
-		)
+		done <<< "$ATMOTHRESH"
 		# 3 = did not find valid atmo range
 		if [ ! $FOUNDATMO ] ; then
 			echo 3
@@ -117,13 +115,13 @@ function IsWinter {
 			[ "$date" -gt "20121029" ] && [ "$date" -lt "20130425" ] ; then
 			#echo true
 			echo 1  # winter
-		elif [ "$date" -ge "20130425" -o "$date" -le "20071026" ] ; then
+		elif [ "$date" -ge "20130425" ] || [ "$date" -le "20071026" ] ; then
 			# don't have specific dates for summer/winter boundary, so we will generalize to the months
 			# may through october inclusive is 'summer'
-			if   [ "$month" -ge 5 -a "$month" -le 10 ] ; then
+			if   [ "$month" -ge 5 ] && [ "$month" -le 10 ] ; then
 				echo 2 # summer
 			# november through april inclusive is 'winter'
-			elif [ "$month" -le 4 -o "$month" -ge 11 ] ; then
+			elif [ "$month" -le 4 ] || [ "$month" -ge 11 ] ; then
 				echo 1 # winter
 			else
 				echo 3 # unassignable
@@ -141,7 +139,7 @@ function badAtmosphere {
 }
 
 # get database url from parameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter" | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 
 if [ ! -n "$MYSQLDB" ] ; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
@@ -157,7 +155,7 @@ MYSQL="mysql -u readonly -h $MYSQLDB -A"
 COUNT=0
 SUB=""
 for ARUN in $RUNLIST ; do
-	if (( $ARUN > 0 )); then
+	if (( ARUN > 0 )); then
 		if [[ "$COUNT" -eq 0 ]] ; then
 			SUB="run_id = $ARUN"
 		else
@@ -175,11 +173,11 @@ while read -r RUNID RUNDATE ; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
 
 		# decode the date tag
-		read YY MM DD HH MI SE <<< ${RUNDATE//[-:]/ }
+		read -r YY MM DD _ _ _ <<< "${RUNDATE//[-:]/ }"
 		#echo "  YEARMONTHDAY:$YY$MM$DD"
 
 		# get the atmosphere code
-        STATUSFLAG=`IsWinter "$YY$MM$DD"`
+        STATUSFLAG=$(IsWinter "$YY$MM$DD")
 		#echo "$RUNID '$STATUSFLAG'"
 
 		# did the user ask for summer runs?

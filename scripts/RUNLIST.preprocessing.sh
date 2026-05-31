@@ -24,8 +24,7 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 [[ "$1" ]] && START_DATE=$1" 00:00:00" || START_DATE="2011-01-01 00:00:00"
@@ -35,14 +34,13 @@ MIN_DURATION=2
 #  Use '%' for all runs.
 MODE="%"
 # science calibration, engineering, moonfilter, reducedhv, special (but see call below)
-DQMCATEGORY="science"
 
 # three telescope configuration
 TEL_MASKS="('15', '7', '11', '13', '14')"
 TEL_CUT_MASKS="('0', '8', '4', '2', '1')"
 
 # Get VERITAS database URL from EVNDISP.global.runparameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 if [ ! -n "$MYSQLDB" ]; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit 1
@@ -75,7 +73,7 @@ while read -r RUNID; do
     if [[ ! -n "$non_digits" ]]; then
 		FINALARRAY+=("$RUNID")
 	fi
-done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status != 'do_not_use' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or data_category is null ) and (usable_duration >= '00:${MIN_DURATION}:00' or usable_duration is null) and run_id in ${RUN_IDS[@]}")
+done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where status != 'do_not_use' and (tel_cut_mask is NULL or tel_cut_mask in $TEL_CUT_MASKS) and ( data_category like \"science\" or data_category like \"reducedhv\" or data_category like \"moonfilter\" or data_category is null ) and (usable_duration >= '00:${MIN_DURATION}:00' or usable_duration is null) and run_id in ${RUN_IDS[*]}")
 
 # See if there are runs without DQM at all; these are also included in the final run list
 RUNS_WITH_DQM=()
@@ -86,7 +84,7 @@ while read -r RUNID; do
             RUNS_WITH_DQM+=("$RUNID")
         fi
     fi
-done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where run_id in ${RUN_IDS[@]}")
+done < <($MYSQL -e "select run_id from VOFFLINE.tblRun_Analysis_Comments where run_id in ${RUN_IDS}")
 for run in "${RUNINFOARRAY[@]}"; do
     if [[ ! " ${RUNS_WITH_DQM[*]} " == *" $run "* ]]; then
         FINALARRAY+=("$run")
