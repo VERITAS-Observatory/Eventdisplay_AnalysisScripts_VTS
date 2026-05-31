@@ -76,11 +76,18 @@ unpack_db_textdirectory()
     echo "DBTEXT FILE for $RRUN $DBRUNFIL" >&2
     if [[ -e ${DBRUNFIL} ]]; then
         mkdir -p ${TMP_DBTEXTDIRECTORY}/${SRUN}
-        tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/${SRUN}/
+        tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/${SRUN}/ || return 1
     else
         echo "DBTEXT FILE not found ($DBRUNFIL)" >&2
+        return 1
     fi
-    echo "${TMP_DBTEXTDIRECTORY}/${SRUN}/${RRUN}/${RRUN}.laserrun"
+
+    DBTEXTFILE="${TMP_DBTEXTDIRECTORY}/${SRUN}/${RRUN}/${RRUN}.laserrun"
+    if [[ ! -r ${DBTEXTFILE} ]]; then
+        echo "DBTEXT FILE not readable (${DBTEXTFILE})" >&2
+        return 1
+    fi
+    echo "${DBTEXTFILE}"
 }
 
 sub_dir()
@@ -100,11 +107,15 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     echo "UNPACKING DBTEXT from $RUN ${DBTEXTDIRECTORY}"
     TMP_DBTEXTDIRECTORY="${TEMPDIR}/DBTEXT"
     TMP_LASERRUN=$(unpack_db_textdirectory $RUN $TMP_DBTEXTDIRECTORY)
+    if [[ $? -ne 0 || ! -r ${TMP_LASERRUN} ]]; then
+        echo "failed to unpack DBTEXT laser-run metadata for run $RUN" >&2
+        exit 1
+    fi
     LRUNID=$(cat ${TMP_LASERRUN} | grep -v run_id | awk -F "|" '{print $1}')
     for LL in ${LRUNID}
     do
         echo "  unpacking flasher/laser run: $LL"
-        unpack_db_textdirectory $LL $TMP_DBTEXTDIRECTORY
+        unpack_db_textdirectory $LL $TMP_DBTEXTDIRECTORY >/dev/null || exit 1
     done
     echo "DBTEXT directory $(ls -l $TMP_DBTEXTDIRECTORY)"
 
@@ -138,6 +149,10 @@ get_run_date()
 # check if run is on disk
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     RUNINFO=$(sub_dir ${TMP_DBTEXTDIRECTORY} ${RUN})/${RUN}/${RUN}.runinfo
+    if [[ ! -r ${RUNINFO} ]]; then
+        echo "DBTEXT run info not readable (${RUNINFO})" >&2
+        exit 1
+    fi
     RUNDATE=$(get_run_date ${RUNINFO})
     echo "RUN $RUN $RUNINFO $RUNDATE"
     ls -l ${TMP_DBTEXTDIRECTORY}

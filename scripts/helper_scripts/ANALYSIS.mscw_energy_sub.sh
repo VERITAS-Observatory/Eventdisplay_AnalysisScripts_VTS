@@ -158,6 +158,10 @@ if [[ $DISPBDT == "1" ]]; then
     ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -zenith | awk '{print $4}')
     DISPDIR=$(get_disp_dir ${ZA})
     echo "DISPDIR (Zenith is $ZA deg): " $DISPDIR
+    if [[ ! -d "$DISPDIR" ]]; then
+        echo "Error: DispBDT directory $DISPDIR not found, exiting..."
+        exit 1
+    fi
 fi
 
 #################################

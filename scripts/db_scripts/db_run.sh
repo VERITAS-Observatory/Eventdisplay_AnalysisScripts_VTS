@@ -75,6 +75,7 @@ get_start_time()
     else
         field_name="data_start_time"
     fi
+    start_time_index=0
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ ));
@@ -98,6 +99,7 @@ get_end_time()
     else
         field_name="data_end_time"
     fi
+    end_time_index=0
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ ));
@@ -173,6 +175,7 @@ get_source_id()
     else
         OFIL=$(cat $OFIL)
     fi
+    source_index=0
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ ));
@@ -292,9 +295,11 @@ read_pointing()
 
 read_run_from_DB runinfo
 read_run_from_DB rundqm
-# don't test and read if tar file exists
-# (implementation of testing missing)
-if [[ ! -e $(getDBTextFileDirectory ${RUN}).tar.gz ]] || [[ ${OVERWRITE} == "1" ]]; then
+# Re-read laser data if tarball is missing OR if sidecar .laserrun file is absent
+RUND="$(getDBTextFileDirectory ${RUN})"
+if [[ ! -e "${RUND}.tar.gz" ]] || \
+   [[ $(get_file_status ${RUN} "${RUND}/${RUN}.laserrun") == "0" ]] || \
+   [[ ${OVERWRITE} == "1" ]]; then
     read_laser_run_and_dqm
     read_laser_calibration
 fi

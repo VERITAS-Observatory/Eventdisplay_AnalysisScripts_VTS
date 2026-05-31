@@ -114,5 +114,3 @@ elif [[ $SUBC == *parallel* ]]; then
 elif [[ $SUBC == *simple* ]]; then
 	"$FSCRIPT.sh" |& tee $FSCRIPT.log
 fi
-
-exit
