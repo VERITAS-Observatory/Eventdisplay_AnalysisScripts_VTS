@@ -131,9 +131,9 @@ fi
 rm -f $OSUBDIR/$OFILE.log
 rm -f $OSUBDIR/$OFILE.list
 echo "INDIR ${INDIR}"
-if [ -n "$(find "${INDIR}/" -name "*[0-9].root" 2>/dev/null)" ]; then
+if [ -n "$(find "${INDIR}/" -maxdepth 1 -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Using evndisp root files from ${INDIR}"
-    cp -v "${INDIR}"/*[0-9].root "$DDIR"
+    find "${INDIR}/" -maxdepth 1 -name "*[0-9].root" -exec cp -v {} "$DDIR" \;
 elif [ -n "$(find  "${INDIR}/" -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     if command -v zstd &>/dev/null; then
         echo "Copying evndisp root.zst files to ${DDIR}"
