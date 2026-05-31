@@ -57,7 +57,7 @@ if [[ "${RUNPAR##*.}" == "json" ]]; then
         }
     }')
 else
-    ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+    ZEBINS=$(grep "^\* ZENBINS " "$RUNPAR" | sed -e 's/\* ZENBINS//' | sed -e 's/ /\n/g')
 fi
 echo "Zenith angle definition: $ZEBINS"
 declare -a ZEBINARRAY=( $ZEBINS ) #convert to array

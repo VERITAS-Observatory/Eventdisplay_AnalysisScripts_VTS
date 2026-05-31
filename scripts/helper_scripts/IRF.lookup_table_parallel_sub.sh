@@ -64,7 +64,7 @@ if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Copying evndisp root files to ${DDIR}"
     find ${INDIR} -name "*[0-9].root" -exec cp -v {} ${DDIR} \;
 elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
-    if command -v zstd /dev/null; then
+    if command -v zstd &>/dev/null; then
         echo "Copying evndisp root.zst files to ${DDIR}"
         FLIST=$(find "${INDIR}/" -name "*[0-9].root.zst")
         for F in $FLIST

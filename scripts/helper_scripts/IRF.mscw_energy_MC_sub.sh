@@ -73,7 +73,6 @@ inspect_executables()
     fi
 }
 
-
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
 # dispBDT reconstruction
@@ -104,14 +103,16 @@ if [ $DISPBDT -eq 1 ]; then
     elif [[ "${ZA}" -lt "58" ]]; then
         DISPDIR="${DISPDIR}/55deg/"
     elif [[ "${ZA}" -lt "62" ]]; then
-        DISPDIR="${DISPDIR}/60deg/"
-        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+        if [[ ${SIMTYPE} == CARE_RedHV* ]]; then  # fix for incomplete RedHV MC set
             DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/60deg/"
         fi
     else
-        DISPDIR="${DISPDIR}/65deg/"
-        if [[ ${SIMTYPE} == "CARE_RedHV" ]]; then  # fix for incomplete MC set
+        if [[ ${SIMTYPE} == CARE_RedHV* ]]; then  # fix for incomplete RedHV MC set
             DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/65deg/"
         fi
     fi
     # unzip XML files into DDIR
@@ -130,11 +131,11 @@ fi
 rm -f $OSUBDIR/$OFILE.log
 rm -f $OSUBDIR/$OFILE.list
 echo "INDIR ${INDIR}"
-if [ -n "$(find "${INDIR}/" -name "*[0-9].root" 2>/dev/null)" ]; then
+if [ -n "$(find "${INDIR}/" -maxdepth 1 -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Using evndisp root files from ${INDIR}"
-    cp -v "${INDIR}/*[0-9].root" "$DDIR"
+    find "${INDIR}/" -maxdepth 1 -name "*[0-9].root" -exec cp -v {} "$DDIR" \;
 elif [ -n "$(find  "${INDIR}/" -name "*[0-9].root.zst" 2>/dev/null)" ]; then
-    if command -v zstd /dev/null; then
+    if command -v zstd &>/dev/null; then
         echo "Copying evndisp root.zst files to ${DDIR}"
         FLIST=$(find "${INDIR}/" -name "*[0-9].root.zst")
         for F in $FLIST

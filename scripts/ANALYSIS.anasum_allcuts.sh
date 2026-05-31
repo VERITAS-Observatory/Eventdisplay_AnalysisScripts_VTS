@@ -63,7 +63,7 @@ do
         fi
         echo $CDIR
         mkdir -p "$TMPDIR/${CDIR}"
-        ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
+        $(dirname "$0")/ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
             "$TMPDIR/${CDIR}" \
             ${C} \
             ${IGNORETYPE} \
@@ -71,7 +71,7 @@ do
             $PREDIR $SKIPIFPROCESSED | tee -a ${TMPLOG}
     elif [[ $RUNTYPE == "V2DL3" ]]; then
         mkdir -p "$TMPDIR/v2dl3_${C}"
-         ./ANALYSIS.v2dl3.sh ${RUNL} \
+         $(dirname "$0")/ANALYSIS.v2dl3.sh ${RUNL} \
              "$TMPDIR/v2dl3_${C}" \
              ${C} | tee -a ${TMPLOG}
     else

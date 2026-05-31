@@ -54,7 +54,6 @@ then
     rm -f ${RATEFILE}.log
 
     # calculate rates from Crab Nebula and from background rates
-    rm -f ${MVADIR}/rates.log
     "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
         ${EFFAREA} \
         ${RATEFILE}.root \

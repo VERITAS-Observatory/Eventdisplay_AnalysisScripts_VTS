@@ -308,7 +308,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB reconstruction reading from $MSCWDIR"
-            ./IRF.dispXGB.sh "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}"
+            $(dirname "$0")/IRF.dispXGB.sh "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}"
             continue
        fi
        #############################################
@@ -316,7 +316,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBGH" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB classification reading from $MSCWDIR"
-            ./IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}"
+            $(dirname "$0")/IRF.dispXGB.sh "classification" "${MSCWDIR}" "${MSCWDIR}"
             continue
        fi
        #############################################
@@ -327,7 +327,7 @@ for VX in $EPOCH; do
            ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
            echo "XGB Classification Training"
            echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
-           ./IRF.trainXGBforGammaHadronSeparationTraining.sh "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           $(dirname "$0")/IRF.trainXGBforGammaHadronSeparationTraining.sh "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
            continue
        fi
        #############################################
@@ -335,54 +335,50 @@ for VX in $EPOCH; do
        # train per epoch and atmosphere and for each cut
        # (cut as sizesecondmax cut is applied)
        if [[ $IRFTYPE == "TRAINTMVA" ]] || [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
-            for VX in $EPOCH; do
-                for ATM in $ATMOS; do
-                    for C in ${CUTTYPES[@]}; do
-                        echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
-                        BDTDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining"
-                        MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
-                        # list of background files
-                        TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
-                        if [[ $DISPBDT == "1" ]]; then
-                            TRAINDIR="${BDTDIR}/mscw_${VX:0:2}_DISP/"
-                            MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
-                        fi
-                        mkdir -p -v "${MVADIR}"
-                        if [[ $IRFTYPE == "TRAINTMVA" ]]; then
-                            # retrieve size cut
-                            CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
-                            echo "CUTFILE: $CUTFIL"
-                            SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
-                            if [ -z "$SIZECUT" ]
-                            then
-                                echo "No size cut found; skipping cut $C"
-                                continue
-                            fi
-                            echo "Size cut applied: $SIZECUT"
-                            RUNPAR="TMVA.BDT.runparameter"
-                            if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/"$RUNPAR"
-                            else
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/"$RUNPAR" "$MVADIR"/"$RUNPAR"
-                            fi
-                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/"$RUNPAR"
-                            if [[ $CUTFIL = *"NTel3"* ]]; then
-                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/"$RUNPAR"
-                            fi
-                            ./IRF.trainTMVAforGammaHadronSeparation.sh \
-                                         "${TRAINDIR}" \
-                                         "$MVADIR"/"$RUNPAR" \
-                                         "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
-                         # Cut optimization
-                         elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
-                             echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
-                             ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
-                                 "${BDTDIR}/BackgroundRates/${VX:0:2}" \
-                                 "${C/PointSource-/}" \
-                                 ${SIMTYPE} ${VX} "${ATM}"
-                         fi
-                    done
-                done
+            for C in ${CUTTYPES[@]}; do
+                echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
+                BDTDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining"
+                MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                # list of background files
+                TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
+                if [[ $DISPBDT == "1" ]]; then
+                    TRAINDIR="${BDTDIR}/mscw_${VX:0:2}_DISP/"
+                    MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                fi
+                mkdir -p -v "${MVADIR}"
+                if [[ $IRFTYPE == "TRAINTMVA" ]]; then
+                    # retrieve size cut
+                    CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
+                    echo "CUTFILE: $CUTFIL"
+                    SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${VX:0:2} | awk '{print $3}' | sort -u`
+                    if [ -z "$SIZECUT" ]
+                    then
+                        echo "No size cut found; skipping cut $C"
+                        continue
+                    fi
+                    echo "Size cut applied: $SIZECUT"
+                    RUNPAR="TMVA.BDT.runparameter"
+                    if [[ ${VX:0:2} == "V4" ]] || [[ ${VX:0:2} == "V5" ]]; then
+                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/"$RUNPAR"
+                    else
+                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/"$RUNPAR" "$MVADIR"/"$RUNPAR"
+                    fi
+                    sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/"$RUNPAR"
+                    if [[ $CUTFIL = *"NTel3"* ]]; then
+                        sed -i "s/NImages>1/NImages>2/" "$MVADIR"/"$RUNPAR"
+                    fi
+                    $(dirname "$0")/IRF.trainTMVAforGammaHadronSeparation.sh \
+                                 "${TRAINDIR}" \
+                                 "$MVADIR"/"$RUNPAR" \
+                                 "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                 # Cut optimization
+                 elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
+                     echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
+                     $(dirname "$0")/IRF.optimizeTMVAforGammaHadronSeparation.sh \
+                         "${BDTDIR}/BackgroundRates/${VX:0:2}" \
+                         "${C/PointSource-/}" \
+                         ${SIMTYPE} ${VX} "${ATM}"
+                 fi
             done
             continue
        fi

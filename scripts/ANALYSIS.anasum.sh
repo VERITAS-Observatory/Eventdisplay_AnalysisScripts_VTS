@@ -87,8 +87,8 @@ sed -e "s|FILELIST|$FLIST|" \
 chmod u+x "$FSCRIPT.sh"
 echo "$FSCRIPT.sh"
 
-SUBC="$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh"
-# run locally or on cluster
+SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
+# run locally or on cluster (expand shell variables in submission string)
 SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
@@ -113,5 +113,3 @@ elif [[ $SUBC == *parallel* ]]; then
 elif [[ $SUBC == *simple* ]]; then
 	"$FSCRIPT.sh" |& tee $FSCRIPT.log
 fi
-
-exit
