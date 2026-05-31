@@ -11,7 +11,7 @@ BCKLIST=MSCWBCK
 PARA=MODELPARA
 EBIN=ENERGYBIN
 ODIR=OUTPUTDIR
-env_name="eventdisplay_ml"
+env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 P="0.5"
 N="5000000"
 MAXCORES=48
@@ -64,9 +64,9 @@ eventdisplay-ml-train-xgb-classify \
     --energy_bin_number "${EBIN}" \
     --model_parameters "${PARA}" \
     --max_cores $MAXCORES \
-    --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
+    --train_test_fraction $P --max_events $N  >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
-conda list -n $env_name >> "${LOGFILE}"
+conda list -n "$env_name" >> "${LOGFILE}"
 
 conda deactivate

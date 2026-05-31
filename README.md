@@ -54,6 +54,7 @@ Set the following environment variables before running the scripts:
 | `$VERITAS_USER_DATA_DIR` | Path to user-specific data output |
 | `$VERITAS_USER_LOG_DIR` | Path to log files |
 | `$EVNDISP_MLSYS` | Path to the [Eventdisplay-ML](https://github.com/Eventdisplay/Eventdisplay-ML) installation (optional) |
+| `$EVNDISP_ML_ENV` | Name of the conda environment for Eventdisplay-ML (default: `eventdisplay_ml`) |
 
 See [`./scripts/set_environment.sh`](./scripts/set_environment.sh) for a template with all variables configured for the DESY computing environment. Submission commands for various batch systems are available in [submissionCommands.dat](./scripts/submissionCommands.dat).
 

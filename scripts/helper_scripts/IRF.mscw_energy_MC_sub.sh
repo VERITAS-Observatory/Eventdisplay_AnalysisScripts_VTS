@@ -26,7 +26,7 @@ ODIR=OUTPUTDIR
 # Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
 XGBVERSION=VERSIONXGB
-env_name="eventdisplay_ml"
+env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -263,7 +263,7 @@ run_xgb()
     check_conda_installation
 # shellcheck source=/dev/null
     source activate base
-    conda activate $env_name
+    conda activate "$env_name"
     MSCW_FILE="$outputfilename"
     ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
     ZA=${ZA%deg}
@@ -290,13 +290,13 @@ run_xgb()
     rm -f "$XGBOFIL".log
 
     eventdisplay-ml-apply-xgb-stereo \
-        --input-file "$MSCW_FILE" \
-        --model-dir "$DISPDIR" \
-        --output-file "$XGBOFIL.root" \
-        --image-selection "$1" > "$XGBOFIL.log" 2>&1
+        --input_file "$MSCW_FILE" \
+        --model_prefix "$DISPDIR" \
+        --output_file "$XGBOFIL.root" \
+        --image_selection "$1" > "$XGBOFIL.log" 2>&1
 
     python --version >> "${XGBOFIL}.log"
-    conda list -n $env_name >> "${XGBOFIL}.log"
+    conda list -n "$env_name" >> "${XGBOFIL}.log"
 
     conda deactivate
     echo "Finished calculated XGB"
@@ -365,7 +365,7 @@ PARAMFILE="
 * CUTFILE $DDIR/$(basename "$CUTSFILE")
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $outputfilename
-* XGBFILESUFFIX ${XGBFILESUFFIX}"
+* XGBSTEREOFILESUFFIX ${XGBFILESUFFIX}"
 
         if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             run_xgb $ID

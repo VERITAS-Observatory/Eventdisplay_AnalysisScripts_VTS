@@ -6,7 +6,7 @@
 
 MSCW_FILE=FFILE
 ODIR=OODIR
-env_name="eventdisplay_ml"
+env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 XGB="XXGB"
 XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
@@ -51,7 +51,7 @@ PYTHONPYCACHEPREFIX="${TEMPDIR}/pycache_$(basename "$MSCW_FILE" .root)"
 export PYTHONPYCACHEPREFIX
 mkdir -p "$PYTHONPYCACHEPREFIX"
 eval "$(conda shell.bash hook)"
-conda activate $env_name
+conda activate "$env_name"
 
 if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."

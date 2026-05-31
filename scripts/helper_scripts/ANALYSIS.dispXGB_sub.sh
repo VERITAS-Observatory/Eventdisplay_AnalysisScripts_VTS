@@ -7,7 +7,7 @@
 # parameters replaced by parent script using sed
 RUN=RRUN
 ODIR=OODIR
-env_name="eventdisplay_ml"
+env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 XGB="XXGB"
 XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
@@ -46,7 +46,7 @@ check_conda_installation()
 check_conda_installation
 
 eval "$(conda shell.bash hook)"
-conda activate $env_name
+conda activate "$env_name"
 
 # directory schema for preprocessed files
 getNumberedDirectory()
@@ -112,6 +112,6 @@ $ML_EXEC --input_file "$MSCW_FILE" \
     --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
-conda list -n $env_name >> "${LOGFILE}"
+conda list -n "$env_name" >> "${LOGFILE}"
 
 conda deactivate

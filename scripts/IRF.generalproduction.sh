@@ -19,7 +19,7 @@ required parameters:
                             EVNDISP,
                             MAKETABLES, COMBINETABLES,
                             TRAINMVANGRES,
-                            TRAINXGBANGRESBINNED, ANAXGBANGRES,
+                            TRAINXGBANGRES, ANAXGBANGRES,
                             TRAINXGBGH, ANAXGBGH,
                             ANALYSETABLES,
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
