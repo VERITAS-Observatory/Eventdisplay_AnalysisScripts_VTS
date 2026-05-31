@@ -5,6 +5,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=03:29:00; h_vmem=12000M; tmpdir_size=20G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 # EventDisplay version
 EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
@@ -111,21 +113,7 @@ if [[ $SUBC == *"ERROR"* ]]; then
     echo "Error: reading submission type from $SUBMISSION_SCRIPT"
     exit 1
 fi
+submit_job "$FSCRIPT" "$FSCRIPT &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
 if [[ $SUBC == *qsub* ]]; then
-    # shellcheck disable=SC2086
-    JOBID=$($SUBC "$FSCRIPT")
     echo "JOBID: $JOBID"
-elif [[ $SUBC == *condor* ]]; then
-    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
-    echo "-------------------------------------------------------------------------------"
-    echo "Job submission using HTCondor - run the following script to submit jobs:"
-    echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-    echo "-------------------------------------------------------------------------------"
-elif [[ $SUBC == *sbatch* ]]; then
-    # shellcheck disable=SC2086
-    $SUBC "$FSCRIPT"
-elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-elif [[ "$SUBC" == *simple* ]]; then
-    "$FSCRIPT" | tee "$FSCRIPT.log"
 fi

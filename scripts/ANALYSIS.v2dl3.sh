@@ -7,6 +7,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 if [ "$#" -lt 3 ]; then
 echo "
@@ -91,42 +93,18 @@ do
         echo "$SUBC"
         exit
     fi
-    if [[ $SUBC == *qsub* ]]; then
-        # shellcheck disable=SC2086
-        JOBID=$($SUBC "$FSCRIPT".sh)
-        # account for -terse changing the job number format
-        if [[ $SUBC != *-terse* ]] ; then
-            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
+        submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.$TIMETAG.dat"
+        if [[ $SUBC == *qsub* ]]; then
+            echo "RUN $J JOBID $JOBID"
+            echo "RUN $J SCRIPT $FSCRIPT.sh"
+            if [[ $SUBC != */dev/null* ]] ; then
+                echo "RUN $J OLOG $FSCRIPT.sh.o$JOBID"
+                echo "RUN $J ELOG $FSCRIPT.sh.e$JOBID"
+            fi
+        elif [[ $SUBC == *parallel* ]]; then
+            echo "RUN $J OLOG $FSCRIPT.log"
         fi
-
-        echo "RUN $J JOBID $JOBID"
-        echo "RUN $J SCRIPT $FSCRIPT.sh"
-        if [[ $SUBC != */dev/null* ]] ; then
-            echo "RUN $J OLOG $FSCRIPT.sh.o$JOBID"
-            echo "RUN $J ELOG $FSCRIPT.sh.e$JOBID"
-        fi
-    elif [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit 5"
-        echo "-------------------------------------------------------------------------------"
-        echo
-	elif [[ $SUBC == *sbatch* ]]; then
-        # shellcheck disable=SC2086
-        $SUBC "$FSCRIPT".sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
-        echo "RUN $J OLOG $FSCRIPT.log"
-    elif [[ "$SUBC" == *simple* ]] ; then
-	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
-	fi
 done
 
 # Execute all FSCRIPTs locally in parallel
-if [[ $SUBC == *parallel* ]]; then
-    # shellcheck disable=SC2086
-    cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
-fi
+run_parallel_jobs "$LOGDIR/runscripts.$TIMETAG.dat"

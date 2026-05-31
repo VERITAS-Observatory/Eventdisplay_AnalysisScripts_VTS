@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=00:29:00; h_vmem=4000M; tmpdir_size=4G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 # EventDisplay version
 EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
@@ -151,44 +153,20 @@ do
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=$(eval "echo \"$SUBC\"")
     echo "Submission command: $SUBC"
-    if [[ $SUBC == *qsub* ]]; then
-        # shellcheck disable=SC2086
-        JOBID=$($SUBC "$FSCRIPT".sh)
-        # account for -terse changing the job number format
-        if [[ $SUBC != *-terse* ]] ; then
-            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
+        submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$TMPLOGDIR/runscripts.$TIMETAG.dat"
+        if [[ $SUBC == *qsub* ]]; then
+            echo "RUN $RUNN JOBID $JOBID"
+            echo "RUN $RUNN SCRIPT $FSCRIPT.sh"
+            if [[ $SUBC != */dev/null* ]] ; then
+                echo "RUN $RUNN OLOG $FSCRIPT.sh.o$JOBID"
+                echo "RUN $RUNN ELOG $FSCRIPT.sh.e$JOBID"
+            fi
+        elif [[ $SUBC == *parallel* ]]; then
+            echo "RUN $RUNN OLOG $FSCRIPT.log"
         fi
-
-        echo "RUN $RUNN JOBID $JOBID"
-        echo "RUN $RUNN SCRIPT $FSCRIPT.sh"
-        if [[ $SUBC != */dev/null* ]] ; then
-            echo "RUN $RUNN OLOG $FSCRIPT.sh.o$JOBID"
-            echo "RUN $RUNN ELOG $FSCRIPT.sh.e$JOBID"
-        fi
-    elif [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit"
-        echo "-------------------------------------------------------------------------------"
-        echo
-    elif [[ $SUBC == *sbatch* ]]; then
-        # shellcheck disable=SC2086
-        $SUBC "$FSCRIPT".sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "${TMPLOGDIR}"/runscripts."$TIMETAG".dat
-        echo "RUN $RUNN OLOG $FSCRIPT.log"
-    elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
-    fi
 done
 
 # Execute all FSCRIPTs locally in parallel
-if [[ $SUBC == *parallel* ]]; then
-    # shellcheck disable=SC2086
-    cat "$TMPLOGDIR"/runscripts."$TIMETAG".dat | $SUBC
-fi
+run_parallel_jobs "$TMPLOGDIR/runscripts.$TIMETAG.dat"
 
 echo "LOG/SUBMIT DIR: ${TMPLOGDIR}"

@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 # EventDisplay version
 EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
@@ -140,23 +142,9 @@ do
             echo "$SUBC"
             exit
         fi
-        if [[ $SUBC == *qsub* ]]; then
-            # shellcheck disable=SC2086
-            JOBID=$($SUBC "$FSCRIPT")
-            echo "RUN $RUNNUM: JOBID $JOBID"
-        elif [[ $SUBC == *condor* ]]; then
-            "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
-            echo
-            echo "-------------------------------------------------------------------------------"
-            echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-            echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-            echo "-------------------------------------------------------------------------------"
-            echo
-        elif [[ $SUBC == *sbatch* ]]; then
-                # shellcheck disable=SC2086
-                $SUBC "$FSCRIPT"
-        elif [[ $SUBC == *parallel* ]]; then
-            echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-        fi
+            submit_job "$FSCRIPT" "$FSCRIPT &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
+            if [[ $SUBC == *qsub* ]]; then
+                echo "RUN $RUNNUM: JOBID $JOBID"
+            fi
     done
 done

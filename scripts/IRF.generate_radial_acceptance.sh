@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=04:29:00; h_vmem=6000M; tmpdir_size=10G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 if [[ $# != 6 ]]; then
 # begin help message
@@ -158,26 +160,16 @@ for CUTS in "${CUTLIST[@]}"; do
             fi
             if [[ $SUBC == *qsub* ]]; then
                 echo "$SUBC" "$FSCRIPT.sh"
-                # shellcheck disable=SC2086
-                JOBID=$($SUBC "$FSCRIPT".sh)
+            fi
+            submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
+            if [[ $SUBC == *qsub* ]]; then
                 echo "JOBID: $JOBID"
-            elif [[ $SUBC == *condor* ]]; then
-                "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-                condor_submit "$FSCRIPT".sh.condor
-            elif [[ $SUBC == *sbatch* ]]; then
-                # shellcheck disable=SC2086
-                $SUBC "$FSCRIPT".sh
-            elif [[ $SUBC == *parallel* ]]; then
-                echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
             fi
         done
     done
 done
 
 # Execute all FSCRIPTs locally in parallel
-if [[ $SUBC == *parallel* ]]; then
-    # shellcheck disable=SC2086
-    cat "$LOGDIR/runscripts.dat" | $SUBC
-fi
+    run_parallel_jobs "$LOGDIR/runscripts.dat"
 
 exit

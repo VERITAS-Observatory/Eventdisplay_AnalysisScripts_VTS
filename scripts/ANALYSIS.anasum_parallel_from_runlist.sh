@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 # EventDisplay version
 EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
@@ -298,33 +300,11 @@ for RUN in "${RUNS[@]}"; do
         echo "$SUBC"
         exit
     fi
-    if [[ $SUBC == *qsub* ]]; then
-        # shellcheck disable=SC2086
-        JOBID=$($SUBC "$FSCRIPT".sh)
-        # account for -terse changing the job number format
-        if [[ $SUBC != *-terse* ]] ; then
-            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
-        fi
-    elif [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        echo
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${TMPLOGDIR} submit 50"
-        echo "-------------------------------------------------------------------------------"
-        echo
-	elif [[ $SUBC == *sbatch* ]]; then
-        # shellcheck disable=SC2086
-        $SUBC "$FSCRIPT".sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$TMPLOGDIR/runscripts.$TIMETAG.dat"
+    submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$TMPLOGDIR/runscripts.$TIMETAG.dat"
+    if [[ $SUBC == *parallel* ]]; then
         echo "RUN $RUN OLOG $FSCRIPT.log"
-    elif [[ "$SUBC" == *simple* ]] ; then
-	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
-	fi
+    fi
 done
 
 # Execute all FSCRIPTs locally in parallel
-if [[ $SUBC == *parallel* ]]; then
-    # shellcheck disable=SC2086
-    cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
-fi
+run_parallel_jobs "$TMPLOGDIR/runscripts.$TIMETAG.dat"

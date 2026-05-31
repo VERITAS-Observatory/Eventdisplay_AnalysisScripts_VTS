@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=0:59:00; h_vmem=12000M; tmpdir_size=150G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 if [[ $# -lt 3 ]]; then
 # begin help message
@@ -98,28 +100,15 @@ if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
 fi
+RUNSCRIPT_LIST="$LOGDIR/runscripts.$(date +"%s").dat"
+submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$RUNSCRIPT_LIST"
+RUNSCRIPT_LIST="$LOGDIR/runscripts.$(date +"%s").dat"
+submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$RUNSCRIPT_LIST"
 if [[ $SUBC == *qsub* ]]; then
-    # shellcheck disable=SC2086
-    JOBID=$($SUBC "$FSCRIPT".sh)
-    # account for -terse changing the job number format
-    if [[ $SUBC != *-terse* ]] ; then
-        echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-        JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
-    fi
-elif [[ $SUBC == *condor* ]]; then
-    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-    condor_submit "$FSCRIPT".sh.condor
-echo "OUTFILE $OUTFILE JOBID $JOBID"
+    echo "OUTFILE $OUTFILE JOBID $JOBID"
     echo "OUTFILE $OUTFILE SCRIPT $FSCRIPT.sh"
     if [[ $SUBC != */dev/null* ]] ; then
         echo "OUTFILE $OUTFILE OLOG $FSCRIPT.sh.o$JOBID"
         echo "OUTFILE $OUTFILE ELOG $FSCRIPT.sh.e$JOBID"
     fi
-elif [[ $SUBC == *sbatch* ]]; then
-    # shellcheck disable=SC2086
-    $SUBC "$FSCRIPT".sh
-elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$(date +"%s").dat"
-elif [[ "$SUBC" == *simple* ]] ; then
-    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
 fi
