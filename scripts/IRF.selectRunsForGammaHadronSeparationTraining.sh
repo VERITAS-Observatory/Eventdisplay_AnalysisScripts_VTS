@@ -57,6 +57,7 @@ if [[ "${RUNPAR##*.}" == "json" ]]; then
         }
     }')
 else
+    echo "$RUNPAR"
     ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
 fi
 echo "Zenith angle definition: $ZEBINS"
