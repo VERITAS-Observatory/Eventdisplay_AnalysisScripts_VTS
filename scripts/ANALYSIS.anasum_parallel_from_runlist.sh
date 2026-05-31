@@ -134,12 +134,16 @@ elif [[ $CUTS = "BDTExtended050moderate2tel" ]]; then
     CUT="NTel2-Extended050-Moderate-TMVA-BDT"
 elif [[ $CUTS = "moderate2telXGB" ]]; then
     CUT="NTel2-PointSource-Moderate-XGB-BDT"
+    echo "WARNING: XGB cuts selected. Ensure ANALYSIS.dispXGB.sh has been run on all mscw files first." >&2
 elif [[ $CUTS = "soft2telXGB" ]]; then
     CUT="NTel2-PointSource-Soft-XGB-BDT"
+    echo "WARNING: XGB cuts selected. Ensure ANALYSIS.dispXGB.sh has been run on all mscw files first." >&2
 elif [[ $CUTS = "hard2telXGB" ]]; then
     CUT="NTel2-PointSource-Hard-XGB-BDT"
+    echo "WARNING: XGB cuts selected. Ensure ANALYSIS.dispXGB.sh has been run on all mscw files first." >&2
 elif [[ $CUTS = "hard3telXGB" ]]; then
     CUT="NTel3-PointSource-Hard-XGB-BDT"
+    echo "WARNING: XGB cuts selected. Ensure ANALYSIS.dispXGB.sh has been run on all mscw files first." >&2
 else
     echo "ERROR: unknown cut definition: $CUTS"
     exit 1
