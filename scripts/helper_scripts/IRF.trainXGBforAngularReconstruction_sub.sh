@@ -11,7 +11,6 @@ env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 P="0.5"
 N="5000000"
 MAXCORES=48
-RANDOM_STATE=42
 
 # temporary (scratch) directory
 if [[ -n "$TMPDIR" ]]; then
@@ -59,8 +58,7 @@ eventdisplay-ml-train-xgb-stereo \
     --max_cores $MAXCORES \
     --observatory VERITAS \
     --min_images 2 \
-    --train_test_fraction $P --max_events $N \
-    --random_state $RANDOM_STATE >| "${LOGFILE}" 2>&1
+    --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
 conda list -n "$env_name" >> "${LOGFILE}"
