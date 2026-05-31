@@ -2,11 +2,11 @@
 # script to analyse data files with anasum (parallel analysis) from a simple run list
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=0:59:00; h_vmem=4000M; tmpdir_size=1G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 IRFVERSION="$EDVERSION"
 AUXVERSION="auxv01"
 
@@ -62,9 +62,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
 RUNLIST=$1
@@ -84,7 +83,7 @@ if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
       DISPBDT="0"
    fi
 fi
-echo $VERITAS_ANALYSIS_TYPE $ANATYPE $DISPBDT
+echo "$VERITAS_ANALYSIS_TYPE" "$ANATYPE" $DISPBDT
 
 # short-cuts for gamma/hadron cuts (note: VX to be replaced later in script)
 if [[ $CUTS = "moderate2tel" ]] || [[ $CUTS = "BDTmoderate2tel" ]]; then
@@ -151,12 +150,12 @@ fi
 # remove PointSource and ExtendedSource string from cut file name for radial acceptances names
 if [[ $CUT == *PointSource-* ]] ; then
     CUTRADACC=${CUT/-PointSource-/"-"}
-    echo $CUTRACACC
+    echo "$CUTRADACC"
 elif [[ $CUT == *"Extended"* ]]; then
     CUTRADACC=${CUT/-PointSource-/"-"}
 elif [[ $CUT == *ExtendedSource-* ]]; then
     CUTRADACC=${CUT/-ExtendedSource-/"-"}
-    echo $CUTRADACC
+    echo "$CUTRADACC"
 fi
 
 if [[ $DISPBDT == "1" ]]; then
@@ -201,7 +200,7 @@ NRUNS=$(cat "$RUNLIST" | sort -u | wc -l)
 echo "total number of runs to analyze: $NRUNS"
 
 # Check that run parameter file exists
-if [[ "$RUNP" == `basename $RUNP` ]]; then
+if [[ "$RUNP" == $(basename "$RUNP") ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
@@ -210,7 +209,7 @@ if [[ ! -f "$RUNP" ]]; then
 fi
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.${CUTS}-${DATE}-$(uuidgen)"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
@@ -221,7 +220,7 @@ mkdir -p "$ODIR"
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_sub"
-TIMETAG=`date +"%s"`
+TIMETAG=$(date +"%s")
 
 # directory schema
 getNumberedDirectory()
@@ -233,7 +232,7 @@ getNumberedDirectory()
     else
         ODIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${ODIR}
+    echo "${ODIR}"
 }
 
 
@@ -243,7 +242,7 @@ for RUN in "${RUNS[@]}"; do
 
     # check if file already has been processed
     if [[ $SKIP == "1" ]]; then
-        ARCHIVEDIR="$(getNumberedDirectory $RUN $VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUTS})"
+        ARCHIVEDIR="$(getNumberedDirectory "$RUN" "$VERITAS_PREPROCESSED_DATA_DIR"/"${VERITAS_ANALYSIS_TYPE:0:2}"/anasum_"${CUTS}")"
         if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
             echo "$RUN already processed (${ARCHIVEDIR}/${RUN}.anasum.root)"
             echo "skipping run"
@@ -255,14 +254,14 @@ for RUN in "${RUNS[@]}"; do
     TMPINDIR="$INDIR"
     # check for mscw file
     if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
-        TMPINDIR=$(getNumberedDirectory $RUN $INDIR)
+        TMPINDIR=$(getNumberedDirectory "$RUN" "$INDIR")
         if [ ! -e "$TMPINDIR/$RUN.mscw.root" ]; then
             echo "error: mscw file not found: $TMPINDIR/$RUN.mscw.root (also not found in directory above)"
-            touch $ODIR/$RUN.NOTFOUND
+            touch "$ODIR"/"$RUN".NOTFOUND
             continue
         fi
     fi
-    rm -f $ODIR/$RUN.NOTFOUND
+    rm -f "$ODIR"/"$RUN".NOTFOUND
 
     TMPLOGDIR=${LOGDIR}
     # avoid reaching limits of number of files per
@@ -270,9 +269,9 @@ for RUN in "${RUNS[@]}"; do
     if [[ ${NRUNS} -gt 5000 ]]; then
         TMPLOGDIR=${LOGDIR}-${RUN:0:1}
     fi
-    mkdir -p ${TMPLOGDIR}
+    mkdir -p "${TMPLOGDIR}"
     FSCRIPT="$TMPLOGDIR/ANASUM.$RUN-$(date +%s)"
-    rm -f $FSCRIPT.sh
+    rm -f "$FSCRIPT".sh
     echo "Run script written to $FSCRIPT"
 
     sed -e "s|FILELIST|NOTDEFINED|" \
@@ -294,13 +293,14 @@ for RUN in "${RUNS[@]}"; do
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
         echo "$SUBC"
         exit
     fi
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -313,7 +313,8 @@ for RUN in "${RUNS[@]}"; do
         echo "-------------------------------------------------------------------------------"
         echo
 	elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$TMPLOGDIR/runscripts.$TIMETAG.dat"
         echo "RUN $RUN OLOG $FSCRIPT.log"
@@ -324,5 +325,6 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
+    # shellcheck disable=SC2086
     cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
 fi

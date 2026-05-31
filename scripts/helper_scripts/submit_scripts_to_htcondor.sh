@@ -24,33 +24,37 @@ PRIORITY="${3:-1}"
 echo "Writing HTCondor job submission file ${SUBMITF} (job priority $PRIORITY) for ${JDIR}"
 if find "${JDIR}" -name "*.condor" -print -quit | grep -q .; then
     SUBMITF=${1}/submit.txt
-    rm -f ${SUBMITF}
-    touch ${SUBMITF}
+    rm -f "${SUBMITF}"
+    touch "${SUBMITF}"
 
-    mkdir -p ${JDIR}/log
-    mkdir -p ${JDIR}/output
-    mkdir -p ${JDIR}/error
+    mkdir -p "${JDIR}"/log
+    mkdir -p "${JDIR}"/output
+    mkdir -p "${JDIR}"/error
 
-    echo "executable = \$(file)" >>  ${SUBMITF}
-    echo "log = log/\$(file).log" >>  ${SUBMITF}
-    echo "output = output/\$(file).output" >>  ${SUBMITF}
-    echo "error = error/\$(file).error" >>  ${SUBMITF}
+    {
+        echo "executable = \$(file)"
+        echo "log = log/\$(file).log"
+        echo "output = output/\$(file).output"
+        echo "error = error/\$(file).error"
+    } >> "${SUBMITF}"
 
     # assume that all condor files have similar requests
-    CONDORFILE=$(find ${JDIR} -name "*.condor" | head -n 1)
-    echo "$(grep -h request_memory $CONDORFILE)"  >>  ${SUBMITF}
-    echo "$(grep -h request_disk $CONDORFILE)"  >>  ${SUBMITF}
-    echo "getenv = True" >>  ${SUBMITF}
-    echo "max_materialize = 1800" >>  ${SUBMITF}
-#    echo "request_cpus = 8" >>  ${SUBMITF}
-    echo "priority = $PRIORITY"  >> ${SUBMITF}
-    echo "queue file matching files *.sh" >> ${SUBMITF}
+    CONDORFILE=$(find "${JDIR}" -name "*.condor" | head -n 1)
+    {
+        grep -h request_memory "$CONDORFILE"
+        grep -h request_disk "$CONDORFILE"
+        echo "getenv = True"
+        echo "max_materialize = 1800"
+#        echo "request_cpus = 8"
+        echo "priority = $PRIORITY"
+        echo "queue file matching files *.sh"
+    } >> "${SUBMITF}"
 
     PDIR=$(pwd)
     if [ "${2}" = "submit" ]; then
-        cd ${JDIR}
+        cd "${JDIR}"
         condor_submit submit.txt requirements='OpSysAndVer=="AlmaLinux9"'
-        cd ${PDIR}
+        cd "${PDIR}"
     fi
 else
     echo "Error: no condor files found in ${JDIR}"

@@ -2,7 +2,7 @@
 # script to make DST files from a raw data file
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:29:00; h_vmem=4000M; tmpdir_size=40G
 
 if [[ $# -lt 2 ]]; then
@@ -40,8 +40,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RLIST=$1
@@ -56,13 +55,13 @@ if [[ ! -f "$RLIST" ]]; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-RUNNUMS=`cat $RLIST`
+RUNNUMS=$(cat "$RLIST")
 
 # run scripts are written into this directory
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANADATA"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 
 # check for the existence of a run parameter file corresponding
@@ -75,7 +74,7 @@ if [[ -z $RUNPFILE ]]; then
 	RUNPFILE="EVNDISP.reconstruction.LMULT.SW$SUMW.runparameter"
 
 	if [ ! -e "$RUNPDIR/$RUNPFILE" ]; then
-    		sed -e "s|XX|$SUMW|g" $RUNPDIR/EVNDISP.reconstruction.LMULT.SWXX.runparameter > $RUNPDIR/$RUNPFILE
+		sed -e "s|XX|$SUMW|g" "$RUNPDIR"/EVNDISP.reconstruction.LMULT.SWXX.runparameter > "$RUNPDIR"/"$RUNPFILE"
 	fi
 fi
 
@@ -94,32 +93,35 @@ for RUN in $RUNNUMS; do
         -e "s|LLLOWGAIN|$LMULT|" \
         -e "s|OUTPUTDIR|$ODIR|" \
         -e "s|RRRRPFILE|$RUNPFILE|" \
-        -e "s|SUMWINDOW|$SUMW|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|SUMWINDOW|$SUMW|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-    chmod u+x $FSCRIPT.sh
-    echo $FSCRIPT.sh
+    chmod u+x "$FSCRIPT".sh
+    echo "$FSCRIPT".sh
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
 		echo "RUN $RUN: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
         "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        condor_submit $FSCRIPT.sh.condor
+        condor_submit "$FSCRIPT".sh.condor
     elif [[ $SUBC == *sbatch* ]]; then
-            $SUBC $FSCRIPT.sh
+            # shellcheck disable=SC2086
+            $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
     elif [[ $SUBC == *simple* ]]; then
-        $FSCRIPT.sh |& tee $FSCRIPT.log
+        "$FSCRIPT".sh |& tee "$FSCRIPT".log
     fi
 done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat $LOGDIR/runscripts.dat | $SUBC
+    # shellcheck disable=SC2086
+    cat "$LOGDIR"/runscripts.dat | $SUBC
 fi
 
 exit

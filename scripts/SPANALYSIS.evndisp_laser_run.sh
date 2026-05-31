@@ -31,8 +31,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RUNNUM=$1
@@ -50,26 +49,38 @@ fi
 CALIBDIR="$VERITAS_USER_DATA_DIR/"
 
 # Check if source vbf file exists
-SF=`find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf"`
+SF=$(find -L "$VERITAS_DATA_DIR"/data -name "$RUNNUM.cvbf")
 if [ ${#SF} = 0 ]; then
     echo "ERROR: VERITAS source (VBF laser/flasher) file $RUNNUM.cvbf not found in $VERITAS_DATA_DIR/data/"
     exit 1
 fi
 
 # Run options
-OPT="-runmode=$RUNMODE -runnumber=$RUNNUM -lasermin=$LASERMIN -calibrationsumwindow=18 -calibrationsumfirst=2 -reconstructionparameter EVNDISP.reconstruction.SW18_noDoublePass.runparameter -calibrationdirectory $CALIBDIR -writeextracalibtree -printdeadpixelinfo"
+OPT=(
+    "-runmode=$RUNMODE"
+    "-runnumber=$RUNNUM"
+    "-lasermin=$LASERMIN"
+    -calibrationsumwindow=18
+    -calibrationsumfirst=2
+    -reconstructionparameter
+    EVNDISP.reconstruction.SW18_noDoublePass.runparameter
+    -calibrationdirectory
+    "$CALIBDIR"
+    -writeextracalibtree
+    -printdeadpixelinfo
+)
 
 # calculate pedestals (for high gain only)
 if [[ $RUNMODE == 2 ]]; then
     echo "Calculating pedestals for run $RUNNUM"
-    "$(dirname "$0")/SPANALYSIS.evndisp_pedestal_events.sh" $RUNNUM
+    "$(dirname "$0")/SPANALYSIS.evndisp_pedestal_events.sh" "$RUNNUM"
 fi
 
 # calculate gains, looping over all telescopes
-TELTOANA=`echo $TELTOANA | fold -w1`
+TELTOANA=$(echo "$TELTOANA" | fold -w1)
 for i in $TELTOANA; do
     echo "Calculating gains for run $RUNNUM, telescope $i"
-    $EVNDISPSYS/bin/evndisp -teltoana=$i $OPT
+    "$EVNDISPSYS"/bin/evndisp -teltoana="$i" "${OPT[@]}"
 done
 
 exit

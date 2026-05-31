@@ -3,7 +3,7 @@
 #
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=0:29:00; h_vmem=4000M; tmpdir_size=20G
 
 if [ $# -lt 7 ]; then
@@ -48,13 +48,12 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$("$EVNDISPSYS"/bin/evndisp --version | tr -d .)
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 
 # Parse command line arguments
 SIMDIR=$1
@@ -86,24 +85,18 @@ LOGDIR="${VERITAS_IRFPRODUCTION_DIR}/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EP
 mkdir -p "$LOGDIR"
 echo -e "input files will be read from:\n $IPDIR"
 
-# Analysis options
-EDOPTIONS=""
-if [[ ${ANALYSIS_TYPE} == *"SQ2"* ]]; then
-   EDOPTIONS="-imagesquared"
-fi
-
 # Create a unique set of run numbers
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="946500"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="956500"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="966500"
-elif [ ${SIMTYPE:0:4} = "CARE" ]; then
+elif [ "${SIMTYPE:0:4}" = "CARE" ]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="941200"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="951200"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
 fi
 
-INT_WOBBLE=`echo "$WOBBLE*100" | bc | awk -F '.' '{print $1}'`
+INT_WOBBLE=$(echo "$WOBBLE*100" | bc | awk -F '.' '{print $1}')
 if [[ ${#INT_WOBBLE} -lt 2 ]]; then
    INT_WOBBLE="000"
 elif [[ ${#INT_WOBBLE} -lt 3 ]]; then
@@ -120,68 +113,65 @@ NOISEFILE="NO_NOISEFILE"
 #######################################################
 # GRISU simulations
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    if [[ -z $VERITAS_EVNDISP_AUX_DIR ]]; then
-        VERITAS_EVNDISP_AUX_DIR=$VERITAS_EVNDISP_AUX_DIR
-    fi
     # Input files (observe that these might need some adjustments)
     if [[ ${EPOCH:0:2} == "V4" ]]; then
         if [[ $ATM == "21" ]]; then
-            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "Oct2012_oa_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+            VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "Oct2012_oa_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         else
-            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V4_Oct2012_SummerV4ForProcessing_20130611_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+            VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V4_Oct2012_SummerV4ForProcessing_20130611_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         fi
         NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
     elif [[ ${EPOCH:0:2} == "V5" ]]; then
-        VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V5_Oct2012_newArrayConfig_20121027_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+        VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V5_Oct2012_newArrayConfig_20121027_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
     elif [[ ${EPOCH:0:2} == "V6" ]]; then
         if [[ $ATM == "21-redHV" ]]; then
-            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_ReducedHV_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+            VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V6_Upgrade_ReducedHV_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         elif [[ $ATM == "21-UV" ]]; then
-            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_UVfilters_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+            VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V6_Upgrade_UVfilters_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         elif [[ $ATM == "21-SNR" ]]; then
-            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_201304_SN2013ak_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+            VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V6_201304_SN2013ak_v420_ATM21_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         else
-            VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_Upgrade_20121127_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
+            VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V6_Upgrade_20121127_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*" -not -name "*.log" -not -name "*.md5sum")
         fi
         NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE${NOISE}_20120827_v420.grisu"
     fi
 #######################################################
-elif [ ${SIMTYPE} == "CARE_UV_June1409" ]; then
+elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
     # example gamma_00deg_750m_0.5wob_180mhz_up_ATM21_part0.cvbf.bz2
-    WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
-    VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_${ZA}deg_750m_${WOBBLE}wob_${NOISE}mhz_up_ATM${ATM}_part0.cvbf.bz2")
+    WOFFSET=$(awk -v WB="$WOBBLE" 'BEGIN { printf("%03d",100*WB) }')
+    VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_${ZA}deg_750m_${WOBBLE}wob_${NOISE}mhz_up_ATM${ATM}_part0.cvbf.bz2")
 #######################################################
-elif [ ${SIMTYPE} == "CARE_UV_2212" ]; then
+elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
     # example gamma_V6_CARE_uvf_Atmosphere61_zen20deg_0.25wob_120MHz.vbf.zst
     LBL="CARE_uvf"
-    VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+    VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
     echo "gamma_V6_${LBL}_Atmosphere${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz"
 #######################################################
-elif [ ${SIMTYPE:0:10} == "CARE_RedHV" ]; then
+elif [ "${SIMTYPE:0:10}" == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
     if [[ ${ATM} == 61 ]]; then
         LBL="PMTUpgrade_RHV_CARE_v1.6.2_12"
-        WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
+        WOFFSET=$(awk -v WB="$WOBBLE" 'BEGIN { printf("%03d",100*WB) }')
     else
         LBL="RHV_CARE_v1.6.2_12"
-        WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%02d",10*WB) }')
+        WOFFSET=$(awk -v WB="$WOBBLE" 'BEGIN { printf("%02d",10*WB) }')
     fi
-    VBFNAME=$(find ${SIMDIR}/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+    VBFNAME=$(find "${SIMDIR}"/ -maxdepth 1 -name "gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
 #######################################################
-elif [ ${SIMTYPE} == "CARE_June2020" ]; then
-    VBFNAME=$(find ${SIMDIR} -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
-    echo _${WOFFSET}wob_${NOISE}MHz
-    echo $SIMDIR/Zd${ZA}/merged/Data/
+elif [ "${SIMTYPE}" == "CARE_June2020" ]; then
+    VBFNAME=$(find "${SIMDIR}" -name "*_${WOBBLE}wob_${NOISE}MHz*.zst" -not -name "*.log" -not -name "*.md5sum")
+    echo _"${WOFFSET}"wob_"${NOISE}"MHz
+    echo "$SIMDIR"/Zd"${ZA}"/merged/Data/
 #######################################################
-elif [ ${SIMTYPE:0:4} == "CARE" ]; then
+elif [ "${SIMTYPE:0:4}" == "CARE" ]; then
     # input files (observe that these might need some adjustments)
     if [[ $PARTICLE == "1" ]]; then
-       VBFNAME=$(find ${SIMDIR}/ -name "gamma_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
+       VBFNAME=$(find "${SIMDIR}"/ -name "gamma_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
     elif [[ $PARTICLE == "2" ]]; then
-       VBFNAME=$(find ${SIMDIR} -name "electron_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
+       VBFNAME=$(find "${SIMDIR}" -name "electron_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
     elif [[ $PARTICLE == "14" ]]; then
-       VBFNAME=$(find ${SIMDIR} -name "proton_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
+       VBFNAME=$(find "${SIMDIR}" -name "proton_${ZA}deg*${WOBBLE}wob_${NOISE}mhz*ATM${ATM}*.zst" -not -name "*.log" -not -name "*.md5sum")
     fi
 fi
 #######################################################
@@ -191,11 +181,11 @@ fi
 for V in ${VBFNAME}
 do
     echo "Processing ${V}"
-    SIMDIR=$(dirname ${V})
+    SIMDIR=$(dirname "${V}")
 
     # size of VBF file
-    FF=$(ls -ls -Llh ${V} | awk '{print $1}' | sed 's/,/./g')
-    V=$(basename ${V})
+    FF=$(du -shL "${V}" | awk '{print $1}' | sed 's/,/./g')
+    V=$(basename "${V}")
     echo "SIMDIR: $SIMDIR"
     echo "VBFILE: ${V} $FF"
     echo "NOISEFILE: ${NOISEFILE}"
@@ -209,7 +199,7 @@ do
        TMSF=$(echo "${FF%?}*25.0" | bc)
     fi
 
-    TMUNI=$(echo "${FF: -1}")
+    TMUNI="${FF: -1}"
     tmpdir_size=${TMSF%.*}$TMUNI
     echo "Setting TMPDIR_SIZE to $tmpdir_size"
 
@@ -220,19 +210,20 @@ do
     FSCRIPT="$LOGDIR/comp-$EPOCH-$SIMTYPE-$ZA-$WOBBLE-$NOISE-ATM$ATM-${RUNNUM}"
     sed -e "s|RUNNUMBER|$RUNNUM|" \
         -e "s|OUTPUTDIR|$OPDIR|" \
-        -e "s|INPUTDIR|$IPDIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|INPUTDIR|$IPDIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-    chmod u+x $FSCRIPT.sh
-    echo $FSCRIPT.sh
+    chmod u+x "$FSCRIPT".sh
+    echo "$FSCRIPT".sh
 
-    let "RUNNUM = ${RUNNUM} + 100"
+    (( RUNNUM += 100 ))
 
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$(eval "echo \"$SUBC\"")
     echo "$SUBC"
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
         echo "RUN $RUNNUM: JOBID $JOBID"
     elif [[ $SUBC == *condor* ]]; then
         "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
@@ -243,7 +234,7 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
     fi
 done
 echo "LOG/SUBMIT DIR: ${LOGDIR}"

@@ -18,4 +18,4 @@ fi
 TARGET=$1
 QUERY="select * from tblObserving_Sources where source_id like convert( _utf8 '$TARGET' using latin1);"
 
-$($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}" | sed 's/\t/|/g'
+$("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}" | sed 's/\t/|/g'

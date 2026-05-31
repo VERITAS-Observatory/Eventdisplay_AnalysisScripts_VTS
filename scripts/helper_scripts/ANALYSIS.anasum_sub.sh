@@ -2,6 +2,7 @@
 # script to analyse one run with anasum
 
 # set observatory environmental variables
+# shellcheck source=/dev/null
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
@@ -48,7 +49,7 @@ if [[ -n "$TMPDIR" ]]; then
 else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/MSCWDISP-$(uuidgen)"
 fi
-mkdir -p $TEMPDIR
+mkdir -p "$TEMPDIR"
 
 # explicit binding for apptainers
 if [ -n "$EVNDISP_APPTAINER" ]; then
@@ -79,7 +80,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/anasum
+        ls -l "${EVNDISPSYS}"/bin/anasum
     fi
 }
 
@@ -121,15 +122,15 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
     echo "* VERSION 6" > $FLIST
     echo "" >> $FLIST
     # preparing effective area and radial acceptance names
-    RUNINFO=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" -runinfo)
-    EPOCH=`echo "$RUNINFO" | awk '{print $(1)}'`
-    MAJOREPOCH=`echo $RUNINFO | awk '{print $(2)}'`
-    ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
-    OBSL=$(echo $RUNINFO | awk '{print $4}')
-    TELTOANA=`echo $RUNINFO | awk '{print "T"$(5)}'`
+    RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "$INFILEPATH" -runinfo)
+    EPOCH=$(echo "$RUNINFO" | awk '{print $(1)}')
+    MAJOREPOCH=$(echo "$RUNINFO" | awk '{print $(2)}')
+    ATMO=${FORCEDATMO:-$(echo "$RUNINFO" | awk '{print $(3)}')}
+    OBSL=$(echo "$RUNINFO" | awk '{print $4}')
+    TELTOANA=$(echo "$RUNINFO" | awk '{print "T"$(5)}')
 
-    REPLACESIMTYPEEff=$(prepare_irf_string $EPOCH $OBSL $SIMTYPE 0)
-    REPLACESIMTYPERad=$(prepare_irf_string $EPOCH $OBSL $SIMTYPE 1)
+    REPLACESIMTYPEEff=$(prepare_irf_string "$EPOCH" "$OBSL" $SIMTYPE 0)
+    REPLACESIMTYPERad=$(prepare_irf_string "$EPOCH" "$OBSL" $SIMTYPE 1)
 
     echo "RUN $RUNNUM at epoch $EPOCH and atmosphere $ATMO (Telescopes $TELTOANA SIMTYPE $REPLACESIMTYPEEff $REPLACESIMTYPERad)"
     # do string replacements
@@ -205,18 +206,20 @@ RUNP="${TEMPDIR}/$(basename $RUNP)"
 
 #################################
 # run anasum
-$EVNDISPSYS/bin/anasum   \
-    -f $RUNP             \
-    -l $FLIST            \
+"$EVNDISPSYS"/bin/anasum   \
+    -f "$RUNP"             \
+    -l "$FLIST"            \
     -d $INDIR            \
     -o $OUTPUTDATAFILE   &> $OUTPUTLOGFILE
 
-echo "$(inspect_executables)" >> ${OUTPUTLOGFILE}
-echo "INDIR ${INDIR}" >> ${OUTPUTLOGFILE}
-echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}" >> ${OUTPUTLOGFILE}
+{
+    inspect_executables
+    echo "INDIR ${INDIR}"
+    echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}"
+} >> "${OUTPUTLOGFILE}"
 
 if [[ -e "$OUTPUTLOGFILE" ]]; then
-    $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$(dirname $OUTPUTDATAFILE)/$(basename $OUTPUTLOGFILE)"
+    "$EVNDISPSYS"/bin/logFile anasumLog "$OUTPUTDATAFILE" "$(dirname $OUTPUTDATAFILE)/$(basename $OUTPUTLOGFILE)"
 fi
 
 echo "RUN$RUNNUM ANPARLOG log file: $OUTPUTLOGFILE"

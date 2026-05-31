@@ -15,7 +15,7 @@ SUBFIL=${SUBSCRIPT}.condor
 
 [[ -f "$SUBFIL" ]] && rm -f "$SUBFIL".
 
-cat > ${SUBFIL} <<EOL
+cat > "${SUBFIL}" <<EOL
 Executable = ${SUBSCRIPT}
 Output = ${SUBSCRIPT}.\$(Cluster)_\$(Process).output
 Error = ${SUBSCRIPT}.\$(Cluster)_\$(Process).error

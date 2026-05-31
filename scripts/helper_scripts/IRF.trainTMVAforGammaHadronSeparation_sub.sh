@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2034
 # script to train TMVA (BDTs) for gamma/hadron separation
 
 RXPAR=RUNPARAM
@@ -9,6 +8,7 @@ ODIR=OUTPUTDIR
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -28,8 +28,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
-
     SIMDIR="/opt/SIMDIR"
     ODIR="/opt/ODIR"
     DDIR="/opt/DDIR"
@@ -48,7 +46,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l "${EVNDISPSYS}"/bin/evndisp
     fi
 }
 
@@ -59,9 +57,9 @@ rm -f "$LDIR/${BASE_RXPAR}_preselect.log"
 rm -f "$LDIR/${BASE_RXPAR}.log"
 "$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR/${BASE_RXPAR}.log"
 
-echo "$(inspect_executables)" >> "$LDIR/${BASE_RXPAR}.log"
+inspect_executables >> "$LDIR/${BASE_RXPAR}.log"
 "$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
 
 # remove unnecessary *.C files
-CDIR=`dirname $RXPAR`
-rm -f -v "$CDIR"/$ONAME*.C
+CDIR=$(dirname "$RXPAR")
+rm -f -v "$CDIR"/"$ONAME"*.C

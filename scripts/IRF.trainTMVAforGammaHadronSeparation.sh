@@ -7,9 +7,9 @@
 # - fixed of NSB levels (adapted to stdHV settings)
 #
 
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 7 ]; then
 echo "
@@ -43,9 +43,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 BDIR="$1"
 RUNPAR="$2"
@@ -85,7 +84,7 @@ if [[ ! -d "$BDIR" ]]; then
 fi
 
 # Check that TMVA run parameter file exists
-if [[ "$RUNPAR" == `basename $RUNPAR` ]]; then
+if [[ "$RUNPAR" == $(basename "$RUNPAR") ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
 if [[ ! -f "$RUNPAR" ]]; then
@@ -93,14 +92,14 @@ if [[ ! -f "$RUNPAR" ]]; then
     exit 1
 fi
 
-RXPAR=`basename $RUNPAR .runparameter`
+RXPAR=$(basename "$RUNPAR" .runparameter)
 echo "Original TMVA run parameter file: $RXPAR.runparameter "
 
 LOGDIR="$ODIR/TMVA.ANADATA.${UUID}"
 echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
-mkdir -p $LOGDIR
-mkdir -p $ODIR
+mkdir -p "$LOGDIR"
+mkdir -p "$ODIR"
 
 #####################################
 # Read runparameter file once for efficiency
@@ -112,23 +111,23 @@ if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
-    for (( i=0; i < $NENE; i++ ))
+    NENE=$(( ${#EBINARRAY[@]}-count1 )) # get number of bins
+    for (( i=0; i < NENE; i++ ))
     do
-        EBINMIN[$i]=${EBINARRAY[$i]}
-        EBINMAX[$i]=${EBINARRAY[$i+1]}
+        EBINMIN[i]=${EBINARRAY[i]}
+        EBINMAX[i]=${EBINARRAY[i+1]}
     done
 else
     ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) # get number of bins
+    NENE=$(( ${#EBINARRAY[@]}-count1 )) # get number of bins
     z="0"
-    for (( i=0; i < $NENE; i+=2 ))
+    for (( i=0; i < NENE; i+=2 ))
     do
-        EBINMIN[$z]=${EBINARRAY[$i]}
-        EBINMAX[$z]=${EBINARRAY[$i+1]}
-        let "z = ${z} + 1"
+        EBINMIN[z]=${EBINARRAY[i]}
+        EBINMAX[z]=${EBINARRAY[i+1]}
+        (( z++ ))
     done
     NENE=$((${#EBINMAX[@]}))
 fi
@@ -137,7 +136,7 @@ fi
 # zenith angle bins
 ZEBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
 mapfile -t ZEBINARRAY <<< "$ZEBINS"
-NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
+NZEW=$(( ${#ZEBINARRAY[@]}-count1 )) #get number of bins
 
 #####################################
 # zenith angle bins of MC simulation files
@@ -162,33 +161,33 @@ SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainTMVAforGammaHadronSeparation_
 
 ###############################################################
 # loop over all energy/zenith bins and submit a job for each bin
-for (( i=0; i < $NENE; i++ ))
+for (( i=0; i < NENE; i++ ))
 do
    echo "==========================================================================="
    echo " "
-   echo "Energy Bin: $(($i+$count1)) of $NENE: ${EBINMIN[$i]} to ${EBINMAX[$i]} (in log TeV)"
-   for (( j=0; j < $NZEW; j++ ))
+   echo "Energy Bin: $((i+count1)) of $NENE: ${EBINMIN[$i]} to ${EBINMAX[$i]} (in log TeV)"
+   for (( j=0; j < NZEW; j++ ))
    do
       echo "---------------------------------------------------------------------------"
-      echo "Zenith Bin: $(($j+$count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
+      echo "Zenith Bin: $((j+count1)) of $NZEW: ${ZEBINARRAY[$j]} to ${ZEBINARRAY[$j+1]} (deg)"
 
       # updating the run parameter file for each parameter space
       RFIL=$ODIR/$RXPAR"_$i""_$j"
       echo "TMVA Runparameter file: $RFIL.runparameter"
-      rm -f $RFIL
+      rm -f "$RFIL"
 
-      echo "* ENERGYBINS ${EBINMIN[$i]} ${EBINMAX[$i]}" > $RFIL.runparameter
-      echo "* ZENBINS  ${ZEBINARRAY[$j]} ${ZEBINARRAY[$j+1]}" >> $RFIL.runparameter
-      echo "$RUNPAR_CONTENT" | grep "^\*" | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
+      echo "* ENERGYBINS ${EBINMIN[$i]} ${EBINMAX[$i]}" > "$RFIL".runparameter
+      echo "* ZENBINS  ${ZEBINARRAY[$j]} ${ZEBINARRAY[$j+1]}" >> "$RFIL".runparameter
+      echo "$RUNPAR_CONTENT" | grep "^\*" | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> "$RFIL".runparameter
 
       nTrainSignal=200000
       nTrainBackground=200000
 
-      echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground" >> $RFIL.runparameter
-
-      echo "* OUTPUTFILE ODIR ${ONAME}_${i}_${j}" >> $RFIL.runparameter
-
-      echo "#######################################################################################" >> $RFIL.runparameter
+      {
+          echo "* PREPARE_TRAINING_OPTIONS SplitMode=Random:!V:nTrain_Signal=$nTrainSignal:nTrain_Background=$nTrainBackground::nTest_Signal=$nTrainSignal:nTest_Background=$nTrainBackground"
+          echo "* OUTPUTFILE ODIR ${ONAME}_${i}_${j}"
+          echo "#######################################################################################"
+      } >> "$RFIL.runparameter"
       # signal and background files (depending on on-axis or cone data set)
       # Collect all signal files first, then write in one batch
       {
@@ -223,17 +222,17 @@ do
               done
           fi
           shopt -u nullglob
-      } >> $RFIL.runparameter
-      echo "#######################################################################################" >> $RFIL.runparameter
+      } >> "$RFIL".runparameter
+      echo "#######################################################################################" >> "$RFIL".runparameter
       BLIST="$ODIR/BackgroundRunlist_Ze${j}.list"
-      rm -f ${BLIST}
+      rm -f "${BLIST}"
       if [[ ! -d "${BDIR}/Ze_${j}" ]]; then
           echo "Error, directory with background files ${BDIR}/Ze_${j} not found, exiting..."
           exit 1
       fi
       # Optimized background file listing using awk instead of subshell per file
       # This replaces the get_run_prefix() function call for each file
-      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | \
+      find "${BDIR}"/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | \
       awk '{
           filename = $0;
           # Remove extension to get run number (equivalent to ${1%%.*})
@@ -255,20 +254,21 @@ do
           -e "s|MCDIRECTORY|$SDIR|" \
           -e "s|DATADIRECTORY|$BCKFILEDIR|" \
           -e "s|OUTPUTDIR|${ODIR}|" \
-          -e "s|OUTNAME|$ODIR/$ONAME_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
+          -e "s|OUTNAME|$ODIR/${ONAME}_${i}_${j}|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-      chmod u+x $FSCRIPT.sh
-      echo $FSCRIPT.sh
+      chmod u+x "$FSCRIPT".sh
+      echo "$FSCRIPT".sh
 
       # run locally or on cluster
       SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
       SUBC=$(eval "echo \"$SUBC\"")
       if [[ $SUBC == *"ERROR"* ]]; then
-            echo $SUBC
+            echo "$SUBC"
             exit
       fi
       if [[ $SUBC == *qsub* ]]; then
-         JOBID=$($SUBC $FSCRIPT.sh)
+         # shellcheck disable=SC2086
+         JOBID=$($SUBC "$FSCRIPT".sh)
          # account for -terse changing the job number format
          if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -284,10 +284,12 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
       elif [[ $SUBC == *sbatch* ]]; then
-            $SUBC $FSCRIPT.sh
+            # shellcheck disable=SC2086
+            $SUBC "$FSCRIPT".sh
       elif [[ $SUBC == *parallel* ]]; then
-         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
-         cat $LOGDIR/runscripts.dat | $SUBC
+         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
+         # shellcheck disable=SC2086
+         cat "$LOGDIR"/runscripts.dat | $SUBC
       elif [[ "$SUBC" == *simple* ]] ; then
          "$FSCRIPT.sh" | tee "$FSCRIPT.log"
       fi

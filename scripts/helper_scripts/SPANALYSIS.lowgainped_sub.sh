@@ -1,8 +1,9 @@
 #!/bin/bash
 # script to analyse VTS raw files (VBF) with eventdisplay
 
+# shellcheck source=/dev/null
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+source "$EVNDISPSYS"/setObservatory.sh VTS
 
 # parameters replaced by parent script using sed
 RUN=RUNFILE
@@ -19,28 +20,35 @@ else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
 fi
 echo "Scratch dir: $TEMPDIR"
-mkdir -p $TEMPDIR
+mkdir -p "$TEMPDIR"
 
 LOGDIR="$TEMPDIR"
 
 
 # eventdisplay reconstruction parameter
-ACUTS="EVNDISP.reconstruction.LGCalibration.runparameter"
+ACUTS=("EVNDISP.reconstruction.LGCalibration.runparameter")
 
-OPT=" -calibrationsumwindow=$CALIBRATIONSUMWINDOW -calibrationsumfirst=$CALIBRATIONSUMFIRST -nevents=$NEVENTS -calibrationdirectory $TEMPDIR -teltoana=$TELTOANA "
+OPT=(
+    "-calibrationsumwindow=$CALIBRATIONSUMWINDOW"
+    "-calibrationsumfirst=$CALIBRATIONSUMFIRST"
+    "-nevents=$NEVENTS"
+    -calibrationdirectory
+    "$TEMPDIR"
+    "-teltoana=$TELTOANA"
+)
 
 #########################################
 # pedestal calculation
-rm -f $LOGDIR/$RUN.ped.log
-$EVNDISPSYS/bin/evndisp -runmode=6 -runnumber=$RUN -reconstructionparameter $ACUTS $OPT &> $LOGDIR/$RUN.ped.log
-echo "$EVNDISPSYS/bin/evndisp -runmode=6 -runnumber=$RUN -reconstructionparameter $ACUTS $OPT "
+rm -f "$LOGDIR"/$RUN.ped.log
+"$EVNDISPSYS"/bin/evndisp -runmode=6 -runnumber="$RUN" -reconstructionparameter "${ACUTS[@]}" "${OPT[@]}" &> "$LOGDIR"/$RUN.ped.log
+echo "$EVNDISPSYS/bin/evndisp -runmode=6 -runnumber=$RUN -reconstructionparameter ${ACUTS[*]} ${OPT[*]}"
 
 for ((i=1; i<5; i++))
 do
 	mkdir -p $CALDIR/Calibration/Tel_$i/
-	mv $TEMPDIR/Calibration/Tel_$i/$RUN.lped $CALDIR/Calibration/Tel_$i/
-	mv $TEMPDIR/Calibration/Tel_$i/$RUN.lped.root $CALDIR/Calibration/Tel_$i/
-	mv $LOGDIR/$RUN.ped.log $CALDIR/
+	mv "$TEMPDIR"/Calibration/Tel_$i/$RUN.lped $CALDIR/Calibration/Tel_$i/
+	mv "$TEMPDIR"/Calibration/Tel_$i/$RUN.lped.root $CALDIR/Calibration/Tel_$i/
+	mv "$LOGDIR"/$RUN.ped.log $CALDIR/
 done
 
 exit

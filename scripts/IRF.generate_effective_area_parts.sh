@@ -3,11 +3,11 @@
 # (output need to be combined afterwards)
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=13:29:00; h_vmem=8000M; tmpdir_size=20G
 
 # EventDisplay version
-IRFVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+IRFVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 8 ]; then
 echo "
@@ -53,9 +53,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 CUTSFILE="$1"
 EPOCH="$2"
@@ -96,7 +95,7 @@ MCFILE="${INDIR}/${ZA}deg_${WOBBLE}wob_NOISE${NOISE}.mscw.root"
 # effective area output file
 EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
 # name of cut
-CUTS_NAME=$(basename $CUTSFILE)
+CUTS_NAME=$(basename "$CUTSFILE")
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
 CUTS_NAME=${CUTS_NAME%%.dat}
 echo "Cuts: $CUTSFILE $CUTS_NAME"
@@ -113,7 +112,7 @@ sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|STEREOXGB|$XGBSTEREOFILESUFFIX|" \
     -e "s|GHXGB|$XGBGAMMAHADRONFILESUFFIX|" \
     -e "s|DATAFILE|$MCFILE|" \
-    -e "s|GAMMACUTS|${CUTSFILE}|" $SUBSCRIPT.sh > $FSCRIPT
+    -e "s|GAMMACUTS|${CUTSFILE}|" "$SUBSCRIPT".sh > "$FSCRIPT"
 
 chmod u+x "$FSCRIPT"
 echo "Run script: $FSCRIPT"
@@ -126,7 +125,8 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit 1
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT`
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT")
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
@@ -135,9 +135,10 @@ elif [[ $SUBC == *condor* ]]; then
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
 elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT
+    # shellcheck disable=SC2086
+    $SUBC "$FSCRIPT"
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT &> $(basename $FSCRIPT .sh).log" >> "$LOGDIR/runscripts.dat"
+    echo "$FSCRIPT &> $(basename "$FSCRIPT" .sh).log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
-    "$FSCRIPT" | tee "$(basename $FSCRIPT .sh).log"
+    "$FSCRIPT" | tee "$(basename "$FSCRIPT" .sh).log"
 fi

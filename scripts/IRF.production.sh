@@ -3,7 +3,7 @@
 # IRF production script (VERITAS)
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 2 ]; then
 echo "
@@ -70,9 +70,8 @@ cd "$(dirname "$0")" || exit
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
 SIMTYPE="$1"
@@ -84,7 +83,7 @@ IRFTYPE="$2"
 [[ "$7" ]] && SIMDIR="$7" || SIMDIR=""
 
 # uuid for this job batch
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 UUID=${DATE}-$(uuidgen)
 
 # version string for aux files
@@ -149,25 +148,25 @@ elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
     WOBBLE_OFFSETS=( 0.5 )
 elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
+    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
 elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
     SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
+    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
 elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
+    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
     WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
-    set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | sort | uniq)
+    set -- "$ZENITH_ANGLES"
+    NSB_LEVELS=$(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # ZENITH_ANGLES=( 20 )
@@ -188,13 +187,13 @@ elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
     ######################################
 elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
+    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     # ZENITH_ANGLES=( 60 65 )
-    set -- $ZENITH_ANGLES
-    ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
+    set -- "$ZENITH_ANGLES"
+    ze_first_bin=$(echo "$ZENITH_ANGLES" | awk '{print $1}')
     # Note! Assumes same NSB and WOBBLE offsets for flat and curved atmosphere
-    NSB_LEVELS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*vbf.zst | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*.vbf.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -name "*vbf.zst" -exec basename {} \; | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -name "*.vbf.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # NSB_LEVELS=( 300 )
@@ -202,12 +201,12 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     # WOBBLE_OFFSETS=( 0.5 )
 elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
-    set -- $ZENITH_ANGLES
-    ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
+    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
+    set -- "$ZENITH_ANGLES"
+    ze_first_bin=$(echo "$ZENITH_ANGLES" | awk '{print $1}')
     # assume same NSB and wobble offsets in all bins
-    NSB_LEVELS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find "${SIMDIR}" -path "*${ze_first_bin}*/*" -type f -exec basename {} \; | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}" -path "*${ze_first_bin}*/*" -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
@@ -220,7 +219,7 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     # NSB_LEVELS=( 200 )
     ######################################
     # TRAINMVANGRES production
-elif [ ${SIMTYPE:0:4} == "CARE" ]; then
+elif [ "${SIMTYPE:0:4}" == "CARE" ]; then
     # Older CARE simulation parameters
     SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
     ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
@@ -242,17 +241,17 @@ echo "Wobble offsets: ${WOBBLE_OFFSETS}"
 read_cutlist()
 {
     CUTFILE="${1}"
-    if [[ $CUTFILE == "" ]] || [ ! -f $CUTFILE ]; then
+    if [[ $CUTFILE == "" ]] || [ ! -f "$CUTFILE" ]; then
         echo "Error, cuts list file not found, exiting..." >&2
-        echo $CUTFILE
+        echo "$CUTFILE"
         exit 1
     fi
-    CUTLISTFROMFILE=$(cat $CUTFILE)
+    CUTLISTFROMFILE=$(cat "$CUTFILE")
     CUTLIST=""
     for CUT in "${CUTLISTFROMFILE[@]}"; do
         CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
     done
-    echo $CUTLIST
+    echo "$CUTLIST"
 }
 
 # Cut types are used for BDT training and optimisation
@@ -264,7 +263,7 @@ CUTTYPES="NTel2-PointSource-Moderate
 if [[ $ANATYPE = "NN"* ]]; then
     CUTTYPES="NTel2-PointSource-SuperSoft"
 fi
-CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
+CUTTYPES=$(echo "$CUTTYPES" |tr '\r' ' ')
 CUTTYPES=${CUTTYPES//$'\n'/}
 
 echo "===== Start submission ====="
@@ -371,14 +370,14 @@ for VX in $EPOCH; do
                     "$(dirname "$0")/IRF.trainTMVAforGammaHadronSeparation.sh" \
                                  "${TRAINDIR}" \
                                  "$MVADIR"/"$RUNPAR" \
-                                 "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
+                                 "${MVADIR}" BDT "${SIMTYPE}" "${VX}" "${ATM}"
                  # Cut optimization
                  elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                      echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
                      "$(dirname "$0")/IRF.optimizeTMVAforGammaHadronSeparation.sh" \
                          "${BDTDIR}/BackgroundRates/${VX:0:2}" \
                          "${C/PointSource-/}" \
-                         ${SIMTYPE} ${VX} "${ATM}"
+                         "${SIMTYPE}" "${VX}" "${ATM}"
                  fi
             done
             continue
@@ -388,14 +387,14 @@ for VX in $EPOCH; do
        #################################################
        if [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
            STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
-           IDS=$(jq -r '.zenith[].id' $STEREO_PAR)
+           IDS=$(jq -r '.zenith[].id' "$STEREO_PAR")
            for ZAB in $IDS; do
                # Explicitly remove 0.0 bin
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
                FIXEDNSB="160 200 350 450"
                    "$(dirname "$0")/IRF.trainXGBforAngularReconstructionBinned.sh" \
-                       $VX $ATM $ZAB "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                       $SIMTYPE $ANATYPE $UUID
+                       "$VX" "$ATM" "$ZAB" "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       "$SIMTYPE" "$ANATYPE" "$UUID"
            done
            continue
        fi
@@ -421,8 +420,8 @@ for VX in $EPOCH; do
                fi
                if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                    "$(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh" \
-                       $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                       $SIMTYPE $ANATYPE $UUID
+                       "$VX" "$ATM" "$ZA" "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       "$SIMTYPE" "$ANATYPE" "$UUID"
                fi
                continue
             fi
@@ -443,20 +442,20 @@ for VX in $EPOCH; do
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            "$(dirname "$0")/IRF.evndisp_MC.sh" \
-                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ACUTS 1 $ANATYPE $UUID
+                               "$SIMDIRZA" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                               "$SIMTYPE" $ACUTS 1 "$ANATYPE" "$UUID"
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                            "$(dirname "$0")/IRF.compress_evndisp_MC.sh" \
-                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ANATYPE $UUID
+                               "$SIMDIRZA" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                               "$SIMTYPE" "$ANATYPE" "$UUID"
                        fi
                     ######################
                     # make tables
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
                         for ID in $RECID; do
                            "$(dirname "$0")/IRF.generate_lookup_table_parts.sh" \
-                               $VX $ATM $ZA $WOBBLE $NOISE \
-                               $ID $SIMTYPE $ANATYPE $UUID
+                               "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                               "$ID" "$SIMTYPE" "$ANATYPE" "$UUID"
                         done #recID
                     ######################
                     # analyse table files
@@ -472,8 +471,8 @@ for VX in $EPOCH; do
                                 EFFAREACUTLIST="$CUTSLISTFILE"
                             fi
                             "$(dirname "$0")/IRF.mscw_energy_MC.sh" \
-                                $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $ANATYPE $DISPBDT $EFFAREACUTLIST $UUID
+                                "$TFILID" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                                "$ID" "$SIMTYPE" "$ANATYPE" $DISPBDT "$EFFAREACUTLIST" "$UUID"
 			            done #recID
                     ######################
                     # analyse effective areas
@@ -484,9 +483,9 @@ for VX in $EPOCH; do
                             for CUTS in "${CUTLIST[@]}"; do
                                echo "calculate effective areas $CUTS (ID $ID)"
                                "$(dirname "$0")/IRF.generate_effective_area_parts.sh" \
-                                   $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
-                                   $ID $SIMTYPE $ANATYPE \
-                                   $DISPBDT $UUID
+                                   "$CUTS" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                                   "$ID" "$SIMTYPE" "$ANATYPE" \
+                                   $DISPBDT "$UUID"
                             done # cuts
                         done #recID
                     fi

@@ -12,9 +12,9 @@ echo "
 exit
 fi
 
-FF=$(cat ${1})
+FF=$(cat "${1}")
 DTYPE=${2}
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFMINORVERSION)
 
 file_on_disk()
 {

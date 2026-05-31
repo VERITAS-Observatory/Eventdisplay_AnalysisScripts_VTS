@@ -25,8 +25,7 @@ exit
 fi
 
 # Run init script
-bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 RUNLIST=$1
@@ -40,7 +39,7 @@ if [[ ! -f "$RUNLIST" ]]; then
 fi
 
 # output directory
-mkdir -p ${ODIR}
+mkdir -p "${ODIR}"
 # directory schema
 getNumberedDirectory()
 {
@@ -51,17 +50,17 @@ getNumberedDirectory()
     else
         NDIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${NDIR}
+    echo "${NDIR}"
 }
 
-RUNS=`cat "$RUNLIST"`
-NRUNS=`cat "$RUNLIST" | wc -l `
+RUNS=$(cat "$RUNLIST")
+NRUNS=$(cat "$RUNLIST" | wc -l )
 echo "total number of runs to be linked: $NRUNS"
 
 for RUN in "${RUNS[@]}"; do
-    ARCHIVEDIR=$(getNumberedDirectory $RUN $DDIR)
+    ARCHIVEDIR=$(getNumberedDirectory "$RUN" "$DDIR")
     if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
-        ls ${ARCHIVEDIR}/${RUN}.anasum.root
-        ln -f -s ${ARCHIVEDIR}/${RUN}.anasum.root ${ODIR}/${RUN}.anasum.root
+        ls "${ARCHIVEDIR}"/"${RUN}".anasum.root
+        ln -f -s "${ARCHIVEDIR}"/"${RUN}".anasum.root "${ODIR}"/"${RUN}".anasum.root
     fi
 done

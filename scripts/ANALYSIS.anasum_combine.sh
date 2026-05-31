@@ -2,7 +2,7 @@
 # script to combine anasum files processed in parallel mode
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=0:59:00; h_vmem=12000M; tmpdir_size=150G
 
 if [[ $# -lt 3 ]]; then
@@ -39,9 +39,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
 RUNLIST=$1
@@ -57,7 +56,7 @@ if [[ ! -f "$RUNLIST" ]]; then
 fi
 
 # Check that run parameter file exists
-if [[ "$RUNP" == `basename $RUNP` ]]; then
+if [[ "$RUNP" == $(basename "$RUNP") ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
@@ -66,7 +65,7 @@ if [[ ! -f "$RUNP" ]]; then
 fi
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.COMBINE-${DATE}-$(uuidgen)"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
@@ -74,7 +73,7 @@ echo -e "Log files will be written to:\n $LOGDIR"
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_combine_sub"
 
-FSCRIPT="$LOGDIR/anasum_combine-$DATE-RUN$RUN-$(date +%s)"
+FSCRIPT="$LOGDIR/anasum_combine-$DATE-$(basename "$OUTFILE")-$(date +%s)"
 echo "Run script written to $FSCRIPT"
 
 # Check that anasum output files exist before combining
@@ -94,13 +93,14 @@ chmod u+x "$FSCRIPT.sh"
 
 # run locally or on cluster
 SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT".sh)
     # account for -terse changing the job number format
     if [[ $SUBC != *-terse* ]] ; then
         echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -108,15 +108,16 @@ if [[ $SUBC == *qsub* ]]; then
     fi
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-    condor_submit $FSCRIPT.sh.condor
-echo "RUN $RUN JOBID $JOBID"
-    echo "RUN $RUN SCRIPT $FSCRIPT.sh"
+    condor_submit "$FSCRIPT".sh.condor
+echo "OUTFILE $OUTFILE JOBID $JOBID"
+    echo "OUTFILE $OUTFILE SCRIPT $FSCRIPT.sh"
     if [[ $SUBC != */dev/null* ]] ; then
-        echo "RUN $RUN OLOG $FSCRIPT.sh.o$JOBID"
-        echo "RUN $RUN ELOG $FSCRIPT.sh.e$JOBID"
+        echo "OUTFILE $OUTFILE OLOG $FSCRIPT.sh.o$JOBID"
+        echo "OUTFILE $OUTFILE ELOG $FSCRIPT.sh.e$JOBID"
     fi
 elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT.sh
+    # shellcheck disable=SC2086
+    $SUBC "$FSCRIPT".sh
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$(date +"%s").dat"
 elif [[ "$SUBC" == *simple* ]] ; then

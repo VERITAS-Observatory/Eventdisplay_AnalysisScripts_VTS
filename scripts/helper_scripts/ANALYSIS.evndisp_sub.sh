@@ -2,6 +2,7 @@
 # script to analyse VTS raw files (VBF) with eventdisplay
 
 # set observatory environmental variables
+# shellcheck source=/dev/null
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
@@ -57,7 +58,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l "${EVNDISPSYS}"/bin/evndisp
     fi
 }
 
@@ -73,8 +74,8 @@ unpack_db_textdirectory()
     DBRUNFIL="${DBTEXTDIRECTORY}/${SRUN}/${RRUN}.tar.gz"
     echo "DBTEXT FILE for $RRUN $DBRUNFIL" >&2
     if [[ -e ${DBRUNFIL} ]]; then
-        mkdir -p ${TMP_DBTEXTDIRECTORY}/${SRUN}
-        tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/${SRUN}/ || return 1
+        mkdir -p "${TMP_DBTEXTDIRECTORY}"/"${SRUN}"
+        tar -xzf "${DBRUNFIL}" -C "${TMP_DBTEXTDIRECTORY}"/"${SRUN}"/ || return 1
     else
         echo "DBTEXT FILE not found ($DBRUNFIL)" >&2
         return 1
@@ -104,18 +105,18 @@ sub_dir()
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     echo "UNPACKING DBTEXT from $RUN ${DBTEXTDIRECTORY}"
     TMP_DBTEXTDIRECTORY="${TEMPDIR}/DBTEXT"
-    TMP_LASERRUN=$(unpack_db_textdirectory $RUN $TMP_DBTEXTDIRECTORY)
+    TMP_LASERRUN=$(unpack_db_textdirectory $RUN "$TMP_DBTEXTDIRECTORY")
     if [[ $? -ne 0 || ! -r ${TMP_LASERRUN} ]]; then
         echo "failed to unpack DBTEXT laser-run metadata for run $RUN" >&2
         exit 1
     fi
-    LRUNID=$(cat ${TMP_LASERRUN} | grep -v run_id | awk -F "|" '{print $1}')
+    LRUNID=$(cat "${TMP_LASERRUN}" | grep -v run_id | awk -F "|" '{print $1}')
     for LL in ${LRUNID}
     do
         echo "  unpacking flasher/laser run: $LL"
-        unpack_db_textdirectory $LL $TMP_DBTEXTDIRECTORY >/dev/null || exit 1
+        unpack_db_textdirectory "$LL" "$TMP_DBTEXTDIRECTORY" >/dev/null || exit 1
     done
-    echo "DBTEXT directory $(ls -l $TMP_DBTEXTDIRECTORY)"
+    echo "DBTEXT directory $(ls -l "$TMP_DBTEXTDIRECTORY")"
 
     OPT=(-dbtextdirectory "${TMP_DBTEXTDIRECTORY}" -epochfile VERITAS.Epochs.runparameter)
     echo "${OPT[@]}"
@@ -135,7 +136,7 @@ get_run_date()
             done
         fi
         start_time="${a[$start_time_index]}"
-    done < ${OFIL}
+    done < "${OFIL}"
     year=$(date --utc -d "$start_time" +%Y)
     month=$(date --utc -d "$start_time" +%m)
     day=$(date --utc -d "$start_time" +%d)
@@ -146,14 +147,14 @@ get_run_date()
 #################################
 # check if run is on disk
 if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
-    RUNINFO=$(sub_dir ${TMP_DBTEXTDIRECTORY} ${RUN})/${RUN}/${RUN}.runinfo
+    RUNINFO=$(sub_dir "${TMP_DBTEXTDIRECTORY}" ${RUN})/${RUN}/${RUN}.runinfo
     if [[ ! -r ${RUNINFO} ]]; then
         echo "DBTEXT run info not readable (${RUNINFO})" >&2
         exit 1
     fi
-    RUNDATE=$(get_run_date ${RUNINFO})
+    RUNDATE=$(get_run_date "${RUNINFO}")
     echo "RUN $RUN $RUNINFO $RUNDATE"
-    ls -l ${TMP_DBTEXTDIRECTORY}
+    ls -l "${TMP_DBTEXTDIRECTORY}"
     # preference to VERITAS_DATA_DIR_2
     if [[ -e ${VERITAS_DATA_DIR_2}/data/${RUNDATE}/${RUN}.cvbf ]]; then
         if [ -n "$EVNDISP_APPTAINER" ]; then
@@ -172,7 +173,7 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     fi
 else
     # original way accessing the VERITAS DB
-    RUNONDISK=$(echo $RUN | $EVNDISPSCRIPTS/RUNLIST.whichRunsAreOnDisk.sh -d)
+    RUNONDISK=$(echo $RUN | "$EVNDISPSCRIPTS"/RUNLIST.whichRunsAreOnDisk.sh -d)
 fi
 if [[ ${RUNONDISK} == *"file not found"** ]]; then
   echo "$RUN not on disk"
@@ -196,12 +197,12 @@ fi
 # pedestal calculation
 if [[ $CALIB == "1" || $CALIB == "2" || $CALIB == "4" || $CALIB == "5" ]]; then
     rm -f $LOGDIR/$RUN.ped.log
-    $EVNDISPSYS/bin/evndisp \
+    "$EVNDISPSYS"/bin/evndisp \
         -runmode=1 -runnumber="$RUN" \
         -reconstructionparameter "$ACUTS" \
         "${OPT[@]}" \
         -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.ped.log"
-    echo "$(inspect_executables)" >> "$LOGDIR/$RUN.ped.log"
+    inspect_executables >> "$LOGDIR/$RUN.ped.log"
     echo "RUN$RUN PEDLOG $LOGDIR/$RUN.ped.log"
 fi
 
@@ -228,13 +229,13 @@ fi
 # average tzero calculation
 if [[ $CALIB == "1" || $CALIB == "3" || $CALIB == "4" || $CALIB == "5" ]]; then
     rm -f $LOGDIR/$RUN.tzero.log
-    $EVNDISPSYS/bin/evndisp \
+    "$EVNDISPSYS"/bin/evndisp \
         -runnumber=$RUN -runmode=7 \
         -calibrationsummin=50 \
         -reconstructionparameter "$ACUTS" \
         "${OPT[@]}" \
         -calibrationdirectory "$CALDIR" &> "$LOGDIR/$RUN.tzero.log"
-    echo "$(inspect_executables)" >> "$LOGDIR/$RUN.tzero.log"
+    inspect_executables >> "$LOGDIR/$RUN.tzero.log"
     echo "RUN$RUN TZEROLOG $LOGDIR/$RUN.tzero.log"
 fi
 
@@ -263,31 +264,31 @@ fi
 if [[ $CALIB != "5" ]]; then
 LOGFILE="$LOGDIR/$RUN.log"
     rm -f "$LOGDIR/$RUN.log"
-    $EVNDISPSYS/bin/evndisp \
+    "$EVNDISPSYS"/bin/evndisp \
         -runnumber="$RUN" \
         -reconstructionparameter "$ACUTS" \
         -outputfile "$TEMPDIR/$RUN.root" \
         "${OPT[@]}" \
         -calibrationdirectory "$CALDIR" &> "$LOGFILE"
-    echo "$(inspect_executables)" >> "$LOGFILE"
+    inspect_executables >> "$LOGFILE"
     echo "RUN$RUN EVNDISPLOG $LOGFILE"
 fi
 
 # move log file into root file
 if [[ -e "$LOGFILE" ]]; then
-    cp -v $LOGFILE $TEMPDIR
+    cp -v "$LOGFILE" "$TEMPDIR"
     LLF="${TEMPDIR}/$RUN.log"
-    $EVNDISPSYS/bin/logFile evndispLog "$TEMPDIR/$RUN.root" "$LLF"
+    "$EVNDISPSYS"/bin/logFile evndispLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 if [[ -e "$LOGDIR/$RUN.ped.log" ]]; then
-    cp -v $LOGDIR/$RUN.ped.log $TEMPDIR
+    cp -v $LOGDIR/$RUN.ped.log "$TEMPDIR"
     LLF="${TEMPDIR}/$RUN.ped.log"
-    $EVNDISPSYS/bin/logFile evndisppedLog "$TEMPDIR/$RUN.root" "$LLF"
+    "$EVNDISPSYS"/bin/logFile evndisppedLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 if [[ -e "$LOGDIR/$RUN.tzero.log" ]]; then
-    cp -v $LOGDIR/$RUN.tzero.log $TEMPDIR
+    cp -v $LOGDIR/$RUN.tzero.log "$TEMPDIR"
     LLF="${TEMPDIR}/$RUN.tzero.log"
-    $EVNDISPSYS/bin/logFile evndisptzeroLog "$TEMPDIR/$RUN.root" "$LLF"
+    "$EVNDISPSYS"/bin/logFile evndisptzeroLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 
 # move data file from tmp dir to data dir

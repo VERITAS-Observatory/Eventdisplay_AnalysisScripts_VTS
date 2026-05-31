@@ -56,15 +56,14 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 [[ "$1" ]] && ALLOW_THREE_TEL=$1 || ALLOW_THREE_TEL=0
 [[ "$2" ]] && WORST_WEATHER=$2   || WORST_WEATHER='B'
 [[ "$3" ]] && MIN_DURATION=$3    || MIN_DURATION=15
 [[ "$4" ]] && DATE_BEG="$4"      || DATE_BEG="2011-01-01"
-[[ "$5" ]] && DATE_END="$5"      || DATE_END=`date +"%Y-%m-%d"`
+[[ "$5" ]] && DATE_END="$5"      || DATE_END=$(date +"%Y-%m-%d")
 [[ "$6" ]] && MODE="$6" || MODE="observing"
 [[ "$7" ]] && DQMCATEGORY="$7" || DQMCATEGORY="science"
 [[ "$8" ]] && ELEVSTRING="$8"  || ELEVSTRING=""
@@ -112,7 +111,7 @@ MAXAZIM=$( echo "$AZIMSTRING" | cut -d '-' -f 2 )
 #echo "MAXAZIM:'$MAXAZIM'"
 
 # Get VERITAS database URL from EVNDISP.global.runparameter file
-MYSQLDB=`grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | egrep -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}'`
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 if [ ! -n "$MYSQLDB" ]; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit 1
@@ -121,7 +120,7 @@ MYSQL="mysql -u readonly -h $MYSQLDB -A"
 
 # get segments of time that are within our time, azimuth, and elevation bounts
 #echo "submitting database request..."
-TIMESEGMENTS=$( $EVNDISPSYS/bin/VTS.getObservingTimesWithinTimeAzElBounds "$DATE_BEG" "$DATE_END" "$MINELEV" "$MAXELEV" "$MINAZIM" "$MAXAZIM" | grep -P "^MJDSEGMENT" | awk '{ printf "%s %s\n", $2, $4 }' )
+TIMESEGMENTS=$( "$EVNDISPSYS"/bin/VTS.getObservingTimesWithinTimeAzElBounds "$DATE_BEG" "$DATE_END" "$MINELEV" "$MAXELEV" "$MINAZIM" "$MAXAZIM" | grep -P "^MJDSEGMENT" | awk '{ printf "%s %s\n", $2, $4 }' )
 #echo "TIMESEGMENTS:"
 #echo "$TIMESEGMENTS"
 
@@ -129,7 +128,7 @@ TIMESEGMENTS=$( $EVNDISPSYS/bin/VTS.getObservingTimesWithinTimeAzElBounds "$DATE
 # which runs fall into these time segments
 TIMESEGCONDITION=""
 segmentiter=0
-while read lin ; do
+while read -r lin ; do
   segmentiter=$((segmentiter+1))
   #echo "$segmentiter - lin:'$lin'"
   mjdstart=$( echo "$lin" | cut -d ' ' -f 1 )

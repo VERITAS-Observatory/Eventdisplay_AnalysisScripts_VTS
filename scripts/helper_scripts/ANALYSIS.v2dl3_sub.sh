@@ -22,8 +22,8 @@ echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 
 # run list
-FILES=`cat "$RUNLIST"`
-NRUNS=`cat "$RUNLIST" | wc -l `
+FILES=$(cat "$RUNLIST")
+NRUNS=$(cat "$RUNLIST" | wc -l )
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -52,19 +52,24 @@ check_conda_installation()
 }
 
 check_conda_installation
+# shellcheck source=/dev/null
 
 source activate base
 conda activate v2dl3Eventdisplay-${V2DL3VERSION}
 # Install only if not already present (avoid slow per-job reinstall)
 pip show v2dl3-eventdisplay &>/dev/null 2>&1 || pip install -e "${V2DL3SYS%/}-v${V2DL3VERSION}"
 
-V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
+V2DL3OPT=(
+    --fuzzy_boundary zenith 0.05
+    --fuzzy_boundary pedvar 0.5
+    --save_multiplicity
+)
 # selection for full-gamma files
 EVENTFILTER="${TEMPDIR}/tmp_select.yml"
-echo "IsGamma: 1" > $EVENTFILTER
+echo "IsGamma: 1" > "$EVENTFILTER"
 echo "Event filter file: ${EVENTFILTER}"
-ls -l ${EVENTFILTER}
-cat ${EVENTFILTER}
+ls -l "${EVENTFILTER}"
+cat "${EVENTFILTER}"
 
 # directory schema for preprocessed files
 getNumberedDirectory()
@@ -76,7 +81,7 @@ getNumberedDirectory()
     else
         ODIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${ODIR}
+    echo "${ODIR}"
 }
 
 # interpolator; might depend on IRF type
@@ -99,20 +104,20 @@ getInterpolator()
 
 for RUN in $FILES
 do
-    echo $RUN
-    ANASUMFILE="$(getNumberedDirectory $RUN $VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUT})/${RUN}.anasum.root"
+    echo "$RUN"
+    ANASUMFILE="$(getNumberedDirectory "$RUN" "$VERITAS_PREPROCESSED_DATA_DIR"/"${VERITAS_ANALYSIS_TYPE:0:2}"/anasum_${CUT})/${RUN}.anasum.root"
     if [[ ! -e ${ANASUMFILE} ]]; then
         echo "File ${ANASUMFILE} not found"
         echo "Skipping run $RUN"
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    result=$(v2dl3-eventdisplay-query-runparameters ${ANASUMFILE} ${RUN})
-    EPOCH=$(echo $result |  awk '{print $2}')
-    EFFAREA=$(echo $result | awk '{print $5}')
+    result=$(v2dl3-eventdisplay-query-runparameters "${ANASUMFILE}" "${RUN}")
+    EPOCH=$(echo "$result" |  awk '{print $2}')
+    EFFAREA=$(echo "$result" | awk '{print $5}')
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
-    DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
-    INTERPOLATOR=$(getInterpolator $EFFAREA)
+    DBFITSFILE=$(getNumberedDirectory "$RUN" "$VERITAS_DATA_DIR"/shared/DBFITS)/$RUN.db.fits.gz
+    INTERPOLATOR=$(getInterpolator "$EFFAREA")
     if [[ ! -e ${DBFITSFILE} ]]; then
         echo "DB File ${DBFITSFILE} not found"
         echo "Skipping run $RUN"
@@ -122,33 +127,33 @@ do
 
     for m in "point-like" "full-enclosure"
     do
-        echo "   Converting (${m}, ${V2DL3OPT})"
+        echo "   Converting (${m}, ${V2DL3OPT[*]})"
 
         for p in "" "-all-events"
         do
             if [[ "$p" != "-all-events" ]]; then
-                V2DL3SELECT="--evt_filter ${EVENTFILTER}"
-                ls -1 ${EVENTFILTER}
+                V2DL3SELECT=(--evt_filter "${EVENTFILTER}")
+                ls -1 "${EVENTFILTER}"
             else
-                V2DL3SELECT=""
+                V2DL3SELECT=()
             fi
-            echo "EVENTFILTER $V2DL3SELECT"
+            echo "EVENTFILTER ${V2DL3SELECT[*]}"
 
             mkdir -p ${ODIR}/${m}${p}
-            rm -f ${ODIR}/${m}${p}/${RUN}.log
+            rm -f ${ODIR}/${m}${p}/"${RUN}".log
 
             v2dl3-eventdisplay \
                 --${m} \
-                ${V2DL3OPT} ${V2DL3SELECT} \
-                --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
-                --logfile ${ODIR}/${m}${p}/${RUN}.log \
-                --instrument_epoch ${EPOCH} \
-                --interpolator_name ${INTERPOLATOR} \
-                --db_fits_file ${DBFITSFILE} \
-                ${ODIR}/${m}${p}/${RUN}.fits.gz
+                "${V2DL3OPT[@]}" "${V2DL3SELECT[@]}" \
+                --file_pair "${ANASUMFILE}" "$VERITAS_EVNDISP_AUX_DIR"/EffectiveAreas/"${EFFAREA}" \
+                --logfile ${ODIR}/${m}${p}/"${RUN}".log \
+                --instrument_epoch "${EPOCH}" \
+                --interpolator_name "${INTERPOLATOR}" \
+                --db_fits_file "${DBFITSFILE}" \
+                ${ODIR}/${m}${p}/"${RUN}".fits.gz
 
-            python --version >> ${ODIR}/${m}${p}/${RUN}.log
-            conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/${RUN}.log
+            python --version >> ${ODIR}/${m}${p}/"${RUN}".log
+            conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/"${RUN}".log
             PDIR=$(pwd)
             cd "${PDIR}" || exit
         done
