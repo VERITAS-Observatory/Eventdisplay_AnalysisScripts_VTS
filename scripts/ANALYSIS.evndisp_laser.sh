@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:29:00; h_vmem=2000M; tmpdir_size=5G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 # begin help message
@@ -90,34 +92,13 @@ for RUN in $RUNNUMS; do
     # run locally or on cluster
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=$(eval "echo \"$SUBC\"")
-    if [[ $SUBC == *qsub* ]]; then
-        # shellcheck disable=SC2086
-        JOBID=$($SUBC "$FSCRIPT".sh)
-
-        # account for -terse changing the job number format
-        if [[ $SUBC != *-terse* ]] ; then
-            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
+        submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
+        if [[ $SUBC == *qsub* ]]; then
+            echo "RUN $RUN: JOBID $JOBID"
         fi
-
-        echo "RUN $RUN: JOBID $JOBID"
-    elif [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        condor_submit "$FSCRIPT".sh.condor
-    elif [[ $SUBC == *sbatch* ]]; then
-        # shellcheck disable=SC2086
-        $SUBC "$FSCRIPT".sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
-    elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
-    fi
 done
 
 # Execute all FSCRIPTs locally in parallel
-if [[ $SUBC == *parallel* ]]; then
-    # shellcheck disable=SC2086
-    cat "$LOGDIR"/runscripts.dat | $SUBC
-fi
+run_parallel_jobs "$LOGDIR/runscripts.dat"
 
 exit

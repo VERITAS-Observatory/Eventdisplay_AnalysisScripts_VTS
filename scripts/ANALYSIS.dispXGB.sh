@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 if [ "$#" -lt 3 ]; then
 echo "
@@ -77,21 +79,8 @@ do
 
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=$(eval "echo \"$SUBC\"")
-    if [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-        echo "-------------------------------------------------------------------------------"
-        echo
-    elif [[ $SUBC == *sbatch* ]]; then
-        # shellcheck disable=SC2086
-        $SUBC "$FSCRIPT".sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "${LOGDIR}"/runscripts."$TIMETAG".dat
+    submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "${LOGDIR}/runscripts.$TIMETAG.dat"
+    if [[ $SUBC == *parallel* ]]; then
         echo "RUN $RUNN OLOG $FSCRIPT.log"
-    elif [[ "$SUBC" == *simple* ]] ; then
-       "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
     fi
 done

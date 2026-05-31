@@ -4,6 +4,8 @@
 # qsub parameters
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 # EventDisplay version
 EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
@@ -252,40 +254,17 @@ do
             echo "read calibration from VOffline DB (default)"
     fi
 
-    if [[ $SUBC == *qsub* ]]; then
-        # shellcheck disable=SC2086
-        JOBID=$($SUBC "$FSCRIPT".sh)
-        # account for -terse changing the job number format
-        if [[ $SUBC != *-terse* ]] ; then
-            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
+        submit_job "$FSCRIPT.sh" "$FSCRIPT.sh" "$LOGDIR/runscripts.sh"
+        if [[ $SUBC == *qsub* ]]; then
+            echo "RUN $FILE JOBID $JOBID"
+            echo "RUN $FILE SCRIPT $FSCRIPT.sh"
+            if [[ $SUBC != */dev/null* ]] ; then
+                echo "RUN $FILE OLOG $FSCRIPT.sh.o$JOBID"
+                echo "RUN $FILE ELOG $FSCRIPT.sh.e$JOBID"
+            fi
+        elif [[ $SUBC == *parallel* ]]; then
+            echo "RUN $FILE OLOG $FSCRIPT.log"
         fi
-
-        echo "RUN $FILE JOBID $JOBID"
-        echo "RUN $FILE SCRIPT $FSCRIPT.sh"
-        if [[ $SUBC != */dev/null* ]] ; then
-            echo "RUN $FILE OLOG $FSCRIPT.sh.o$JOBID"
-            echo "RUN $FILE ELOG $FSCRIPT.sh.e$JOBID"
-        fi
-    elif [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-        echo "-------------------------------------------------------------------------------"
-        echo
-    elif [[ $SUBC == *sbatch* ]]; then
-        # shellcheck disable=SC2086
-        $SUBC "$FSCRIPT".sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh" >> "$LOGDIR"/runscripts.sh
-        echo "RUN $FILE OLOG $FSCRIPT.log"
-    elif [[ "$SUBC" == *simple* ]] ; then
-        "$FSCRIPT.sh" | tee "$FSCRIPT.log"
-    elif [[ "$SUBC" == *test* ]]; then
-        echo "TESTING SCRIPT $FSCRIPT.sh"
-    fi
 
     if [[ ! -e ${DBRUNFIL} ]] || [[ ${DBTEXTDIR} == "0" ]]; then
         echo "SLEEPING (${SLEEPABIT}) ${DBRUNFIL} $FILE"
@@ -303,8 +282,7 @@ if [[ $SUBC == *parallel* ]]; then
         echo "echo \"==================================\""
         echo "echo \"List of scripts to run\""
         cat "$LOGDIR"/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/'
-        # shellcheck disable=SC2086
-        echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC"
+        echo "run_parallel_jobs \"$LOGDIR/runscripts.sh\""
     } >> Run_me.sh
     chmod +x Run_me.sh
 # shellcheck source=/dev/null
