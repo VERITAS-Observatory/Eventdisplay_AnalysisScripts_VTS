@@ -151,3 +151,4 @@ elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then
     "$FSCRIPT" | tee "$FSCRIPT.log"
+fi
