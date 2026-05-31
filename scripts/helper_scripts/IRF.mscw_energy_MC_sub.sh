@@ -73,7 +73,6 @@ inspect_executables()
     fi
 }
 
-
 # mscw_energy command line options
 MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
 # dispBDT reconstruction
