@@ -56,7 +56,19 @@ if [ ${#SF} = 0 ]; then
 fi
 
 # Run options
-OPT="-runmode=$RUNMODE -runnumber=$RUNNUM -lasermin=$LASERMIN -calibrationsumwindow=18 -calibrationsumfirst=2 -reconstructionparameter EVNDISP.reconstruction.SW18_noDoublePass.runparameter -calibrationdirectory $CALIBDIR -writeextracalibtree -printdeadpixelinfo"
+OPT=(
+    "-runmode=$RUNMODE"
+    "-runnumber=$RUNNUM"
+    "-lasermin=$LASERMIN"
+    -calibrationsumwindow=18
+    -calibrationsumfirst=2
+    -reconstructionparameter
+    EVNDISP.reconstruction.SW18_noDoublePass.runparameter
+    -calibrationdirectory
+    "$CALIBDIR"
+    -writeextracalibtree
+    -printdeadpixelinfo
+)
 
 # calculate pedestals (for high gain only)
 if [[ $RUNMODE == 2 ]]; then
@@ -68,8 +80,7 @@ fi
 TELTOANA=$(echo "$TELTOANA" | fold -w1)
 for i in $TELTOANA; do
     echo "Calculating gains for run $RUNNUM, telescope $i"
-    # shellcheck disable=SC2086
-    "$EVNDISPSYS"/bin/evndisp -teltoana="$i" $OPT
+    "$EVNDISPSYS"/bin/evndisp -teltoana="$i" "${OPT[@]}"
 done
 
 exit

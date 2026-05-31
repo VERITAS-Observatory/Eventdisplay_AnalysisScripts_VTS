@@ -84,22 +84,28 @@ rm -f "$DDIR/$TABFILE.list"
 find "$DDIR" -maxdepth 1 -name "*[0-9].root" > "$DDIR/$TABFILE.list"
 
 # Redo stereo reconstruction with diff cuts on images (versions after v490)
-MOPT=""
+MOPT=()
 if [[ $IRFVERSION != v490* ]]; then
-    MOPT="-redo_stereo_reconstruction -minangle_stereo_reconstruction=10"
-    MOPT="$MOPT -maxloss=0.4 -use_evndisp_selected_images=0"
-    MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
+    MOPT=(
+        -redo_stereo_reconstruction
+        -minangle_stereo_reconstruction=10
+        -maxloss=0.4
+        -use_evndisp_selected_images=0
+        -maxdist=1.75
+        -minntubes=5
+        -minwidth=0.02
+        -minsize=100
+    )
 fi
 
 echo "Running mscw_energy (table filling)"
 logfile="$ODIR/$TABFILE.log"
-# shellcheck disable=SC2086
 "$EVNDISPSYS"/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
                             -inputfilelist "$DDIR/$TABFILE.list" \
                             -tablefile "${DDIR}/$TABFILE.root" \
-                            -ze=$ZA $MOPT \
+                            -ze=$ZA "${MOPT[@]}" \
                             -arrayrecid=$RECID \
                             -woff=$WOBBLE &> "$logfile"
 

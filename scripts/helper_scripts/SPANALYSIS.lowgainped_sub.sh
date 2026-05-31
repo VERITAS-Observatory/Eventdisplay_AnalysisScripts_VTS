@@ -26,16 +26,22 @@ LOGDIR="$TEMPDIR"
 
 
 # eventdisplay reconstruction parameter
-ACUTS="EVNDISP.reconstruction.LGCalibration.runparameter"
+ACUTS=("EVNDISP.reconstruction.LGCalibration.runparameter")
 
-OPT=" -calibrationsumwindow=$CALIBRATIONSUMWINDOW -calibrationsumfirst=$CALIBRATIONSUMFIRST -nevents=$NEVENTS -calibrationdirectory $TEMPDIR -teltoana=$TELTOANA "
+OPT=(
+    "-calibrationsumwindow=$CALIBRATIONSUMWINDOW"
+    "-calibrationsumfirst=$CALIBRATIONSUMFIRST"
+    "-nevents=$NEVENTS"
+    -calibrationdirectory
+    "$TEMPDIR"
+    "-teltoana=$TELTOANA"
+)
 
 #########################################
 # pedestal calculation
 rm -f "$LOGDIR"/$RUN.ped.log
-# shellcheck disable=SC2086
-"$EVNDISPSYS"/bin/evndisp -runmode=6 -runnumber=$RUN -reconstructionparameter $ACUTS $OPT &> "$LOGDIR"/$RUN.ped.log
-echo "$EVNDISPSYS/bin/evndisp -runmode=6 -runnumber=$RUN -reconstructionparameter $ACUTS $OPT "
+"$EVNDISPSYS"/bin/evndisp -runmode=6 -runnumber="$RUN" -reconstructionparameter "${ACUTS[@]}" "${OPT[@]}" &> "$LOGDIR"/$RUN.ped.log
+echo "$EVNDISPSYS/bin/evndisp -runmode=6 -runnumber=$RUN -reconstructionparameter ${ACUTS[*]} ${OPT[*]}"
 
 for ((i=1; i<5; i++))
 do

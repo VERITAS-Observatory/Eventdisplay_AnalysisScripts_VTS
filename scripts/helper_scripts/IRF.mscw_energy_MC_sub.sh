@@ -74,20 +74,35 @@ inspect_executables()
 }
 
 # mscw_energy command line options
-MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
+MOPT=(
+    -noNoTrigger
+    -nomctree
+    -writeReconstructedEventsOnly=1
+    "-arrayrecid=${RECID}"
+    -tablefile
+    "$TABFILE"
+)
 # dispBDT reconstruction
 if [ $DISPBDT -eq 1 ]; then
-    MOPT="$MOPT -redo_stereo_reconstruction"
-    MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT+=(
+        -redo_stereo_reconstruction
+        -tmva_disperror_weight
+        50
+        -minangle_stereo_reconstruction=10.
+    )
     if [[ $IRFVERSION == v490* ]]; then
-        MOPT="$MOPT -maxloss=0.20"
+        MOPT+=("-maxloss=0.20")
     else
-        MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
-        MOPT="$MOPT -maxloss=0.40"
-        MOPT="$MOPT -use_evndisp_selected_images=0"
+        MOPT+=(
+            -maxdist=1.75
+            -minntubes=5
+            -minwidth=0.02
+            -minsize=100
+            -maxloss=0.40
+            -use_evndisp_selected_images=0
+        )
     fi
-    # MOPT="$MOPT -maxnevents=1000"
+    # MOPT+=("-maxnevents=1000")
     if [[ ${SIMTYPE} == *"RedHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}_redHV/"
     elif [[ ${SIMTYPE} == *"UV"* ]]; then
@@ -118,13 +133,21 @@ if [ $DISPBDT -eq 1 ]; then
     # unzip XML files into DDIR
     cp -v -f "${DISPDIR}"/*.xml.gz "${DDIR}"/
     gunzip -v "${DDIR}"/*xml.gz
-    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
-    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
-    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
+    MOPT+=(
+        -tmva_filename_stereo_reconstruction
+        "${DDIR}/BDTDisp_BDT_"
+        -tmva_filename_disperror_reconstruction
+        "${DDIR}/BDTDispError_BDT_"
+        -tmva_filename_dispsign_reconstruction
+        "${DDIR}/BDTDispSign_BDT_"
+    )
     if [[ $IRFVERSION != v490* ]]; then
-        MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
+        MOPT+=(
+            -tmva_filename_energy_reconstruction
+            "${DDIR}/BDTDispEnergy_BDT_"
+        )
     fi
-    echo "DISP BDT options: $MOPT"
+    echo "DISP BDT options: ${MOPT[*]}"
 fi
 
 # input evndisp files
@@ -157,8 +180,7 @@ cat "$DDIR/$OFILE.list"
 echo "Running mscw_energy"
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
-# shellcheck disable=SC2086
-"$EVNDISPSYS"/bin/mscw_energy $MOPT \
+"$EVNDISPSYS"/bin/mscw_energy "${MOPT[@]}" \
     -inputfilelist "$DDIR/$OFILE.list" \
     -outputfile "$outputfilename" \
     -noise=$NOISE &> $logfile

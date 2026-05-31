@@ -46,18 +46,17 @@ if [[ ${#SF} = 0 ]]; then
 fi
 
 if [[ $CALDB == "1" ]]; then
-    OPT="$OPT -readCalibDB"
+    OPT=(-readCalibDB)
 else
-    OPT="$OPT -nocalibnoproblem"
+    OPT=(-nocalibnoproblem)
 fi
-echo "$OPT"
+echo "${OPT[*]}"
 
 # run options
-OPT="-runmode=7 -runnumber=$RUNNUM -teltoana=$TELTOANA $OPT"
+OPT=("-runmode=7" "-runnumber=$RUNNUM" "-teltoana=$TELTOANA" "${OPT[@]}")
 
 # Run evndisp
-echo "$EVNDISPSYS/bin/evndisp $OPT"
-# shellcheck disable=SC2086
-"$EVNDISPSYS"/bin/evndisp $OPT
+echo "$EVNDISPSYS/bin/evndisp ${OPT[*]}"
+"$EVNDISPSYS"/bin/evndisp "${OPT[@]}"
 
 exit

@@ -134,7 +134,11 @@ else
 fi
 
 # Amplitude correction factor options
-AMPCORR="-traceamplitudecorrection ThroughputCorrection.runparameter -pedestalDefaultPedestal=$PEDLEV"
+AMPCORR=(
+    -traceamplitudecorrection
+    ThroughputCorrection.runparameter
+    "-pedestalDefaultPedestal=$PEDLEV"
+)
 # CARE simulations: add Gaussian noise of 3.6 mV/ (7.84 mV/dc)  / 2
 # Current (2018) CARE simulations:
 #    no electronic noise included - therefore add
@@ -142,7 +146,7 @@ AMPCORR="-traceamplitudecorrection ThroughputCorrection.runparameter -pedestalDe
 #    Derived for GrIsu many years ago - source not entirely clear
 #    add Gaussian noise of 3.6 mV/ (7.84 mV/dc)  / 2
 if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
-    AMPCORR="$AMPCORR -injectGaussianNoise=0.229592"
+    AMPCORR+=("-injectGaussianNoise=0.229592")
 fi
 
 # detector configuration
@@ -192,11 +196,29 @@ VBF_FILE="$DDIR/$VBF_FILE"
 
 #######################################
 # option for all steps of the analysis
-MCOPT=" -runnumber=$RUNNUM -sourcetype=2 -epoch $EPOCH -camera=$CFG"
-MCOPT="$MCOPT -reconstructionparameter $ACUTS -sourcefile $VBF_FILE"
-MCOPT="$MCOPT -deadchannelfile $DEAD -donotusedbinfo -calibrationdirectory ${CALDIR}"
-MCOPT="$MCOPT $AMPCORR"
-MCOPT="$MCOPT ${ADD_OPT}"
+read -r -a ADD_OPT_ARR <<< "$ADD_OPT"
+MCOPT=(
+    "-runnumber=$RUNNUM"
+    -sourcetype=2
+    -epoch
+    "$EPOCH"
+    "-camera=$CFG"
+)
+MCOPT+=(
+    -reconstructionparameter
+    "$ACUTS"
+    -sourcefile
+    "$VBF_FILE"
+)
+MCOPT+=(
+    -deadchannelfile
+    "$DEAD"
+    -donotusedbinfo
+    -calibrationdirectory
+    "${CALDIR}"
+)
+MCOPT+=("${AMPCORR[@]}")
+MCOPT+=("${ADD_OPT_ARR[@]}")
 
 # Low gain calibration
 LOWGAINCALIBRATIONFILE=NOFILE
@@ -220,9 +242,8 @@ fi
 if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
     echo "Calculating pedestals for run $RUNNUM"
     rm -f $ODIR/"$RUNNUM".ped.log
-    PEDOPT="-runmode=1 -calibrationnevents=${PEDNEVENTS}"
-    # shellcheck disable=SC2086
-    "$EVNDISPSYS"/bin/evndisp $MCOPT $PEDOPT &> "$ODIR/$RUNNUM.ped.log"
+    PEDOPT=("-runmode=1" "-calibrationnevents=${PEDNEVENTS}")
+    "$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${PEDOPT[@]}" &> "$ODIR/$RUNNUM.ped.log"
     inspect_executables >> "$ODIR/$RUNNUM.ped.log"
     if grep -Fq "END OF ANALYSIS, exiting" $ODIR/"$RUNNUM".ped.log;
     then
@@ -236,16 +257,26 @@ fi
 ###############################################
 # calculate tzeros
 echo "Calculating average tzeros for run $RUNNUM"
-TZEROPT="-runmode=7 -calibrationnevents=${TZERONEVENTS} -pedestalnoiselevel=$NOISE "
-TZEROPT="$TZEROPT -lowgainpedestallevel=$LOWPEDLEV -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE}"
+TZEROPT=(
+    "-runmode=7"
+    "-calibrationnevents=${TZERONEVENTS}"
+    "-pedestalnoiselevel=$NOISE"
+    "-lowgainpedestallevel=$LOWPEDLEV"
+    -lowgaincalibrationfile
+    "${LOWGAINCALIBRATIONFILE}"
+)
 rm -f $ODIR/"$RUNNUM".tzero.log
 ### eventdisplay GRISU run options
 if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-   TZEROPT="$TZEROPT -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
+   TZEROPT+=(
+       -pedestalfile
+       "$NOISEFILE"
+       "-pedestalseed=$RUNNUM"
+       "-pedestalDefaultPedestal=$PEDLEV"
+   )
 fi
-echo "$EVNDISPSYS/bin/evndisp $MCOPT $TZEROPT" &> $ODIR/"$RUNNUM".tzero.log
-# shellcheck disable=SC2086
-"$EVNDISPSYS"/bin/evndisp $MCOPT $TZEROPT &>> $ODIR/"$RUNNUM".tzero.log
+echo "$EVNDISPSYS/bin/evndisp ${MCOPT[*]} ${TZEROPT[*]}" &> $ODIR/"$RUNNUM".tzero.log
+"$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${TZEROPT[@]}" &>> $ODIR/"$RUNNUM".tzero.log
 inspect_executables &>> "$ODIR/$RUNNUM.tzero.log"
 if grep -Fq "END OF ANALYSIS, exiting" $ODIR/"$RUNNUM".tzero.log;
 then
@@ -261,20 +292,31 @@ fi
 
 #####################
 # general analysis options
-ANAOPT=" -writenomctree -outputfile $DDIR/$ONAME.root"
-ANAOPT="$ANAOPT -lowgaincalibrationfile ${LOWGAINCALIBRATIONFILE} -lowgainpedestallevel=$PEDLEV"
+ANAOPT=(
+    -writenomctree
+    -outputfile
+    "$DDIR/$ONAME.root"
+    -lowgaincalibrationfile
+    "${LOWGAINCALIBRATIONFILE}"
+    "-lowgainpedestallevel=$PEDLEV"
+)
 #
 ######################
 ## options for GRISU (handling of low-gain values)
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    ANAOPT="$ANAOPT -simu_hilo_from_simfile -pedestalfile $NOISEFILE -pedestalseed=$RUNNUM -pedestalDefaultPedestal=$PEDLEV"
+    ANAOPT+=(
+        -simu_hilo_from_simfile
+        -pedestalfile
+        "$NOISEFILE"
+        "-pedestalseed=$RUNNUM"
+        "-pedestalDefaultPedestal=$PEDLEV"
+    )
 fi
 #################################################################################
 # run evndisp
 echo "Analysing MC file for run $RUNNUM"
-echo "$EVNDISPSYS/bin/evndisp $MCOPT $ANAOPT" &> $ODIR/"$ONAME".log
-# shellcheck disable=SC2086
-"$EVNDISPSYS"/bin/evndisp $MCOPT $ANAOPT &>> $ODIR/"$ONAME".log
+echo "$EVNDISPSYS/bin/evndisp ${MCOPT[*]} ${ANAOPT[*]}" &> $ODIR/"$ONAME".log
+"$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${ANAOPT[@]}" &>> $ODIR/"$ONAME".log
 inspect_executables >> "$ODIR/$ONAME.log"
 
 #################################################################################

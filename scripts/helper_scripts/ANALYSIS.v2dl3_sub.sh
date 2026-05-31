@@ -59,7 +59,11 @@ conda activate v2dl3Eventdisplay-${V2DL3VERSION}
 # Install only if not already present (avoid slow per-job reinstall)
 pip show v2dl3-eventdisplay &>/dev/null 2>&1 || pip install -e "${V2DL3SYS%/}-v${V2DL3VERSION}"
 
-V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
+V2DL3OPT=(
+    --fuzzy_boundary zenith 0.05
+    --fuzzy_boundary pedvar 0.5
+    --save_multiplicity
+)
 # selection for full-gamma files
 EVENTFILTER="${TEMPDIR}/tmp_select.yml"
 echo "IsGamma: 1" > "$EVENTFILTER"
@@ -123,25 +127,24 @@ do
 
     for m in "point-like" "full-enclosure"
     do
-        echo "   Converting (${m}, ${V2DL3OPT})"
+        echo "   Converting (${m}, ${V2DL3OPT[*]})"
 
         for p in "" "-all-events"
         do
             if [[ "$p" != "-all-events" ]]; then
-                V2DL3SELECT="--evt_filter ${EVENTFILTER}"
+                V2DL3SELECT=(--evt_filter "${EVENTFILTER}")
                 ls -1 "${EVENTFILTER}"
             else
-                V2DL3SELECT=""
+                V2DL3SELECT=()
             fi
-            echo "EVENTFILTER $V2DL3SELECT"
+            echo "EVENTFILTER ${V2DL3SELECT[*]}"
 
             mkdir -p ${ODIR}/${m}${p}
             rm -f ${ODIR}/${m}${p}/"${RUN}".log
 
-            # shellcheck disable=SC2086
             v2dl3-eventdisplay \
                 --${m} \
-                ${V2DL3OPT} ${V2DL3SELECT} \
+                "${V2DL3OPT[@]}" "${V2DL3SELECT[@]}" \
                 --file_pair "${ANASUMFILE}" "$VERITAS_EVNDISP_AUX_DIR"/EffectiveAreas/"${EFFAREA}" \
                 --logfile ${ODIR}/${m}${p}/"${RUN}".log \
                 --instrument_epoch "${EPOCH}" \

@@ -30,7 +30,7 @@ LOGDIR="$ODIR"
 mkdir -p $LOGDIR
 
 # eventdisplay reconstruction parameter
-ACUTS=RRRRPFILE
+ACUTS=("RRRRPFILE")
 
 #########################################
 # pedestal and tzero calculation. No tzeros needed for lmult.
@@ -48,16 +48,15 @@ fi
 #########################################
 # Other options. hilo runs should have all events analysed.
 if [[ $LMULT == "0" ]] ; then
-	OPT=" -nevents=5000 "
+    OPT=("-nevents=5000")
 else
-	OPT=" -lowgaincalibrationfile calibrationlist.LowGain.CALIB.dat "
+    OPT=(-lowgaincalibrationfile calibrationlist.LowGain.CALIB.dat)
 fi
 
 #########################################
 # run eventdisplay
 rm -f $LOGDIR/$RUN.log
-# shellcheck disable=SC2086
-"$EVNDISPSYS"/bin/evndisp -runnumber=$RUN -runmode=4 -nocalibnoproblem $OPT -reconstructionparameter $ACUTS -dstfile "$TEMPDIR"/$RUN.DST.root &> $LOGDIR/$RUN.DST.log
+"$EVNDISPSYS"/bin/evndisp -runnumber="$RUN" -runmode=4 -nocalibnoproblem "${OPT[@]}" -reconstructionparameter "${ACUTS[@]}" -dstfile "$TEMPDIR"/$RUN.DST.root &> $LOGDIR/$RUN.DST.log
 
 # move data file from temp dir to data dir
 cp -f -v "$TEMPDIR"/$RUN.DST.root $ODIR/$RUN.DST.root
