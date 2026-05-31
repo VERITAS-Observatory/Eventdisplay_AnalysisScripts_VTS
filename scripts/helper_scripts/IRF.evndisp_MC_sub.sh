@@ -92,6 +92,7 @@ if [ -e "$V4N" ]; then
     mkdir -p "$TMPDIR"
     VBF_BASENAME="${VBFNAME%.zst}"
     echo "Checking processed files in $V4N"
+    shopt -s nullglob
     for file in "$V4N"/*.root.zst; do
         tmpfile="$TMPDIR/$(basename "${file%.zst}")"
         zstd -d -c "$file" > "$tmpfile"
@@ -100,6 +101,7 @@ if [ -e "$V4N" ]; then
             exit
         fi
     done
+    shopt -u nullglob
     rm -rf "$TMPDIR"
 fi
 

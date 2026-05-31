@@ -74,22 +74,6 @@ rm -f $OUTPUTLOGFILE
 touch $OUTPUTLOGFILE
 
 
-prepare_atmo_string()
-{
-    ATMO=$1
-    EPOCH=$2
-    OBSL=$3
-    # V4 and V5: grisu sims with ATM21/22
-    if [[ $EPOCH == *"V4"* ]] || [[ $EPOCH == *"V5"* ]]; then
-        ATMO=${ATMO/6/2}
-    fi
-    # V6 UV only for ATM 61
-    if [[ $EPOCH == *"V6"* ]] && [[ $OBSL == "obsFilter" ]]; then
-       ATMO=${ATMO/62/61}
-    fi
-    echo "$ATMO"
-}
-
 inspect_executables()
 {
     if [ -n "$EVNDISP_APPTAINER" ]; then
@@ -143,8 +127,6 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
     ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
     OBSL=$(echo $RUNINFO | awk '{print $4}')
     TELTOANA=`echo $RUNINFO | awk '{print "T"$(5)}'`
-
-    ATMO=$(prepare_atmo_string $ATMO $EPOCH $OBSL)
 
     REPLACESIMTYPEEff=$(prepare_irf_string $EPOCH $OBSL $SIMTYPE 0)
     REPLACESIMTYPERad=$(prepare_irf_string $EPOCH $OBSL $SIMTYPE 1)

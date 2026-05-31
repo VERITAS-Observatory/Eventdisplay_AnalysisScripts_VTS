@@ -55,7 +55,8 @@ check_conda_installation
 
 source activate base
 conda activate v2dl3Eventdisplay-${V2DL3VERSION}
-pip install -e "${V2DL3SYS%/}-v${V2DL3VERSION}"
+# Install only if not already present (avoid slow per-job reinstall)
+pip show v2dl3-eventdisplay &>/dev/null 2>&1 || pip install -e "${V2DL3SYS%/}-v${V2DL3VERSION}"
 
 V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
 # selection for full-gamma files

@@ -77,6 +77,15 @@ SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_combine_sub"
 FSCRIPT="$LOGDIR/anasum_combine-$DATE-RUN$RUN-$(date +%s)"
 echo "Run script written to $FSCRIPT"
 
+# Check that anasum output files exist before combining
+NANASUMFILES=$(find "$DDIR" -maxdepth 1 -name "*.anasum.root" | wc -l)
+if [[ $NANASUMFILES -eq 0 ]]; then
+    echo "Error: no .anasum.root files found in $DDIR"
+    echo "Run ANALYSIS.anasum_parallel_from_runlist.sh and wait for completion before combining."
+    exit 1
+fi
+echo "Found $NANASUMFILES anasum output files in $DDIR"
+
 sed -e "s|RRUNLIST|$RUNLIST|" \
     -e "s|DDDIR|$DDIR|" \
     -e "s|RRUNP|$RUNP|" \
