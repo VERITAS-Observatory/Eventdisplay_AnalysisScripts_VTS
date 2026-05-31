@@ -12,7 +12,7 @@ if [ "$#" -lt 2 ]; then
 echo "
 MSCW_ENERGY data analysis: submit jobs from a simple run list
 
-ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [preprocessing skip] [Rec ID] [ATM]
+ANALYSIS.mscw_energy.sh <runlist> [output directory] [evndisp directory] [preprocessing skip] [Rec ID]
 
 required parameters:
 
@@ -31,9 +31,6 @@ optional parameters:
 
     [Rec ID]                reconstruction ID. Default 0
                             (see EVNDISP.reconstruction.runparameter)
-
-    [ATM]                   set atmosphere ID (overwrite the value from the evndisp stage)
-
 
 The analysis type (cleaning method; direction reconstruction) is read from the \$VERITAS_ANALYSIS_TYPE environmental
 variable (e.g., AP_DISP, NN_DISP; here set to: \"$VERITAS_ANALYSIS_TYPE\").
@@ -60,7 +57,6 @@ RUNLIST=$1
 [[ "$3" ]] && INPUTDIR=$3 || INPUTDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/evndisp"
 [[ "$4" ]] && SKIP=$4 || SKIP=1
 [[ "$5" ]] && ID=$5 || ID=0
-[[ "$6" ]] && FORCEDATMO=$6
 DISPBDT="1"
 
 # Read runlist
