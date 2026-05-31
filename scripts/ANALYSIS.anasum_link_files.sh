@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to link pre-processed anasum files to an anasum output directory
 
 
@@ -40,7 +39,7 @@ if [[ ! -f "$RUNLIST" ]]; then
 fi
 
 # output directory
-mkdir -p ${ODIR}
+mkdir -p "${ODIR}"
 # directory schema
 getNumberedDirectory()
 {
@@ -51,7 +50,7 @@ getNumberedDirectory()
     else
         NDIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${NDIR}
+    echo "${NDIR}"
 }
 
 RUNS=$(cat "$RUNLIST")
@@ -59,9 +58,9 @@ NRUNS=$(cat "$RUNLIST" | wc -l )
 echo "total number of runs to be linked: $NRUNS"
 
 for RUN in "${RUNS[@]}"; do
-    ARCHIVEDIR=$(getNumberedDirectory $RUN $DDIR)
+    ARCHIVEDIR=$(getNumberedDirectory "$RUN" "$DDIR")
     if [ -e "${ARCHIVEDIR}/${RUN}.anasum.root" ]; then
-        ls ${ARCHIVEDIR}/${RUN}.anasum.root
-        ln -f -s ${ARCHIVEDIR}/${RUN}.anasum.root ${ODIR}/${RUN}.anasum.root
+        ls "${ARCHIVEDIR}"/"${RUN}".anasum.root
+        ln -f -s "${ARCHIVEDIR}"/"${RUN}".anasum.root "${ODIR}"/"${RUN}".anasum.root
     fi
 done

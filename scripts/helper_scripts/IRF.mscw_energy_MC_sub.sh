@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2086
 # Analyse MC files with lookup tables (mscw_energy stage)
 # (optional) Calculate instrument response functions (effective areas) for 4 and 3-telescope combinations
 
@@ -62,7 +61,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
     TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
 fi
 
@@ -71,7 +69,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/mscw_energy
+        ls -l "${EVNDISPSYS}"/bin/mscw_energy
     fi
 }
 
@@ -118,8 +116,8 @@ if [ $DISPBDT -eq 1 ]; then
         fi
     fi
     # unzip XML files into DDIR
-    cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
-    gunzip -v ${DDIR}/*xml.gz
+    cp -v -f "${DISPDIR}"/*.xml.gz "${DDIR}"/
+    gunzip -v "${DDIR}"/*xml.gz
     MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
     MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
@@ -143,9 +141,9 @@ elif [ -n "$(find  "${INDIR}/" -name "*[0-9].root.zst" 2>/dev/null)" ]; then
         for F in $FLIST
         do
             echo "unpacking $F"
-            cp -v -f $F ${DDIR}/
-            ofile=$(basename $F .zst)
-            zstd -d ${DDIR}/${ofile}.zst -o ${DDIR}/${ofile}
+            cp -v -f "$F" "${DDIR}"/
+            ofile=$(basename "$F" .zst)
+            zstd -d "${DDIR}"/"${ofile}".zst -o "${DDIR}"/"${ofile}"
         done
     else
         echo "Error: no zstd installation"
@@ -159,9 +157,10 @@ cat "$DDIR/$OFILE.list"
 echo "Running mscw_energy"
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
-$EVNDISPSYS/bin/mscw_energy $MOPT \
+# shellcheck disable=SC2086
+"$EVNDISPSYS"/bin/mscw_energy $MOPT \
     -inputfilelist "$DDIR/$OFILE.list" \
-    -outputfile $outputfilename \
+    -outputfile "$outputfilename" \
     -noise=$NOISE &> $logfile
 
 echo "READING evndisp files from ${INDIR}" >> $logfile
@@ -173,13 +172,13 @@ fi
 
 inspect_executables >> "$logfile"
 cp -v "$logfile" "$DDIR/$OFILE.log"
-$EVNDISPSYS/bin/logFile mscwTableLog $outputfilename "$DDIR/$OFILE.log"
+"$EVNDISPSYS"/bin/logFile mscwTableLog "$outputfilename" "$DDIR/$OFILE.log"
 
 # cp results file back to data directory and clean up
-outputbasename=$( basename $outputfilename )
+outputbasename=$( basename "$outputfilename" )
 chmod g+w "$logfile"
 if [[ $EFFAREACUTLIST == "NOEFFAREA" ]]; then
-    cp -f -v $outputfilename $OSUBDIR/$outputbasename
+    cp -f -v "$outputfilename" $OSUBDIR/"$outputbasename"
     chmod g+w "$OSUBDIR/$outputbasename"
     exit
 fi
@@ -193,17 +192,17 @@ echo "Effective area generation (cut list: $EFFAREACUTLIST)"
 read_cutlist()
 {
     CUTFILE="${1}"
-    if [[ $CUTFILE == "" ]] || [ ! -f $CUTFILE ]; then
+    if [[ $CUTFILE == "" ]] || [ ! -f "$CUTFILE" ]; then
         echo "Error, cuts list file not found, exiting..." >&2
-        echo $CUTFILE
+        echo "$CUTFILE"
         exit 1
     fi
-    CUTLISTFROMFILE=$(cat $CUTFILE)
+    CUTLISTFROMFILE=$(cat "$CUTFILE")
     CUTLIST=""
     for CUT in "${CUTLISTFROMFILE[@]}"; do
         CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
     done
-    echo $CUTLIST
+    echo "$CUTLIST"
 }
 
 # Required for DISP XGB
@@ -231,7 +230,7 @@ check_conda_installation()
 ###############################################
 get_xgb_output_file()
 {
-    XGBOFIL=$(basename $MSCW_FILE .root)
+    XGBOFIL=$(basename "$MSCW_FILE" .root)
     XGBOFIL="${DDIR}/${XGBOFIL}.${XGBVERSION}_ImgSel${1}"
     echo "$XGBOFIL"
 }
@@ -262,7 +261,7 @@ run_xgb()
     DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"
     echo "DispXGB directory $DISPDIR"
     echo "DispXGB options $XGBVERSION"
-    XGBOFIL=$(get_xgb_output_file $1)
+    XGBOFIL=$(get_xgb_output_file "$1")
     echo "XGB Output file $XGBOFIL"
     echo "DispXGB inputfle $MSCW_FILE"
 
@@ -272,7 +271,7 @@ run_xgb()
         --input-file "$MSCW_FILE" \
         --model-dir "$DISPDIR" \
         --output-file "$XGBOFIL.root" \
-        --image-selection $1 > "$XGBOFIL.log" 2>&1
+        --image-selection "$1" > "$XGBOFIL.log" 2>&1
 
     python --version >> "${XGBOFIL}.log"
     conda list -n $env_name >> "${XGBOFIL}.log"
@@ -302,10 +301,10 @@ for ID in 15 14 13 11 7; do
         fi
         # Check that cuts file exists
         CUTSFILE=${CUTSFILE%%.dat}
-        echo $CUTSFILE
-        CUTS_NAME=$(basename $CUTSFILE)
+        echo "$CUTSFILE"
+        CUTS_NAME=$(basename "$CUTSFILE")
         CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-        if [[ "$CUTSFILE" == $(basename $CUTSFILE) ]]; then
+        if [[ "$CUTSFILE" == $(basename "$CUTSFILE") ]]; then
             CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
         else
             CUTSFILE="$CUTSFILE.dat"
@@ -321,7 +320,7 @@ for ID in 15 14 13 11 7; do
             OSUBDIR="${OSUBDIR}_DISP"
         fi
         echo -e "Output files will be written to:\n $OSUBDIR"
-        mkdir -p $OSUBDIR
+        mkdir -p "$OSUBDIR"
 
         if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             XGBFILESUFFIX=${XGBVERSION}_ImgSel${ID}
@@ -341,7 +340,7 @@ PARAMFILE="
 * FILLMONTECARLOHISTOS 0
 * ENERGYSPECTRUMINDEX 40 1.5 0.1
 * RERUN_STEREO_RECONSTRUCTION_3TEL $ID
-* CUTFILE $DDIR/$(basename $CUTSFILE)
+* CUTFILE $DDIR/$(basename "$CUTSFILE")
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $outputfilename
 * XGBFILESUFFIX ${XGBFILESUFFIX}"
@@ -353,32 +352,32 @@ PARAMFILE="
         # create makeEffectiveArea parameter file
         EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
         rm -f "$DDIR/$EAPARAMS.dat"
-        eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+        eval "echo \"$PARAMFILE\"" > "$DDIR"/"$EAPARAMS".dat
         echo "Run parameter file:"
-        cat $DDIR/$EAPARAMS.dat
+        cat "$DDIR"/"$EAPARAMS".dat
 
         # calculate effective areas
-        rm -f $OSUBDIR/$OFILE.root
-        $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
+        rm -f "$OSUBDIR"/$OFILE.root
+        "$EVNDISPSYS"/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
 
         echo "Filling effAreaLog file into root file: $OSUBDIR/$EAPARAMS.log"
         inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
         cp "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
+        "$EVNDISPSYS"/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
         echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
-        $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
+        "$EVNDISPSYS"/bin/logFile mscwTableLog "$DDIR"/"$EAPARAMS".root "$DDIR/$OFILE.log"
         echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
         if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             XGBLOGFILE="$(get_xgb_output_file $ID).log"
             if [[ -f "$XGBLOGFILE" ]]; then
-                $EVNDISPSYS/bin/logFile xgbLog $DDIR/$EAPARAMS.root "$XGBLOGFILE"
+                "$EVNDISPSYS"/bin/logFile xgbLog "$DDIR"/"$EAPARAMS".root "$XGBLOGFILE"
             else
                 echo "XGB log file $XGBLOGFILE not found, skipping."
             fi
         fi
-        rm -f $OSUBDIR/$EAPARAMS.log
-        cp -f -v $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
-        chmod -R g+w $OSUBDIR
-        chmod g+w $OSUBDIR/$EAPARAMS.root
+        rm -f "$OSUBDIR"/"$EAPARAMS".log
+        cp -f -v "$DDIR"/"$EAPARAMS".root "$OSUBDIR"/"$EAPARAMS".root
+        chmod -R g+w "$OSUBDIR"
+        chmod g+w "$OSUBDIR"/"$EAPARAMS".root
     done
 done

@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # calculate pedestals
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -58,6 +57,7 @@ fi
 
 # Run evndisp
 echo "$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT "
-$EVNDISPSYS/bin/evndisp -runnumber=$RUNNUM $OPT
+# shellcheck disable=SC2086
+"$EVNDISPSYS"/bin/evndisp -runnumber="$RUNNUM" $OPT
 
 exit

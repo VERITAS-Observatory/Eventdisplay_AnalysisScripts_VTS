@@ -1,13 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 echo "
@@ -76,7 +75,7 @@ exec 5>&1
 # Parse command line arguments
 RLIST=$1
 [[ "$2" ]] && ODIR=$2 || ODIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 
 ACUTS_AUTO="EVNDISP.reconstruction.runparameter.AP.v4x"
 if [[ $VERITAS_ANALYSIS_TYPE = "TS"* ]]; then
@@ -129,7 +128,7 @@ SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 SUBC=$(eval "echo \"$SUBC\"")
 
 if [[ $SUBC == *parallel* ]]; then
-   touch $LOGDIR/runscripts.sh
+   touch "$LOGDIR"/runscripts.sh
 fi
 
 echo "total number of runs to analyze: $NRUNS"
@@ -147,11 +146,11 @@ fi
 # low gain calibration file
 for T in Tel_1 Tel_2 Tel_3 Tel_4
 do
-    mkdir -p ${ODIR}/Calibration/${T}
+    mkdir -p "${ODIR}"/Calibration/${T}
 done
 if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat" ]]; then
    if [[ ! -e ${ODIR}/Calibration/calibrationlist.LowGain.dat ]]; then
-       cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat ${ODIR}/Calibration/
+       cp -f -v "${VERITAS_EVNDISP_AUX_DIR}"/Calibration/calibrationlist.LowGain.dat "${ODIR}"/Calibration/
    fi
 else
    echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/calibrationlist.LowGain.dat)"
@@ -159,7 +158,7 @@ else
 fi
 if [[ -e "${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped" ]]; then
    if [[ ! -e ${ODIR}/Calibration/LowGainPedestals.lped ]]; then
-       cp -f -v ${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped ${ODIR}/Calibration/
+       cp -f -v "${VERITAS_EVNDISP_AUX_DIR}"/Calibration/LowGainPedestals.lped "${ODIR}"/Calibration/
    fi
 else
    echo "error - low-gain calibration list not found (${VERITAS_EVNDISP_AUX_DIR}/Calibration/LowGainPedestals.lped)"
@@ -193,7 +192,7 @@ do
 
     # check if file is on disk
     if [[ $SKIP == "1" ]]; then
-        FDISK=$(file_on_disk $FILE)
+        FDISK=$(file_on_disk "$FILE")
         if [[ $FDISK == "TRUE" ]]; then
             echo "RUN $FILE already processed; skipping"
             continue
@@ -254,7 +253,8 @@ do
     fi
 
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=$($SUBC $FSCRIPT.sh)
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -276,9 +276,10 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh" >> $LOGDIR/runscripts.sh
+        echo "$FSCRIPT.sh" >> "$LOGDIR"/runscripts.sh
         echo "RUN $FILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
         "$FSCRIPT.sh" | tee "$FSCRIPT.log"
@@ -297,11 +298,12 @@ if [[ $SUBC == *parallel* ]]; then
     echo
     echo "$LOGDIR/runscripts.sh"
     echo
-    chmod +x $LOGDIR/runscripts.sh
+    chmod +x "$LOGDIR"/runscripts.sh
     {
         echo "echo \"==================================\""
         echo "echo \"List of scripts to run\""
-        cat $LOGDIR/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/'
+        cat "$LOGDIR"/runscripts.sh | sort -u | awk "{print \$1}" | sed 's/.*/echo \" & \"/'
+        # shellcheck disable=SC2086
         echo "cat $LOGDIR/runscripts.sh | sort -u | $SUBC"
     } >> Run_me.sh
     chmod +x Run_me.sh

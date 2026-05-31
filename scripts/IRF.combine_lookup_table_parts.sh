@@ -1,13 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to combine several table file into one
 
 # job requirements
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=20:29:00; h_vmem=12000M; tmpdir_size=10G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 4 ]; then
 echo "
@@ -88,7 +87,7 @@ mkdir -p "$LOGDIR"
 # Create list of partial table files
 FLIST=$OFILE.list
 rm -f "$ODIR/$FLIST"
-ls -1 $INDIR/*ID${RECID}.root > "$ODIR/$FLIST"
+ls -1 "$INDIR"/*ID"${RECID}".root > "$ODIR/$FLIST"
 NFIL=$(cat "$ODIR/$FLIST" | wc -l)
 if [[ $NFIL = "0" ]]; then
    echo "No lookup table root files found"
@@ -105,7 +104,7 @@ FSCRIPT="$LOGDIR/TABLES-COMBINE.$OFILE.$DATE.MC"
 
 sed -e "s|TABLELIST|$FLIST|" \
     -e "s|OUTPUTFILE|$OFILE|" \
-    -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|OUTPUTDIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
 chmod u+x "$FSCRIPT.sh"
 echo "Run script written to: $FSCRIPT"
@@ -118,7 +117,8 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=$($SUBC $FSCRIPT.sh)
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT".sh)
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
@@ -129,6 +129,6 @@ elif [[ $SUBC == *condor* ]]; then
     echo "-------------------------------------------------------------------------------"
     echo
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
 fi
 echo "LOG/SUBMIT DIR: ${LOGDIR}"

@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22/62) or winter(21/61)
 
 # check to see if input is from terminal, or from a pipe
@@ -7,14 +6,14 @@ ISPIPEFILE=$(readlink /dev/fd/0)
 if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} && $# -lt 2 ]]; then # its a terminal (not a pipe)
     echo
     echo "From a runlist or pipe, prints the run numbers that are of a particular atmosphere."
-    echo " $ $(basename $0) [w|21|s|22] <file of runs>" ; echo
+    echo " $ $(basename "$0") [w|21|s|22] <file of runs>" ; echo
     echo "w = 21 = 61 = winter, s = 22 = 62 = summer" ; echo
     echo "Print list of summer runs:"
-    echo " $ $(basename $0) s myrunlist.dat" ; echo
+    echo " $ $(basename "$0") s myrunlist.dat" ; echo
     echo "Print list of winter runs:"
-    echo " $ $(basename $0) 61 myrunlist.dat" ; echo
+    echo " $ $(basename "$0") 61 myrunlist.dat" ; echo
     echo "Works with pipes : "
-    echo " $ cat myrunlist.dat | $(basename $0) w" ; echo
+    echo " $ cat myrunlist.dat | $(basename "$0") w" ; echo
     echo "Summer/winter transition dates taken from $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/VERITAS.Epochs.runparameter"
     exit
 fi
@@ -23,11 +22,11 @@ function echoerr(){ echo "$@" 1>&2; } #for spitting out error text
 
 # list of run_id's to read in
 RUNFILE=$2
-if [ ! -e $RUNFILE ] ; then
+if [ ! -e "$RUNFILE" ] ; then
 	echo "File $RUNFILE could not be found in $PWD , sorry."
 	exit
 fi
-RUNLIST=$(cat $RUNFILE)
+RUNLIST=$(cat "$RUNFILE")
 #echo "RUNLIST:$RUNLIST"
 
 SUMMFLAG=false

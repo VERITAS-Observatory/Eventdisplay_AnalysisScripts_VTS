@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # Sync pre-processed DBFITS and DBTEXT files with UCLA
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -24,9 +23,9 @@ echo "USER: $USER BACKUP $BACKUP"
 rsync -avz -e ssh \
       --backup --suffix="$BACKUP" \
      ./DBFITS \
-     ${USER}:/home/maierg/processed_Eventdisplay/
+     "${USER}":/home/maierg/processed_Eventdisplay/
 
 rsync -avz -e ssh \
       --backup --suffix="$BACKUP" \
      ./DBTEXT \
-     ${USER}:/home/maierg/processed_Eventdisplay/
+     "${USER}":/home/maierg/processed_Eventdisplay/

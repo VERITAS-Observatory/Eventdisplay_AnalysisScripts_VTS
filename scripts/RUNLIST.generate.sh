@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # Generates a simple run list (one run per line) with quality cuts
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -78,7 +77,7 @@ for (( i=0; i < ${#WEATHER_GRADES[@]}; i++ )); do
 done
 
 # Get VERITAS database URL from EVNDISP.global.runparameter file
-MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 if [ ! -n "$MYSQLDB" ]; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit 1

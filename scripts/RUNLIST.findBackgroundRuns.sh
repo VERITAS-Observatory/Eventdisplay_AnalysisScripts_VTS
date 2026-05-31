@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # Generates a simple run list (one run per line) with quality cuts
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -112,7 +111,7 @@ MAXAZIM=$( echo "$AZIMSTRING" | cut -d '-' -f 2 )
 #echo "MAXAZIM:'$MAXAZIM'"
 
 # Get VERITAS database URL from EVNDISP.global.runparameter file
-MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
+MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
 if [ ! -n "$MYSQLDB" ]; then
     echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
     exit 1
@@ -121,7 +120,7 @@ MYSQL="mysql -u readonly -h $MYSQLDB -A"
 
 # get segments of time that are within our time, azimuth, and elevation bounts
 #echo "submitting database request..."
-TIMESEGMENTS=$( $EVNDISPSYS/bin/VTS.getObservingTimesWithinTimeAzElBounds "$DATE_BEG" "$DATE_END" "$MINELEV" "$MAXELEV" "$MINAZIM" "$MAXAZIM" | grep -P "^MJDSEGMENT" | awk '{ printf "%s %s\n", $2, $4 }' )
+TIMESEGMENTS=$( "$EVNDISPSYS"/bin/VTS.getObservingTimesWithinTimeAzElBounds "$DATE_BEG" "$DATE_END" "$MINELEV" "$MAXELEV" "$MINAZIM" "$MAXAZIM" | grep -P "^MJDSEGMENT" | awk '{ printf "%s %s\n", $2, $4 }' )
 #echo "TIMESEGMENTS:"
 #echo "$TIMESEGMENTS"
 

@@ -1,9 +1,8 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # submit evndisp for grisu/care simulations
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=47:59:00; h_vmem=8000M; tmpdir_size=50G
 DATE=$(date +"%y%m%d")
 
@@ -102,7 +101,7 @@ if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="946500"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="956500"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="966500"
-elif [ ${SIMTYPE:0:4} == "CARE" ]; then
+elif [ "${SIMTYPE:0:4}" == "CARE" ]; then
     [[ ${EPOCH:0:2} == "V4" ]] && RUNNUM="941200"
     [[ ${EPOCH:0:2} == "V5" ]] && RUNNUM="951200"
     [[ ${EPOCH:0:2} == "V6" ]] && RUNNUM="961200"
@@ -125,44 +124,44 @@ NOISEFILE="NO_NOISEFILE"
 if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
     if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
         if [[ ${EPOCH:0:2} == "V5" ]]; then
-            VBFFILENAME="gamma_V5_Oct2012_newArrayConfig_20121027_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*"
+            VBFILENAME="gamma_V5_Oct2012_newArrayConfig_20121027_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*"
         elif [[ $ATM == "21" ]]; then
-            VBFFILENAME="Oct2012_oa_ATM21_${ZA}deg_${INT_WOBBLE}*"
+            VBFILENAME="Oct2012_oa_ATM21_${ZA}deg_${INT_WOBBLE}*"
         else
-            VBFFILENAME="gamma_V4_Oct2012_SummerV4ForProcessing_20130611_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*"
+            VBFILENAME="gamma_V4_Oct2012_SummerV4ForProcessing_20130611_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*"
         fi
         NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE$NOISE.grisu"
     elif [[ ${EPOCH:0:2} == "V6" ]]; then
         if [[ $ATM == "21-redHV" ]]; then
-            VBFFILENAME="gamma_V6_Upgrade_ReducedHV_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*"
+            VBFILENAME="gamma_V6_Upgrade_ReducedHV_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*"
         elif [[ $ATM == "21-UV" ]]; then
-            VBFFILENAME="gamma_V6_Upgrade_UVfilters_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*"
+            VBFILENAME="gamma_V6_Upgrade_UVfilters_20121211_v420_ATM21_${ZA}deg_${INT_WOBBLE}*"
         elif [[ $ATM == "21-SNR" ]]; then
-            VBFFILENAME="gamma_V6_201304_SN2013ak_v420_ATM21_${ZA}deg_${INT_WOBBLE}*"
+            VBFILENAME="gamma_V6_201304_SN2013ak_v420_ATM21_${ZA}deg_${INT_WOBBLE}*"
         else
-            VBFFILENAME="gamma_V6_Upgrade_20121127_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*"
+            VBFILENAME="gamma_V6_Upgrade_20121127_v420_ATM${ATM}_${ZA}deg_${INT_WOBBLE}*"
         fi
         NOISEFILE="$VERITAS_EVNDISP_AUX_DIR/NOISE/NOISE${NOISE}_20120827_v420.grisu"
     fi
 #######################################################
-elif [ ${SIMTYPE} == "CARE_UV_June1409" ]; then
+elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
     # example gamma_00deg_750m_0.5wob_180mhz_up_ATM21_part0.cvbf.bz2
-    WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
-    VBFFILENAME="gamma_${ZA}deg_750m_${WOFFSET}wob_${NOISE}mhz_up_ATM${ATM}_part0.cvbf.bz2"
-elif [ ${SIMTYPE} == "CARE_UV_2212" ]; then
+    WOFFSET=$(awk -v WB="$WOBBLE" 'BEGIN { printf("%03d",100*WB) }')
+    VBFILENAME="gamma_${ZA}deg_750m_${WOFFSET}wob_${NOISE}mhz_up_ATM${ATM}_part0.cvbf.bz2"
+elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
     # example gamma_V6_CARE_uvf_Atmosphere61_zen20deg_0.25wob_120MHz.vbf.zst
     VBFILENAME="gamma_V6_CARE_uvf_Atmosphere${ATM}_zen${ZA}deg_${WOBBLE}wob_${NOISE}MHz*.zst"
-elif [ ${SIMTYPE} == "CARE_RedHV" ]; then
+elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
     # example gamma_V6_PMTUpgrade_RHV_CARE_v1.6.2_12_ATM61_zen40deg_050wob_150MHz.cvbf.zst
     if [[ ${ATM} == 61 ]]; then
         LBL="PMTUpgrade_RHV_CARE_v1.6.2_12"
-        WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%03d",100*WB) }')
+        WOFFSET=$(awk -v WB="$WOBBLE" 'BEGIN { printf("%03d",100*WB) }')
     else
         LBL="RHV_CARE_v1.6.2_12"
-        WOFFSET=$(awk -v WB=$WOBBLE 'BEGIN { printf("%02d",10*WB) }')
+        WOFFSET=$(awk -v WB="$WOBBLE" 'BEGIN { printf("%02d",10*WB) }')
     fi
     VBFILENAME="gamma_V6_${LBL}_ATM${ATM}_zen${ZA}deg_${WOFFSET}wob_${NOISE}MHz*.zst"
-elif [ ${SIMTYPE:0:4} == "CARE" ]; then
+elif [ "${SIMTYPE:0:4}" == "CARE" ]; then
 #    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz*.zst"
 # Used for processing of pre-2025 simulations (run number starting with 65...)
    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_*.vbf.zst"
@@ -171,7 +170,7 @@ elif [ ${SIMTYPE:0:4} == "CARE" ]; then
 #    VBFILENAME="*_${WOBBLE}wob_${NOISE}MHz_66*.zst"
 fi
 echo "VBF file name search string: $VBFILENAME"
-VBFNAME=$(find ${SIMDIR} -name "$VBFILENAME" -not -name "*.log" -not -name "*.md5sum")
+VBFNAME=$(find "${SIMDIR}" -name "$VBFILENAME" -not -name "*.log" -not -name "*.md5sum")
 if [[ -z "$VBFNAME" ]]; then
     echo "No vbf files found"
     exit
@@ -194,7 +193,7 @@ rm -f "${FSCRIPT}.txt"
 touch "${FSCRIPT}.txt"
 
 for V in $VBFNAME; do
-    echo "$RUNNUM $(basename $V)" >> "${FSCRIPT}.txt"
+    echo "$RUNNUM $(basename "$V")" >> "${FSCRIPT}.txt"
     (( RUNNUM += 100 ))
 done
 
@@ -212,7 +211,7 @@ sed -e "s|DATADIR|$SIMDIR|" \
     -e "s|SIMULATIONTYPE|$SIMTYPE|" \
     -e "s|VVERSION|$EDVERSION|" \
     -e "s|ADDITIONALOPTIONS|$EDOPTIONS|" \
-    -e "s|NOISEFFILE|$NOISEFILE|"  $SUBSCRIPT > $FSCRIPT
+    -e "s|NOISEFFILE|$NOISEFILE|"  "$SUBSCRIPT" > "$FSCRIPT"
 
 chmod u+x "$FSCRIPT"
 echo "Run script: $FSCRIPT"
@@ -223,7 +222,7 @@ if [[ $SUBC == *"condor"* ]]; then
     SUBFIL=${SUBSCRIPT}.condor
     [[ -f "$SUBFIL" ]] && rm -f "$SUBFIL"
 
-cat > ${SUBFIL} <<EOL
+cat > "${SUBFIL}" <<EOL
 Executable = ${SUBSCRIPT}
 Output = ${SUBSCRIPT}.\$(Cluster)_\$(Process).output
 Error = ${SUBSCRIPT}.\$(Cluster)_\$(Process).error

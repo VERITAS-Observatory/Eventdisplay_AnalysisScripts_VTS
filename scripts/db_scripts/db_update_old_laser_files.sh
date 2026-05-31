@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # Update a laser rfiles for very early V4 runs
 # Some of these runs have no entries for the
 # laser file in the database
@@ -33,7 +32,7 @@ get_db_text_tar_file()
 
 get_date()
 {
-    RUNINFOSTRING=$(tar -axf ${2} ${1}/${1}.runinfo -O)
+    RUNINFOSTRING=$(tar -axf "${2}" "${1}"/"${1}".runinfo -O)
     DATE=$(echo "${RUNINFOSTRING}" | cut -d '|' -f 5 | grep -v db_start_time | tr -d '-')
     echo "${DATE:0:8}"
 
@@ -43,28 +42,28 @@ fill_laser_run()
 {
     mkdir -p tmp_update_laser_run
     cd tmp_update_laser_run || exit
-    cp ${2} .
-    TFILE=$(basename ${2})
-    tar -xzf ${TFILE}
-    rm -f ${TFILE}
+    cp "${2}" .
+    TFILE=$(basename "${2}")
+    tar -xzf "${TFILE}"
+    rm -f "${TFILE}"
     echo "Updating laser file ${1}/${1}.laserrun"
-    echo "run_id|excluded_telescopes|config_mask" >> ${1}/${1}.laserrun
-    echo "${3}|0|15" >> ${1}/${1}.laserrun
+    echo "run_id|excluded_telescopes|config_mask" >> "${1}"/"${1}".laserrun
+    echo "${3}|0|15" >> "${1}"/"${1}".laserrun
     cd .. || exit
 }
 
-DBTEXTFILE=$(get_db_text_tar_file ${1})
+DBTEXTFILE=$(get_db_text_tar_file "${1}")
 if [[ ! -e ${DBTEXTFILE} ]]; then
     echo "Error: db tar file nout found: ${DBTEXTFILE}"
     exit
 fi
 
 echo "checking for laser runs for run ${1}"
-LASERSTRING=$(tar -axf ${DBTEXTFILE} ${1}/${1}.laserrun -O)
+LASERSTRING=$(tar -axf "${DBTEXTFILE}" "${1}"/"${1}".laserrun -O)
 if [ -z "${LASERSTRING}" ]; then
-    OBSDATE=$(get_date ${1} ${DBTEXTFILE})
+    OBSDATE=$(get_date "${1}" "${DBTEXTFILE}")
     echo "   Observation date is: ${OBSDATE} found in  ${2}"
-    LASERRUN=$(grep ${OBSDATE} ${2})
+    LASERRUN=$(grep "${OBSDATE}" "${2}")
     if [ -n "${LASERRUN}" ]; then
         echo "   FOUND ${LASERRUN} ${OBSDATE}"
         fill_laser_run "${1}" "${DBTEXTFILE}" "$(echo "$LASERRUN" | cut -d ' ' -f 2)"

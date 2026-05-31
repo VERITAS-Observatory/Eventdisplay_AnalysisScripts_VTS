@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # Update existing tar balls with DB files with new
 # files.
 
@@ -29,11 +28,11 @@ get_run_directory()
 }
 PDIR=$(pwd)
 
-FILES=$(cat $FLIST)
+FILES=$(cat "$FLIST")
 
 for RUN in $FILES
 do
-    SUBDIR=$(get_run_directory $RUN)
+    SUBDIR=$(get_run_directory "$RUN")
 
     ORG_FILE="${DBTEXTDIR}/${SUBDIR}/${RUN}.tar.gz"
     if [[ ! -e "${ORG_FILE}" ]]; then
@@ -48,11 +47,11 @@ do
 
     # copy and unpack tar ball
     cd "${NEWDIR}/${SUBDIR}/" || exit
-    cp ${ORG_FILE} .
-    tar -xvzf ${RUN}.tar.gz
-    rm -f ${RUN}.tar.gz
+    cp "${ORG_FILE}" .
+    tar -xvzf "${RUN}".tar.gz
+    rm -f "${RUN}".tar.gz
     # pack again with all files
-    tar -cvzf ${RUN}.tar.gz ${RUN}
+    tar -cvzf "${RUN}".tar.gz "${RUN}"
 
     cd "${PDIR}" || exit
 done

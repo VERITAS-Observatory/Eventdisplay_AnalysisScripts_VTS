@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # download sounding (balloon) data from UWYO for VERITAS
 # combine the monthly data into one file and create a list of files (in this case just the total file)
 
@@ -36,12 +35,12 @@ do
         M=${MONTH[$i]}
         D=${DAY[$i]}
         ONAME="sounding_${y}${M}"
-        echo $M   $D   $ONAME
+        echo "$M"   "$D"   "$ONAME"
 
-        wget --output-document=$ONAME.dat2 "http://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR=${y}&MONTH=${M}&FROM=0100&TO=${D}12&STNM=${USM}&REPLOT=1"
+        wget --output-document="$ONAME".dat2 "http://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR=${y}&MONTH=${M}&FROM=0100&TO=${D}12&STNM=${USM}&REPLOT=1"
 
-        sed -e :a -e 's/<[^>]*>//g;/</N;//ba' $ONAME.dat2 > $ONAME.dat
-        rm -f $ONAME.dat2
+        sed -e :a -e 's/<[^>]*>//g;/</N;//ba' "$ONAME".dat2 > "$ONAME".dat
+        rm -f "$ONAME".dat2
 
     done
 done

@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 #
 
 if [ ! -n "$3" ] || [ "$1" = "-h" ]; then
@@ -19,4 +18,4 @@ TELID="$3"
 
 QUERY="select c.pixel_id , s.fadc_id, c.fadc_channel from tblFADC_Slot_Relation as s, tblFADC_Channel_Relation as c where s.db_start_time < \"${STARTDATE}\" and c.db_start_time < \"${STARTDATE}\" and ( s.db_end_time IS NULL or s.db_end_time > \"${ENDDATE}\" ) and ( c.db_end_time IS NULL or c.db_end_time > \"${ENDDATE}\" ) and s.fadc_crate=c.fadc_crate and s.fadc_slot=c.fadc_slot and s.telescope_id=c.telescope_id and c.pixel_id IS NOT NULL and s.telescope_id=${TELID} order by c.pixel_id ;"
 
-$($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}" | sed 's/\t/|/g'
+$("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}" | sed 's/\t/|/g'

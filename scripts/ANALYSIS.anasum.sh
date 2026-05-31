@@ -1,9 +1,8 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to analyse data files with anasum
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=8:00:00; h_vmem=4000M; tmpdir_size=10G
 
 if [[ $# -lt 3 ]]; then
@@ -55,7 +54,7 @@ if [[ ! -f "$FLIST" ]]; then
 fi
 
 # Check that run parameter file exists
-if [[ "$RUNP" == $(basename $RUNP) ]]; then
+if [[ "$RUNP" == $(basename "$RUNP") ]]; then
     RUNP="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNP"
 fi
 if [[ ! -f "$RUNP" ]]; then
@@ -96,7 +95,8 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=$($SUBC $FSCRIPT.sh)
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT".sh)
 
     # account for -terse changing the job number format
     if [[ $SUBC != *-terse* ]] ; then
@@ -106,11 +106,12 @@ if [[ $SUBC == *qsub* ]]; then
     echo "RUN $AFILE JOBID $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-    condor_submit $FSCRIPT.sh.condor
+    condor_submit "$FSCRIPT".sh.condor
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
-    cat $LOGDIR/runscripts.$TIMETAG.dat | $SUBC
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts."$TIMETAG".dat
+    # shellcheck disable=SC2086
+    cat "$LOGDIR"/runscripts."$TIMETAG".dat | $SUBC
 
 elif [[ $SUBC == *simple* ]]; then
-	"$FSCRIPT.sh" |& tee $FSCRIPT.log
+	"$FSCRIPT.sh" |& tee "$FSCRIPT".log
 fi

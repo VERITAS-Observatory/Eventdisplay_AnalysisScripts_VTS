@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # calculate mean tzeros
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -40,7 +39,7 @@ fi
 [[ "$3" ]] && CALDB=$3   || CALDB="1"
 
 # Check if source vbf file exists
-SF=$(find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf")
+SF=$(find -L "$VERITAS_DATA_DIR"/data -name "$RUNNUM.cvbf")
 if [[ ${#SF} = 0 ]]; then
     echo "ERROR: VERITAS source file $RUNNUM.cvbf not found in $VERITAS_DATA_DIR/data/"
     exit 1
@@ -51,13 +50,14 @@ if [[ $CALDB == "1" ]]; then
 else
     OPT="$OPT -nocalibnoproblem"
 fi
-echo $OPT
+echo "$OPT"
 
 # run options
 OPT="-runmode=7 -runnumber=$RUNNUM -teltoana=$TELTOANA $OPT"
 
 # Run evndisp
 echo "$EVNDISPSYS/bin/evndisp $OPT"
-$EVNDISPSYS/bin/evndisp $OPT
+# shellcheck disable=SC2086
+"$EVNDISPSYS"/bin/evndisp $OPT
 
 exit

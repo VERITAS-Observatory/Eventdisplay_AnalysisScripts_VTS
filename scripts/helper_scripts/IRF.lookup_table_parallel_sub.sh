@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2154,SC2086
+# shellcheck disable=SC2154
 # fill lookup tables
 
 # set observatory environmental variables
@@ -49,7 +49,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
 fi
 
 inspect_executables()
@@ -57,14 +56,14 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/mscw_energy
+        ls -l "${EVNDISPSYS}"/bin/mscw_energy
     fi
 }
 
 
 if [ -n "$(find ${INDIR} -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Copying evndisp root files to ${DDIR}"
-    find ${INDIR} -name "*[0-9].root" -exec cp -v {} ${DDIR} \;
+    find ${INDIR} -name "*[0-9].root" -exec cp -v {} "${DDIR}" \;
 elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
     if command -v zstd &>/dev/null; then
         echo "Copying evndisp root.zst files to ${DDIR}"
@@ -72,9 +71,9 @@ elif [ -n "$(find  ${INDIR} -name "*[0-9].root.zst" 2>/dev/null)" ]; then
         for F in $FLIST
         do
             echo "unpacking $F"
-            cp -v -f $F ${DDIR}/
-            ofile=$(basename $F .zst)
-            zstd -d ${DDIR}/${ofile}.zst -o ${DDIR}/${ofile}
+            cp -v -f "$F" "${DDIR}"/
+            ofile=$(basename "$F" .zst)
+            zstd -d "${DDIR}"/"${ofile}".zst -o "${DDIR}"/"${ofile}"
         done
     else
         echo "Error: no zstd installation"
@@ -94,7 +93,8 @@ fi
 
 echo "Running mscw_energy (table filling)"
 logfile="$ODIR/$TABFILE.log"
-$EVNDISPSYS/bin/mscw_energy -filltables=1 \
+# shellcheck disable=SC2086
+"$EVNDISPSYS"/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
                             -inputfilelist "$DDIR/$TABFILE.list" \
@@ -104,5 +104,5 @@ $EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -woff=$WOBBLE &> "$logfile"
 
 inspect_executables >> "$logfile"
-$EVNDISPSYS/bin/logFile makeTableLog "${DDIR}/$TABFILE.root" "$logfile"
+"$EVNDISPSYS"/bin/logFile makeTableLog "${DDIR}/$TABFILE.root" "$logfile"
 mv -v -f "${DDIR}/$TABFILE.root" "${ODIR}/$TABFILE.root"

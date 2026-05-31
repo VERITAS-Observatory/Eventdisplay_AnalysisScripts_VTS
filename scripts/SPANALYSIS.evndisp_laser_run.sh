@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # analyze a laser/flasher run (calculate pedestals, calculate gains)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
@@ -50,7 +49,7 @@ fi
 CALIBDIR="$VERITAS_USER_DATA_DIR/"
 
 # Check if source vbf file exists
-SF=$(find -L $VERITAS_DATA_DIR/data -name "$RUNNUM.cvbf")
+SF=$(find -L "$VERITAS_DATA_DIR"/data -name "$RUNNUM.cvbf")
 if [ ${#SF} = 0 ]; then
     echo "ERROR: VERITAS source (VBF laser/flasher) file $RUNNUM.cvbf not found in $VERITAS_DATA_DIR/data/"
     exit 1
@@ -62,14 +61,15 @@ OPT="-runmode=$RUNMODE -runnumber=$RUNNUM -lasermin=$LASERMIN -calibrationsumwin
 # calculate pedestals (for high gain only)
 if [[ $RUNMODE == 2 ]]; then
     echo "Calculating pedestals for run $RUNNUM"
-    "$(dirname "$0")/SPANALYSIS.evndisp_pedestal_events.sh" $RUNNUM
+    "$(dirname "$0")/SPANALYSIS.evndisp_pedestal_events.sh" "$RUNNUM"
 fi
 
 # calculate gains, looping over all telescopes
-TELTOANA=$(echo $TELTOANA | fold -w1)
+TELTOANA=$(echo "$TELTOANA" | fold -w1)
 for i in $TELTOANA; do
     echo "Calculating gains for run $RUNNUM, telescope $i"
-    $EVNDISPSYS/bin/evndisp -teltoana=$i $OPT
+    # shellcheck disable=SC2086
+    "$EVNDISPSYS"/bin/evndisp -teltoana="$i" $OPT
 done
 
 exit

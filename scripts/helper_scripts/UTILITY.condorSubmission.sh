@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # prepare a condor job submission file
 
 if [ "$1" = "-h" ]; then
@@ -16,7 +15,7 @@ SUBFIL=${SUBSCRIPT}.condor
 
 [[ -f "$SUBFIL" ]] && rm -f "$SUBFIL".
 
-cat > ${SUBFIL} <<EOL
+cat > "${SUBFIL}" <<EOL
 Executable = ${SUBSCRIPT}
 Output = ${SUBSCRIPT}.\$(Cluster)_\$(Process).output
 Error = ${SUBSCRIPT}.\$(Cluster)_\$(Process).error

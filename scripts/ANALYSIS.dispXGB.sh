@@ -1,9 +1,8 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # XGBoost analysis on mscw data files.
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
 
 if [ "$#" -lt 3 ]; then
@@ -47,7 +46,7 @@ else
 fi
 
 # make output directory if it doesn't exist
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
@@ -55,7 +54,7 @@ DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/XGB-${XGB_TYPE}-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
-rm -f ${LOGDIR}/x* 2>/dev/null
+rm -f "${LOGDIR}"/x* 2>/dev/null
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.dispXGB_sub"
@@ -65,16 +64,16 @@ for RUNN in $FILES
 do
     echo "Now analysing run $RUNN"
     FSCRIPT="$LOGDIR/dispXGB-${XGB_TYPE}-$RUNN"
-    rm -f $FSCRIPT.sh
+    rm -f "$FSCRIPT".sh
 
     sed -e "s|RRUN|$RUNN|" \
         -e "s|XXGB|$XGB|" \
         -e "s|XGB_TTYPE|$XGB_TYPE|" \
         -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
-        -e "s|OODIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|OODIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
     chmod u+x "$FSCRIPT.sh"
-    echo $FSCRIPT.sh
+    echo "$FSCRIPT".sh
 
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=$(eval "echo \"$SUBC\"")
@@ -87,9 +86,10 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> ${LOGDIR}/runscripts.$TIMETAG.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "${LOGDIR}"/runscripts."$TIMETAG".dat
         echo "RUN $RUNN OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
        "$FSCRIPT.sh" |& tee "$FSCRIPT.log"

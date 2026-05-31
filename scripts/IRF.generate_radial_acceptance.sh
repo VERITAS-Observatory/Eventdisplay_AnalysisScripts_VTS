@@ -1,9 +1,8 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # calculate radial acceptances
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=04:29:00; h_vmem=6000M; tmpdir_size=10G
 
 if [[ $# != 6 ]]; then
@@ -60,7 +59,7 @@ EPOCH=$4
 SIM=$5
 RECID="$6"
 # make radial acceptance version
-IRFVERSION=$($EVNDISPSYS/bin/makeRadialAcceptance --version | tr -d . | sed -e 's/[a-Z]*$//')
+IRFVERSION=$("$EVNDISPSYS"/bin/makeRadialAcceptance --version | tr -d . | sed -e 's/[a-Z]*$//')
 # version string for aux files
 AUX="auxv01"
 
@@ -110,7 +109,7 @@ for CUTS in "${CUTLIST[@]}"; do
 
             # Check that cuts file exists
             CUTSFILE=${CUTS%%.dat}.dat
-            if [[ "$CUTSFILE" == $(basename $CUTSFILE) ]]; then
+            if [[ "$CUTSFILE" == $(basename "$CUTSFILE") ]]; then
                 CUTSFILE="$VERITAS_EVNDISP_AUX_DIR/GammaHadronCutFiles/$CUTSFILE"
             fi
             if [[ ! -f "$CUTSFILE" ]]; then
@@ -120,16 +119,16 @@ for CUTS in "${CUTLIST[@]}"; do
             fi
 
             METH="${VERITAS_ANALYSIS_TYPE/_/-}"
-	        CUTSNAME=$(basename $CUTSFILE)
+	        CUTSNAME=$(basename "$CUTSFILE")
             # Generate base file name based on cuts file, extended and point source radial acceptances are the same
             CUTSNAME=${CUTSNAME##ANASUM.GammaHadron-}
             CUTSNAME=${CUTSNAME%%.dat}
             if [[ $CUTSNAME == *PointSource-* ]] ; then
                 CUTSNAME=${CUTSNAME/-PointSource-/"-"}
-                echo $CUTSNAME
+                echo "$CUTSNAME"
             elif [[ $CUTSNAME == *ExtendedSource-* ]]; then
                 CUTSNAME=${CUTSNAME/-ExtendedSource-/"-"}
-                echo $CUTSNAME
+                echo "$CUTSNAME"
             fi
             OFILE="radialAcceptance-${IRFVERSION}-${AUX}-${SIM}-$CUTSNAME-${METH}-$VX-T$TELES"
             ODIR="$VERITAS_IRFPRODUCTION_DIR/${IRFVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/RadialAcceptances"
@@ -144,9 +143,9 @@ for CUTS in "${CUTLIST[@]}"; do
                 -e "s|CUTSFILE|$CUTSFILE|" \
                 -e "s|OUTPUTDIR|$ODIR|"    \
 		        -e "s|TELTOANA|$TELES|" \
-                -e "s|OUTPUTFILE|$OFILE|" $SUBSCRIPT > $FSCRIPT.sh
+                -e "s|OUTPUTFILE|$OFILE|" "$SUBSCRIPT" > "$FSCRIPT".sh
 
-            chmod u+x $FSCRIPT.sh
+            chmod u+x "$FSCRIPT".sh
             echo "Script submitted to cluster: $FSCRIPT.sh"
 
             # run locally or on cluster
@@ -154,20 +153,22 @@ for CUTS in "${CUTLIST[@]}"; do
             echo "$LOGDIR"
             SUBC=$(eval "echo \"$SUBC\"")
             if [[ $SUBC == *"ERROR"* ]]; then
-                echo $SUBC
+                echo "$SUBC"
                 exit
             fi
             if [[ $SUBC == *qsub* ]]; then
                 echo "$SUBC" "$FSCRIPT.sh"
-                JOBID=$($SUBC $FSCRIPT.sh)
+                # shellcheck disable=SC2086
+                JOBID=$($SUBC "$FSCRIPT".sh)
                 echo "JOBID: $JOBID"
             elif [[ $SUBC == *condor* ]]; then
                 "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-                condor_submit $FSCRIPT.sh.condor
-	        elif [[ $SUBC == *sbatch* ]]; then
-	         	$SUBC $FSCRIPT.sh
+                condor_submit "$FSCRIPT".sh.condor
+            elif [[ $SUBC == *sbatch* ]]; then
+                # shellcheck disable=SC2086
+                $SUBC "$FSCRIPT".sh
             elif [[ $SUBC == *parallel* ]]; then
-                echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
+                echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
             fi
         done
     done
@@ -175,7 +176,8 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat "$LOGDIR/runscripts.dat" | "$SUBC"
+    # shellcheck disable=SC2086
+    cat "$LOGDIR/runscripts.dat" | $SUBC
 fi
 
 exit

@@ -1,10 +1,9 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to optimize BDT cuts
 #
 #
 
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=1G
 
 if [[ $# -lt 5 ]]; then
@@ -42,16 +41,7 @@ SIMTYPE=$3
 EPOCH=$4
 ATM=$5
 # evndisplay version
-IRFVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
-
-DISPBDT=""
-ANATYPE="AP"
-if [[ ! -z $VERITAS_ANALYSIS_TYPE ]]; then
-    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-    if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
-        DISPBDT="_DISP"
-    fi
-fi
+IRFVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 # Check that list of background files exists
 if [[ ! -d "${PREDIR}/${CUTTYPE}" ]]; then
@@ -64,7 +54,7 @@ fi
 DATE=$(date +"%y%m%d")
 LOGDIR="$PREDIR/${CUTTYPE}/$DATE/"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # EffAreaFile
 if [[ $CUTTYPE == *"Moderate"* ]]; then
@@ -90,29 +80,15 @@ else
 fi
 #####################################
 # energy bins
+count1=1
 if grep -q "^\* ENERGYBINS" "$RUNPAR"; then
     ENBINS=$( cat "$RUNPAR" | grep "^\* ENERGYBINS" | sed -e 's/\* ENERGYBINS//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
-    count1=1
     NENE=$(( ${#EBINARRAY[@]}-count1 )) #get number of bins
-    for (( i=0; i < NENE; i++ ))
-    do
-        EBINMIN[i]=${EBINARRAY[i]}
-        EBINMAX[i]=${EBINARRAY[i+1]}
-    done
 else
     ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
     mapfile -t EBINARRAY <<< "$ENBINS"
-    count1=1
-    NENE=$(( ${#EBINARRAY[@]}-count1 )) #get number of bins
-    z="0"
-    for (( i=0; i < NENE; i+=2 ))
-    do
-        EBINMIN[z]=${EBINARRAY[i]}
-        EBINMAX[z]=${EBINARRAY[i+1]}
-        (( z++ ))
-    done
-    NENE=$((${#EBINMAX[@]}))
+    NENE=$(( ${#EBINARRAY[@]} / 2 ))
 fi
 
 #####################################
@@ -132,20 +108,21 @@ sed -e "s|EFFFILE|$EFFFILE|"  \
     -e "s|EEBINS|${NENE}|" \
     -e "s|ZZBINS|${NZEW}|" \
     -e "s|TMVARUNPARA|${RUNPAR}|" \
-    -e "s|CUTTYPE|${CUTTYPE}|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|CUTTYPE|${CUTTYPE}|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-chmod u+x $FSCRIPT.sh
-echo $FSCRIPT.sh
+chmod u+x "$FSCRIPT".sh
+echo "$FSCRIPT".sh
 
 # run locally or on cluster
 SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
 SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
-    echo $SUBC
+    echo "$SUBC"
     exit
 fi
 if [[ $SUBC == *qsub* ]]; then
- JOBID=$($SUBC $FSCRIPT.sh)
+ # shellcheck disable=SC2086
+ JOBID=$($SUBC "$FSCRIPT".sh)
  # account for -terse changing the job number format
  if [[ $SUBC != *-terse* ]] ; then
     echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -154,12 +131,14 @@ if [[ $SUBC == *qsub* ]]; then
  echo "JOBID:  $JOBID"
 elif [[ $SUBC == *condor* ]]; then
    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-   condor_submit $FSCRIPT.sh.condor
+   condor_submit "$FSCRIPT".sh.condor
 elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT.sh
+    # shellcheck disable=SC2086
+    $SUBC "$FSCRIPT".sh
 elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
-    cat $LOGDIR/runscripts.dat | $SUBC
+    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
+    # shellcheck disable=SC2086
+    cat "$LOGDIR"/runscripts.dat | $SUBC
 elif [[ "$SUBC" == *simple* ]] ; then
     "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi

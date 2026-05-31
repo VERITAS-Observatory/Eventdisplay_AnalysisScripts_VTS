@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # from a run list, prints the list of runs that were taken in a specific atmosphere, summer(22) or winter(21)
 
 CONORM="\e[0m"
@@ -10,13 +9,13 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pi
 	if ! [ $# -eq 2 ] ; then # the human didn't add any arguments, and we must tell them so
 		echo
 		echo "From a runlist or pipe, prints the run numbers that are of a particular wobble or wobbles."
-		echo " $ $(basename $0) [nsew] <file of runs>" ; echo
+		echo " $ $(basename "$0") [nsew] <file of runs>" ; echo
 		echo "Print list of only north wobble runs:"
-		echo " $ $(basename $0) n myrunlist.dat" ; echo
+		echo " $ $(basename "$0") n myrunlist.dat" ; echo
 		echo "Print list of only south and east wobble runs:"
-		echo " $ $(basename $0) se myrunlist.dat" ; echo
+		echo " $ $(basename "$0") se myrunlist.dat" ; echo
 		echo "Works with pipes : "
-		echo " $ cat myrunlist.dat | $(basename $0) w" ; echo
+		echo " $ cat myrunlist.dat | $(basename "$0") w" ; echo
 		exit
 	fi
 fi
@@ -25,11 +24,11 @@ function echoerr(){ echo -e "${CORED}$*${CONORM}" 1>&2; } #for spitting out erro
 
 # list of run_id's to read in
 RUNFILE=$2
-if [ ! -e $RUNFILE ] ; then
+if [ ! -e "$RUNFILE" ] ; then
 	echoerr "File $RUNFILE could not be found in $PWD , sorry."
 	exit 1
 fi
-RUNLIST=$(cat $RUNFILE)
+RUNLIST=$(cat "$RUNFILE")
 #echo "RUNLIST:$RUNLIST"
 
 NORTFLAG=false

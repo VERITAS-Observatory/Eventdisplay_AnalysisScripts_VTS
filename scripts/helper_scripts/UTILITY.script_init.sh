@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # simple script to make sure environmental variables are set correctly
 
 # Check that the EVNDISP environmental variables are set
@@ -26,7 +25,7 @@ fi
 
 # shellcheck source=/dev/null
 # set the right observatory (environmental variables)
-source $EVNDISPSYS/setObservatory.sh VTS -q
+source "$EVNDISPSYS"/setObservatory.sh VTS -q
 
 # return 0 if successful
 exit 0

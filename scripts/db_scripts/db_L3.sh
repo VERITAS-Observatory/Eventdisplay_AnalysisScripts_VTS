@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 #
 
 if [ $# -lt 2 ] || [ "$1" = "-h" ]; then
@@ -28,5 +27,5 @@ if [[ "${STARTDATE}" == *NULL* ]] || [[ "${ENDDATE}" == *NULL* ]]; then
     echo ""
 else
     QUERY="SELECT timestamp, run_id, L3, L3orVDAQBusy, VDAQBusy, SpareBusy, PED, OC, VDAQBusyScaler, L3orVDAQBusyScaler, TenMHzScaler FROM tblL3_Array_TriggerInfo WHERE timestamp >= ${TIMESTART} AND timestamp <= ${TIMEEND};"
-    $($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}"  | sed 's/\t/|/g'
+    $("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}"  | sed 's/\t/|/g'
 fi

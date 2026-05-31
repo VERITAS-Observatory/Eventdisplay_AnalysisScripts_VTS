@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # analyse MC files with lookup tables
 
 # set observatory environmental variables
@@ -68,10 +67,10 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
 fi
 
 echo "READING RUNINFO from $INFILEPATH"
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH updated-runinfo)
-EPOCH=$(echo $RUNINFO | awk '{print $(1)}')
-ATMO=${FORCEDATMO:-$(echo $RUNINFO | awk '{print $(3)}')}
-HVSETTINGS=$(echo $RUNINFO | awk '{print $(4)}')
+RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "$INFILEPATH" updated-runinfo)
+EPOCH=$(echo "$RUNINFO" | awk '{print $(1)}')
+ATMO=${FORCEDATMO:-$(echo "$RUNINFO" | awk '{print $(3)}')}
+HVSETTINGS=$(echo "$RUNINFO" | awk '{print $(4)}')
 if [[ $ATMO == *error* ]]; then
     echo "error finding atmosphere; skipping run $BFILE"
     exit
@@ -99,7 +98,7 @@ fi
 TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
 echo "TABLEFILE: $TABFILE"
 # Check that table file exists
-if [[ "$TABFILE" == $(basename $TABFILE) ]]; then
+if [[ "$TABFILE" == $(basename "$TABFILE") ]]; then
     TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
 fi
 echo "TABLEFILE $TABFILE"
@@ -108,7 +107,7 @@ if [ ! -f "$TABFILE" ]; then
     exit 1
 fi
 if [ -n "$EVNDISP_APPTAINER" ]; then
-    TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
+    TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename "$TABFILE")"
 fi
 
 inspect_executables()
@@ -116,7 +115,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/mscw_energy
+        ls -l "${EVNDISPSYS}"/bin/mscw_energy
     fi
 }
 
@@ -155,9 +154,9 @@ get_disp_dir()
 }
 
 if [[ $DISPBDT == "1" ]]; then
-    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -zenith | awk '{print $4}')
-    DISPDIR=$(get_disp_dir ${ZA})
-    echo "DISPDIR (Zenith is $ZA deg): " $DISPDIR
+    ZA=$("$EVNDISPSYS"/bin/printRunParameter "$INFILEPATH" -zenith | awk '{print $4}')
+    DISPDIR=$(get_disp_dir "${ZA}")
+    echo "DISPDIR (Zenith is $ZA deg): " "$DISPDIR"
     if [[ ! -d "$DISPDIR" ]]; then
         echo "Error: DispBDT directory $DISPDIR not found, exiting..."
         exit 1
@@ -168,7 +167,7 @@ fi
 # run analysis
 
 MSCWLOGFILE="$ODIR/$BFILE.mscw.log"
-rm -f ${MSCWLOGFILE}
+rm -f "${MSCWLOGFILE}"
 
 MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
 echo "MSCWDATAFILE $MSCWDATAFILE"
@@ -190,8 +189,8 @@ if [ $DISPBDT -eq 1 ]; then
     # MOPT="$MOPT -minfui=0.2"
     # MOPT="$MOPT -minfitstat=3"
     # unzip XML files into DDIR
-    cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
-    gunzip -v ${DDIR}/*xml.gz
+    cp -v -f "${DISPDIR}"/*.xml.gz "${DDIR}"/
+    gunzip -v "${DDIR}"/*xml.gz
     MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
     MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
     MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
@@ -201,20 +200,21 @@ if [ $DISPBDT -eq 1 ]; then
     echo "DISP BDT options: $MOPT"
 fi
 
-$EVNDISPSYS/bin/mscw_energy         \
+# shellcheck disable=SC2086
+"$EVNDISPSYS"/bin/mscw_energy         \
     ${MOPT} \
     -updateEpoch=1 \
-    -tablefile $TABFILE             \
+    -tablefile "$TABFILE"             \
     -arrayrecid=$RECID              \
-    -inputfile $DDIR/$BFILE.root \
-    -writeReconstructedEventsOnly=1 &> ${MSCWLOGFILE}
+    -inputfile "$DDIR"/"$BFILE".root \
+    -writeReconstructedEventsOnly=1 &> "${MSCWLOGFILE}"
 
-inspect_executables >> ${MSCWLOGFILE}
+inspect_executables >> "${MSCWLOGFILE}"
 
 # write DISP directory into log file (as tmp directories are used)
 if [[ $DISPBDT != "NOTSET" ]]; then
-    echo "" >> ${MSCWLOGFILE}
-    echo "dispBDT XML files read from ${DISPDIR}" >> ${MSCWLOGFILE}
+    echo "" >> "${MSCWLOGFILE}"
+    echo "dispBDT XML files read from ${DISPDIR}" >> "${MSCWLOGFILE}"
 fi
 {
     echo "EVNDISP file: ${INFILE}"
@@ -224,19 +224,19 @@ fi
 
 # move logfiles into output file
 if [[ -e ${MSCWLOGFILE} ]]; then
-  cp -v ${MSCWLOGFILE} $DDIR/
-  LLF="${DDIR}/$(basename ${MSCWLOGFILE})"
-  $EVNDISPSYS/bin/logFile mscwTableLog "$DDIR/$BFILE.mscw.root" "$LLF"
+  cp -v "${MSCWLOGFILE}" "$DDIR"/
+  LLF="${DDIR}/$(basename "${MSCWLOGFILE}")"
+  "$EVNDISPSYS"/bin/logFile mscwTableLog "$DDIR/$BFILE.mscw.root" "$LLF"
 fi
 
 # move output file from scratch and clean up
-cp -f -v $DDIR/$BFILE.mscw.root $MSCWDATAFILE
-rm -f $DDIR/$BFILE.mscw.root
-rm -f $DDIR/$BFILE.root
+cp -f -v "$DDIR"/"$BFILE".mscw.root "$MSCWDATAFILE"
+rm -f "$DDIR"/"$BFILE".mscw.root
+rm -f "$DDIR"/"$BFILE".root
 
 # write info to log
 echo "RUN$BFILE MSCWLOG ${MSCWLOGFILE}"
 echo "RUN$BFILE MSCWDATA $MSCWDATAFILE"
 
 # remove files in DDIR
-rm -rf $DDIR
+rm -rf "$DDIR"

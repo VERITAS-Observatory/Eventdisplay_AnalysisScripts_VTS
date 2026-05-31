@@ -1,13 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to run eventdisplay analysis for VTS data
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=2000M; tmpdir_size=25G
 
 # EventDisplay version
-EDVERSION=$($EVNDISPSYS/bin/evndisp --version | tr -d .)
+EDVERSION=$("$EVNDISPSYS"/bin/evndisp --version | tr -d .)
 
 if [ ! -n "$1" ] || [ "$1" = "-h" ]; then
 # begin help message
@@ -76,7 +75,7 @@ exec 5>&1
 # Parse command line arguments
 RLIST=$1
 [[ "$2" ]] && ODIR=$2 || ODIR="$VERITAS_USER_DATA_DIR/analysis/Results/$EDVERSION/"
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 
 # Try to use the correct reconstruction runparameters. For V4 and V5 the default is GRISU / SumWindow6-noDISP.
 if [[ "$SIMTYPE" == "CARE"* ]]; then
@@ -109,19 +108,19 @@ if [ ! -f "$RLIST" ] ; then
     echo "Error, runlist $RLIST not found, exiting..."
     exit 1
 fi
-FILES=$(cat $RLIST)
+FILES=$(cat "$RLIST")
 
 # Output directory for error/output
 DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/$DATE/EVNDISP.ANADATA"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.evndisp_sub"
 
 TIMETAG=$(date +"%s")
 
-NRUNS=$(cat $RLIST | wc -l )
+NRUNS=$(cat "$RLIST" | wc -l )
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -140,10 +139,10 @@ do
         -e "s|TELTOANACOMB|$TELTOANA|"                   \
         -e "s|USECALIBLIST|$CALIBFILE|"                  \
         -e "s|USEMODEL3D|$MODEL3D|"                      \
-        -e "s|EXTRAPARS|\"$EXTRAPARS\"|" $SUBSCRIPT.sh > $FSCRIPT.sh
+        -e "s|EXTRAPARS|\"$EXTRAPARS\"|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-    chmod u+x $FSCRIPT.sh
-    echo $FSCRIPT.sh
+    chmod u+x "$FSCRIPT".sh
+    echo "$FSCRIPT".sh
 	# output selected input during submission:
 
 	echo "Using runparameter file $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$ACUTS"
@@ -173,7 +172,8 @@ do
     SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
     SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *qsub* ]]; then
-        JOBID=$($SUBC $FSCRIPT.sh)
+        # shellcheck disable=SC2086
+        JOBID=$($SUBC "$FSCRIPT".sh)
         # account for -terse changing the job number format
         if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -188,11 +188,12 @@ do
         fi
     elif [[ $SUBC == *condor* ]]; then
         "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
-        condor_submit $FSCRIPT.sh.condor
+        condor_submit "$FSCRIPT".sh.condor
     elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
+        # shellcheck disable=SC2086
+        $SUBC "$FSCRIPT".sh
     elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.$TIMETAG.dat
+        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts."$TIMETAG".dat
         echo "RUN $AFILE OLOG $FSCRIPT.log"
     elif [[ "$SUBC" == *simple* ]] ; then
 	"$FSCRIPT.sh" |& tee "$FSCRIPT.log"
@@ -201,7 +202,8 @@ done
 
 # Execute all FSCRIPTs locally in parallel
 if [[ $SUBC == *parallel* ]]; then
-    cat $LOGDIR/runscripts.$TIMETAG.dat | sort -u | $SUBC
+    # shellcheck disable=SC2086
+    cat "$LOGDIR"/runscripts."$TIMETAG".dat | sort -u | $SUBC
 fi
 
 exit

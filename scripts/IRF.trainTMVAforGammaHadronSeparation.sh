@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # train BDTs for gamma/hadron separation
 #
 # note the large amount of hardwired parameters in this scripts:
@@ -8,9 +7,9 @@
 # - fixed of NSB levels (adapted to stdHV settings)
 #
 
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:59; h_vmem=8000M; tmpdir_size=24G
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 7 ]; then
 echo "
@@ -85,7 +84,7 @@ if [[ ! -d "$BDIR" ]]; then
 fi
 
 # Check that TMVA run parameter file exists
-if [[ "$RUNPAR" == $(basename $RUNPAR) ]]; then
+if [[ "$RUNPAR" == $(basename "$RUNPAR") ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/$RUNPAR"
 fi
 if [[ ! -f "$RUNPAR" ]]; then
@@ -93,14 +92,14 @@ if [[ ! -f "$RUNPAR" ]]; then
     exit 1
 fi
 
-RXPAR=$(basename $RUNPAR .runparameter)
+RXPAR=$(basename "$RUNPAR" .runparameter)
 echo "Original TMVA run parameter file: $RXPAR.runparameter "
 
 LOGDIR="$ODIR/TMVA.ANADATA.${UUID}"
 echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
-mkdir -p $LOGDIR
-mkdir -p $ODIR
+mkdir -p "$LOGDIR"
+mkdir -p "$ODIR"
 
 #####################################
 # Read runparameter file once for efficiency
@@ -175,11 +174,11 @@ do
       # updating the run parameter file for each parameter space
       RFIL=$ODIR/$RXPAR"_$i""_$j"
       echo "TMVA Runparameter file: $RFIL.runparameter"
-      rm -f $RFIL
+      rm -f "$RFIL"
 
-      echo "* ENERGYBINS ${EBINMIN[$i]} ${EBINMAX[$i]}" > $RFIL.runparameter
-      echo "* ZENBINS  ${ZEBINARRAY[$j]} ${ZEBINARRAY[$j+1]}" >> $RFIL.runparameter
-      echo "$RUNPAR_CONTENT" | grep "^\*" | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> $RFIL.runparameter
+      echo "* ENERGYBINS ${EBINMIN[$i]} ${EBINMAX[$i]}" > "$RFIL".runparameter
+      echo "* ZENBINS  ${ZEBINARRAY[$j]} ${ZEBINARRAY[$j+1]}" >> "$RFIL".runparameter
+      echo "$RUNPAR_CONTENT" | grep "^\*" | grep -v ENERGYBINS | grep -v ENERGYBINEDGES | grep -v ZENBINS | grep -v OUTPUTFILE | grep -v SIGNALFILE | grep -v BACKGROUNDFILE | grep -v MCXYOFF >> "$RFIL".runparameter
 
       nTrainSignal=200000
       nTrainBackground=200000
@@ -223,17 +222,17 @@ do
               done
           fi
           shopt -u nullglob
-      } >> $RFIL.runparameter
-      echo "#######################################################################################" >> $RFIL.runparameter
+      } >> "$RFIL".runparameter
+      echo "#######################################################################################" >> "$RFIL".runparameter
       BLIST="$ODIR/BackgroundRunlist_Ze${j}.list"
-      rm -f ${BLIST}
+      rm -f "${BLIST}"
       if [[ ! -d "${BDIR}/Ze_${j}" ]]; then
           echo "Error, directory with background files ${BDIR}/Ze_${j} not found, exiting..."
           exit 1
       fi
       # Optimized background file listing using awk instead of subshell per file
       # This replaces the get_run_prefix() function call for each file
-      find ${BDIR}/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | \
+      find "${BDIR}"/Ze_${j} -name "*.root" -printf "%f\n" | sort -n | \
       awk '{
           filename = $0;
           # Remove extension to get run number (equivalent to ${1%%.*})
@@ -255,20 +254,21 @@ do
           -e "s|MCDIRECTORY|$SDIR|" \
           -e "s|DATADIRECTORY|$BCKFILEDIR|" \
           -e "s|OUTPUTDIR|${ODIR}|" \
-          -e "s|OUTNAME|$ODIR/${ONAME}_${i}_${j}|" $SUBSCRIPT.sh > $FSCRIPT.sh
+          -e "s|OUTNAME|$ODIR/${ONAME}_${i}_${j}|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-      chmod u+x $FSCRIPT.sh
-      echo $FSCRIPT.sh
+      chmod u+x "$FSCRIPT".sh
+      echo "$FSCRIPT".sh
 
       # run locally or on cluster
       SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
       SUBC=$(eval "echo \"$SUBC\"")
       if [[ $SUBC == *"ERROR"* ]]; then
-            echo $SUBC
+            echo "$SUBC"
             exit
       fi
       if [[ $SUBC == *qsub* ]]; then
-         JOBID=$($SUBC $FSCRIPT.sh)
+         # shellcheck disable=SC2086
+         JOBID=$($SUBC "$FSCRIPT".sh)
          # account for -terse changing the job number format
          if [[ $SUBC != *-terse* ]] ; then
             echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
@@ -284,10 +284,12 @@ do
         echo "-------------------------------------------------------------------------------"
         echo
       elif [[ $SUBC == *sbatch* ]]; then
-            $SUBC $FSCRIPT.sh
+            # shellcheck disable=SC2086
+            $SUBC "$FSCRIPT".sh
       elif [[ $SUBC == *parallel* ]]; then
-         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
-         cat $LOGDIR/runscripts.dat | $SUBC
+         echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR"/runscripts.dat
+         # shellcheck disable=SC2086
+         cat "$LOGDIR"/runscripts.dat | $SUBC
       elif [[ "$SUBC" == *simple* ]] ; then
          "$FSCRIPT.sh" | tee "$FSCRIPT.log"
       fi

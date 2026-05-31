@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # XGBoost disp stereo and classification analysis on mscw data file
 
 # Don't do set -e.
@@ -59,27 +58,27 @@ getNumberedDirectory()
     else
         ODIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${ODIR}
+    echo "${ODIR}"
 }
 
 echo $RUN
-MSCW_FILE="$(getNumberedDirectory $RUN ${VERITAS_PREPROCESSED_DATA_DIR}${VERITAS_ANALYSIS_TYPE:0:2}/mscw)/$RUN.mscw.root"
+MSCW_FILE="$(getNumberedDirectory $RUN "${VERITAS_PREPROCESSED_DATA_DIR}""${VERITAS_ANALYSIS_TYPE:0:2}"/mscw)/$RUN.mscw.root"
 if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
 fi
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
+RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "${MSCW_FILE}" -runinfo)
 echo "RUNINFO $RUNINFO"
-ZA=$(echo $RUNINFO | awk '{print $8}')
-EPOCH=$(echo $RUNINFO | awk '{print $1}')
-ATM=$(echo $RUNINFO | awk '{print $3}')
+ZA=$(echo "$RUNINFO" | awk '{print $8}')
+EPOCH=$(echo "$RUNINFO" | awk '{print $1}')
+ATM=$(echo "$RUNINFO" | awk '{print $3}')
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
 DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}"
 if [[ ! -d "${DISPDIR}" ]]; then
     echo "Error finding model directory $DISPDIR"
     exit
 fi
-OFIL=$(basename $MSCW_FILE .root)
+OFIL=$(basename "$MSCW_FILE" .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
     STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
     BIN_ID=$(jq -r --arg za "$ZA" '

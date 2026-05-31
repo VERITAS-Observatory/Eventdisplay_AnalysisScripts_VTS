@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2086
 # train TMVA (BDTs) for angular reconstruction
 
 # set observatory environmental variables
@@ -38,7 +37,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
 fi
 
 # decompress
@@ -50,11 +48,11 @@ do
     OF=${DDIR}/$(basename "$IDIR")_$(basename "$F")
     cp -v -f "$F" "${OF}"
 done < "$LLIST"
-find $DDIR -name "*.root.zst" -exec zstd -f -d {} \;
-ls -1 $DDIR
-ls -1 $DDIR/*.root > ${DDIR}/$NLIST
+find "$DDIR" -name "*.root.zst" -exec zstd -f -d {} \;
+ls -1 "$DDIR"
+ls -1 "$DDIR"/*.root > "${DDIR}"/$NLIST
 echo "FILELIST ${DDIR}/$NLIST"
-cat ${DDIR}/$NLIST
+cat "${DDIR}"/$NLIST
 
 ODIR="${ODIR}/${BDT}"
 mkdir -p ${ODIR}
@@ -78,7 +76,7 @@ if [[ $IRFVERSION != v490* ]]; then
     QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
     echo "QUALITYCUTS: $QUALITYCUTS"
 
-    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
+    "$EVNDISPSYS"/bin/trainTMVAforAngularReconstruction \
         "${DDIR}/${NLIST}" \
         "${DDIR}" \
         "$TRAINTESTFRACTION" \
@@ -89,7 +87,7 @@ if [[ $IRFVERSION != v490* ]]; then
         "${TMVAOPTIONS}" \
         "${EWEIGHT}" > "$ODIR/$ONAME-$BDT-Tel$TELTYPE.log"
 else
-    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
+    "$EVNDISPSYS"/bin/trainTMVAforAngularReconstruction \
         "${DDIR}/${NLIST}" \
         "${DDIR}" \
         "$TRAINTESTFRACTION" \
@@ -99,7 +97,7 @@ else
 fi
 
 
-cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
-cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/
+cp -f "${DDIR}"/${BDT}_*.root ${ODIR}/
+cp -f "${DDIR}"/${BDT}_*.xml ${ODIR}/
 # (potentially large training file)
-cp -v ${DDIR}/BDTDisp_${TELTYPE}.root ${ODIR}/
+cp -v "${DDIR}"/BDTDisp_${TELTYPE}.root ${ODIR}/

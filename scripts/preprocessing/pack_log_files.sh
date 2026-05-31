@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # Pack log files in production directories into
 # individual tar ball depending on the data level
 #
@@ -25,7 +24,7 @@ DDIRS=$(cat "$DLIST")
 cd "${PDIR}" || exit
 
 for DIR in $DDIRS; do
-    echo $DIR
-    rm -f logs_${DIR}.tar.gz
-    find ${DIR} -type f -name "*.log" -exec tar -rf logs_${DIR}.tar.gz {} +
+    echo "$DIR"
+    rm -f logs_"${DIR}".tar.gz
+    find "${DIR}" -type f -name "*.log" -exec tar -rf logs_"${DIR}".tar.gz {} +
 done

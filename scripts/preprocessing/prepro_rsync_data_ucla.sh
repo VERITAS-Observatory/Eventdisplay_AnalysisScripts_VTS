@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # Sync pre-processed Eventdisplay data with UCLA
 # This includes Eventdisplay data products
 
@@ -19,7 +18,7 @@ if [[ ! -n "${VTS_UCLA_USER}" ]]; then
 fi
 
 USER="${VTS_UCLA_USER}"
-VERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
+VERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFMINORVERSION)
 VERSION="v491.0"
 VERSION="v490.7"
 BACKUP="$1"
@@ -44,7 +43,7 @@ if [[ $SYNC_DL3TAR == "TRUE" ]]; then
     echo "Syncing DL3 tar ball"
     rsync -avz -e ssh \
          ./processed_data_${VERSION}/$ANATYPE/*.tar.gz \
-         ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/
+         "${USER}":/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/
 fi
 
 
@@ -52,14 +51,14 @@ if [[ $SYNC_DL3 == "TRUE" ]]; then
     echo "Syncing DL3 files"
     DLDIRS=$(find ./processed_data_${VERSION}/$ANATYPE/ -type d -name 'dl3_*')
     for DL in $DLDIRS; do
-         echo $DL
-         DL3=$(basename $DL)
+         echo "$DL"
+         DL3=$(basename "$DL")
          echo "SYNC with ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/$DL3/"
 
          rsync -avz -e ssh \
               --backup --suffix="$BACKUP" \
-              $DL/* \
-             ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/$DL3/
+              "$DL"/* \
+             "${USER}":/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/"$DL3"/
     done
 fi
 
@@ -68,7 +67,7 @@ if [[ $SYNC_MSCW == "TRUE" ]]; then
     rsync -avz -e ssh \
           --backup --suffix="$BACKUP" \
          ./processed_data_${VERSION}/$ANATYPE/mscw/* \
-         ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/mscw/
+         "${USER}":/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/mscw/
 fi
 
 
@@ -77,5 +76,5 @@ if [[ $SYNC_EVNDISP == "TRUE" ]]; then
     rsync -avz -e ssh \
          --backup --suffix="$BACKUP" \
         ./processed_data_${VERSION}/$ANATYPE/evndisp/* \
-        ${USER}:/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/evndisp/
+        "${USER}":/home/maierg/processed_Eventdisplay/${VERSION}/$ANATYPE/evndisp/
 fi

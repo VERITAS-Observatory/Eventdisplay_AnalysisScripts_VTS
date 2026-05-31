@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # pack newly written directories extracted from the DB
 # with query_run_list.sh
 #
@@ -16,17 +15,17 @@ get_run_directory()
     fi
     echo "${DBTEXTDIR}/${SRUN}"
 }
-LDIR=$(find ${DBTEXTDIR} -type d -name "[0-9][0-9][0-9]*")
+LDIR=$(find "${DBTEXTDIR}" -type d -name "[0-9][0-9][0-9]*")
 
 PDIR=$(pwd)
 
 for L in ${LDIR}
 do
-    RUN=$(basename $L)
-    TDIR=$(get_run_directory $RUN)
-    echo $RUN $TDIR/$RUN
+    RUN=$(basename "$L")
+    TDIR=$(get_run_directory "$RUN")
+    echo "$RUN" "$TDIR"/"$RUN"
     cd "$TDIR" || exit
-    tar -czf ${RUN}.tar.gz ${RUN}
+    tar -czf "${RUN}".tar.gz "${RUN}"
 done
 
 cd "${PDIR}" || exit

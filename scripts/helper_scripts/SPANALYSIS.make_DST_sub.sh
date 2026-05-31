@@ -1,14 +1,14 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2086
 # script to make DSTs
 
 # set observatory environmental variables
 # shellcheck source=/dev/null
-source $EVNDISPSYS/setObservatory.sh VTS
+source "$EVNDISPSYS"/setObservatory.sh VTS
 
 # parameters replaced by parent script using sed
 RUN=RUNFILE
 PED=PEDESTALS
+# shellcheck disable=SC2034  # template placeholder, replaced by sed before job submission
 SUMW=SUMWINDOW
 LMULT=LLLOWGAIN
 
@@ -19,7 +19,7 @@ else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
 fi
 echo "Temporary directory: $TEMPDIR"
-mkdir -p $TEMPDIR
+mkdir -p "$TEMPDIR"
 
 # output data files are written to this directory
 ODIR=OUTPUTDIR
@@ -36,11 +36,11 @@ ACUTS=RRRRPFILE
 # pedestal and tzero calculation. No tzeros needed for lmult.
 if [[ $PED == "1" ]]; then
     rm -f $LOGDIR/$RUN.ped.log
-    $EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=1 &> $LOGDIR/$RUN.ped.log
+    "$EVNDISPSYS"/bin/evndisp -runnumber=$RUN -runmode=1 &> $LOGDIR/$RUN.ped.log
 
     if [[ $LMULT == "0" ]] ; then
 	rm -f $LOGDIR/$RUN.tzero.log
-    	$EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=7 -nocalibnoproblem &> $LOGDIR/$RUN.tzero.log
+	"$EVNDISPSYS"/bin/evndisp -runnumber=$RUN -runmode=7 -nocalibnoproblem &> $LOGDIR/$RUN.tzero.log
     fi
 fi
 
@@ -56,10 +56,11 @@ fi
 #########################################
 # run eventdisplay
 rm -f $LOGDIR/$RUN.log
-$EVNDISPSYS/bin/evndisp -runnumber=$RUN -runmode=4 -nocalibnoproblem $OPT -reconstructionparameter $ACUTS -dstfile $TEMPDIR/$RUN.DST.root &> $LOGDIR/$RUN.DST.log
+# shellcheck disable=SC2086
+"$EVNDISPSYS"/bin/evndisp -runnumber=$RUN -runmode=4 -nocalibnoproblem $OPT -reconstructionparameter $ACUTS -dstfile "$TEMPDIR"/$RUN.DST.root &> $LOGDIR/$RUN.DST.log
 
 # move data file from temp dir to data dir
-cp -f -v $TEMPDIR/$RUN.DST.root $ODIR/$RUN.DST.root
-rm -f $TEMPDIR/$RUN.DST.root
+cp -f -v "$TEMPDIR"/$RUN.DST.root $ODIR/$RUN.DST.root
+rm -f "$TEMPDIR"/$RUN.DST.root
 
 exit

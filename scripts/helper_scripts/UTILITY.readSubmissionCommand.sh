@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to read submission command from a parameter file
 
 if [ "$1" = "-h" ]; then
@@ -40,7 +39,7 @@ if [[ -z "$CMD" ]]; then
     echo "ERROR! No submission command is selected in $CMDFILE."
     exit 1
 else
-    echo $CMD
+    echo "$CMD"
 fi
 
 exit

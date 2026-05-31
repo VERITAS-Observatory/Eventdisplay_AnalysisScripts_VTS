@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 #
 # Extract information from VERITAS database required
 # for evndisp analysis for a list of runs
@@ -14,10 +13,10 @@ query_run_list.sh: query DB and write DBTEXT files
 exit
 fi
 
-RUNS=$(cat $1)
+RUNS=$(cat "$1")
 [[ "$2" ]] && OVERW=$2 || OVERW="0"
 
 for R in $RUNS
 do
-    ./db_run.sh ${R} ${OVERW}
+    ./db_run.sh "${R}" "${OVERW}"
 done

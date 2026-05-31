@@ -1,12 +1,11 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # script to calculate signal and background rates and
 # optimize BDTs with TMVA
 #
 
 # shellcheck source=/dev/null
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+source "$EVNDISPSYS"/setObservatory.sh VTS
 
 EFFAREA=EFFFILE
 PREDIR=ODIR
@@ -24,8 +23,8 @@ else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/${CUT}/"
 fi
 echo "Temporary directory: $TEMPDIR"
-mkdir -p $TEMPDIR
-ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
+mkdir -p "$TEMPDIR"
+ls -1 ${PREDIR}/${CUT}/*.anasum.root > "${TEMPDIR}"/anasum.list
 
 OBSTIME="5."
 MINEVENTS="10."
@@ -57,11 +56,11 @@ then
 
     # calculate rates from Crab Nebula and from background rates
     "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
-        ${EFFAREA} \
+        "${EFFAREA}" \
         ${RATEFILE}.root \
         ${DEADTIME} \
         ${TMVAPARFILES} \
-        ${TEMPDIR}/anasum.list \
+        "${TEMPDIR}"/anasum.list \
         > ${RATEFILE}.log
 fi
 

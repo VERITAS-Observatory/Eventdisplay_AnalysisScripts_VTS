@@ -1,14 +1,13 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # fill lookup tables for a given point in the parameter space
 # (generated tables need to be combined afterwards)
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=03:29:00; h_vmem=12000M; tmpdir_size=20G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 EVNIRFVERSION="v4N"
 
 if [ $# -lt 7 ]; then
@@ -113,7 +112,8 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit 1
 fi
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=$($SUBC $FSCRIPT)
+    # shellcheck disable=SC2086
+    JOBID=$($SUBC "$FSCRIPT")
     echo "JOBID: $JOBID"
 elif [[ $SUBC == *condor* ]]; then
     "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
@@ -122,7 +122,8 @@ elif [[ $SUBC == *condor* ]]; then
     echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
     echo "-------------------------------------------------------------------------------"
 elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT
+    # shellcheck disable=SC2086
+    $SUBC "$FSCRIPT"
 elif [[ $SUBC == *parallel* ]]; then
     echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
 elif [[ "$SUBC" == *simple* ]]; then

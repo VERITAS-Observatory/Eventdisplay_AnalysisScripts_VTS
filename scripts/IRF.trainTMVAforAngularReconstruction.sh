@@ -1,13 +1,12 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # submit TMVA training for angular reconstruction
 
 # qsub parameters
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 EVNIRFVERSION="v4N"
 
 if [ $# -lt 8 ]; then
@@ -79,8 +78,8 @@ BDTFILE="mvaAngRes_${ZA}deg"
 
 # prepare list of input files
 EVNLIST=$ODIR/${BDTFILE}.list
-rm -f ${EVNLIST}
-touch ${EVNLIST}
+rm -f "${EVNLIST}"
+touch "${EVNLIST}"
 
 check_evndisp_directory()
 {
@@ -100,14 +99,14 @@ check_evndisp_directory()
             exit 1
         fi
     fi
-    echo $INDIR
+    echo "$INDIR"
 }
 
 for W in ${WOBBLE}
 do
     for N in ${NOISE}
     do
-        check_evndisp_directory $W $N
+        check_evndisp_directory "$W" "$N"
         # choose a random file from all files
         find "$INDIR" -maxdepth 1 -name "*[0-9].root.zst" | sort -R | head -n 1 >> "${EVNLIST}"
     done
@@ -138,11 +137,12 @@ do
         SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
         SUBC=$(eval "echo \"$SUBC\"")
         if [[ $SUBC == *"ERROR"* ]]; then
-            echo $SUBC
+            echo "$SUBC"
             exit
         fi
         if [[ $SUBC == *qsub* ]]; then
-            JOBID=$($SUBC $FSCRIPT)
+            # shellcheck disable=SC2086
+            JOBID=$($SUBC "$FSCRIPT")
             echo "RUN $RUNNUM: JOBID $JOBID"
         elif [[ $SUBC == *condor* ]]; then
             "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
@@ -153,7 +153,8 @@ do
             echo "-------------------------------------------------------------------------------"
             echo
         elif [[ $SUBC == *sbatch* ]]; then
-                $SUBC $FSCRIPT
+                # shellcheck disable=SC2086
+                $SUBC "$FSCRIPT"
         elif [[ $SUBC == *parallel* ]]; then
             echo "$FSCRIPT &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
         fi

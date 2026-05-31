@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # from a run list, prints the list of runs that were taken in a specific observing mode (observing, obsLowHV, obsFilter,...)
 #
 
@@ -9,9 +8,9 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pi
 		echo
 		echo "From a runlist or pipe, prints the run numbers that have been taken in a particular observing mode."
 		echo "Usage: "
-		echo " $ $(basename $0) <mode> <file of runs>"
+		echo " $ $(basename "$0") <mode> <file of runs>"
 		echo "or"
-		echo " $ cat myrunlist.dat | $(basename $0) <mode>" ; echo
+		echo " $ cat myrunlist.dat | $(basename "$0") <mode>" ; echo
 		echo "   <mode> = observing for regular runs"
 		echo "            obsLowHV for runs taken with reduced HV"
 		echo "            obsFilter for runs taken with UV filters"
@@ -24,11 +23,11 @@ fi
 
 # list of run_ids to read in
 RUNFILE=$2
-if [ ! -e $RUNFILE ] ; then
+if [ ! -e "$RUNFILE" ] ; then
 	echoerr "File $RUNFILE could not be found in $PWD , sorry."
 	exit 1
 fi
-RUNLIST=$(cat $RUNFILE)
+RUNLIST=$(cat "$RUNFILE")
 #echo "RUNLIST:$RUNLIST"
 
 MODE="$1"

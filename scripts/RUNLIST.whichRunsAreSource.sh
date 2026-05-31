@@ -1,10 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2086
 # from a run list, prints the list of runs that target a specific source
-
-# variables for coloring terminal output
-CONORM="\e[0m"
-CORED='\e[1;31m'
 
 NOTFLAG=false # flag for if the -n flag was used
 HELPFLAG=false # if true, print help text and exit
@@ -25,7 +20,7 @@ if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pi
 			SOURCE="$2"
 			RUNFILE="$3"
 		else
-			echo " Error: $(basename $0) doesn't understand flag '$1'.  Only acceptable flag is -n"
+			echo " Error: $(basename "$0") doesn't understand flag '$1'.  Only acceptable flag is -n"
 			HELPFLAG=true
 		fi
 	else
@@ -46,7 +41,7 @@ else # it is a pipe
 			SOURCE=$2
 			RUNFILE=$3
 		else
-			echo " Error: $(basename $0) doesn't understand flag '$1'.  Only acceptable flag is -n"
+			echo " Error: $(basename "$0") doesn't understand flag '$1'.  Only acceptable flag is -n"
 			HELPFLAG=true
 		fi
 	else
@@ -59,7 +54,7 @@ if $HELPFLAG ; then
     echo
     echo "Prints the source names for a list of run numbers,"
 	echo "  OR, only print runs that do or do not target a particular source." ; echo
-    echo "$ $(basename $0) [-n] [source name] <file of runs>" ; echo
+    echo "$ $(basename "$0") [-n] [source name] <file of runs>" ; echo
 	echo "Required arguments:"
 	echo "  <file of runs> : The runlist file, containing the list of runs, 1 runnumber per line"
 	echo "                   Can also take input from a piped runlist" ; echo
@@ -69,27 +64,27 @@ if $HELPFLAG ; then
 	echo "                   (only has effect if [source name] is specified)" ; echo
 	echo "Examples:" ; echo
 	echo "  Print source names for each run:"
-	echo "  $ $(basename $0) myrunlist.dat"
+	echo "  $ $(basename "$0") myrunlist.dat"
 	echo "  43744 PSRJ2229+6114"
 	echo "  43745 PSRJ2229+6114"
 	echo "  47146 Tycho"
 	echo "  47147 Tycho"
 	echo "  47478 Tycho" ; echo
     echo "  Only print the Tycho runs from a runlist:"
-    echo "  $ $(basename $0) \"Tycho\" myrunlist.dat"
+    echo "  $ $(basename "$0") \"Tycho\" myrunlist.dat"
 	echo "  47146"
 	echo "  47147"
 	echo "  47478" ; echo
     echo "  Only print the PSRJ2229+6114 runs from a runlist:"
-    echo "  $ $(basename $0) \"PSRJ2229+6114\" myrunlist.dat"
+    echo "  $ $(basename "$0") \"PSRJ2229+6114\" myrunlist.dat"
 	echo "  43744"
 	echo "  43745" ; echo
 	echo "  Print list of non-Tycho runs, along with their source name:"
-	echo "  $ $(basename $0) -n \"Tycho\" myrunlist.dat"
+	echo "  $ $(basename "$0") -n \"Tycho\" myrunlist.dat"
 	echo "  43744 PSRJ2229+6114"
 	echo "  43745 PSRJ2229+6114" ; echo
     echo "Works with pipes : "
-    echo "  $ cat myrunlist.dat | $(basename $0) \"Tycho\""
+    echo "  $ cat myrunlist.dat | $(basename "$0") \"Tycho\""
 	echo "  47146"
 	echo "  47147"
 	echo "  47478" ; echo
@@ -97,11 +92,11 @@ if $HELPFLAG ; then
 fi
 
 # list of run_id's to read in
-if [ ! -e $RUNFILE ] ; then
+if [ ! -e "$RUNFILE" ] ; then
 	echo "File '$RUNFILE' could not be found in $PWD , sorry."
 	exit
 fi
-RUNLIST=$(cat $RUNFILE)
+RUNLIST=$(cat "$RUNFILE")
 #echo "RUNLIST:$RUNLIST"
 
 # get database url from parameter file

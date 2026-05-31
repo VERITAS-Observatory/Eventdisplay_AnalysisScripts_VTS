@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 if [ $# -lt 1 ]; then
 echo "
 ./prepro_check_and_clean_files.sh <analysis type>
@@ -35,7 +34,7 @@ move_list()
 
 
 # find all runs with errors and move them
-FLIST=$(grep -irl "error" $FTYPE/*.log)
+FLIST=$(grep -irl "error" "$FTYPE"/*.log)
 if [[ -n $FLIST ]]; then
     file_count=$(echo "$FLIST" | wc -w)
     if [[ ! -z $file_count ]]; then
@@ -44,7 +43,7 @@ if [[ -n $FLIST ]]; then
     move_list error "$FLIST"
 fi
 # find all runs with segmentation faults
-FLIST=$(grep -rl "segmentation" $FTYPE/*.log)
+FLIST=$(grep -rl "segmentation" "$FTYPE"/*.log)
 if [[ -n $FLIST ]]; then
     file_count=$(echo "$FLIST" | wc -w)
     if [[ ! -z $file_count ]]; then
@@ -53,7 +52,7 @@ if [[ -n $FLIST ]]; then
     move_list error "$FLIST"
 fi
 # find all runs without errors and remove them from error directory
-FLIST=$(grep -iL "error" $FTYPE/*.log)
+FLIST=$(grep -iL "error" "$FTYPE"/*.log)
 if [[ -n $FLIST ]]; then
     file_count=$(echo "$FLIST" | wc -w)
     if [[ ! -z $file_count ]]; then

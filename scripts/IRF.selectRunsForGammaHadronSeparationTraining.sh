@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2086
 # select mscw files for BDT gamma/hadron separation training
 #
 # selection is based on
@@ -114,7 +113,7 @@ do
     fi
 
     # Get run info once and parse into array for efficiency
-    RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${F}.root" -runinfo 2>/dev/null)
+    RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "${F}.root" -runinfo 2>/dev/null)
     if [[ -z "$RUNINFO" ]]; then
         [[ $VERBOSE -eq 1 ]] && echo "  ERROR: Could not read run info"
         ((SKIPPED++))

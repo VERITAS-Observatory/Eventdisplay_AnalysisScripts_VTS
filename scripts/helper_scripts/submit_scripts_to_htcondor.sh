@@ -1,5 +1,4 @@
 #!/bin/sh
-# shellcheck disable=SC2086
 #
 # submit a list of scripts to HTCondor job submission system
 #
@@ -25,12 +24,12 @@ PRIORITY="${3:-1}"
 echo "Writing HTCondor job submission file ${SUBMITF} (job priority $PRIORITY) for ${JDIR}"
 if find "${JDIR}" -name "*.condor" -print -quit | grep -q .; then
     SUBMITF=${1}/submit.txt
-    rm -f ${SUBMITF}
-    touch ${SUBMITF}
+    rm -f "${SUBMITF}"
+    touch "${SUBMITF}"
 
-    mkdir -p ${JDIR}/log
-    mkdir -p ${JDIR}/output
-    mkdir -p ${JDIR}/error
+    mkdir -p "${JDIR}"/log
+    mkdir -p "${JDIR}"/output
+    mkdir -p "${JDIR}"/error
 
     {
         echo "executable = \$(file)"
@@ -40,7 +39,7 @@ if find "${JDIR}" -name "*.condor" -print -quit | grep -q .; then
     } >> "${SUBMITF}"
 
     # assume that all condor files have similar requests
-    CONDORFILE=$(find ${JDIR} -name "*.condor" | head -n 1)
+    CONDORFILE=$(find "${JDIR}" -name "*.condor" | head -n 1)
     {
         grep -h request_memory "$CONDORFILE"
         grep -h request_disk "$CONDORFILE"
@@ -53,9 +52,9 @@ if find "${JDIR}" -name "*.condor" -print -quit | grep -q .; then
 
     PDIR=$(pwd)
     if [ "${2}" = "submit" ]; then
-        cd ${JDIR}
+        cd "${JDIR}"
         condor_submit submit.txt requirements='OpSysAndVer=="AlmaLinux9"'
-        cd ${PDIR}
+        cd "${PDIR}"
     fi
 else
     echo "Error: no condor files found in ${JDIR}"
