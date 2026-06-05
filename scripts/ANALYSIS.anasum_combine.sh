@@ -56,6 +56,7 @@ if [[ ! -f "$RUNLIST" ]]; then
     echo "Error, anasum runlist $RUNLIST not found, exiting..."
     exit 1
 fi
+NRUNLIST_LINES=$(wc -l < "$RUNLIST")
 
 # Check that run parameter file exists
 if [[ "$RUNP" == $(basename "$RUNP") ]]; then
@@ -99,6 +100,10 @@ SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
+fi
+if [[ $SUBC == *condor* && $NRUNLIST_LINES -gt 500 ]]; then
+    h_vmem=16000M
+    echo "Run list has $NRUNLIST_LINES lines; requesting $h_vmem memory for HTCondor"
 fi
 RUNSCRIPT_LIST="$LOGDIR/runscripts.$(date +"%s").dat"
 submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$RUNSCRIPT_LIST"
