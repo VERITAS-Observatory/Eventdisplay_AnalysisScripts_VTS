@@ -102,7 +102,7 @@ if [[ $SUBC == *"ERROR"* ]]; then
     exit
 fi
 if [[ $SUBC == *condor* && $NRUNLIST_LINES -gt 500 ]]; then
-    h_vmem=16000M
+    h_vmem=32000M
     echo "Run list has $NRUNLIST_LINES lines; requesting $h_vmem memory for HTCondor"
 fi
 RUNSCRIPT_LIST="$LOGDIR/runscripts.$(date +"%s").dat"
