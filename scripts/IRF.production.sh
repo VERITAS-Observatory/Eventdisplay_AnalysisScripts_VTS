@@ -189,11 +189,10 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     # ZENITH_ANGLES=( 60 65 )
-    set -- "$ZENITH_ANGLES"
-    ze_first_bin=$(echo "$ZENITH_ANGLES" | awk '{print $1}')
+    ze_first_bin=$(printf '%s\n' "$ZENITH_ANGLES" | head -n 1)
     # Note! Assumes same NSB and WOBBLE offsets for flat and curved atmosphere
-    NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -name "*vbf.zst" -exec basename {} \; | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}' | sort -u)
-    WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -name "*.vbf.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
     ######################################
     # TEST
     # NSB_LEVELS=( 300 )
@@ -202,11 +201,10 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
 elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
     SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
     ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
-    set -- "$ZENITH_ANGLES"
-    ze_first_bin=$(echo "$ZENITH_ANGLES" | awk '{print $1}')
+    ze_first_bin=$(printf '%s\n' "$ZENITH_ANGLES" | head -n 1)
     # assume same NSB and wobble offsets in all bins
-    NSB_LEVELS=$(find "${SIMDIR}" -path "*${ze_first_bin}*/*" -type f -exec basename {} \; | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}' | sort -u)
-    WOBBLE_OFFSETS=$(find "${SIMDIR}" -path "*${ze_first_bin}*/*" -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
+    NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
+    WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
