@@ -398,8 +398,8 @@ for VX in $EPOCH; do
            done
            continue
        fi
-       # zenith angle dependent analysis
-       for ZA in "${ZENITH_ANGLES[@]}"; do
+    # zenith angle dependent analysis
+    for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
@@ -425,8 +425,8 @@ for VX in $EPOCH; do
                fi
                continue
             fi
-            for NOISE in "${NSB_LEVELS[@]}"; do
-                for WOBBLE in "${WOBBLE_OFFSETS[@]}"; do
+            for NOISE in ${NSB_LEVELS[@]}; do
+                for WOBBLE in ${WOBBLE_OFFSETS[@]}; do
                     echo "Preparing epoch $VX, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE"
                     ######################
                     # run simulations through evndisp
