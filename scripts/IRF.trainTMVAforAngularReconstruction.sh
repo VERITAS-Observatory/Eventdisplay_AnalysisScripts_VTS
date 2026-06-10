@@ -64,7 +64,7 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     exit 1
 fi
 # output and log directories
-ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TMVA_AngularReconstruction/ze${ZA}deg/"
+ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TMVA_AngularReconstruction/ze${ZA}deg"
 LOGDIR="${ODIR}/submit-TMVAAngRes-RECID${RECID}-${UUID}"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
