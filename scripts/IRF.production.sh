@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2178,SC2128
+# shellcheck disable=SC2178,SC2128,SC2068
 # IRF production script (VERITAS)
 
 # EventDisplay version
