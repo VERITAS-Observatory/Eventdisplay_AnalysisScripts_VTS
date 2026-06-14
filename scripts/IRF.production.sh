@@ -249,7 +249,7 @@ read_cutlist()
     for CUT in "${CUTLISTFROMFILE[@]}"; do
         CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
     done
-    echo "$CUTLIST"
+    echo "${CUTLIST# }"
 }
 
 # Cut types are used for BDT training and optimisation
