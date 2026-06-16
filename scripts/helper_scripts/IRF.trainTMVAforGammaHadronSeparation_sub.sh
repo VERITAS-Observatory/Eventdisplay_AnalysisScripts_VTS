@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # script to train TMVA (BDTs) for gamma/hadron separation
 
 RXPAR=RUNPARAM
@@ -52,13 +54,13 @@ inspect_executables()
 
 BASE_RXPAR=$(basename "$RXPAR")
 rm -f "$LDIR/${BASE_RXPAR}_preselect.log"
-"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS > "$LDIR/${BASE_RXPAR}_preselect.log"
+$EVNDISPSYS/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run WRITETRAININGEVENTS > "$LDIR/${BASE_RXPAR}_preselect.log"
 
 rm -f "$LDIR/${BASE_RXPAR}.log"
-"$EVNDISPSYS"/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR/${BASE_RXPAR}.log"
+$EVNDISPSYS/bin/trainTMVAforGammaHadronSeparation "$RXPAR".runparameter.run > "$LDIR/${BASE_RXPAR}.log"
 
 inspect_executables >> "$LDIR/${BASE_RXPAR}.log"
-"$EVNDISPSYS"/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
+$EVNDISPSYS/bin/logFile tmvaLog "$RXPAR".root "$RXPAR".log
 
 # remove unnecessary *.C files
 CDIR=$(dirname "$RXPAR")

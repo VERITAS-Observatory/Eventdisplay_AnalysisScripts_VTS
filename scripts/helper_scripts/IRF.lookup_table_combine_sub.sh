@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # combine lookup tables
 
 # set observatory environmental variables
@@ -48,13 +50,13 @@ xargs -a "$ODIR/$FLIST" cp -t "$DDIR"
 ls -1 "${DDIR}"/*.root > "$DDIR/$FLIST"
 
 # combine the tables
-"$EVNDISPSYS"/bin/combineLookupTables "$DDIR/$FLIST" "$DDIR/$OFILE.root" median &> "$ODIR/$OFILE.log"
+$EVNDISPSYS/bin/combineLookupTables "$DDIR/$FLIST" "$DDIR/$OFILE.root" median &> "$ODIR/$OFILE.log"
 
 # log files
 inspect_executables >> "$ODIR/$OFILE.log"
 cp -v "$ODIR/$OFILE.log" "$DDIR/$OFILE.log"
-"$EVNDISPSYS"/bin/logFile makeTableCombineLog "$DDIR/$OFILE.root" "$DDIR/$OFILE.log"
-"$EVNDISPSYS"/bin/logFile makeTableFileList "$DDIR/$OFILE.root" "$DDIR/$FLIST"
+$EVNDISPSYS/bin/logFile makeTableCombineLog "$DDIR/$OFILE.root" "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile makeTableFileList "$DDIR/$OFILE.root" "$DDIR/$FLIST"
 
 # cleanup
 mv -f -v "$DDIR/$OFILE.root" "$ODIR/$OFILE.root"

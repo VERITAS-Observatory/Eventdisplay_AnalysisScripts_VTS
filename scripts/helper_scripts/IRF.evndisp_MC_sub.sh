@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # shellcheck disable=SC2154
 # script to run evndisp for simulations on one of the cluster nodes (VBF)
 
@@ -100,7 +102,7 @@ if [ -e "$V4N" ]; then
     for file in "$V4N"/*.root.zst; do
         tmpfile="$TMPDIR/$(basename "${file%.zst}")"
         zstd -d -c "$file" > "$tmpfile"
-        if "$EVNDISPSYS"/bin/logFile evndispLog "$tmpfile" | grep -q "$VBF_BASENAME"; then
+        if $EVNDISPSYS/bin/logFile evndispLog "$tmpfile" | grep -q "$VBF_BASENAME"; then
             echo "File $VBFNAME ($VBF_BASENAME) already processed ($(basename "$tmpfile"))"
             exit
         fi
@@ -243,7 +245,7 @@ if [[ ${SIMTYPE:0:4} == "CARE" ]]; then
     echo "Calculating pedestals for run $RUNNUM"
     rm -f $ODIR/"$RUNNUM".ped.log
     PEDOPT=("-runmode=1" "-calibrationnevents=${PEDNEVENTS}")
-    "$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${PEDOPT[@]}" &> "$ODIR/$RUNNUM.ped.log"
+    $EVNDISPSYS/bin/evndisp "${MCOPT[@]}" "${PEDOPT[@]}" &> "$ODIR/$RUNNUM.ped.log"
     inspect_executables >> "$ODIR/$RUNNUM.ped.log"
     if grep -Fq "END OF ANALYSIS, exiting" $ODIR/"$RUNNUM".ped.log;
     then
@@ -276,7 +278,7 @@ if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
    )
 fi
 echo "$EVNDISPSYS/bin/evndisp ${MCOPT[*]} ${TZEROPT[*]}" &> $ODIR/"$RUNNUM".tzero.log
-"$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${TZEROPT[@]}" &>> $ODIR/"$RUNNUM".tzero.log
+$EVNDISPSYS/bin/evndisp "${MCOPT[@]}" "${TZEROPT[@]}" &>> $ODIR/"$RUNNUM".tzero.log
 inspect_executables &>> "$ODIR/$RUNNUM.tzero.log"
 if grep -Fq "END OF ANALYSIS, exiting" $ODIR/"$RUNNUM".tzero.log;
 then
@@ -316,7 +318,7 @@ fi
 # run evndisp
 echo "Analysing MC file for run $RUNNUM"
 echo "$EVNDISPSYS/bin/evndisp ${MCOPT[*]} ${ANAOPT[*]}" &> $ODIR/"$ONAME".log
-"$EVNDISPSYS"/bin/evndisp "${MCOPT[@]}" "${ANAOPT[@]}" &>> $ODIR/"$ONAME".log
+$EVNDISPSYS/bin/evndisp "${MCOPT[@]}" "${ANAOPT[@]}" &>> $ODIR/"$ONAME".log
 inspect_executables >> "$ODIR/$ONAME.log"
 
 #################################################################################
@@ -334,11 +336,11 @@ echo "EVNDISP log file written to $ODIR/$ONAME.log"
 add_log_file()
 {
      # first check if logFile is already included in evndisp file
-     LCON=$("$EVNDISPSYS"/bin/logFile "$1" "$DDIR"/"$ONAME".root | grep -c "Error: log file object")
+     LCON=$($EVNDISPSYS/bin/logFile "$1" "$DDIR"/"$ONAME".root | grep -c "Error: log file object")
      if [[ ${LCON} == 1 ]]; then
          echo "writing log file ${2}"
          if [[ -f ${2} ]]; then
-             "$EVNDISPSYS"/bin/logFile "$1" "$DDIR"/"$ONAME".root "${2}"
+             $EVNDISPSYS/bin/logFile "$1" "$DDIR"/"$ONAME".root "${2}"
          fi
      else
          echo "log file ${2} already in $DDIR/$ONAME.root"
@@ -355,7 +357,7 @@ add_log_file evndisptzeroLog "$DDIR/$ONAME.tzero.log"
 ### check that log files are filled correctly
 compare_log_file()
 {
-    "$EVNDISPSYS"/bin/logFile "$1" "$DDIR"/"$ONAME".root > "${DDIR}"/"${1}".log
+    $EVNDISPSYS/bin/logFile "$1" "$DDIR"/"$ONAME".root > "${DDIR}"/"${1}".log
     if cmp -s "${2}" "${DDIR}/${1}.log"; then
         echo "FILES ${1} ${2} are the same, removing"
         rm -f "${2}"

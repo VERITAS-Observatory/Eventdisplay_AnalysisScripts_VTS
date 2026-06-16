@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # calculate effective areas
 #
 # v490: possible issue with "RERUN_STEREO_RECONSTRUCTION_3TEL" option
@@ -129,12 +131,12 @@ eval "echo \"$PARAMFILE\"" > "$DDIR"/"$EAPARAMS".dat
 
 # calculate effective areas
 rm -f "$OSUBDIR"/"$OFILE".root
-"$EVNDISPSYS"/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
+$EVNDISPSYS/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
 
 echo "Filling log file into root file"
 inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
 cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-"$EVNDISPSYS"/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
+$EVNDISPSYS/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
 cp -f "$DDIR"/"$EAPARAMS".root "$OSUBDIR"/"$EAPARAMS".root
 chmod -R g+w "$OSUBDIR"
 chmod g+w "$OSUBDIR"/"$EAPARAMS".root

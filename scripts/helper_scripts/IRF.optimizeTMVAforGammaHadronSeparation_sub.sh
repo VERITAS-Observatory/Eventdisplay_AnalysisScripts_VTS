@@ -1,11 +1,15 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # script to calculate signal and background rates and
 # optimize BDTs with TMVA
 #
 
 # shellcheck source=/dev/null
 # set observatory environmental variables
-source "$EVNDISPSYS"/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
 EFFAREA=EFFFILE
 PREDIR=ODIR
@@ -55,7 +59,7 @@ then
     rm -f ${RATEFILE}.log
 
     # calculate rates from Crab Nebula and from background rates
-    "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
+    $EVNDISPSYS/bin/calculateCrabRateFromMC \
         "${EFFAREA}" \
         ${RATEFILE}.root \
         ${DEADTIME} \

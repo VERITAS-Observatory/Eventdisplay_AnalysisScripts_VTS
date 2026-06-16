@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # combine effective areas
 
 # set observatory environmental variables
@@ -51,8 +53,8 @@ done
 echo "Found $(cat $ODIR/$OFILE.list | wc -l) input files to merge"
 echo "File list: $ODIR/$OFILE.list"
 
-"$EVNDISPSYS"/bin/combineEffectiveAreas "$OPTODIR/$OFILE.list" ${OPTODIR}/$OFILE DL3reduced &> ${ODIR}/$OFILE.log
+$EVNDISPSYS/bin/combineEffectiveAreas "$OPTODIR/$OFILE.list" ${OPTODIR}/$OFILE DL3reduced &> ${ODIR}/$OFILE.log
 
 # log files
 inspect_executables >> "$ODIR/$OFILE.log"
-"$EVNDISPSYS"/bin/logFile effAreaCombineLog "${OPTODIR}/$OFILE.root" "${OPTODIR}/$OFILE.log"
+$EVNDISPSYS/bin/logFile effAreaCombineLog "${OPTODIR}/$OFILE.root" "${OPTODIR}/$OFILE.log"

@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # script to analyse one run with anasum
 
 # set observatory environmental variables
@@ -122,7 +124,7 @@ if [[ $FLIST == "NOTDEFINED" ]]; then
     echo "* VERSION 6" > $FLIST
     echo "" >> $FLIST
     # preparing effective area and radial acceptance names
-    RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "$INFILEPATH" -runinfo)
+    RUNINFO=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" -runinfo)
     EPOCH=$(echo "$RUNINFO" | awk '{print $(1)}')
     MAJOREPOCH=$(echo "$RUNINFO" | awk '{print $(2)}')
     ATMO=${FORCEDATMO:-$(echo "$RUNINFO" | awk '{print $(3)}')}
@@ -206,7 +208,7 @@ RUNP="${TEMPDIR}/$(basename $RUNP)"
 
 #################################
 # run anasum
-"$EVNDISPSYS"/bin/anasum   \
+$EVNDISPSYS/bin/anasum   \
     -f "$RUNP"             \
     -l "$FLIST"            \
     -d $INDIR            \
@@ -219,7 +221,7 @@ RUNP="${TEMPDIR}/$(basename $RUNP)"
 } >> "${OUTPUTLOGFILE}"
 
 if [[ -e "$OUTPUTLOGFILE" ]]; then
-    "$EVNDISPSYS"/bin/logFile anasumLog "$OUTPUTDATAFILE" "$(dirname $OUTPUTDATAFILE)/$(basename $OUTPUTLOGFILE)"
+    $EVNDISPSYS/bin/logFile anasumLog "$OUTPUTDATAFILE" "$(dirname $OUTPUTDATAFILE)/$(basename $OUTPUTLOGFILE)"
 fi
 
 echo "RUN$RUNNUM ANPARLOG log file: $OUTPUTLOGFILE"

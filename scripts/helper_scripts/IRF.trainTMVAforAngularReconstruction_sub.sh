@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # train TMVA (BDTs) for angular reconstruction
 
 # set observatory environmental variables
@@ -76,7 +78,7 @@ if [[ $IRFVERSION != v490* ]]; then
     QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
     echo "QUALITYCUTS: $QUALITYCUTS"
 
-    "$EVNDISPSYS"/bin/trainTMVAforAngularReconstruction \
+    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
         "${DDIR}/${NLIST}" \
         "${DDIR}" \
         "$TRAINTESTFRACTION" \
@@ -87,7 +89,7 @@ if [[ $IRFVERSION != v490* ]]; then
         "${TMVAOPTIONS}" \
         "${EWEIGHT}" > "$ODIR/$ONAME-$BDT-Tel$TELTYPE.log"
 else
-    "$EVNDISPSYS"/bin/trainTMVAforAngularReconstruction \
+    $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
         "${DDIR}/${NLIST}" \
         "${DDIR}" \
         "$TRAINTESTFRACTION" \
