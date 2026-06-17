@@ -41,33 +41,29 @@ echo "Avoiding bright sources: ${BRIGHTSOURCES[*]}"
 # zenith angle bins
 if [[ "${RUNPAR##*.}" == "json" ]]; then
     echo "Reading zenith bins from json file"
-    ZEBIN_EDGES=$(jq -r '.zenith_bins_deg[] | "\(.Ze_min) \(.Ze_max)"' "$RUNPAR" | awk '{print $1}')
-    ZEBIN_MAX=$(jq -r '.zenith_bins_deg[-1].Ze_max' "$RUNPAR")
-
-    # Combine into a single space-separated string of unique bin edges
-    ZEBINS=$(echo "$ZEBIN_EDGES" "$ZEBIN_MAX" | tr '\n' ' ' | awk '{
-        # Store unique values in order
-        split($0, arr);
-        prev = "";
-        for (i in arr) {
-            if (arr[i] != prev) {
-                printf "%s ", arr[i];
-                prev = arr[i];
-            }
-        }
-    }')
+    ZEBINS=$(jq -r '.zenith_bins_deg[] | .Ze_min, .Ze_max' "$RUNPAR" | awk 'NF && !seen[$1]++ {print $1}')
 else
-    ZEBINS=$(grep "^\* ZENBINS " "$RUNPAR" | sed -e 's/\* ZENBINS//' | sed -e 's/ /\n/g')
+    ZEBINS=$(grep "^\* ZENBINS " "$RUNPAR" | sed -e 's/^\* ZENBINS[[:space:]]*//')
 fi
-echo "Zenith angle definition: $ZEBINS"
-mapfile -t ZEBINARRAY <<< "$ZEBINS"
+echo "Zenith angle definition: $(echo "$ZEBINS" | tr '\n' ' ')"
+read -r -a ZEBINARRAY <<< "$(echo "$ZEBINS" | tr '\n' ' ')"
 NZEW=$((${#ZEBINARRAY[@]}-1)) #get number of bins
+if (( NZEW < 1 )); then
+    echo "Error: less than two zenith bin edges found in $RUNPAR"
+    exit 1
+fi
+for ZE_EDGE in "${ZEBINARRAY[@]}"; do
+    if [[ ! "$ZE_EDGE" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        echo "Error: invalid zenith bin edge '$ZE_EDGE' read from $RUNPAR"
+        exit 1
+    fi
+done
 
 # Find files and store in array to handle filenames with spaces
 if [[ $MEPOCH == "V4" ]]; then
-    mapfile -t FLIST < <(find "${2}" -name "[3,4]*[0-9].mscw.root" | sed 's/\.root$//')
+    mapfile -t FLIST < <(find "${2}" -name "[34]*[0-9].mscw.root" | sed 's/\.root$//')
 elif [[ $MEPOCH == "V5" ]]; then
-    mapfile -t FLIST < <(find "${2}" -name "[4,5,6]*[0-9].mscw.root" | sed 's/\.root$//')
+    mapfile -t FLIST < <(find "${2}" -name "[456]*[0-9].mscw.root" | sed 's/\.root$//')
 else
     mapfile -t FLIST < <(find "${2}" -regextype posix-extended \
       -regex '.*/(6|7|8|9|1[0-5])[0-9]*\.mscw\.root' \
@@ -94,6 +90,13 @@ linkFile()
     fi
 }
 
+printRunParameter()
+{
+    # EVNDISPSYS may be a command prefix, e.g. "apptainer exec ... /opt/EventDisplay_v4/".
+    # shellcheck disable=SC2086
+    $EVNDISPSYS/bin/printRunParameter "$@"
+}
+
 # Process files
 PROCESSED=0
 SKIPPED=0
@@ -112,7 +115,7 @@ do
     fi
 
     # Get run info once and parse into array for efficiency
-    RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "${F}.root" -runinfo 2>/dev/null)
+    RUNINFO=$(printRunParameter "${F}.root" -runinfo 2>/dev/null)
     if [[ -z "$RUNINFO" ]]; then
         [[ $VERBOSE -eq 1 ]] && echo "  ERROR: Could not read run info"
         ((SKIPPED++))
