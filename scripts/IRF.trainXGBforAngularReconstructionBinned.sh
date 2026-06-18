@@ -107,7 +107,8 @@ echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
 FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
 sed -e "s|OUTPUTDIR|$ODIR|" \
-    -e "s|MSCWLIST|$MSCWLIST|" "$SUBSCRIPT" > "$FSCRIPT"
+    -e "s|MSCWLIST|$MSCWLIST|" \
+    -e "s|NCORES|$ncore|" "$SUBSCRIPT" > "$FSCRIPT"
 
 chmod u+x "$FSCRIPT"
 echo "$FSCRIPT"

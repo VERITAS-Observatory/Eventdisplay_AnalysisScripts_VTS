@@ -10,7 +10,7 @@ ODIR=OUTPUTDIR
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 P="0.5"
 N="5000000"
-MAXCORES=1
+MAXCORES=NCORES
 
 # temporary (scratch) directory
 if [[ -n "$TMPDIR" ]]; then
