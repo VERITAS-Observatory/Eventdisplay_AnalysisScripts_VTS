@@ -2,7 +2,7 @@
 # train XGB for angular reconstruction
 
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
-h_cpu=47:29:00; h_vmem=12000M; tmpdir_size=100G
+h_cpu=47:29:00; h_vmem=12000M; tmpdir_size=100G; ncore=8
 # shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
 source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 

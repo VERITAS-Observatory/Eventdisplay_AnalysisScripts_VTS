@@ -43,9 +43,9 @@ if find "${JDIR}" -name "*.condor" -print -quit | grep -q .; then
     {
         grep -h request_memory "$CONDORFILE"
         grep -h request_disk "$CONDORFILE"
+        grep -h request_cpus "$CONDORFILE"
         echo "getenv = True"
         echo "max_materialize = 1800"
-#        echo "request_cpus = 8"
         echo "priority = $PRIORITY"
         echo "queue file matching files *.sh"
     } >> "${SUBMITF}"
