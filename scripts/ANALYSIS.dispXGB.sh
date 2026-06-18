@@ -61,11 +61,21 @@ rm -f "${LOGDIR}"/x* 2>/dev/null
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.dispXGB_sub"
 TIMETAG=$(date +"%s")
+CREATED_LOGSUBDIRS=" "
 
 for RUNN in $FILES
 do
     echo "Now analysing run $RUNN"
-    FSCRIPT="$LOGDIR/dispXGB-${XGB_TYPE}-$RUNN"
+    if [[ ${RUNN:0:1} =~ [6-9] ]]; then
+        LOGSUBDIR="0${RUNN:0:1}"
+    else
+        LOGSUBDIR="${RUNN:0:2}"
+    fi
+    if [[ $CREATED_LOGSUBDIRS != *" $LOGSUBDIR "* ]]; then
+        mkdir -p "$LOGDIR/$LOGSUBDIR"
+        CREATED_LOGSUBDIRS+="$LOGSUBDIR "
+    fi
+    FSCRIPT="$LOGDIR/$LOGSUBDIR/dispXGB-${XGB_TYPE}-$RUNN"
     rm -f "$FSCRIPT".sh
 
     sed -e "s|RRUN|$RUNN|" \
