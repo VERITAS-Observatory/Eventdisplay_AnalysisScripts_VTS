@@ -12,7 +12,7 @@ if [ $# -lt 7 ]; then
 echo "
 XGB (BDT) training for stereo reconstruction from MC mscw files for different zenith angle bins
 
-IRF.trainXGBforAngularReconstructionBinned.sh <epoch> <atmosphere> <zenith range> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
+IRF.trainXGBforAngularReconstruction.sh <epoch> <atmosphere> <zenith range> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
 
