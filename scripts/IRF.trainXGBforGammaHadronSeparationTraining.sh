@@ -4,7 +4,7 @@
 # - training at wobble offsets 0.5 deg only
 
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
-h_cpu=11:59:59; h_vmem=16000M; tmpdir_size=24G
+h_cpu=21:59:59; h_vmem=16000M; tmpdir_size=24G; ncore=8
 EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 6 ]; then
@@ -18,7 +18,7 @@ required parameters:
     <background file directory>     directory with background training (mscw) files
 
     <run-parameter file>            run-parameter file with basic options (incl. whole range of
-	                                energy and zenith angle bins) and full path
+	                            energy and zenith angle bins) and full path
 
     <output directory>              XGB files are written to this directory
 
@@ -166,6 +166,7 @@ for (( i=0; i < NENE; i++ )); do
         -e "s|MSCWBCK|$BCKLIST|" \
         -e "s|MODELPARA|$RUNPAR|" \
         -e "s|ENERGYBIN|$i|" \
+	-e "s|NCORES|$ncore|" \
         -e "s|OUTPUTDIR|${ODIR}|" "$SUBSCRIPT" > "$FSCRIPT"
 
     chmod u+x "$FSCRIPT"
