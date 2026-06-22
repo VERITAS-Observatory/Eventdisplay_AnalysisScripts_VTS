@@ -253,16 +253,16 @@ read_cutlist()
 }
 
 # Cut types are used for BDT training and optimisation
-CUTTYPES="NTel2-PointSource-Moderate
-          NTel2-PointSource-Soft
-          NTel2-PointSource-Hard
-          NTel3-PointSource-Hard"
+CUTTYPES=(
+    "NTel2-PointSource-Moderate"
+    "NTel2-PointSource-Soft"
+    "NTel2-PointSource-Hard"
+    "NTel3-PointSource-Hard"
+)
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
-    CUTTYPES="NTel2-PointSource-SuperSoft"
+    CUTTYPES=("NTel2-PointSource-SuperSoft")
 fi
-CUTTYPES=$(echo "$CUTTYPES" |tr '\r' ' ')
-CUTTYPES=${CUTTYPES//$'\n'/}
 
 echo "===== Start submission ====="
 
