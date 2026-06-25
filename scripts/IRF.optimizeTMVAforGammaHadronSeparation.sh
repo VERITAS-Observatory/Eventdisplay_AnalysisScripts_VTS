@@ -103,7 +103,7 @@ if [[ ${#ZEBINARRAY[@]} -lt 2 ]]; then
     exit 1
 fi
 for ZE_EDGE in "${ZEBINARRAY[@]}"; do
-    if [[ ! "$ZE_EDGE" =~ ^-?[0-9]+([.][0-9]+)?$ ]]; then
+    if [[ ! "$ZE_EDGE" =~ ^-?([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
         echo "Error: invalid zenith bin edge '$ZE_EDGE' read from $RUNPAR"
         exit 1
     fi
