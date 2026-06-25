@@ -110,7 +110,7 @@ RUNPAR_CONTENT=$(cat "$RUNPAR")
 #####################################
 # energy bins
 if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
-    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINS" | sed -e 's/* ENERGYBINS//' | sed -e 's/ /\n/g')
+    ENBINS=$(echo "$RUNPAR_CONTENT" | awk '$1 == "*" && $2 == "ENERGYBINS" { for (i = 3; i <= NF; i++) print $i; exit }')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
     NENE=$(( ${#EBINARRAY[@]}-count1 )) # get number of bins
@@ -120,7 +120,7 @@ if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
         EBINMAX[i]=${EBINARRAY[i+1]}
     done
 else
-    ENBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
+    ENBINS=$(echo "$RUNPAR_CONTENT" | awk '$1 == "*" && $2 == "ENERGYBINEDGES" { for (i = 3; i <= NF; i++) print $i; exit }')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1
     NENE=$(( ${#EBINARRAY[@]}-count1 )) # get number of bins
@@ -136,9 +136,19 @@ fi
 
 #####################################
 # zenith angle bins
-ZEBINS=$(echo "$RUNPAR_CONTENT" | grep "^\* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+ZEBINS=$(echo "$RUNPAR_CONTENT" | awk '$1 == "*" && $2 == "ZENBINS" { for (i = 3; i <= NF; i++) print $i; exit }')
 mapfile -t ZEBINARRAY <<< "$ZEBINS"
 NZEW=$(( ${#ZEBINARRAY[@]}-count1 )) #get number of bins
+if [[ ${#ZEBINARRAY[@]} -lt 2 ]]; then
+    echo "Error: less than two zenith bin edges found in $RUNPAR"
+    exit 1
+fi
+for ZE_EDGE in "${ZEBINARRAY[@]}"; do
+    if [[ ! "$ZE_EDGE" =~ ^-?[0-9]+([.][0-9]+)?$ ]]; then
+        echo "Error: invalid zenith bin edge '$ZE_EDGE' read from $RUNPAR"
+        exit 1
+    fi
+done
 
 #####################################
 # zenith angle bins of MC simulation files
