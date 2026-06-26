@@ -10,6 +10,8 @@
 RUN=RRUN
 ODIR=OODIR
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
+HELPER_SCRIPTS_DIR="HHELPER_SCRIPTS_DIR"
+ENV_SNAPSHOT_DIR="EENV_SNAPSHOT_DIR"
 XGB="XXGB"
 XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
@@ -26,29 +28,10 @@ mkdir -p "$TEMPDIR"
 mkdir -p "${ODIR}"
 echo -e "Output files will be written to:\n ${ODIR}"
 
-check_conda_installation()
-{
-    if command -v conda &> /dev/null; then
-        echo "Found conda installation."
-    else
-        echo "Error: found no conda installation."
-        echo "exiting..."
-        exit
-    fi
-    env_info=$(conda info --envs)
-    if [[ "$env_info" == *"$env_name"* ]]; then
-        echo "Found conda environment '$env_name'"
-    else
-        echo "Error: the conda environment '$env_name' does not exist."
-        echo "exiting..."
-        exit
-    fi
-}
-
-check_conda_installation
-
-eval "$(conda shell.bash hook)"
-conda activate "$env_name"
+# shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
+source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
+evndisp_ml_setup_python_cache "$TEMPDIR" "$RUN"
+evndisp_ml_activate_conda "$env_name"
 
 # directory schema for preprocessed files
 getNumberedDirectory()
@@ -113,7 +96,6 @@ $ML_EXEC --input_file "$MSCW_FILE" \
     --model_prefix "$DISPDIR" \
     --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
-python --version >> "${LOGFILE}"
-conda list -n "$env_name" >> "${LOGFILE}"
+evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR"
 
 conda deactivate

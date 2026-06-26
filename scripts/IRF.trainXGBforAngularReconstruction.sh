@@ -102,12 +102,15 @@ done
 echo "FILE LIST: ${MSCWLIST}"
 
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainXGBforAngularReconstruction_sub.sh"
+HELPER_SCRIPTS_DIR="$(cd "$(dirname "$0")/helper_scripts" && pwd)"
 
 echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
 FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|MSCWLIST|$MSCWLIST|" \
+    -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
+    -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
     -e "s|NCORES|$ncore|" "$SUBSCRIPT" > "$FSCRIPT"
 
 chmod u+x "$FSCRIPT"

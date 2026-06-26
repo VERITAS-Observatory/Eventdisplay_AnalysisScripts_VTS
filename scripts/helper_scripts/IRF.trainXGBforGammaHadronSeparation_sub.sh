@@ -11,6 +11,8 @@ PARA=MODELPARA
 EBIN=ENERGYBIN
 ODIR=OUTPUTDIR
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
+HELPER_SCRIPTS_DIR="HHELPER_SCRIPTS_DIR"
+ENV_SNAPSHOT_DIR="EENV_SNAPSHOT_DIR"
 P="0.5"
 N="5000000"
 MAXCORES=NCORES
@@ -27,29 +29,10 @@ mkdir -p "$TEMPDIR"
 mkdir -p "${ODIR}"
 echo -e "Output files will be written to:\n ${ODIR}"
 
-check_conda_installation()
-{
-    if command -v conda &> /dev/null; then
-        echo "Found conda installation."
-    else
-        echo "Error: found no conda installation."
-        echo "exiting..."
-        exit
-    fi
-    env_info=$(conda info --envs)
-    if [[ "$env_info" == *"$env_name"* ]]; then
-        echo "Found conda environment '$env_name'"
-    else
-        echo "Error: the conda environment '$env_name' does not exist."
-        echo "exiting..."
-        exit
-    fi
-}
-
-check_conda_installation
-
-eval "$(conda shell.bash hook)"
-conda activate "$env_name"
+# shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
+source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
+evndisp_ml_setup_python_cache "$TEMPDIR" "train_gh_ebin${EBIN}"
+evndisp_ml_activate_conda "$env_name"
 
 PREFIX="${ODIR}/gammahadron_bdt"
 LOGFILE="${PREFIX}_ebin${EBIN}.log"
@@ -66,7 +49,6 @@ eventdisplay-ml-train-xgb-classify \
     --balance_class_zenith_weights \
     --train_test_fraction $P --max_events $N  >| "${LOGFILE}" 2>&1
 
-python --version >> "${LOGFILE}"
-conda list -n "$env_name" >> "${LOGFILE}"
+evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR"
 
 conda deactivate
