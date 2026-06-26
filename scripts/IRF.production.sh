@@ -253,16 +253,16 @@ read_cutlist()
 }
 
 # Cut types are used for BDT training and optimisation
-CUTTYPES="NTel2-PointSource-Moderate
-          NTel2-PointSource-Soft
-          NTel2-PointSource-Hard
-          NTel3-PointSource-Hard"
+CUTTYPES=(
+    "NTel2-PointSource-Moderate"
+    "NTel2-PointSource-Soft"
+    "NTel2-PointSource-Hard"
+    "NTel3-PointSource-Hard"
+)
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
-    CUTTYPES="NTel2-PointSource-SuperSoft"
+    CUTTYPES=("NTel2-PointSource-SuperSoft")
 fi
-CUTTYPES=$(echo "$CUTTYPES" |tr '\r' ' ')
-CUTTYPES=${CUTTYPES//$'\n'/}
 
 echo "===== Start submission ====="
 
@@ -390,7 +390,7 @@ for VX in $EPOCH; do
                # Explicitly remove 0.0 bin
                FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
                FIXEDNSB="160 200 350 450"
-                   "$(dirname "$0")/IRF.trainXGBforAngularReconstructionBinned.sh" \
+                   "$(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh" \
                        "$VX" "$ATM" "$ZAB" "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
                        "$SIMTYPE" "$ANATYPE" "$UUID"
            done

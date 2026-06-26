@@ -84,20 +84,30 @@ fi
 # energy bins
 count1=1
 if grep -q "^\* ENERGYBINS" "$RUNPAR"; then
-    ENBINS=$( cat "$RUNPAR" | grep "^\* ENERGYBINS" | sed -e 's/\* ENERGYBINS//' | sed -e 's/ /\n/g')
+    ENBINS=$(awk '$1 == "*" && $2 == "ENERGYBINS" { for (i = 3; i <= NF; i++) print $i; exit }' "$RUNPAR")
     mapfile -t EBINARRAY <<< "$ENBINS"
     NENE=$(( ${#EBINARRAY[@]}-count1 )) #get number of bins
 else
-    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
+    ENBINS=$(awk '$1 == "*" && $2 == "ENERGYBINEDGES" { for (i = 3; i <= NF; i++) print $i; exit }' "$RUNPAR")
     mapfile -t EBINARRAY <<< "$ENBINS"
     NENE=$(( ${#EBINARRAY[@]} / 2 ))
 fi
 
 #####################################
 # zenith angle bins
-ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
+ZEBINS=$(awk '$1 == "*" && $2 == "ZENBINS" { for (i = 3; i <= NF; i++) print $i; exit }' "$RUNPAR")
 mapfile -t ZEBINARRAY <<< "$ZEBINS"
 NZEW=$(( ${#ZEBINARRAY[@]}-count1 )) #get number of bins
+if [[ ${#ZEBINARRAY[@]} -lt 2 ]]; then
+    echo "Error: less than two zenith bin edges found in $RUNPAR"
+    exit 1
+fi
+for ZE_EDGE in "${ZEBINARRAY[@]}"; do
+    if [[ ! "$ZE_EDGE" =~ ^-?([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+        echo "Error: invalid zenith bin edge '$ZE_EDGE' read from $RUNPAR"
+        exit 1
+    fi
+done
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub"

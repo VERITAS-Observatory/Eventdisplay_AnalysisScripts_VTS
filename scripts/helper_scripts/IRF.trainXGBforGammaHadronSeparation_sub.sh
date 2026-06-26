@@ -1,6 +1,5 @@
 #!/bin/bash
 # Train XGB for gamma/hadron separation
-#
 
 # Don't do set -e.
 # set -e
@@ -14,10 +13,10 @@ ODIR=OUTPUTDIR
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 P="0.5"
 N="5000000"
-MAXCORES=48
+MAXCORES=NCORES
 
 # temporary (scratch) directory
-if [[ -n $TMPDIR ]]; then
+if [[ -n "$TMPDIR" ]]; then
     TEMPDIR="$TMPDIR"
 else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
@@ -64,6 +63,7 @@ eventdisplay-ml-train-xgb-classify \
     --energy_bin_number "${EBIN}" \
     --model_parameters "${PARA}" \
     --max_cores $MAXCORES \
+    --balance_class_zenith_weights \
     --train_test_fraction $P --max_events $N  >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"

@@ -2,7 +2,7 @@
 # train XGB for angular reconstruction
 
 # shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
-h_cpu=47:29:00; h_vmem=16000M; tmpdir_size=100G
+h_cpu=47:29:00; h_vmem=12000M; tmpdir_size=100G; ncore=8
 # shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
 source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
@@ -12,7 +12,7 @@ if [ $# -lt 7 ]; then
 echo "
 XGB (BDT) training for stereo reconstruction from MC mscw files for different zenith angle bins
 
-IRF.trainXGBforAngularReconstructionBinned.sh <epoch> <atmosphere> <zenith range> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
+IRF.trainXGBforAngularReconstruction.sh <epoch> <atmosphere> <zenith range> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
 
 required parameters:
 
@@ -107,7 +107,8 @@ echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 
 FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
 sed -e "s|OUTPUTDIR|$ODIR|" \
-    -e "s|MSCWLIST|$MSCWLIST|" "$SUBSCRIPT" > "$FSCRIPT"
+    -e "s|MSCWLIST|$MSCWLIST|" \
+    -e "s|NCORES|$ncore|" "$SUBSCRIPT" > "$FSCRIPT"
 
 chmod u+x "$FSCRIPT"
 echo "$FSCRIPT"

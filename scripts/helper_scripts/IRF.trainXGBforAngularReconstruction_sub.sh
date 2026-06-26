@@ -10,7 +10,7 @@ ODIR=OUTPUTDIR
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 P="0.5"
 N="5000000"
-MAXCORES=48
+MAXCORES=NCORES
 
 # temporary (scratch) directory
 if [[ -n "$TMPDIR" ]]; then
@@ -57,7 +57,7 @@ eventdisplay-ml-train-xgb-stereo \
     --model_prefix "${PREFIX}" \
     --max_cores $MAXCORES \
     --observatory VERITAS \
-    --min_images 2 \
+    --min_images 2 --memory_profile \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"

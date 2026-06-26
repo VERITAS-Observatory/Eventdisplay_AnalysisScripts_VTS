@@ -8,6 +8,7 @@
 #   parallel_file: file to collect parallel jobs in (default: "$LOGDIR/runscripts.dat")
 # Sets: JOBID (qsub mode only)
 # Requires env: SUBC, LOGDIR, h_vmem, tmpdir_size, EVNDISPSCRIPTS
+# Optional env: ncore (HTCondor CPU request; default: 1)
 submit_job() {
     local fscript="$1"
     local parallel_line="${2:-$fscript}"
@@ -25,10 +26,10 @@ submit_job() {
             JOBID=$(echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }')
         fi
     elif [[ "$SUBC" == *condor_submit* ]]; then
-        "$subc_dir/UTILITY.condorSubmission.sh" "$fscript" "${h_vmem-}" "${tmpdir_size-}"
+        "$subc_dir/UTILITY.condorSubmission.sh" "$fscript" "${h_vmem-}" "${tmpdir_size-}" "${ncore:-1}"
         condor_submit "$fscript.condor"
     elif [[ "$SUBC" == *condor* ]]; then
-        "$subc_dir/UTILITY.condorSubmission.sh" "$fscript" "${h_vmem-}" "${tmpdir_size-}"
+        "$subc_dir/UTILITY.condorSubmission.sh" "$fscript" "${h_vmem-}" "${tmpdir_size-}" "${ncore:-1}"
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs:"
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} ${CONDOR_SUBMIT_ARGS:-submit}"

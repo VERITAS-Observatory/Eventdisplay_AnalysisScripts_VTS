@@ -70,7 +70,7 @@ ANALYSIS_TYPE="${9:-}"
 DISPBDT="${10:-0}"
 UUID="${11:-$(date +"%y%m%d")-$(uuidgen)}"
 XGBSTEREOFILESUFFIX="xgb_stereo"
-XGBGAMMAHADRONFILESUFFIX="xgb_gh"
+XGBGAMMAHADRONFILESUFFIX="None"
 
 echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBSTEREOFILESUFFIX $XGBGAMMAHADRONFILESUFFIX)"
 
