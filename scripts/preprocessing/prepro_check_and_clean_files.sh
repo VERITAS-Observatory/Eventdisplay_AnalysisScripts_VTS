@@ -44,9 +44,7 @@ if [[ $FTYPE == anasum* ]]; then
 
     if [[ -n $anasum_bad_logs ]]; then
         file_count=$(echo "$anasum_bad_logs" | wc -w)
-        if [[ ! -z $file_count ]]; then
-            echo "FOUND $file_count anasum log files without VERITAS_ANALYSIS_TYPE in the last line"
-        fi
+        echo "FOUND $file_count anasum log files without VERITAS_ANALYSIS_TYPE in the last line"
         move_list error "$anasum_bad_logs"
     fi
 fi
