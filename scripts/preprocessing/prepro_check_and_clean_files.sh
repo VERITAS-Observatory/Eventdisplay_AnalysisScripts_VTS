@@ -23,7 +23,6 @@ if [[ $FTYPE == "mscw" ]]; then
 fi
 
 # find all files with errors in the log file
-
 move_list()
 {
     mkdir -p "${FTYPE}"/"${1}"
@@ -32,6 +31,23 @@ move_list()
     done
 }
 
+# for anasum products: require VERITAS_ANALYSIS_TYPE in the last log line
+if [[ $FTYPE == anasum* ]]; then
+    anasum_bad_logs=""
+    shopt -s nullglob
+    for F in "$FTYPE"/*.log; do
+        if ! tail -n 1 "$F" | grep -q "VERITAS_ANALYSIS_TYPE"; then
+            anasum_bad_logs+="$F "$'\n'
+        fi
+    done
+    shopt -u nullglob
+
+    if [[ -n $anasum_bad_logs ]]; then
+        file_count=$(echo "$anasum_bad_logs" | wc -w)
+        echo "FOUND $file_count anasum log files without VERITAS_ANALYSIS_TYPE in the last line"
+        move_list error "$anasum_bad_logs"
+    fi
+fi
 
 # find all runs with errors and move them
 FLIST=$(grep -irl "error" "$FTYPE"/*.log)

@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # shellcheck disable=SC2154
 # fill lookup tables
 
@@ -100,7 +102,7 @@ fi
 
 echo "Running mscw_energy (table filling)"
 logfile="$ODIR/$TABFILE.log"
-"$EVNDISPSYS"/bin/mscw_energy -filltables=1 \
+$EVNDISPSYS/bin/mscw_energy -filltables=1 \
                             -limitEnergyReconstruction \
                             -write1DHistograms \
                             -inputfilelist "$DDIR/$TABFILE.list" \
@@ -110,5 +112,5 @@ logfile="$ODIR/$TABFILE.log"
                             -woff=$WOBBLE &> "$logfile"
 
 inspect_executables >> "$logfile"
-"$EVNDISPSYS"/bin/logFile makeTableLog "${DDIR}/$TABFILE.root" "$logfile"
+$EVNDISPSYS/bin/logFile makeTableLog "${DDIR}/$TABFILE.root" "$logfile"
 mv -v -f "${DDIR}/$TABFILE.root" "${ODIR}/$TABFILE.root"

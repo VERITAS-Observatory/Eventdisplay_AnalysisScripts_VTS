@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # script to analyse VTS raw files (VBF) with eventdisplay
 
 # set observatory environmental variables
@@ -197,7 +199,7 @@ fi
 # pedestal calculation
 if [[ $CALIB == "1" || $CALIB == "2" || $CALIB == "4" || $CALIB == "5" ]]; then
     rm -f $LOGDIR/$RUN.ped.log
-    "$EVNDISPSYS"/bin/evndisp \
+    $EVNDISPSYS/bin/evndisp \
         -runmode=1 -runnumber="$RUN" \
         -reconstructionparameter "$ACUTS" \
         "${OPT[@]}" \
@@ -229,7 +231,7 @@ fi
 # average tzero calculation
 if [[ $CALIB == "1" || $CALIB == "3" || $CALIB == "4" || $CALIB == "5" ]]; then
     rm -f $LOGDIR/$RUN.tzero.log
-    "$EVNDISPSYS"/bin/evndisp \
+    $EVNDISPSYS/bin/evndisp \
         -runnumber=$RUN -runmode=7 \
         -calibrationsummin=50 \
         -reconstructionparameter "$ACUTS" \
@@ -264,7 +266,7 @@ fi
 if [[ $CALIB != "5" ]]; then
 LOGFILE="$LOGDIR/$RUN.log"
     rm -f "$LOGDIR/$RUN.log"
-    "$EVNDISPSYS"/bin/evndisp \
+    $EVNDISPSYS/bin/evndisp \
         -runnumber="$RUN" \
         -reconstructionparameter "$ACUTS" \
         -outputfile "$TEMPDIR/$RUN.root" \
@@ -278,17 +280,17 @@ fi
 if [[ -e "$LOGFILE" ]]; then
     cp -v "$LOGFILE" "$TEMPDIR"
     LLF="${TEMPDIR}/$RUN.log"
-    "$EVNDISPSYS"/bin/logFile evndispLog "$TEMPDIR/$RUN.root" "$LLF"
+    $EVNDISPSYS/bin/logFile evndispLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 if [[ -e "$LOGDIR/$RUN.ped.log" ]]; then
     cp -v $LOGDIR/$RUN.ped.log "$TEMPDIR"
     LLF="${TEMPDIR}/$RUN.ped.log"
-    "$EVNDISPSYS"/bin/logFile evndisppedLog "$TEMPDIR/$RUN.root" "$LLF"
+    $EVNDISPSYS/bin/logFile evndisppedLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 if [[ -e "$LOGDIR/$RUN.tzero.log" ]]; then
     cp -v $LOGDIR/$RUN.tzero.log "$TEMPDIR"
     LLF="${TEMPDIR}/$RUN.tzero.log"
-    "$EVNDISPSYS"/bin/logFile evndisptzeroLog "$TEMPDIR/$RUN.root" "$LLF"
+    $EVNDISPSYS/bin/logFile evndisptzeroLog "$TEMPDIR/$RUN.root" "$LLF"
 fi
 
 # move data file from tmp dir to data dir

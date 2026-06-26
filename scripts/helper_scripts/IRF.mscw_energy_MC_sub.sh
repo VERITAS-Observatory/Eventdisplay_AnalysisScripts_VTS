@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # Analyse MC files with lookup tables (mscw_energy stage)
 # (optional) Calculate instrument response functions (effective areas) for 4 and 3-telescope combinations
 
@@ -180,7 +182,7 @@ cat "$DDIR/$OFILE.list"
 echo "Running mscw_energy"
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
-"$EVNDISPSYS"/bin/mscw_energy "${MOPT[@]}" \
+$EVNDISPSYS/bin/mscw_energy "${MOPT[@]}" \
     -inputfilelist "$DDIR/$OFILE.list" \
     -outputfile "$outputfilename" \
     -noise=$NOISE &> $logfile
@@ -194,7 +196,7 @@ fi
 
 inspect_executables >> "$logfile"
 cp -v "$logfile" "$DDIR/$OFILE.log"
-"$EVNDISPSYS"/bin/logFile mscwTableLog "$outputfilename" "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile mscwTableLog "$outputfilename" "$DDIR/$OFILE.log"
 
 # cp results file back to data directory and clean up
 outputbasename=$( basename "$outputfilename" )
@@ -380,19 +382,19 @@ PARAMFILE="
 
         # calculate effective areas
         rm -f "$OSUBDIR"/$OFILE.root
-        "$EVNDISPSYS"/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
+        $EVNDISPSYS/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
 
         echo "Filling effAreaLog file into root file: $OSUBDIR/$EAPARAMS.log"
         inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
         cp "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-        "$EVNDISPSYS"/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
+        $EVNDISPSYS/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
         echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
-        "$EVNDISPSYS"/bin/logFile mscwTableLog "$DDIR"/"$EAPARAMS".root "$DDIR/$OFILE.log"
+        $EVNDISPSYS/bin/logFile mscwTableLog "$DDIR"/"$EAPARAMS".root "$DDIR/$OFILE.log"
         echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
         if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
             XGBLOGFILE="$(get_xgb_output_file $ID).log"
             if [[ -f "$XGBLOGFILE" ]]; then
-                "$EVNDISPSYS"/bin/logFile xgbLog "$DDIR"/"$EAPARAMS".root "$XGBLOGFILE"
+                $EVNDISPSYS/bin/logFile xgbLog "$DDIR"/"$EAPARAMS".root "$XGBLOGFILE"
             else
                 echo "XGB log file $XGBLOGFILE not found, skipping."
             fi

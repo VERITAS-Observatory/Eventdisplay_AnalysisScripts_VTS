@@ -1,9 +1,13 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # script to analyse VTS raw files (VBF) with eventdisplay
 
 # shellcheck source=/dev/null
 # set observatory environmental variables
-source "$EVNDISPSYS"/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
 # parameters replaced by parent script using sed
 RUN=RUNFILE
@@ -40,7 +44,7 @@ OPT=(
 #########################################
 # pedestal calculation
 rm -f "$LOGDIR"/$RUN.ped.log
-"$EVNDISPSYS"/bin/evndisp -runmode=6 -runnumber="$RUN" -reconstructionparameter "${ACUTS[@]}" "${OPT[@]}" &> "$LOGDIR"/$RUN.ped.log
+$EVNDISPSYS/bin/evndisp -runmode=6 -runnumber="$RUN" -reconstructionparameter "${ACUTS[@]}" "${OPT[@]}" &> "$LOGDIR"/$RUN.ped.log
 echo "$EVNDISPSYS/bin/evndisp -runmode=6 -runnumber=$RUN -reconstructionparameter ${ACUTS[*]} ${OPT[*]}"
 
 for ((i=1; i<5; i++))

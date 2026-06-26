@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # script to combine anasum runs
 #
 # set observatory environmental variables
@@ -116,7 +118,7 @@ echo "RUNP ${RUNP}"
 echo "OUTPUTDATAFILE ${OUTPUTDATAFILE}"
 echo "OUTPUTLOGFILE ${OUTPUTLOGFILE}"
 
-"$EVNDISPSYS"/bin/anasum \
+$EVNDISPSYS/bin/anasum \
     -i 1 \
     ${RUNLISTSTRING} "${RUNLIST}" \
     -d "${TEMPDIR}" \
@@ -124,12 +126,12 @@ echo "OUTPUTLOGFILE ${OUTPUTLOGFILE}"
     -o "${OUTPUTDATAFILE}".root 2>&1 | tee ${OUTPUTLOGFILE}
 
 # for Crab runs: print sensitivity estimate
-RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "${OUTPUTDATAFILE}".root -runinfo)
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${OUTPUTDATAFILE}".root -runinfo)
 TMPTARGET=$(echo "$RUNINFO" | cut -d\  -f7- )
 if [[ ${TMPTARGET} == "Crab" ]]; then
     {
         echo "========================== SENSITIVITY ESTIMATE =========================="
-        "$EVNDISPSYS"/bin/printCrabSensitivity "${OUTPUTDATAFILE}".root
+        $EVNDISPSYS/bin/printCrabSensitivity "${OUTPUTDATAFILE}".root
         echo "========================== =========================="
     } >> "${OUTFILE}.log"
 fi
@@ -137,7 +139,7 @@ fi
 inspect_executables >> ${OUTFILE}.log
 
 # log file into root file
-"$EVNDISPSYS"/bin/logFile \
+$EVNDISPSYS/bin/logFile \
     anasumLog \
     "${OUTPUTDATAFILE}".root \
     "${OUTPUTDATAFILE}".log

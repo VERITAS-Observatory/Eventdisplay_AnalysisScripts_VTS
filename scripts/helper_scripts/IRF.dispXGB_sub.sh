@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # XGBoost disp stereo and classification analysis on mscw MC file
 
 # Don't do set -e.
@@ -57,7 +59,7 @@ if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
 fi
-RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter ${MSCW_FILE} -runinfo)
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
 echo "RUNINFO $RUNINFO"
 ZA=$(echo "$RUNINFO" | awk '{print $8}')
 EPOCH=$(echo "$RUNINFO" | awk '{print $1}')

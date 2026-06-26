@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # analyse MC files with lookup tables
 
 # set observatory environmental variables
@@ -67,7 +69,7 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
 fi
 
 echo "READING RUNINFO from $INFILEPATH"
-RUNINFO=$("$EVNDISPSYS"/bin/printRunParameter "$INFILEPATH" updated-runinfo)
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" updated-runinfo)
 EPOCH=$(echo "$RUNINFO" | awk '{print $(1)}')
 ATMO=${FORCEDATMO:-$(echo "$RUNINFO" | awk '{print $(3)}')}
 HVSETTINGS=$(echo "$RUNINFO" | awk '{print $(4)}')
@@ -154,7 +156,7 @@ get_disp_dir()
 }
 
 if [[ $DISPBDT == "1" ]]; then
-    ZA=$("$EVNDISPSYS"/bin/printRunParameter "$INFILEPATH" -zenith | awk '{print $4}')
+    ZA=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" -zenith | awk '{print $4}')
     DISPDIR=$(get_disp_dir "${ZA}")
     echo "DISPDIR (Zenith is $ZA deg): " "$DISPDIR"
     if [[ ! -d "$DISPDIR" ]]; then
@@ -216,7 +218,7 @@ if [ $DISPBDT -eq 1 ]; then
     echo "DISP BDT options: ${MOPT[*]}"
 fi
 
-"$EVNDISPSYS"/bin/mscw_energy         \
+$EVNDISPSYS/bin/mscw_energy         \
     "${MOPT[@]}" \
     -updateEpoch=1 \
     -tablefile "$TABFILE"             \
@@ -241,7 +243,7 @@ fi
 if [[ -e ${MSCWLOGFILE} ]]; then
   cp -v "${MSCWLOGFILE}" "$DDIR"/
   LLF="${DDIR}/$(basename "${MSCWLOGFILE}")"
-  "$EVNDISPSYS"/bin/logFile mscwTableLog "$DDIR/$BFILE.mscw.root" "$LLF"
+  $EVNDISPSYS/bin/logFile mscwTableLog "$DDIR/$BFILE.mscw.root" "$LLF"
 fi
 
 # move output file from scratch and clean up
