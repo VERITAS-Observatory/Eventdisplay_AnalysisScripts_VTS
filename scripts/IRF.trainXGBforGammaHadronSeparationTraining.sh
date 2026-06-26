@@ -116,6 +116,7 @@ get_run_prefix()
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainXGBforGammaHadronSeparation_sub.sh"
+HELPER_SCRIPTS_DIR="$(cd "$(dirname "$0")/helper_scripts" && pwd)"
 
 SIGNALLIST="${ODIR}/signal_files.list"
 rm -f "${SIGNALLIST}"
@@ -167,6 +168,8 @@ for (( i=0; i < NENE; i++ )); do
         -e "s|MODELPARA|$RUNPAR|" \
         -e "s|ENERGYBIN|$i|" \
 	-e "s|NCORES|$ncore|" \
+        -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
+        -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
         -e "s|OUTPUTDIR|${ODIR}|" "$SUBSCRIPT" > "$FSCRIPT"
 
     chmod u+x "$FSCRIPT"

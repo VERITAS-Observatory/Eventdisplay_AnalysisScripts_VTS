@@ -58,6 +58,7 @@ rm -f "${LOGDIR}"/x* 2>/dev/null
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.dispXGB_sub"
+HELPER_SCRIPTS_DIR="$(cd "$(dirname "$0")/helper_scripts" && pwd)"
 
 for FILE in $FILES
 do
@@ -69,6 +70,8 @@ do
         -e "s|XXGB|$XGB|" \
         -e "s|XGB_TTYPE|$XGB_TYPE|" \
         -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
+        -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
+        -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
         -e "s|OODIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
     chmod u+x "$FSCRIPT.sh"
