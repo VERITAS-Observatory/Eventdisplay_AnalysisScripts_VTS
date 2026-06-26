@@ -63,6 +63,7 @@ eventdisplay-ml-train-xgb-classify \
     --energy_bin_number "${EBIN}" \
     --model_parameters "${PARA}" \
     --max_cores $MAXCORES \
+    --balance_class_zenith_weights \
     --train_test_fraction $P --max_events $N  >| "${LOGFILE}" 2>&1
 
 python --version >> "${LOGFILE}"
