@@ -175,7 +175,7 @@ if [[ "${DBTEXTDIRECTORY}" != "0" ]]; then
     fi
 else
     # original way accessing the VERITAS DB
-    RUNONDISK=$(echo $RUN | "$EVNDISPSCRIPTS"/RUNLIST.whichRunsAreOnDisk.sh -d)
+    RUNONDISK=$(echo $RUN | "$EVNDISPSCRIPTS"/RUNLIST.whichRunsAreOnDisk.sh -c)
 fi
 if [[ ${RUNONDISK} == *"file not found"** ]]; then
   echo "$RUN not on disk"

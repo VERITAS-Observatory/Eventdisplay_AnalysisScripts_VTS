@@ -1,96 +1,97 @@
 #!/bin/bash
-# from a run list, prints the list of runs that are on disk.
+# From a run list, print the list of runs that are on disk.
 
-NOTFLAG=false # flag for if the -n flag was used
-DATFLAG=false # flat to print full date of run
-HELPFLAG=false # if true, print help text and exit
-PRINTPATH=false # if true, print full path of file on disl
-DOWNLOADFLAG=true
-RAWDATASERVER=$(grep "\* VTSRAWDATA" "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter  | awk '{print $3}')
-#echo "INP:'$(basename $0)' '$1' '$2' '$3'"
+NOTFLAG=false
+PRINTPATH=false
+DELETEFLAG=false
+CHECKFLAG=false
+INPUT_FROM_STDIN=false
 
-ISPIPEFILE=$(readlink /dev/fd/0) # check to see if input is from terminal, or from a pipe
-if [[ "$ISPIPEFILE" =~ ^/dev/pts/[0-9]{1,2} ]] ; then # its a terminal (not a pipe)
-	if [ "$#" -eq "1" ] ; then # format is "exe <fname>"
-		RUNFILE=$1
-	elif [ "$#" -eq "2" ] ; then # format is "exe -flag <fname>"
-		if [ "$1" = "-n" ] ; then
-			NOTFLAG=true
-			RUNFILE=$2
-        elif [ "$1" = "-p" ] ; then
-			PRINTPATH=true
-			RUNFILE=$2
-		else
-			echo " Error: $(basename "$0") doesn't understand flag $1.  Only acceptable flag is -n"
-			HELPFLAG=true
-		fi
-	else
-		echo "needs at least one argument"
-		HELPFLAG=true
-	fi
-else # it is a pipe
-	if [ "$#" -eq "0" ] ; then # format is " cat runlist.dat | exe "
-		RUNFILE=$1
-	elif [ "$#" -eq "1" ] ; then # format is " cat runlist.dat | exe -flags"
-		if [ "$1" = "-n" ] ; then
-			NOTFLAG=true
-			RUNFILE=$2
-        elif [ "$1" = "-p" ] ; then
-			PRINTPATH=true
-			RUNFILE=$2
-        elif [ "$1" = "-d" ] ; then
-            DATFLAG=true
-			RUNFILE=$2
-		else
-			echo " Error: $(basename "$0") doesn't understand flag $1.  Only acceptable flag is -n"
-			HELPFLAG=true
-		fi
-	else
-		echo "needs at least one argument"
-		HELPFLAG=true
-	fi
+print_help()
+{
+    echo
+    echo "Print the run numbers that ARE stored on disk:"
+    echo "  $ $(basename "$0") <file of runs>"
+    echo
+    echo "Print the full paths of runs that ARE stored on disk:"
+    echo "  $ $(basename "$0") -p <file of runs>"
+    echo
+    echo "Print the run numbers that are NOT stored on disk:"
+    echo "  $ $(basename "$0") -n <file of runs>"
+    echo
+    echo "Delete the .cvbf files for runs that ARE stored on disk:"
+    echo "  $ $(basename "$0") -d <file of runs>"
+    echo "  This first prints every .cvbf path that would be deleted and then asks"
+    echo "  for confirmation. No files are deleted unless the answer is 'y' or 'yes'."
+    echo
+    echo "The run list can also be supplied on standard input, for example:"
+    echo "  $ cat <file of runs> | $(basename "$0")"
+    echo "  $ cat <file of runs> | $(basename "$0") -n"
+    echo "  $ cat <file of runs> | $(basename "$0") -d"
+    echo
+}
+
+while getopts ":npcdh" OPTION; do
+    case "$OPTION" in
+        n) NOTFLAG=true ;;
+        p) PRINTPATH=true ;;
+        c) CHECKFLAG=true ;;
+        d) DELETEFLAG=true ;;
+        h)
+            print_help
+            exit 0
+            ;;
+        :|\?)
+            echo "Error: $(basename "$0") doesn't understand option '-$OPTARG'." >&2
+            print_help >&2
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if (( $# > 1 )); then
+    echo "Error: expected at most one run-list file." >&2
+    print_help >&2
+    exit 1
+fi
+if { $NOTFLAG && $PRINTPATH; } || { $NOTFLAG && $DELETEFLAG; } || { $PRINTPATH && $DELETEFLAG; }; then
+    echo "Error: options -n, -p, and -d cannot be combined." >&2
+    exit 1
 fi
 
-if $HELPFLAG ; then
-	echo
-	echo "Prints the run numbers that ARE stored on disk." ; echo
-	echo " $ $(basename "$0") <file of runs>" ; echo
-	echo "Prints the full path of runs that ARE stored on disk." ; echo
-	echo " $ $(basename "$0") -p <file of runs>" ; echo
-	echo "Prints the run numbers that are NOT stored on disk" ; echo
-	echo " $ $(basename "$0") -n <file of runs>" ; echo
-	echo " $ cat <file of runs> | $(basename "$0")" ; echo
-	echo " $ cat <file of runs> | $(basename "$0") -n" ; echo
-	exit
+if (( $# == 1 )); then
+    RUNFILE=$1
+    if [ ! -f "$RUNFILE" ]; then
+        echo "File '$RUNFILE' could not be found, sorry." >&2
+        exit 1
+    fi
+    RUNLISTTMP=$(<"$RUNFILE")
+elif [ ! -t 0 ]; then
+    INPUT_FROM_STDIN=true
+    RUNLISTTMP=$(cat)
+else
+    print_help
+    exit 1
 fi
 
-#echo "NOTFLAG:$NOTFLAG"
-
-# list of run_id's to read in
-#RUNFILE=$1
-if [ ! -e "$RUNFILE" ] ; then
-	echo "File '$RUNFILE' could not be found, sorry."
-	exit
-fi
-RUNLISTTMP=$(cat "$RUNFILE")
-RUNLIST=$(echo "$RUNLISTTMP" | grep -oP "^\d+$" )
+RUNLIST=$(grep -E '^[0-9]+$' <<< "$RUNLISTTMP")
 if [ -z "$RUNLIST" ] ; then
-  >&2 echo "Error, RUNLIST.whichRunsAreOnDisk.sh : input file/pipe $RUNLISTTMP contains no runs, exiting..."
-  exit 1
+    echo "Error: input file/pipe contains no runs, exiting..." >&2
+    exit 1
 fi
 #echo "RUNLIST:$RUNLIST"
 #echo "Files not on disk:"
 
 # find the veritas db url
 MYSQLDB=$(grep '^\*[ \t]*DBSERVER[ \t]*mysql://' "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter | grep -E -o '[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}\.[[:alpha:]]{1,20}')
-if [ ! -n "$MYSQLDB" ] ; then
-    echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!"
-    exit
+if [ -z "$MYSQLDB" ] ; then
+    echo "* DBSERVER param not found in \$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/EVNDISP.global.runparameter!" >&2
+    exit 1
 fi
 
-
 # mysql login info
-MYSQL="mysql -u readonly -h $MYSQLDB -A"
+MYSQL=(mysql -u readonly -h "$MYSQLDB" -A)
 
 # generate list of runs to ask for ( run_id = RUNID[1] OR run_id = RUNID[2] etc)
 COUNT=0
@@ -108,8 +109,10 @@ done
 #echo "SUB:"
 #echo "$SUB"
 
-# search through mysql result rows, where each row's elements
-# are assigned to RUNID and RUNDATE
+# Search through mysql result rows, where each row's elements are assigned to
+# RUNID and RUNDATE. In deletion mode, collect paths so confirmation happens
+# only after the complete list has been printed.
+FILES_TO_DELETE=()
 while read -r RUNID RUNDATE ; do
 	if [[ "$RUNID" =~ ^[0-9]+$ ]] ; then
 
@@ -124,7 +127,10 @@ while read -r RUNID RUNDATE ; do
 		#echo "  Does file exist: $TARGFILE"
 		if [ -e "$TARGFILE" ] ; then # file exists
 			if ! $NOTFLAG ; then # $NOTFLAG is false, and we should print the runnumber
-                if $PRINTPATH ; then
+                if $DELETEFLAG ; then
+                    echo "$TARGFILE"
+                    FILES_TO_DELETE+=("$TARGFILE")
+                elif $PRINTPATH ; then
                     echo "$TARGFILE"
                 else
                     echo "$RUNID"
@@ -133,9 +139,10 @@ while read -r RUNID RUNDATE ; do
 		else # file does not exist
 			if $NOTFLAG ; then # $NOTFLAG is true, and we should print the runnumber
 				echo "$RUNID"
-            elif $DATFLAG ; then
+            elif $CHECKFLAG ; then
                 echo "file not found - date: $YY$MM$DD"
-            elif $DOWNLOADFLAG ; then
+            elif ! $DELETEFLAG && ! $PRINTPATH ; then
+                RAWDATASERVER=$(grep "\* VTSRAWDATA" "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter | awk '{print $3}')
                 echo "[[ ! -f \"$VERITAS_DATA_DIR/data/d$YY$MM$DD/$RUNID.cvbf\" ]] && bbftp -V -S -p 12 -u bbftp -e \"mget /veritas/data/d$YY$MM$DD/$RUNID.cvbf $VERITAS_DATA_DIR/data/d$YY$MM$DD/\" $RAWDATASERVER || echo 'File already exists, skipping download.'"
 			fi
 		fi
@@ -144,6 +151,40 @@ while read -r RUNID RUNDATE ; do
 # You have to do it this way, because using a pipe | calls the command in a
 # subshell, and that prevents variables from being saved within the 'while' loop
 # http://stackoverflow.com/questions/14585045/is-it-possible-to-avoid-pipes-when-reading-from-mysql-in-bash
-done < <($MYSQL -e "USE VERITAS ; SELECT run_id, data_start_time FROM tblRun_Info WHERE $SUB")
+done < <("${MYSQL[@]}" -e "USE VERITAS ; SELECT run_id, data_start_time FROM tblRun_Info WHERE $SUB")
 
-exit
+if $DELETEFLAG; then
+    if (( ${#FILES_TO_DELETE[@]} == 0 )); then
+        echo "No .cvbf files from the run list are on disk."
+        exit 0
+    fi
+
+    if $INPUT_FROM_STDIN; then
+        if [ ! -r /dev/tty ]; then
+            echo "Deletion cancelled: a terminal is required for confirmation." >&2
+            exit 1
+        fi
+        read -r -p "Delete these ${#FILES_TO_DELETE[@]} file(s)? [y/N] " CONFIRMATION < /dev/tty
+    else
+        read -r -p "Delete these ${#FILES_TO_DELETE[@]} file(s)? [y/N] " CONFIRMATION
+    fi
+
+    if [[ ! "$CONFIRMATION" =~ ^([yY]|[yY][eE][sS])$ ]]; then
+        echo "Deletion cancelled."
+        exit 0
+    fi
+
+    DELETE_FAILED=false
+    for TARGFILE in "${FILES_TO_DELETE[@]}"; do
+        if ! rm -- "$TARGFILE"; then
+            DELETE_FAILED=true
+        fi
+    done
+    if $DELETE_FAILED; then
+        echo "Error: one or more files could not be deleted." >&2
+        exit 1
+    fi
+    echo "Deleted ${#FILES_TO_DELETE[@]} file(s)."
+fi
+
+exit 0
