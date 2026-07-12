@@ -58,7 +58,7 @@ ZA=$(echo "$RUNINFO" | awk '{print $8}')
 EPOCH=$(echo "$RUNINFO" | awk '{print $1}')
 ATM=$(echo "$RUNINFO" | awk '{print $3}')
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}"
+DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}"
 if [[ ! -d "${DISPDIR}" ]]; then
     echo "Error finding model directory $DISPDIR"
     exit
