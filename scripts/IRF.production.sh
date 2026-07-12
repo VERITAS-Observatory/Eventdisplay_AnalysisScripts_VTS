@@ -23,7 +23,7 @@ required parameters:
                             EVNDISP,
                             MAKETABLES, COMBINETABLES,
                             TRAINMVANGRES,
-                            ANALYSETABLES,
+                            ANALYSETABLES, ANALYSETABLESXGBTRAIN
                             TRAINXGBANGRES, ANAXGBANGRES,
                             TRAINXGBGH, ANAXGBGH,
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
@@ -190,9 +190,13 @@ elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
     ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
     # ZENITH_ANGLES=( 60 65 )
     ze_first_bin=$(printf '%s\n' "$ZENITH_ANGLES" | head -n 1)
-    # Note! Assumes same NSB and WOBBLE offsets for flat and curved atmosphere
     NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
     WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
+    if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
+        ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65 )
+        NSB_LEVELS=( 160 200 350 450 )
+        WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 )
+    fi
     ######################################
     # TEST
     # NSB_LEVELS=( 300 )
@@ -205,6 +209,11 @@ elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; 
     # assume same NSB and wobble offsets in all bins
     NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
     WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
+    if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
+        ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65 )
+        NSB_LEVELS=( 160 200 350 450 )
+        WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 )
+    fi
     ######################################
     # TEST
     # ZENITH_ANGLES=( 00 20 30 35 40 45 )
@@ -457,7 +466,7 @@ for VX in $EPOCH; do
                         done #recID
                     ######################
                     # analyse table files
-                    elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
+                    elif [[ $IRFTYPE == "ANALYSETABLES"* ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
