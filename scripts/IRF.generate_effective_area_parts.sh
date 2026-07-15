@@ -69,10 +69,10 @@ SIMTYPE="$8"
 ANALYSIS_TYPE="${9:-}"
 DISPBDT="${10:-0}"
 UUID="${11:-$(date +"%y%m%d")-$(uuidgen)}"
-XGBSTEREOFILESUFFIX="xgb_stereo"
+XGBSTEREOFILESUFFIX="None"
 XGBGAMMAHADRONFILESUFFIX="None"
 
-echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT, XGB $XGBSTEREOFILESUFFIX $XGBGAMMAHADRONFILESUFFIX)"
+echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT)"
 
 
 if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
@@ -103,6 +103,12 @@ CUTS_NAME=${CUTS_NAME%%.dat}
 echo "Cuts: $CUTSFILE $CUTS_NAME"
 echo "MC file: $MCFILE"
 echo "Eff area file: $EFFAREAFILE"
+if [[ $CUTS_NAME == *XGB* ]]; then
+  XGBSTEREOFILESUFFIX="xgb_stereo"
+  XGBGAMMAHADRONFILESUFFIX="None"   # keep until development is finalized
+fi
+echo "XGB: $XGBSTEREOFILESUFFIX $XGBGAMMAHADRONFILESUFFIX"
+
 # run script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.effective_area_parallel_sub"
 FSCRIPT="$LOGDIR/EA.ID${RECID}.${ZA}.${WOBBLE}.${NOISE}.${CUTS_NAME}.sh"
