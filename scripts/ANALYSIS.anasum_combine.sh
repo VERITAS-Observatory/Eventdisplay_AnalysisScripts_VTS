@@ -72,7 +72,7 @@ DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/ANASUM.COMBINE-${DATE}-$(uuidgen)"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
-cp -f "$RUNLIST" "$LOGDIR/"
+cp -f "$RUNLIST" "$LOGDIR/" || { echo "Error: failed to copy runlist '$RUNLIST' to '$LOGDIR'"; exit 1; }
 
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.anasum_combine_sub"
