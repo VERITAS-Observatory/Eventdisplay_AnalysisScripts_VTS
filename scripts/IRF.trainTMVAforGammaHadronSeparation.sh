@@ -109,7 +109,7 @@ RUNPAR_CONTENT=$(cat "$RUNPAR")
 
 #####################################
 # energy bins
-if echo "$RUNPAR_CONTENT" | grep -q "^\* ENERGYBINS"; then
+if echo "$RUNPAR_CONTENT" | grep -q "^[*] ENERGYBINS"; then
     ENBINS=$(echo "$RUNPAR_CONTENT" | awk '$1 == "*" && $2 == "ENERGYBINS" { for (i = 3; i <= NF; i++) print $i; exit }')
     mapfile -t EBINARRAY <<< "$ENBINS"
     count1=1

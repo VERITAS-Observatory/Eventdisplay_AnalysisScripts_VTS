@@ -23,7 +23,7 @@ fi
 echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 
-mkdir -p "${ODIR}"
+mkdir -p "${ODIR}" || exit 1
 echo -e "Output files will be written to:\n ${ODIR}"
 
 # shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh

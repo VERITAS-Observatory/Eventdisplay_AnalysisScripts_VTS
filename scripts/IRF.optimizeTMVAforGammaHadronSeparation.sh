@@ -83,7 +83,7 @@ fi
 #####################################
 # energy bins
 count1=1
-if grep -q "^\* ENERGYBINS" "$RUNPAR"; then
+if grep -q "^[*] ENERGYBINS" "$RUNPAR"; then
     ENBINS=$(awk '$1 == "*" && $2 == "ENERGYBINS" { for (i = 3; i <= NF; i++) print $i; exit }' "$RUNPAR")
     mapfile -t EBINARRAY <<< "$ENBINS"
     NENE=$(( ${#EBINARRAY[@]}-count1 )) #get number of bins

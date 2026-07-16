@@ -201,7 +201,7 @@ if [[ ! -f "$RUNLIST" ]]; then
     echo "Error, runlist $RUNLIST not found, exiting..."
     exit 1
 fi
-RUNS=$(cat "$RUNLIST" | sort -u)
+mapfile -t RUNS < <(tr -d '\r' < "$RUNLIST" | sort -u)
 NRUNS=$(cat "$RUNLIST" | sort -u | wc -l)
 echo "total number of runs to analyze: $NRUNS"
 

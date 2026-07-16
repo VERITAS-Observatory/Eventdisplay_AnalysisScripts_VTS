@@ -271,7 +271,7 @@ run_xgb()
     ZA=${ZA%deg}
     echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
 
-    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGB/${ANATYPE}/${EPOCH}_ATM${ATM}/"
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}/"
     STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
     BIN_ID=$(jq -r --arg za "$ZA" '
       .zenith[]
