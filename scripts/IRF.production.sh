@@ -466,7 +466,7 @@ for VX in $EPOCH; do
                         done #recID
                     ######################
                     # analyse table files
-                    elif [[ $IRFTYPE == "ANALYSETABLES"* ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
+elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
