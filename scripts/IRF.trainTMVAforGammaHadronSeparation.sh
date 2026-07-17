@@ -226,9 +226,8 @@ do
                       if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
                           for wobble in "${WOBBLE_OFFSETS[@]}"; do
                               for noise in "${NOISE_VALUES[@]}"; do
-                                  for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_"${wobble}"wob_NOISE"${noise}".mscw.root; do
-                                      echo "* SIGNALFILE SIMDIR/${arg##*/}"
-                                  done
+                                  arg="${SDIR}/${ZENITH_ANGLES[$l]}deg_${wobble}wob_NOISE${noise}.mscw.root"
+                                  [[ -f "$arg" ]] && echo "* SIGNALFILE SIMDIR/${arg##*/}"
                               done
                           done
                       fi
@@ -241,9 +240,8 @@ do
                       if (( "${ZENITH_ANGLES[$l]}" != "00" )); then
                           for wobble in "${WOBBLE_OFFSETS[@]}"; do
                               for noise in "${NOISE_VALUES[@]}"; do
-                                  for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_"${wobble}"wob_NOISE"${noise}".mscw.root; do
-                                      echo "* SIGNALFILE SIMDIR/${arg##*/}"
-                                  done
+                                  arg="${SDIR}/${ZENITH_ANGLES[$l]}deg_${wobble}wob_NOISE${noise}.mscw.root"
+                                  [[ -f "$arg" ]] && echo "* SIGNALFILE SIMDIR/${arg##*/}"
                               done
                           done
                       fi
