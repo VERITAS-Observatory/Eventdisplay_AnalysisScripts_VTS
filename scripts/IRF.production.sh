@@ -126,123 +126,173 @@ fi
 echo "Cut list file: $CUTSLISTFILE"
 echo "Simulation type: $SIMTYPE"
 
-# simulation types and definition of parameter space
-if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    # GrISU simulation parameters
-    SIMDIR=${VERITAS_DCACHE_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
-    ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
-    NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
-    WOBBLE_OFFSETS=( 0.5 0.00 0.25 0.75 1.00 1.25 1.50 1.75 2.00 )
-    if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
-       NSB_LEVELS=( 200 )
-       WOBBLE_OFFSETS=( 0.5 )
-    fi
-elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
-    SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
-    if [[ $ATMOS == "62" ]]; then
-        ZENITH_ANGLES=( 00 30 50 )
+# simulation space and learner-specific training parameter spaces
+SIM_ZENITH_ANGLES=()
+SIM_NSB_LEVELS=()
+SIM_WOBBLE_OFFSETS=()
+TRAIN_TMVA_GH_ZENITH_ANGLES=()
+TRAIN_TMVA_GH_NSB_LEVELS=()
+TRAIN_TMVA_GH_WOBBLE_OFFSETS=()
+TRAIN_XGB_GH_ZENITH_ANGLES=()
+TRAIN_XGB_GH_NSB_LEVELS=()
+TRAIN_XGB_GH_WOBBLE_OFFSETS=()
+TRAIN_MVA_ANGRES_NSB_LEVELS=()
+TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=()
+TRAIN_XGB_ANGRES_ZENITH_ANGLES=()
+TRAIN_XGB_ANGRES_NSB_LEVELS=()
+TRAIN_XGB_ANGRES_WOBBLE_OFFSETS=()
+TRAIN_XGB_ANGRES_BIN_IDS=()
+
+set_gh_training_parameter_space()
+{
+    TRAIN_TMVA_GH_ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65 )
+    TRAIN_TMVA_GH_WOBBLE_OFFSETS=( 0.5 )
+    TRAIN_XGB_GH_WOBBLE_OFFSETS=( 0.5 )
+    if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
+        TRAIN_TMVA_GH_NSB_LEVELS=( 100 150 200 250 325 425 550 )
     else
-        ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
+        TRAIN_TMVA_GH_NSB_LEVELS=( 100 160 200 250 350 450 )
     fi
-    NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
-    WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
-    SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
-    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
-    SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
-    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
-elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
-    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
-    ZENITH_ANGLES=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
-    SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | sort | uniq)
-    set -- "$ZENITH_ANGLES"
-    NSB_LEVELS=$(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}' | sort -u)
-    WOBBLE_OFFSETS=$(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}' | sort -u)
-    ######################################
-    # TEST
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 200 )
-    ######################################
-    # TRAINMVANGRES production
-    # (assume 0.5 deg wobble is done)
-    # NSB_LEVELS=( 160 200 250 )
-    # WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
-    # complete NSB bins from TRAINMVANGRES production
-    # (assume 0.5 deg wobble is done)
-    # NSB_LEVELS=( 50 75 100 130 300 350 400 450 )
-    # WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
-    # complete wobble bins after TRAINMVANGRES production
-    # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
-    # (END TEMPORARY)
-    ######################################
-elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
-    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
-    # ZENITH_ANGLES=( 60 65 )
-    ze_first_bin=$(printf '%s\n' "$ZENITH_ANGLES" | head -n 1)
-    NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
-    WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
-    if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
-        ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65 )
-        NSB_LEVELS=( 160 200 350 450 )
-        WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 )
+
+    TRAIN_XGB_GH_ZENITH_ANGLES=()
+    TRAIN_XGB_GH_NSB_LEVELS=()
+    XGB_GH_RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+    if [[ -f "$XGB_GH_RUNPAR" ]]; then
+        mapfile -t TRAIN_XGB_GH_ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$XGB_GH_RUNPAR")
+        mapfile -t TRAIN_XGB_GH_NSB_LEVELS < <(jq -r '.input_noise_values[]' "$XGB_GH_RUNPAR")
     fi
-    ######################################
-    # TEST
-    # NSB_LEVELS=( 300 )
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
-    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort | uniq)
-    ze_first_bin=$(printf '%s\n' "$ZENITH_ANGLES" | head -n 1)
-    # assume same NSB and wobble offsets in all bins
-    NSB_LEVELS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
-    WOBBLE_OFFSETS=$(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
-    if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
-        ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65 )
-        NSB_LEVELS=( 160 200 350 450 )
-        WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 )
+}
+
+set_angres_training_parameter_space()
+{
+    TRAIN_XGB_ANGRES_ZENITH_ANGLES=()
+    TRAIN_XGB_ANGRES_NSB_LEVELS=( 160 200 350 450 )
+    TRAIN_XGB_ANGRES_WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 )
+    TRAIN_XGB_ANGRES_BIN_IDS=()
+
+    STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+    if [[ -f "$STEREO_PAR" ]]; then
+        mapfile -t TRAIN_XGB_ANGRES_ZENITH_ANGLES < <(jq -r '.zenith[].train[]' "$STEREO_PAR" | sort -un | awk '{printf "%02d\n", $1}')
+        mapfile -t TRAIN_XGB_ANGRES_BIN_IDS < <(jq -r '.zenith[].id' "$STEREO_PAR")
     fi
-    ######################################
-    # TEST
-    # ZENITH_ANGLES=( 00 20 30 35 40 45 )
-    # ZENITH_ANGLES=( 50 55 60 65 )
-    # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 200 )
-    # IRF comparison
-    # ZENITH_ANGLES=( 20 40 50 60 65 )
-    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
-    # NSB_LEVELS=( 200 )
-    ######################################
-    # TRAINMVANGRES production
-elif [ "${SIMTYPE:0:4}" == "CARE" ]; then
-    # Older CARE simulation parameters
-    SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
-    ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
-    NSB_LEVELS=( 50 80 120 170 230 290 370 450 )
-    WOBBLE_OFFSETS=( 0.5 )
-    if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
-       NSB_LEVELS=( 170 )
-       WOBBLE_OFFSETS=( 0.5 )
+
+    TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.5 )
+    if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 150 200 250 )
+        TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.00 1.50 )
+    elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 300 600 900 )
+        TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.5 )
+    elif [[ ${SIMTYPE} = "CARE_RedHV_"* ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 300 600 900 )
+    elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 160 200 300 )
+        TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.5 )
+    elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 160 200 250 )
     fi
-else
-    echo "Invalid simulation type: ${SIMTYPE}. Exiting..."
-    exit 1
-fi
-echo "Zenith angle bins: ${ZENITH_ANGLES}"
-echo "NSB levels: ${NSB_LEVELS}"
-echo "Wobble offsets: ${WOBBLE_OFFSETS}"
+}
+
+set_sim_parameter_space()
+{
+    if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
+        # GrISU simulation parameters
+        SIMDIR=${VERITAS_DCACHE_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
+        SIM_ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
+        SIM_NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
+        SIM_WOBBLE_OFFSETS=( 0.5 0.00 0.25 0.75 1.00 1.25 1.50 1.75 2.00 )
+        if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
+           SIM_NSB_LEVELS=( 200 )
+           SIM_WOBBLE_OFFSETS=( 0.5 )
+        fi
+    elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
+        SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
+        if [[ $ATMOS == "62" ]]; then
+            SIM_ZENITH_ANGLES=( 00 30 50 )
+        else
+            SIM_ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
+        fi
+        SIM_NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+    elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
+        SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort -u)
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+    elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
+        SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
+    elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort -u)
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+    elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
+        SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}' | sort -u)
+    elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort -u)
+        ze_first_bin=$(printf '%s\n' "${SIM_ZENITH_ANGLES[@]}" | head -n 1)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
+    elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort -u)
+        ze_first_bin=$(printf '%s\n' "${SIM_ZENITH_ANGLES[@]}" | head -n 1)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
+    elif [ "${SIMTYPE:0:4}" == "CARE" ]; then
+        # Older CARE simulation parameters
+        SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
+        SIM_ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
+        SIM_NSB_LEVELS=( 50 80 120 170 230 290 370 450 )
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+        if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
+           SIM_NSB_LEVELS=( 170 )
+           SIM_WOBBLE_OFFSETS=( 0.5 )
+        fi
+    else
+        echo "Invalid simulation type: ${SIMTYPE}. Exiting..."
+        exit 1
+    fi
+}
+
+use_parameter_space()
+{
+    case "$1" in
+        sim)
+            ZENITH_ANGLES=( "${SIM_ZENITH_ANGLES[@]}" )
+            NSB_LEVELS=( "${SIM_NSB_LEVELS[@]}" )
+            WOBBLE_OFFSETS=( "${SIM_WOBBLE_OFFSETS[@]}" )
+            ;;
+        xgb-angres)
+            ZENITH_ANGLES=( "${TRAIN_XGB_ANGRES_ZENITH_ANGLES[@]}" )
+            NSB_LEVELS=( "${TRAIN_XGB_ANGRES_NSB_LEVELS[@]}" )
+            WOBBLE_OFFSETS=( "${TRAIN_XGB_ANGRES_WOBBLE_OFFSETS[@]}" )
+            ;;
+        *)
+            echo "Unknown parameter space '$1'"
+            exit 1
+            ;;
+    esac
+}
+
+irftype_requires_sim_parameter_space()
+{
+    case "$1" in
+        EVNDISP|MVAEVNDISP|EVNDISPCOMPRESS|MAKETABLES|ANALYSETABLES|ANALYSETABLESXGBTRAIN|ANATABLESEFFAREAS|EFFECTIVEAREAS|PRESELECTEFFECTIVEAREAS|TRAINMVANGRES)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
 
 # read cut list file
 read_cutlist()
@@ -329,12 +379,15 @@ for VX in $EPOCH; do
        #############################################
        # XGB Classification Training
        if [[ $IRFTYPE == "TRAINXGBGH" ]]; then
+           set_gh_training_parameter_space
            BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_XGB"
            RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
            ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
            echo "XGB Classification Training"
            echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
-           "$(dirname "$0")/IRF.trainXGBforGammaHadronSeparationTraining.sh" "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           "$(dirname "$0")/IRF.trainXGBforGammaHadronSeparationTraining.sh" \
+               "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}" \
+               "${UUID}" "${TRAIN_XGB_GH_ZENITH_ANGLES[*]}" "${TRAIN_XGB_GH_NSB_LEVELS[*]}" "${TRAIN_XGB_GH_WOBBLE_OFFSETS[*]}"
            continue
        fi
        #############################################
@@ -342,6 +395,7 @@ for VX in $EPOCH; do
        # train per epoch and atmosphere and for each cut
        # (cut as sizesecondmax cut is applied)
        if [[ $IRFTYPE == "TRAINTMVA" ]] || [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
+            set_gh_training_parameter_space
             for C in "${CUTTYPES[@]}"; do
                 echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
                 BDTDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining"
@@ -377,7 +431,8 @@ for VX in $EPOCH; do
                     "$(dirname "$0")/IRF.trainTMVAforGammaHadronSeparation.sh" \
                                  "${TRAINDIR}" \
                                  "$MVADIR"/"$RUNPAR" \
-                                 "${MVADIR}" BDT "${SIMTYPE}" "${VX}" "${ATM}"
+                                 "${MVADIR}" BDT "${SIMTYPE}" "${VX}" "${ATM}" \
+                                 "${UUID}" "${TRAIN_TMVA_GH_ZENITH_ANGLES[*]}" "${TRAIN_TMVA_GH_NSB_LEVELS[*]}" "${TRAIN_TMVA_GH_WOBBLE_OFFSETS[*]}"
                  # Cut optimization
                  elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                      echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
@@ -393,43 +448,35 @@ for VX in $EPOCH; do
        # zenith angle bin dependent analysis
        #################################################
        if [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
-           STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
-           IDS=$(jq -r '.zenith[].id' "$STEREO_PAR")
-           for ZAB in $IDS; do
-               # Explicitly remove 0.0 bin
-               FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0"
-               FIXEDNSB="160 200 350 450"
+           set_angres_training_parameter_space
+           for ZAB in "${TRAIN_XGB_ANGRES_BIN_IDS[@]}"; do
                    "$(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh" \
-                       "$VX" "$ATM" "$ZAB" "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
+                       "$VX" "$ATM" "$ZAB" "${TRAIN_XGB_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_XGB_ANGRES_NSB_LEVELS[*]}" 0 \
                        "$SIMTYPE" "$ANATYPE" "$UUID"
            done
            continue
+       fi
+       if irftype_requires_sim_parameter_space "$IRFTYPE"; then
+           set_sim_parameter_space
+           if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
+               set_angres_training_parameter_space
+               use_parameter_space xgb-angres
+           else
+               use_parameter_space sim
+           fi
+           echo "Zenith angle bins: ${ZENITH_ANGLES}"
+           echo "NSB levels: ${NSB_LEVELS}"
+           echo "Wobble offsets: ${WOBBLE_OFFSETS}"
        fi
     # zenith angle dependent analysis
     for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
-               if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                   FIXEDNSB="150 200 250"
-                   FIXEDWOBBLE="0.25 0.5 0.75 1.00 1.50"
-               elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
-                   FIXEDWOBBLE="0.5"
-                   FIXEDNSB="300 600 900"
-               elif [[ ${SIMTYPE} = "CARE_RedHV_"* ]]; then
-                   FIXEDNSB="300 600 900"
-               elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
-                   FIXEDWOBBLE="0.5"
-                   FIXEDNSB="160 200 300"
-               elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                   FIXEDNSB="160 200 250"
-               fi
-               if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-                   "$(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh" \
-                       "$VX" "$ATM" "$ZA" "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                       "$SIMTYPE" "$ANATYPE" "$UUID"
-               fi
+               set_angres_training_parameter_space
+               "$(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh" \
+                   "$VX" "$ATM" "$ZA" "${TRAIN_MVA_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_MVA_ANGRES_NSB_LEVELS[*]}" 0 \
+                   "$SIMTYPE" "$ANATYPE" "$UUID"
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do

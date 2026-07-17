@@ -17,7 +17,7 @@ if [ $# -lt 7 ]; then
 echo "
 TMVA (BDT) training for gamma/hadron separation
 
-IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA run-parameter file> <output directory> <output file name> <sim type> <epoch> <atmosphere>
+IRF.trainTMVAforGammaHadronSeparation.sh <background file directory> <TMVA run-parameter file> <output directory> <output file name> <sim type> <epoch> <atmosphere> [uuid] [zenith angles] [NSB levels] [wobble offsets]
 
 required parameters:
 
@@ -59,14 +59,17 @@ ATM="$7"
 RECID="0"
 PARTICLE_TYPE="gamma"
 UUID="${8:-$(date +"%y%m%d")-$(uuidgen)}"
+TRAIN_ZENITH_ANGLES="${9:-}"
+TRAIN_NSB_LEVELS="${10:-}"
+TRAIN_WOBBLE_OFFSETS="${11:-}"
 
 echo "Background file directory: $BDIR"
 echo "Run parameters: $RUNPAR"
 echo "Simulation type: $SIMTYPE"
 
-# Fixed list of NSB levels; redHV needs attention
-if [[ ${SIMTYPE} == *"RedHV"* ]]; then
-    echo "Fixed NSB levels not suitable for RedHV training"
+# Training parameter space is defined by IRF.production.sh.
+if [[ ${SIMTYPE} == *"RedHV"* ]] && [[ -z "$TRAIN_NSB_LEVELS" ]]; then
+    echo "Training NSB levels not provided for RedHV training"
     exit 1
 fi
 
@@ -151,8 +154,14 @@ for ZE_EDGE in "${ZEBINARRAY[@]}"; do
 done
 
 #####################################
-# zenith angle bins of MC simulation files
-ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65)
+# zenith/NSB/wobble bins of MC simulation files
+read -r -a ZENITH_ANGLES <<< "$TRAIN_ZENITH_ANGLES"
+read -r -a NOISE_VALUES <<< "$TRAIN_NSB_LEVELS"
+read -r -a WOBBLE_OFFSETS <<< "$TRAIN_WOBBLE_OFFSETS"
+if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#NOISE_VALUES[@]} -eq 0 ]] || [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
+    echo "Error: missing training parameter space from IRF.production.sh"
+    exit 1
+fi
 
 
 ####################################
@@ -215,8 +224,12 @@ do
               do
                   if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                       if (( "${ZENITH_ANGLES[$l]}" != "00" && "${ZENITH_ANGLES[$l]}" != "60" && "${ZENITH_ANGLES[$l]}" != "65" )); then
-                          for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,150,200,250,325,425,550}.mscw.root; do
-                              echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                          for wobble in "${WOBBLE_OFFSETS[@]}"; do
+                              for noise in "${NOISE_VALUES[@]}"; do
+                                  for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_"${wobble}"wob_NOISE"${noise}".mscw.root; do
+                                      echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                                  done
+                              done
                           done
                       fi
                   fi
@@ -226,8 +239,12 @@ do
               do
                   if (( $(echo "${ZEBINARRAY[$j]} <= ${ZENITH_ANGLES[$l]}" | bc ) && $(echo "${ZEBINARRAY[$j+1]} >= ${ZENITH_ANGLES[$l]}" | bc ) ));then
                       if (( "${ZENITH_ANGLES[$l]}" != "00" )); then
-                          for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_0.5wob_NOISE{100,160,200,250,350,450}.mscw.root; do
-                              echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                          for wobble in "${WOBBLE_OFFSETS[@]}"; do
+                              for noise in "${NOISE_VALUES[@]}"; do
+                                  for arg in "$SDIR"/${ZENITH_ANGLES[$l]}deg_"${wobble}"wob_NOISE"${noise}".mscw.root; do
+                                      echo "* SIGNALFILE SIMDIR/${arg##*/}"
+                                  done
+                              done
                           done
                       fi
                   fi
