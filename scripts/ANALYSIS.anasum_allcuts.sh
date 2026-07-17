@@ -73,7 +73,7 @@ do
             "$TMPDIR/${CDIR}" \
             "${C}" \
             ${IGNORETYPE} \
-            ${ANARUNP} \
+            "${ANARUNP}" \
             "$PREDIR" $SKIPIFPROCESSED | tee -a "${TMPLOG}"
     elif [[ $RUNTYPE == "V2DL3" ]]; then
         mkdir -p "$TMPDIR/v2dl3_${C}"
