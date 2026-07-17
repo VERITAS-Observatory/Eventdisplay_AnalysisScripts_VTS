@@ -21,7 +21,7 @@ required parameters:
                             TRAINMVANGRES,
                             TRAINXGBANGRES, ANAXGBANGRES,
                             TRAINXGBGH, ANAXGBGH,
-                            ANALYSETABLES,
+                            ANALYSETABLES, ANALYSETABLESXGBTRAIN
                             PRESELECTEFFECTIVEAREAS, COMBINEPRESELECTEFFECTIVEAREAS,
                             TRAINTMVA, OPTIMIZETMVA,
                             ANATABLESEFFAREAS,
