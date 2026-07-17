@@ -5,6 +5,7 @@
 
 if [[ ${VERITAS_ANALYSIS_TYPE:0:2} == "AP" ]]; then
     CUTS="moderate2tel soft2tel hard2tel hard3tel moderate2telXGB soft2telXGB hard2telXGB hard3telXGB"
+    CUTS="NTel2ModeratePre NTel2ModerateXGBPre"
 else
     CUTS="supersoftNN2tel"
 fi
@@ -61,13 +62,18 @@ do
         if  [[ $RUNTYPE == "PRECUTS" ]]; then
             CDIR=$(echo "$CDIR" | sed -E 's/anasum_(NTel[23])([A-Za-z]+)Pre/\1-\2/')
         fi
+        ANARUNP="$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/ANASUM.runparameter
+        if [[ $C == *"XGB"* ]]; then
+            ANARUNP="$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/ANASUM.XGB.runparameter
+        fi
+
         echo "$CDIR"
         mkdir -p "$TMPDIR/${CDIR}"
         "$(dirname "$0")/ANALYSIS.anasum_parallel_from_runlist.sh" "${RUNL}" \
             "$TMPDIR/${CDIR}" \
             "${C}" \
             ${IGNORETYPE} \
-            "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/ANASUM.runparameter \
+            ${ANARUNP} \
             "$PREDIR" $SKIPIFPROCESSED | tee -a "${TMPLOG}"
     elif [[ $RUNTYPE == "V2DL3" ]]; then
         mkdir -p "$TMPDIR/v2dl3_${C}"
