@@ -105,7 +105,12 @@ read -r -a ZENITH_ANGLES <<< "$TRAIN_ZENITH_ANGLES"
 read -r -a NOISE_VALUES <<< "$TRAIN_NSB_LEVELS"
 read -r -a WOBBLE_OFFSETS <<< "$TRAIN_WOBBLE_OFFSETS"
 if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#NOISE_VALUES[@]} -eq 0 ]] || [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
-    echo "Error: missing training parameter space from IRF.production.sh"
+    mapfile -t ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$RUNPAR")
+    mapfile -t NOISE_VALUES < <(jq -r '.input_noise_values[]' "$RUNPAR")
+    WOBBLE_OFFSETS=( 0.5 )
+fi
+if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#NOISE_VALUES[@]} -eq 0 ]] || [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
+    echo "Error: no valid training parameter space found"
     exit 1
 fi
 

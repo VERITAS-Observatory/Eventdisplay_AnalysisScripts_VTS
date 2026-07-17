@@ -380,6 +380,10 @@ for VX in $EPOCH; do
        # XGB Classification Training
        if [[ $IRFTYPE == "TRAINXGBGH" ]]; then
            set_gh_training_parameter_space
+           if [[ ${#TRAIN_XGB_GH_ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#TRAIN_XGB_GH_NSB_LEVELS[@]} -eq 0 ]]; then
+               echo "Error: failed to read XGB gamma/hadron training parameter space from $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+               exit 1
+           fi
            BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_XGB"
            RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
            ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
@@ -449,6 +453,10 @@ for VX in $EPOCH; do
        #################################################
        if [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
            set_angres_training_parameter_space
+           if [[ ${#TRAIN_XGB_ANGRES_BIN_IDS[@]} -eq 0 ]]; then
+               echo "Error: failed to read XGB angular reconstruction bin IDs from $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+               exit 1
+           fi
            for ZAB in "${TRAIN_XGB_ANGRES_BIN_IDS[@]}"; do
                    "$(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh" \
                        "$VX" "$ATM" "$ZAB" "${TRAIN_XGB_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_XGB_ANGRES_NSB_LEVELS[*]}" 0 \
@@ -461,6 +469,9 @@ for VX in $EPOCH; do
            if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
                set_angres_training_parameter_space
                use_parameter_space xgb-angres
+           elif [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+               set_angres_training_parameter_space
+               use_parameter_space sim
            else
                use_parameter_space sim
            fi
@@ -473,7 +484,6 @@ for VX in $EPOCH; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               set_angres_training_parameter_space
                "$(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh" \
                    "$VX" "$ATM" "$ZA" "${TRAIN_MVA_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_MVA_ANGRES_NSB_LEVELS[*]}" 0 \
                    "$SIMTYPE" "$ANATYPE" "$UUID"

@@ -159,8 +159,16 @@ read -r -a ZENITH_ANGLES <<< "$TRAIN_ZENITH_ANGLES"
 read -r -a NOISE_VALUES <<< "$TRAIN_NSB_LEVELS"
 read -r -a WOBBLE_OFFSETS <<< "$TRAIN_WOBBLE_OFFSETS"
 if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#NOISE_VALUES[@]} -eq 0 ]] || [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
-    echo "Error: missing training parameter space from IRF.production.sh"
-    exit 1
+    ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65 )
+    WOBBLE_OFFSETS=( 0.5 )
+    if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
+        NOISE_VALUES=( 100 150 200 250 325 425 550 )
+    elif [[ ${SIMTYPE} == *"RedHV"* ]]; then
+        echo "Fixed NSB levels not suitable for RedHV training"
+        exit 1
+    else
+        NOISE_VALUES=( 100 160 200 250 350 450 )
+    fi
 fi
 
 
