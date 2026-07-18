@@ -53,13 +53,20 @@ if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
 fi
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${MSCW_FILE}" -runinfo)
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${MSCW_FILE}" updated-runinfo)
 echo "RUNINFO $RUNINFO"
 ZA=$(echo "$RUNINFO" | awk '{print $8}')
 EPOCH=$(echo "$RUNINFO" | awk '{print $1}')
 ATM=$(echo "$RUNINFO" | awk '{print $3}')
+HVSETTINGS=$(echo "$RUNINFO" | awk '{print $4}')
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}"
+if [[ "${HVSETTINGS}" == "obsLowHV" ]]; then
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}_redHV"
+elif [[ "${HVSETTINGS}" == "obsFilter" ]]; then
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}_UV"
+else
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}"
+fi
 if [[ ! -d "${DISPDIR}" ]]; then
     echo "Error finding model directory $DISPDIR"
     exit
