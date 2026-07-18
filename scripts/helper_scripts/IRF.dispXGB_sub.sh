@@ -32,11 +32,28 @@ echo -e "Output files will be written to:\n ${ODIR}"
 # shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
 source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
 evndisp_ml_setup_python_cache "$TEMPDIR" "$(basename "$MSCW_FILE" .root)"
-evndisp_ml_use_env_prefix "$ENV_PREFIX" "$env_name"
+if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
+    evndisp_ml_use_env_prefix "$ENV_PREFIX" "$env_name"
+fi
 
 if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
+fi
+if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
+    APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:${VERITAS_EVNDISP_AUX_DIR} "
+    APPTAINER_MOUNT+=" --bind ${VERITAS_USER_DATA_DIR}:${VERITAS_USER_DATA_DIR} "
+    APPTAINER_MOUNT+=" --bind $(dirname "${MSCW_FILE}"):$(dirname "${MSCW_FILE}") "
+    APPTAINER_MOUNT+=" --bind ${ODIR}:${ODIR} "
+    APPTAINER_MOUNT+=" --bind ${TEMPDIR}:${TEMPDIR}"
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},ODIR=${ODIR},TMPDIR=${TEMPDIR},PYTHONPYCACHEPREFIX=${PYTHONPYCACHEPREFIX}"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    APPTAINER_EXEC=(apptainer exec --no-mount bind-paths --cleanenv)
+    APPTAINER_EXEC+=("${APPTAINER_ENV}")
+    APPTAINER_EXEC+=(${APPTAINER_MOUNT})
+    APPTAINER_EXEC+=("${EVNDISP_APPTAINER}")
 fi
 RUNINFO=$($EVNDISPSYS/bin/printRunParameter ${MSCW_FILE} -runinfo)
 echo "RUNINFO $RUNINFO"
@@ -78,9 +95,24 @@ echo "Output file $OFIL"
 LOGFILE="$OFIL".log
 rm -f "$LOGFILE"
 
-$ML_EXEC --input_file "$MSCW_FILE" \
-    --model_prefix "$DISPDIR" \
-    --max_cores $MAXCORES \
-    --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
+    "${APPTAINER_EXEC[@]}" "$ML_EXEC" \
+        --input_file "$MSCW_FILE" \
+        --model_prefix "$DISPDIR" \
+        --max_cores $MAXCORES \
+        --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+    {
+        echo
+        echo "Apptainer image:"
+        apptainer inspect "$EVNDISP_APPTAINER"
+    } >> "${LOGFILE}" 2>&1
+else
+    $ML_EXEC --input_file "$MSCW_FILE" \
+        --model_prefix "$DISPDIR" \
+        --max_cores $MAXCORES \
+        --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+fi
 
-evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR" "$ENV_PREFIX"
+if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
+    evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR" "$ENV_PREFIX"
+fi
