@@ -59,6 +59,15 @@ rm -f "${LOGDIR}"/x* 2>/dev/null
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.dispXGB_sub"
 HELPER_SCRIPTS_DIR="$(cd "$(dirname "$0")/helper_scripts" && pwd)"
+env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
+
+# shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
+source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
+ENV_PREFIX="$(evndisp_ml_resolve_env_prefix "$env_name")" || {
+    echo "Error: failed to resolve conda environment '$env_name'."
+    exit 1
+}
+echo "Using Eventdisplay-ML conda environment '$env_name' at '$ENV_PREFIX'"
 
 for FILE in $FILES
 do
@@ -71,6 +80,7 @@ do
         -e "s|XGB_TTYPE|$XGB_TYPE|" \
         -e "s|ANALYSISTYPE|$ANALYSIS_TYPE|" \
         -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
+        -e "s|CCONDA_ENV_PREFIX|$ENV_PREFIX|" \
         -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
         -e "s|OODIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 

@@ -10,6 +10,7 @@
 RUN=RRUN
 ODIR=OODIR
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
+ENV_PREFIX="CCONDA_ENV_PREFIX"
 HELPER_SCRIPTS_DIR="HHELPER_SCRIPTS_DIR"
 ENV_SNAPSHOT_DIR="EENV_SNAPSHOT_DIR"
 XGB="XXGB"
@@ -31,7 +32,7 @@ echo -e "Output files will be written to:\n ${ODIR}"
 # shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
 source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
 evndisp_ml_setup_python_cache "$TEMPDIR" "$RUN"
-evndisp_ml_activate_conda "$env_name"
+evndisp_ml_use_env_prefix "$ENV_PREFIX" "$env_name"
 
 # directory schema for preprocessed files
 getNumberedDirectory()
@@ -96,6 +97,4 @@ $ML_EXEC --input_file "$MSCW_FILE" \
     --model_prefix "$DISPDIR" \
     --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
 
-evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR"
-
-conda deactivate
+evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR" "$ENV_PREFIX"
