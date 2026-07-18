@@ -11,7 +11,7 @@ if [ $# -lt 6 ]; then
 echo "
 XGB (BDT) training for gamma/hadron separation
 
-IRF.trainXGBforGammaHadronSeparationTraining.sh <background file directory> <run-parameter file> <output directory> <sim type> <epoch> <atmosphere>
+IRF.trainXGBforGammaHadronSeparationTraining.sh <background file directory> <run-parameter file> <output directory> <sim type> <epoch> <atmosphere> [uuid] [zenith angles] [NSB levels] [wobble offsets]
 
 required parameters:
 
@@ -49,14 +49,17 @@ ATM="$6"
 RECID="0"
 PARTICLE_TYPE="gamma"
 UUID="${7:-$(date +"%y%m%d")-$(uuidgen)}"
+TRAIN_ZENITH_ANGLES="${8:-}"
+TRAIN_NSB_LEVELS="${9:-}"
+TRAIN_WOBBLE_OFFSETS="${10:-}"
 
 echo "Background file directory: $BDIR"
 echo "Run parameters: $RUNPAR"
 echo "Simulation type: $SIMTYPE"
 
-# Fixed list of NSB levels; redHV needs attention
-if [[ ${SIMTYPE} == *"RedHV"* ]]; then
-    echo "Fixed NSB levels not suitable for RedHV training"
+# Training parameter space is defined by IRF.production.sh.
+if [[ ${SIMTYPE} == *"RedHV"* ]] && [[ -z "$TRAIN_NSB_LEVELS" ]]; then
+    echo "Training NSB levels not provided for RedHV training"
     exit 1
 fi
 
@@ -97,9 +100,23 @@ NEZE=$(jq '.zenith_bins_deg | length' "$RUNPAR")
 echo "Number of energy / zenith bins: $NENE $NEZE"
 
 #####################################
-# zenith angle / NSB bins of MC simulation files
-mapfile -t ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$RUNPAR")
-mapfile -t NOISE_VALUES < <(jq -r '.input_noise_values[]' "$RUNPAR")
+# zenith angle / NSB / wobble bins of MC simulation files
+read -r -a ZENITH_ANGLES <<< "$TRAIN_ZENITH_ANGLES"
+read -r -a NOISE_VALUES <<< "$TRAIN_NSB_LEVELS"
+read -r -a WOBBLE_OFFSETS <<< "$TRAIN_WOBBLE_OFFSETS"
+if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]]; then
+    mapfile -t ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$RUNPAR")
+fi
+if [[ ${#NOISE_VALUES[@]} -eq 0 ]]; then
+    mapfile -t NOISE_VALUES < <(jq -r '.input_noise_values[]' "$RUNPAR")
+fi
+if [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
+    WOBBLE_OFFSETS=( 0.5 )
+fi
+if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#NOISE_VALUES[@]} -eq 0 ]] || [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
+    echo "Error: no valid training parameter space found"
+    exit 1
+fi
 
 ####################################
 # Run prefix
@@ -134,8 +151,8 @@ if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
 else
     for z in "${ZENITH_ANGLES[@]}"; do
         for n in "${NOISE_VALUES[@]}"; do
-            for f in "$SDIR"/"${z}"deg_*wob_NOISE"${n}".mscw.root; do
-
+            for wobble in "${WOBBLE_OFFSETS[@]}"; do
+                f="${SDIR}/${z}deg_${wobble}wob_NOISE${n}.mscw.root"
                 [[ -f "$f" ]] && echo "$f" >> "$SIGNALLIST"
             done
         done
