@@ -466,15 +466,10 @@ for VX in $EPOCH; do
        fi
        if irftype_requires_sim_parameter_space "$IRFTYPE"; then
            set_sim_parameter_space
-           if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
+           if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
                set_angres_training_parameter_space
-               use_parameter_space xgb-angres
-           elif [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               set_angres_training_parameter_space
-               use_parameter_space sim
-           else
-               use_parameter_space sim
            fi
+           use_parameter_space sim
            echo "Zenith angle bins: ${ZENITH_ANGLES}"
            echo "NSB levels: ${NSB_LEVELS}"
            echo "Wobble offsets: ${WOBBLE_OFFSETS}"
