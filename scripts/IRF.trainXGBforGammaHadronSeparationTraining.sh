@@ -104,9 +104,13 @@ echo "Number of energy / zenith bins: $NENE $NEZE"
 read -r -a ZENITH_ANGLES <<< "$TRAIN_ZENITH_ANGLES"
 read -r -a NOISE_VALUES <<< "$TRAIN_NSB_LEVELS"
 read -r -a WOBBLE_OFFSETS <<< "$TRAIN_WOBBLE_OFFSETS"
-if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#NOISE_VALUES[@]} -eq 0 ]] || [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
+if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]]; then
     mapfile -t ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$RUNPAR")
+fi
+if [[ ${#NOISE_VALUES[@]} -eq 0 ]]; then
     mapfile -t NOISE_VALUES < <(jq -r '.input_noise_values[]' "$RUNPAR")
+fi
+if [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then
     WOBBLE_OFFSETS=( 0.5 )
 fi
 if [[ ${#ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#NOISE_VALUES[@]} -eq 0 ]] || [[ ${#WOBBLE_OFFSETS[@]} -eq 0 ]]; then

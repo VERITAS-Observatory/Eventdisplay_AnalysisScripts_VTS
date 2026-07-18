@@ -207,7 +207,7 @@ set_sim_parameter_space()
         fi
     elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
         SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
-        if [[ $ATMOS == "62" ]]; then
+        if [[ $ATM == "62" ]]; then
             SIM_ZENITH_ANGLES=( 00 30 50 )
         else
             SIM_ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
@@ -225,23 +225,23 @@ set_sim_parameter_space()
         mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort -u)
         mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
     elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
-        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATM}"
         mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort -u)
         mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort -u)
         SIM_WOBBLE_OFFSETS=( 0.5 )
     elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
-        SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
+        SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATM}"
         mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | sort -u)
         mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}' | sort -u)
         mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}' | sort -u)
     elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
-        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATM}"
         mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort -u)
         ze_first_bin=$(printf '%s\n' "${SIM_ZENITH_ANGLES[@]}" | head -n 1)
         mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
         mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
     elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
-        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATM}"
         mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort -u)
         ze_first_bin=$(printf '%s\n' "${SIM_ZENITH_ANGLES[@]}" | head -n 1)
         mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
@@ -475,9 +475,9 @@ for VX in $EPOCH; do
            else
                use_parameter_space sim
            fi
-           echo "Zenith angle bins: ${ZENITH_ANGLES}"
-           echo "NSB levels: ${NSB_LEVELS}"
-           echo "Wobble offsets: ${WOBBLE_OFFSETS}"
+           echo "Zenith angle bins: ${ZENITH_ANGLES[*]}"
+           echo "NSB levels: ${NSB_LEVELS[*]}"
+           echo "Wobble offsets: ${WOBBLE_OFFSETS[*]}"
        fi
     # zenith angle dependent analysis
     for ZA in ${ZENITH_ANGLES[@]}; do
