@@ -64,14 +64,17 @@ HELPER_SCRIPTS_DIR="$(cd "$(dirname "$0")/helper_scripts" && pwd)"
 TIMETAG=$(date +"%s")
 CREATED_LOGSUBDIRS=" "
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
+ENV_PREFIX=""
 
-# shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
-source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
-ENV_PREFIX="$(evndisp_ml_resolve_env_prefix "$env_name")" || {
-    echo "Error: failed to resolve conda environment '$env_name'."
-    exit 1
-}
-echo "Using Eventdisplay-ML conda environment '$env_name' at '$ENV_PREFIX'"
+if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
+    # shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
+    source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
+    ENV_PREFIX="$(evndisp_ml_resolve_env_prefix "$env_name")" || {
+        echo "Error: failed to resolve conda environment '$env_name'."
+        exit 1
+    }
+    echo "Using Eventdisplay-ML conda environment '$env_name' at '$ENV_PREFIX'"
+fi
 
 for RUNN in $FILES
 do

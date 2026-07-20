@@ -5,6 +5,11 @@ evndisp_ml_find_conda_exe()
 {
     local default_conda="/afs/ifh.de/group/cta/scratch/maierg/software/miniforge3/bin/conda"
 
+    if [[ -n "${EVNDISP_ML_CONDA_EXE:-}" && -x "${EVNDISP_ML_CONDA_EXE}" ]]; then
+        echo "${EVNDISP_ML_CONDA_EXE}"
+        return 0
+    fi
+
     if [[ -n "${CONDA_EXE:-}" && -x "${CONDA_EXE}" ]]; then
         echo "${CONDA_EXE}"
         return 0
@@ -12,11 +17,6 @@ evndisp_ml_find_conda_exe()
 
     if command -v conda > /dev/null 2>&1; then
         command -v conda
-        return 0
-    fi
-
-    if [[ -n "${EVNDISP_ML_CONDA_EXE:-}" && -x "${EVNDISP_ML_CONDA_EXE}" ]]; then
-        echo "${EVNDISP_ML_CONDA_EXE}"
         return 0
     fi
 
