@@ -167,6 +167,9 @@ set_angres_training_parameter_space()
 {
     TRAIN_XGB_ANGRES_ZENITH_ANGLES=()
     TRAIN_XGB_ANGRES_NSB_LEVELS=( 160 200 350 450 )
+    if [[ ${SIMTYPE} == "CARE_RedHV_"* ]]; then
+        TRAIN_XGB_ANGRES_NSB_LEVELS=( 300 450 600 750 )
+    fi
     TRAIN_XGB_ANGRES_WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 )
     TRAIN_XGB_ANGRES_BIN_IDS=()
 

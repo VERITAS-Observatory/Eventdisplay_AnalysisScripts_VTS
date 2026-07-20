@@ -10,6 +10,7 @@
 RUN=RRUN
 ODIR=OODIR
 env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
+ENV_PREFIX="CCONDA_ENV_PREFIX"
 HELPER_SCRIPTS_DIR="HHELPER_SCRIPTS_DIR"
 ENV_SNAPSHOT_DIR="EENV_SNAPSHOT_DIR"
 XGB="XXGB"
@@ -31,7 +32,9 @@ echo -e "Output files will be written to:\n ${ODIR}"
 # shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
 source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
 evndisp_ml_setup_python_cache "$TEMPDIR" "$RUN"
-evndisp_ml_activate_conda "$env_name"
+if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
+    evndisp_ml_use_env_prefix "$ENV_PREFIX" "$env_name"
+fi
 
 # directory schema for preprocessed files
 getNumberedDirectory()
@@ -52,13 +55,37 @@ if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
     exit
 fi
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${MSCW_FILE}" -runinfo)
+if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
+    APPTAINER_MOUNT=(
+        --bind "${VERITAS_EVNDISP_AUX_DIR}:${VERITAS_EVNDISP_AUX_DIR}"
+        --bind "${VERITAS_USER_DATA_DIR}:${VERITAS_USER_DATA_DIR}"
+        --bind "${VERITAS_PREPROCESSED_DATA_DIR}:${VERITAS_PREPROCESSED_DATA_DIR}"
+        --bind "${ODIR}:${ODIR}"
+        --bind "${TEMPDIR}:${TEMPDIR}"
+    )
+    echo "APPTAINER MOUNT: ${APPTAINER_MOUNT[*]}"
+    APPTAINER_ENV_VALUE="VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_PREPROCESSED_DATA_DIR=${VERITAS_PREPROCESSED_DATA_DIR},ODIR=${ODIR},TMPDIR=${TEMPDIR},PYTHONPYCACHEPREFIX=${PYTHONPYCACHEPREFIX}"
+    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv --env ${APPTAINER_ENV_VALUE} ${APPTAINER_MOUNT[*]}}"
+    echo "APPTAINER SYS: $EVNDISPSYS"
+    APPTAINER_EXEC=(apptainer exec --no-mount bind-paths --cleanenv)
+    APPTAINER_EXEC+=(--env "${APPTAINER_ENV_VALUE}")
+    APPTAINER_EXEC+=("${APPTAINER_MOUNT[@]}")
+    APPTAINER_EXEC+=("${EVNDISP_APPTAINER}")
+fi
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${MSCW_FILE}" updated-runinfo)
 echo "RUNINFO $RUNINFO"
 ZA=$(echo "$RUNINFO" | awk '{print $8}')
 EPOCH=$(echo "$RUNINFO" | awk '{print $1}')
 ATM=$(echo "$RUNINFO" | awk '{print $3}')
+HVSETTINGS=$(echo "$RUNINFO" | awk '{print $4}')
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
-DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}"
+if [[ "${HVSETTINGS}" == "obsLowHV" ]]; then
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}_redHV"
+elif [[ "${HVSETTINGS}" == "obsFilter" ]]; then
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}_UV"
+else
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}"
+fi
 if [[ ! -d "${DISPDIR}" ]]; then
     echo "Error finding model directory $DISPDIR"
     exit
@@ -92,10 +119,22 @@ echo "Output file $OFIL"
 LOGFILE="$OFIL".log
 rm -f "$LOGFILE"
 
-$ML_EXEC --input_file "$MSCW_FILE" \
-    --model_prefix "$DISPDIR" \
-    --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
+    "${APPTAINER_EXEC[@]}" "$ML_EXEC" \
+        --input_file "$MSCW_FILE" \
+        --model_prefix "$DISPDIR" \
+        --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+    {
+        echo
+        echo "Apptainer image:"
+        apptainer inspect "$EVNDISP_APPTAINER"
+    } >> "${LOGFILE}" 2>&1
+else
+    $ML_EXEC --input_file "$MSCW_FILE" \
+        --model_prefix "$DISPDIR" \
+        --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+fi
 
-evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR"
-
-conda deactivate
+if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
+    evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR" "$ENV_PREFIX"
+fi
