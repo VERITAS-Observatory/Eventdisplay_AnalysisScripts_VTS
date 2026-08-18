@@ -18,7 +18,7 @@ EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFMINORVERSION)
 
 file_on_disk()
 {
-    ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/${DTYPE}/"
+    ARCHIVEDIR="$VERITAS_DATA_DIR/shared/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/${DTYPE}/"
     TRUN="$1"
     if [[ ${TRUN} -lt 100000 ]]; then
         EDIR="${ARCHIVEDIR}/${TRUN:0:1}/"
