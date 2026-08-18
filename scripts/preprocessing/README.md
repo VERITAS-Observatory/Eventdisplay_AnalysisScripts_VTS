@@ -66,7 +66,8 @@ The command exits `0` when all products are present, `1` for missing or duplicat
 products, and `2` for usage or filesystem errors. If no report directory is given,
 one is created below the production directory. The reference subdirectory defaults
 to `evndisp`. See the report's `summary.tsv` and `missing-*.txt` files for
-machine-readable results.
+machine-readable results. Directory symlinks are followed, so an `evndisp` link to
+another filesystem can be used as the reference.
 
 ### Check if runs read from a run list are processed with evndis/mscw
 

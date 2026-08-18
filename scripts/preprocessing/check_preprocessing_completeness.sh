@@ -38,6 +38,10 @@ if [[ ! -d "$REFERENCE_DIR" || ! -r "$REFERENCE_DIR" || ! -x "$REFERENCE_DIR" ]]
     echo "Error: reference directory '$REFERENCE_DIR' is not a readable directory" >&2
     exit 2
 fi
+REFERENCE_DIR=$(cd "$REFERENCE_DIR" && pwd -P) || {
+    echo "Error: cannot resolve reference directory '$REFERENCE_DIR'" >&2
+    exit 2
+}
 
 if [[ $# -ge 2 ]]; then
     REPORT=$2
@@ -81,7 +85,7 @@ TMP_WORK=$(mktemp -d "${TMPDIR:-/tmp}/check-preprocessing-completeness.XXXXXX") 
     echo "Error: cannot create temporary working directory" >&2
     exit 2
 }
-# shellcheck disable=SC2329  # invoked indirectly by trap
+# shellcheck disable=SC2329,SC2317  # cleanup is invoked indirectly by trap
 cleanup()
 {
     rm -rf "$TMP_WORK"
@@ -100,7 +104,7 @@ BASELINE_DUPLICATES_RUNS="$TMP_WORK/baseline-duplicate-runs.txt"
 : > "$EXPECTED_PATHS"
 
 filesystem_error=0
-if ! find "$REFERENCE_DIR" -type f -name '*.root' -print0 > "$BASELINE_PATHS0"; then
+if ! find -H "$REFERENCE_DIR" -type f -name '*.root' -print0 > "$BASELINE_PATHS0"; then
     echo "Error: reference traversal failed for '$REFERENCE_DIR'" >&2
     filesystem_error=1
 fi
@@ -171,7 +175,7 @@ for index in "${!TARGET_NAMES[@]}"; do
         continue
     fi
 
-    if ! find "$target_dir" -type f -name "${TARGET_GLOBS[$index]}" -print0 > "$target_runs0"; then
+    if ! find -H "$target_dir" -type f -name "${TARGET_GLOBS[$index]}" -print0 > "$target_runs0"; then
         echo "Error: traversal failed for '$target_dir'" >&2
         filesystem_error=1
     fi
