@@ -25,6 +25,11 @@ if [[ ! -d "$1" || ! -r "$1" || ! -x "$1" ]]; then
 fi
 
 ROOT=$(cd "$1" && pwd -P) || exit 2
+REFERENCE_DIR="$ROOT/evndisp"
+if [[ ! -d "$REFERENCE_DIR" || ! -r "$REFERENCE_DIR" || ! -x "$REFERENCE_DIR" ]]; then
+    echo "Error: reference directory '$REFERENCE_DIR' is not a readable directory" >&2
+    exit 2
+fi
 
 if [[ $# -eq 2 ]]; then
     REPORT=$2
@@ -86,16 +91,9 @@ BASELINE_DUPLICATES_RUNS="$TMP_WORK/baseline-duplicate-runs.txt"
 : > "$EXPECTED_RAW"
 : > "$EXPECTED_PATHS"
 
-# Product directories are pruned from this inventory. Otherwise evndisp's
-# <run>.root output could be mistaken for a baseline input.
-PRUNE_ARGS=()
-for target in "${TARGET_NAMES[@]}"; do
-    PRUNE_ARGS+=(-path "$ROOT/$target" -prune -o)
-done
-
 filesystem_error=0
-if ! find "$ROOT" "${PRUNE_ARGS[@]}" -type f -name '*.root' -print0 > "$BASELINE_PATHS0"; then
-    echo "Error: baseline traversal failed for '$ROOT'" >&2
+if ! find "$REFERENCE_DIR" -type f -name '*.root' -print0 > "$BASELINE_PATHS0"; then
+    echo "Error: reference traversal failed for '$REFERENCE_DIR'" >&2
     filesystem_error=1
 fi
 
@@ -216,7 +214,8 @@ and duplicate_runs. Missing and unexpected files contain one run number per line
 Duplicate TSV files contain the run number and every matching pathname. A run is
 present when at least one regular file with the target's exact expected basename
 exists anywhere below its target directory; shard-directory placement is ignored.
-Baseline files are exact numeric <run>.root basenames outside managed target trees.
+Baseline files are exact numeric <run>.root basenames below the evndisp reference
+directory (<production-directory>/evndisp).
 EOF
 
 printf 'Reports: %s\n' "$REPORT"
