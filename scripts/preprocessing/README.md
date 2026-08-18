@@ -51,6 +51,22 @@ Move Eventdisplay data products from all stages into an runs_with_issues directo
 ./check_dl3_number_of_files_per_cut.sh <directory>
 ```
 
+### Check completeness of a large preprocessing production
+
+Compare every numeric `<run>.root` input below an archive root with the standard
+evndisp, mscw, anasum, and DL3 products. The checker inventories each tree once and
+writes compact reports, so it can be used for productions with more than 50,000
+files:
+
+```bash
+./check_preprocessing_completeness.sh <production-directory> [report-directory]
+```
+
+The command exits `0` when all products are present, `1` for missing or duplicate
+products, and `2` for usage or filesystem errors. If no report directory is given,
+one is created below the production directory. See its `summary.tsv` and
+`missing-*.txt` files for machine-readable results.
+
 ### Check if runs read from a run list are processed with evndis/mscw
 
 ```bash
