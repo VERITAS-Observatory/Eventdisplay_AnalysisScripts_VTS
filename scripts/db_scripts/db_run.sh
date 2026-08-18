@@ -51,7 +51,7 @@ get_file_status()
     elif [[ -e ${TFIL} ]]; then
         echo "2"
     else
-        TARF="$(getDBTextFileDirectory "${RRUN}").tar.gz"
+        TARF="$(getDBTextFileDirectory "${TRUN}").tar.gz"
         if [[ -e ${TARF} ]]; then
             FFIL="${RRUN}/$(basename "${TFIL}")"
             CFIL=$(tar -tzf "${TARF}" "${FFIL}" 2>/dev/null)
