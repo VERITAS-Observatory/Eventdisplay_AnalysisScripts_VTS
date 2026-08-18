@@ -119,13 +119,11 @@ get_end_time()
 get_laser_run()
 {
     OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.laserrun"
-    LASERRUN=""
     while IFS="|" read -ra a; do
         if [[ ${a[0]} != "run_id" ]]; then
-            LASERRUN="${LASERRUN} ${a[0]}"
+            printf '%s\n' "${a[0]}"
         fi
     done < "${OFIL}"
-    echo "${LASERRUN}"
 }
 
 get_excluded_telescopes()
