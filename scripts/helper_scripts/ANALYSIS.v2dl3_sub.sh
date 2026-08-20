@@ -112,7 +112,9 @@ do
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    result=$(v2dl3-eventdisplay-query-runparameters "${ANASUMFILE}" "${RUN}")
+    QUERY_ERROR_LOG="${TEMPDIR}/${RUN}.v2dl3-query.stderr.log"
+    : > "${QUERY_ERROR_LOG}"
+    result=$(v2dl3-eventdisplay-query-runparameters "${ANASUMFILE}" "${RUN}" 2>"${QUERY_ERROR_LOG}")
     EPOCH=$(echo "$result" |  awk '{print $2}')
     EFFAREA=$(echo "$result" | awk '{print $5}')
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
@@ -142,6 +144,10 @@ do
             mkdir -p ${ODIR}/${m}${p}
             rm -f ${ODIR}/${m}${p}/"${RUN}".log
 
+            if [[ -s "${QUERY_ERROR_LOG}" ]]; then
+                cat "${QUERY_ERROR_LOG}" >> ${ODIR}/${m}${p}/"${RUN}".log
+            fi
+
             v2dl3-eventdisplay \
                 --${m} \
                 "${V2DL3OPT[@]}" "${V2DL3SELECT[@]}" \
@@ -150,10 +156,11 @@ do
                 --instrument_epoch "${EPOCH}" \
                 --interpolator_name "${INTERPOLATOR}" \
                 --db_fits_file "${DBFITSFILE}" \
-                ${ODIR}/${m}${p}/"${RUN}".fits.gz
+                ${ODIR}/${m}${p}/"${RUN}".fits.gz \
+                2>> ${ODIR}/${m}${p}/"${RUN}".log
 
-            python --version >> ${ODIR}/${m}${p}/"${RUN}".log
-            conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/"${RUN}".log
+            python --version >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
+            conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
             PDIR=$(pwd)
             cd "${PDIR}" || exit
         done
