@@ -2,7 +2,7 @@
 # script to combine anasum files processed in parallel mode
 
 # qsub parameters
-h_cpu=0:59:00; h_vmem=12000M; tmpdir_size=150G
+h_cpu=4:59:00; h_vmem=12000M; tmpdir_size=150G
 
 if [[ $# -lt 3 ]]; then
 # begin help message
@@ -54,6 +54,7 @@ if [[ ! -f "$RUNLIST" ]]; then
     echo "Error, anasum runlist $RUNLIST not found, exiting..."
     exit 1
 fi
+NRUNLIST_LINES=$(wc -l < "$RUNLIST")
 
 # Check that run parameter file exists
 if [[ "$RUNP" == `basename $RUNP` ]]; then
@@ -88,6 +89,10 @@ SUBC=`eval "echo \"$SUBC\""`
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
+fi
+if [[ $SUBC == *condor* && $NRUNLIST_LINES -gt 500 ]]; then
+    h_vmem=32000M
+    echo "Run list has $NRUNLIST_LINES lines; requesting $h_vmem memory for HTCondor"
 fi
 if [[ $SUBC == *qsub* ]]; then
     JOBID=`$SUBC $FSCRIPT.sh`
