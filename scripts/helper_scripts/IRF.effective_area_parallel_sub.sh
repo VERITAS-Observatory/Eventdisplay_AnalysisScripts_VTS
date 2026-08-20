@@ -113,7 +113,7 @@ echo "Filling log file into root file"
 echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
 cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
 $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
-rm -f $OSUBDIR/$EAPARAMS.log
 cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
 chmod -R g+w $OSUBDIR
 chmod g+w $OSUBDIR/$EAPARAMS.root
+rm -f $OSUBDIR/$EAPARAMS.log
