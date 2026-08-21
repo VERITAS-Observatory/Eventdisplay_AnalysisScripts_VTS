@@ -10,7 +10,14 @@
 RUNLIST=RRUNLIST
 ODIR=OODIR
 CUT=CCUT
-V2DL3VERSION="0.8.0"
+# Set to "" to use the unversioned environment v2dl3Eventdisplay.
+# V2DL3VERSION="v0.8.1"
+V2DL3VERSION=""
+if [[ -n "${V2DL3VERSION}" ]]; then
+    CONDA_ENV="v2dl3Eventdisplay-${V2DL3VERSION}"
+else
+    CONDA_ENV="v2dl3Eventdisplay"
+fi
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -41,23 +48,22 @@ check_conda_installation()
         exit
     fi
     env_info=$(conda info --envs)
-    env_name="v2dl3Eventdisplay-${V2DL3VERSION}"
-    if [[ "$env_info" == *"$env_name"* ]]; then
-        echo "Found conda environment '$env_name'"
+    if [[ "$env_info" == *"$CONDA_ENV"* ]]; then
+        echo "Found conda environment '$CONDA_ENV'"
     else
-        echo "Error: the conda environment '$env_name' does not exist."
+        echo "Error: the conda environment '$CONDA_ENV' does not exist."
         echo "exiting..."
         exit
     fi
 }
 
 check_conda_installation
-# shellcheck source=/dev/null
 
-source activate base
-conda activate v2dl3Eventdisplay-${V2DL3VERSION}
-# Install only if not already present (avoid slow per-job reinstall)
-pip show v2dl3-eventdisplay &>/dev/null 2>&1 || pip install -e "${V2DL3SYS%/}-v${V2DL3VERSION}"
+CONDA_BASE=$(conda info --base) || exit 1
+source "${CONDA_BASE}/etc/profile.d/conda.sh" || exit 1
+conda activate "${CONDA_ENV}" || exit 1
+command -v v2dl3-eventdisplay >/dev/null 2>&1 || exit 1
+command -v v2dl3-eventdisplay-query-runparameters >/dev/null 2>&1 || exit 1
 
 V2DL3OPT=(
     --fuzzy_boundary zenith 0.05
@@ -115,8 +121,16 @@ do
     QUERY_ERROR_LOG="${TEMPDIR}/${RUN}.v2dl3-query.stderr.log"
     : > "${QUERY_ERROR_LOG}"
     result=$(v2dl3-eventdisplay-query-runparameters "${ANASUMFILE}" "${RUN}" 2>"${QUERY_ERROR_LOG}")
-    EPOCH=$(echo "$result" |  awk '{print $2}')
-    EFFAREA=$(echo "$result" | awk '{print $5}')
+    EPOCH=$(printf '%s\n' "$result" | awk -F': ' '/^Epoch:/ {print $2; exit}')
+    EFFAREA=$(printf '%s\n' "$result" | awk -F': ' '/^Effective Area:/ {print $2; exit}')
+    if [[ -z "$EPOCH" || -z "$EFFAREA" ]]; then
+        echo "Error: could not extract epoch/effective area for run ${RUN}."
+        cat "${QUERY_ERROR_LOG}"
+        echo "Query output: ${result}"
+        echo "Skipping run ${RUN}"
+        continue
+    fi
+    EVNDISPVERSION=$(echo "${EFFAREA}" | grep -oE 'v[0-9]+' | head -n 1)
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
     DBFITSFILE=$(getNumberedDirectory "$RUN" "$VERITAS_DATA_DIR"/shared/DBFITS)/$RUN.db.fits.gz
     INTERPOLATOR=$(getInterpolator "$EFFAREA")
@@ -129,6 +143,14 @@ do
 
     for m in "point-like" "full-enclosure"
     do
+        if [[ "$m" == "full-enclosure" && \
+              "${EVNDISPVERSION,,}" == *v490* && \
+              ( "${EFFAREA,,}" == *redhv* || \
+                "${EFFAREA,,}" == *uv* ) ]]; then
+            echo "   Skipping full-enclosure conversion for EVNDISPVERSION=${EVNDISPVERSION} and RedHV/UV effective-area file"
+            continue
+        fi
+
         echo "   Converting (${m}, ${V2DL3OPT[*]})"
 
         for p in "" "-all-events"
@@ -160,7 +182,7 @@ do
                 2>> ${ODIR}/${m}${p}/"${RUN}".log
 
             python --version >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
-            conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
+            conda list -n "${CONDA_ENV}" >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
             PDIR=$(pwd)
             cd "${PDIR}" || exit
         done
