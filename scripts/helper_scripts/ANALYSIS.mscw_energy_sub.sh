@@ -123,7 +123,11 @@ inspect_executables()
 
 get_disp_dir()
 {
-    if [ "$HVSETTINGS" == "obsLowHV" ]; then
+    # V5 has no separate redHV XML training.  Some V5 run metadata contains
+    # obsLowHV, but those runs must still use the standard V5 directory.
+    if [ "$EPOCH" == "V5" ]; then
+        DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
+    elif [ "$HVSETTINGS" == "obsLowHV" ]; then
         DISPDIR="DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATMO}_redHV/"
     elif [ "$HVSETTINGS" == "obsFilter" ]; then
         DISPDIR="DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATMO}_UV/"
