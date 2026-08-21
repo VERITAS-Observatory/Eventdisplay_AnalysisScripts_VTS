@@ -7,15 +7,16 @@ set -o pipefail
 usage()
 {
     cat <<'EOF'
-Usage: check_preprocessing_completeness.sh <production-directory> [report-directory] [reference-subdirectory]
+Usage: check_preprocessing_completeness.sh <production-directory> [report-directory] [reference-subdirectory] [run-list-file]
 
 Check every baseline <run>.root file against the standard evndisp, mscw, anasum,
 and DL3 products. Reports are written to the optional report directory. The
-reference subdirectory defaults to 'evndisp'.
+reference subdirectory defaults to 'evndisp'. Runs listed in the optional
+run-list file are excluded from the completeness check.
 EOF
 }
 
-if [[ $# -lt 1 || $# -gt 3 || ${1:-} == "-h" || ${1:-} == "--help" ]]; then
+if [[ $# -lt 1 || $# -gt 4 || ${1:-} == "-h" || ${1:-} == "--help" ]]; then
     usage
     exit 2
 fi
@@ -27,6 +28,7 @@ fi
 
 ROOT=$(cd "$1" && pwd -P) || exit 2
 REFERENCE_SUBDIR=${3:-evndisp}
+EXCLUDE_RUN_LIST=${4:-}
 case "/$REFERENCE_SUBDIR/" in
     //|/*/../*|*/./*|//*)
         echo "Error: reference subdirectory must be a non-empty relative path without '.' or '..' components" >&2
@@ -42,6 +44,11 @@ REFERENCE_DIR=$(cd "$REFERENCE_DIR" && pwd -P) || {
     echo "Error: cannot resolve reference directory '$REFERENCE_DIR'" >&2
     exit 2
 }
+
+if [[ -n "$EXCLUDE_RUN_LIST" && ( ! -f "$EXCLUDE_RUN_LIST" || ! -r "$EXCLUDE_RUN_LIST" ) ]]; then
+    echo "Error: run-list file '$EXCLUDE_RUN_LIST' is not a readable regular file" >&2
+    exit 2
+fi
 
 if [[ $# -ge 2 ]]; then
     REPORT=$2
@@ -100,8 +107,39 @@ EXPECTED_PATHS="$TMP_WORK/expected-paths.tsv"
 BASELINE_PATHS0="$TMP_WORK/baseline-paths.null"
 BASELINE_DUPLICATES="$REPORT/baseline-duplicates.tsv"
 BASELINE_DUPLICATES_RUNS="$TMP_WORK/baseline-duplicate-runs.txt"
+EXCLUDED_RUNS_FILE="$TMP_WORK/excluded-runs.txt"
 : > "$EXPECTED_RAW"
 : > "$EXPECTED_PATHS"
+baseline_file_count=0
+
+declare -A EXCLUDED_RUNS=()
+if [[ -n "$EXCLUDE_RUN_LIST" ]]; then
+    if ! awk '
+        /^[[:space:]]*($|#)/ { next }
+        {
+            run = $0
+            sub(/^[[:space:]]+/, "", run)
+            sub(/[[:space:]]+$/, "", run)
+            if (run !~ /^[0-9]+$/) {
+                invalid = 1
+                next
+            }
+            print run
+        }
+        END { exit invalid }
+    ' "$EXCLUDE_RUN_LIST" | sort -nu > "$EXCLUDED_RUNS_FILE"; then
+        echo "Error: run-list file '$EXCLUDE_RUN_LIST' must contain one numeric run per line" >&2
+        exit 2
+    fi
+    while IFS= read -r run; do
+        [[ -n "$run" ]] && EXCLUDED_RUNS["$run"]=1
+    done < "$EXCLUDED_RUNS_FILE"
+fi
+
+run_is_excluded()
+{
+    [[ -n ${EXCLUDED_RUNS[$1]+yes} ]]
+}
 
 filesystem_error=0
 if ! find -H "$REFERENCE_DIR" -type f -name '*.root' -print0 > "$BASELINE_PATHS0"; then
@@ -112,7 +150,9 @@ fi
 while IFS= read -r -d '' path; do
     name=${path##*/}
     if [[ "$name" =~ ^([0-9]+)\.root$ ]]; then
+        baseline_file_count=$((baseline_file_count + 1))
         run=${BASH_REMATCH[1]}
+        run_is_excluded "$run" && continue
         printf '%s\t%s\n' "$run" "$path" >> "$EXPECTED_PATHS"
         printf '%s\n' "$run" >> "$EXPECTED_RAW"
     fi
@@ -130,7 +170,7 @@ fi
 expected_count=$(wc -l < "$EXPECTED_RUNS" | tr -d '[:space:]')
 baseline_duplicate_count=$(wc -l < "$BASELINE_DUPLICATES_RUNS" | tr -d '[:space:]')
 
-if [[ "$expected_count" -eq 0 ]]; then
+if [[ "$expected_count" -eq 0 && "$baseline_file_count" -eq 0 ]]; then
     echo "Error: no baseline files matching <run>.root found below '$REFERENCE_DIR'" >&2
     exit 2
 fi
@@ -140,6 +180,9 @@ cat > "$SUMMARY" <<'EOF'
 target	status	expected	present	missing	unexpected	duplicate_runs
 EOF
 printf 'Baseline runs: %s\n' "$expected_count"
+if [[ "${#EXCLUDED_RUNS[@]}" -gt 0 ]]; then
+    printf 'Excluded runs: %s\n' "${#EXCLUDED_RUNS[@]}"
+fi
 if [[ "$baseline_duplicate_count" -gt 0 ]]; then
     printf 'Baseline duplicate runs: %s (see %s)\n' "$baseline_duplicate_count" "$BASELINE_DUPLICATES"
 fi
@@ -168,6 +211,11 @@ for index in "${!TARGET_NAMES[@]}"; do
 
     if [[ ! -d "$target_dir" || ! -r "$target_dir" || ! -x "$target_dir" ]]; then
         cp "$EXPECTED_RUNS" "$missing_report"
+        if [[ "$expected_count" -eq 0 ]]; then
+            printf '%s\tok\t0\t0\t0\t0\t0\n' "$target" >> "$SUMMARY"
+            printf '%-42s ok (no expected runs)\n' "$target"
+            continue
+        fi
         printf '%s\tmissing-directory\t%s\t0\t%s\t0\t0\n' \
             "$target" "$expected_count" "$expected_count" >> "$SUMMARY"
         printf '%-42s missing directory\n' "$target"
@@ -184,6 +232,7 @@ for index in "${!TARGET_NAMES[@]}"; do
         name=${path##*/}
         if [[ "$name" =~ ${TARGET_REGEXES[$index]} ]]; then
             run=${BASH_REMATCH[1]}
+            run_is_excluded "$run" && continue
             printf '%s\t%s\n' "$run" "$path" >> "$target_paths"
             printf '%s\n' "$run" >> "$target_runs"
         fi
@@ -221,6 +270,7 @@ done
 cat > "$REPORT/README" <<EOF
 This report was generated by check_preprocessing_completeness.sh.
 Reference directory: $REFERENCE_DIR
+Excluded run-list: ${EXCLUDE_RUN_LIST:-none}
 
 summary.tsv columns are target, status, expected, present, missing, unexpected,
 and duplicate_runs. Missing and unexpected files contain one run number per line.

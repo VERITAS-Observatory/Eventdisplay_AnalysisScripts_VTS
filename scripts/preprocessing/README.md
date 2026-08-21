@@ -59,15 +59,16 @@ anasum, and DL3 products. The checker inventories each tree once and writes comp
 reports, so it can be used for productions with more than 50,000 files:
 
 ```bash
-./check_preprocessing_completeness.sh <production-directory> [report-directory] [reference-subdirectory]
+./check_preprocessing_completeness.sh <production-directory> [report-directory] [reference-subdirectory] [run-list-file]
 ```
 
 The command exits `0` when all products are present, `1` for missing or duplicate
 products, and `2` for usage or filesystem errors. If no report directory is given,
 one is created below the production directory. The reference subdirectory defaults
-to `evndisp`. See the report's `summary.tsv` and `missing-*.txt` files for
-machine-readable results. Directory symlinks are followed, so an `evndisp` link to
-another filesystem can be used as the reference.
+to `evndisp`. Runs listed in the optional run-list file (one numeric run per line)
+are excluded from the check. See the report's `summary.tsv` and `missing-*.txt`
+files for machine-readable results. Directory symlinks are followed, so an
+`evndisp` link to another filesystem can be used as the reference.
 
 ### Check if runs read from a run list are processed with evndis/mscw
 
