@@ -67,8 +67,9 @@ products, and `2` for usage or filesystem errors. If no report directory is give
 one is created below the production directory. The reference subdirectory defaults
 to `evndisp`. Runs listed in the optional run-list file (one numeric run per line)
 are excluded from the check. See the report's `summary.tsv` and `missing-*.txt`
-files for machine-readable results. Directory symlinks are followed, so an
-`evndisp` link to another filesystem can be used as the reference.
+files for machine-readable results. The filtered reference run list is saved as
+`reference-runs.txt` in the report directory. Directory symlinks are followed,
+so an `evndisp` link to another filesystem can be used as the reference.
 
 ### Check if runs read from a run list are processed with evndis/mscw
 
