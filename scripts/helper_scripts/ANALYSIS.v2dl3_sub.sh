@@ -10,7 +10,7 @@
 RUNLIST=RRUNLIST
 ODIR=OODIR
 CUT=CCUT
-V2DL3VERSION="0.8.0"
+V2DL3VERSION="v0.8.1"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -53,9 +53,33 @@ check_conda_installation()
 
 check_conda_installation
 
-source activate base
-conda activate v2dl3Eventdisplay-${V2DL3VERSION}
-pip install -e "${V2DL3SYS%/}-v${V2DL3VERSION}"
+# HTCondor starts a non-interactive shell and does not source the user's
+# interactive shell initialization.  Therefore the conda shell function is
+# not available even when `conda` itself is on PATH.
+CONDA_BASE=$(conda info --base) || {
+    echo "Error: unable to determine the Conda base installation."
+    exit 1
+}
+source "${CONDA_BASE}/etc/profile.d/conda.sh" || {
+    echo "Error: unable to initialize Conda from ${CONDA_BASE}."
+    exit 1
+}
+
+CONDA_ENV="v2dl3Eventdisplay-${V2DL3VERSION}"
+conda activate "${CONDA_ENV}" || {
+    echo "Error: unable to activate Conda environment '${CONDA_ENV}'."
+    exit 1
+}
+
+python -m pip install -e "${V2DL3SYS%/}" || {
+    echo "Error: unable to install V2DL3 from ${V2DL3SYS}."
+    exit 1
+}
+
+command -v v2dl3-eventdisplay || {
+    echo "Error: v2dl3-eventdisplay is not available in Conda environment '${CONDA_ENV}'."
+    exit 1
+}
 
 V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
 # selection for full-gamma files
@@ -109,7 +133,11 @@ do
     result=$(v2dl3-eventdisplay-query-runparameters ${ANASUMFILE} ${RUN})
     EPOCH=$(echo $result |  awk '{print $2}')
     EFFAREA=$(echo $result | awk '{print $5}')
+    # The effective-area filename is the authoritative source for the
+    # EventDisplay generation and HV configuration used for this run.
+    EVNDISPVERSION=$(echo "${EFFAREA}" | grep -oE 'v[0-9]+' | head -n 1)
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
+    echo "   EventDisplay version from effective area: ${EVNDISPVERSION}"
     DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
     INTERPOLATOR=$(getInterpolator $EFFAREA)
     if [[ ! -e ${DBFITSFILE} ]]; then
@@ -121,6 +149,13 @@ do
 
     for m in "point-like" "full-enclosure"
     do
+        if [[ "$m" == "full-enclosure" && \
+              "${EVNDISPVERSION,,}" == *v490* && \
+              "${EFFAREA,,}" == *redhv* ]]; then
+            echo "   Skipping full-enclosure conversion for EVNDISPVERSION=${EVNDISPVERSION} and redHV ANASUM file"
+            continue
+        fi
+
         echo "   Converting (${m}, ${V2DL3OPT})"
 
         for p in "" "-all-events"
