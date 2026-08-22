@@ -48,7 +48,7 @@ check_conda_installation()
         exit
     fi
     env_info=$(conda info --envs)
-    if [[ "$env_info" == *"$CONDA_ENV"* ]]; then
+    if awk '$1 !~ /^#/ {print $1}' <<< "$env_info" | grep -Fxq "$CONDA_ENV"; then
         echo "Found conda environment '$CONDA_ENV'"
     else
         echo "Error: the conda environment '$CONDA_ENV' does not exist."
@@ -149,6 +149,11 @@ do
               ( "${EFFAREA,,}" == *redhv* || \
                 "${EFFAREA,,}" == *uv* ) ]]; then
             echo "   Skipping full-enclosure conversion for EVNDISPVERSION=${EVNDISPVERSION} and RedHV/UV effective-area file"
+            rm -f \
+                "${ODIR}/full-enclosure/${RUN}.fits.gz" \
+                "${ODIR}/full-enclosure/${RUN}.log" \
+                "${ODIR}/full-enclosure-all-events/${RUN}.fits.gz" \
+                "${ODIR}/full-enclosure-all-events/${RUN}.log"
             continue
         fi
 
