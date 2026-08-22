@@ -148,6 +148,11 @@ do
               ( "${EFFAREA,,}" == *redhv* || \
                 "${EFFAREA,,}" == *uv* ) ]]; then
             echo "   Skipping full-enclosure conversion for EVNDISPVERSION=${EVNDISPVERSION} and RedHV/UV effective-area file"
+            rm -f \
+                "${ODIR}/full-enclosure/${RUN}.fits.gz" \
+                "${ODIR}/full-enclosure/${RUN}.log" \
+                "${ODIR}/full-enclosure-all-events/${RUN}.fits.gz" \
+                "${ODIR}/full-enclosure-all-events/${RUN}.log"
             continue
         fi
 
