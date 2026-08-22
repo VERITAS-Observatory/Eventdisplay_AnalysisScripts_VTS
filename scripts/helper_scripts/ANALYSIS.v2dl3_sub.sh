@@ -60,6 +60,7 @@ check_conda_installation()
 check_conda_installation
 
 CONDA_BASE=$(conda info --base) || exit 1
+# shellcheck source=/dev/null
 source "${CONDA_BASE}/etc/profile.d/conda.sh" || exit 1
 conda activate "${CONDA_ENV}" || exit 1
 command -v v2dl3-eventdisplay >/dev/null 2>&1 || exit 1
@@ -164,7 +165,9 @@ do
             echo "EVENTFILTER ${V2DL3SELECT[*]}"
 
             mkdir -p ${ODIR}/${m}${p}
-            rm -f ${ODIR}/${m}${p}/"${RUN}".log
+            RUN_LOG="${ODIR}/${m}${p}/${RUN}.log"
+            EVENTDISPLAY_STDERR_LOG="${TEMPDIR}/${RUN}.${m}${p}.stderr.log"
+            rm -f ${ODIR}/${m}${p}/"${RUN}".log "$EVENTDISPLAY_STDERR_LOG"
 
             if [[ -s "${QUERY_ERROR_LOG}" ]]; then
                 cat "${QUERY_ERROR_LOG}" >> ${ODIR}/${m}${p}/"${RUN}".log
@@ -174,12 +177,15 @@ do
                 --${m} \
                 "${V2DL3OPT[@]}" "${V2DL3SELECT[@]}" \
                 --file_pair "${ANASUMFILE}" "$VERITAS_EVNDISP_AUX_DIR"/EffectiveAreas/"${EFFAREA}" \
-                --logfile ${ODIR}/${m}${p}/"${RUN}".log \
+                --logfile "$RUN_LOG" \
                 --instrument_epoch "${EPOCH}" \
                 --interpolator_name "${INTERPOLATOR}" \
                 --db_fits_file "${DBFITSFILE}" \
                 ${ODIR}/${m}${p}/"${RUN}".fits.gz \
-                2>> ${ODIR}/${m}${p}/"${RUN}".log
+                2> "$EVENTDISPLAY_STDERR_LOG"
+
+            cat "$EVENTDISPLAY_STDERR_LOG" >> "$RUN_LOG"
+            rm -f "$EVENTDISPLAY_STDERR_LOG"
 
             python --version >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
             conda list -n "${CONDA_ENV}" >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
