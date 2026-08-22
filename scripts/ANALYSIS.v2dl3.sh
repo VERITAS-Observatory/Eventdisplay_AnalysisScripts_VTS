@@ -21,7 +21,7 @@ required parameters:
 
     <cut name>              cut name to search pre-processing directories
 
-    [nruns per job]        number of runs per job (default: 100)
+    [nruns per job]        number of runs per job (default: 25)
 
 Expect installation of V2DL3 (https://github.com/VERITAS-Observatory/V2DL3) and
 corresponding conda installation (v2dl3Eventdisplay)
@@ -33,7 +33,7 @@ fi
 RUNLIST=$1
 ODIR=$2
 CUT=$3
-[[ "$4" ]] && SPLITRUN=$4 || SPLITRUN=100
+[[ "$4" ]] && SPLITRUN=$4 || SPLITRUN=25
 
 # Check that run list exists
 if [[ ! -f "$RUNLIST" ]]; then

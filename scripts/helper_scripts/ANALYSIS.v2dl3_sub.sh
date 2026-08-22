@@ -10,7 +10,14 @@
 RUNLIST=RRUNLIST
 ODIR=OODIR
 CUT=CCUT
-V2DL3VERSION="v0.8.1"
+# Set to "" to use the unversioned environment v2dl3Eventdisplay.
+# V2DL3VERSION="v0.8.1"
+V2DL3VERSION=""
+if [[ -n "${V2DL3VERSION}" ]]; then
+    CONDA_ENV="v2dl3Eventdisplay-${V2DL3VERSION}"
+else
+    CONDA_ENV="v2dl3Eventdisplay"
+fi
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -22,8 +29,8 @@ echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 
 # run list
-FILES=`cat "$RUNLIST"`
-NRUNS=`cat "$RUNLIST" | wc -l `
+FILES=$(cat "$RUNLIST")
+NRUNS=$(cat "$RUNLIST" | wc -l )
 echo "total number of runs to analyze: $NRUNS"
 echo
 
@@ -41,11 +48,10 @@ check_conda_installation()
         exit
     fi
     env_info=$(conda info --envs)
-    env_name="v2dl3Eventdisplay-${V2DL3VERSION}"
-    if [[ "$env_info" == *"$env_name"* ]]; then
-        echo "Found conda environment '$env_name'"
+    if [[ "$env_info" == *"$CONDA_ENV"* ]]; then
+        echo "Found conda environment '$CONDA_ENV'"
     else
-        echo "Error: the conda environment '$env_name' does not exist."
+        echo "Error: the conda environment '$CONDA_ENV' does not exist."
         echo "exiting..."
         exit
     fi
@@ -53,41 +59,23 @@ check_conda_installation()
 
 check_conda_installation
 
-# HTCondor starts a non-interactive shell and does not source the user's
-# interactive shell initialization.  Therefore the conda shell function is
-# not available even when `conda` itself is on PATH.
-CONDA_BASE=$(conda info --base) || {
-    echo "Error: unable to determine the Conda base installation."
-    exit 1
-}
-source "${CONDA_BASE}/etc/profile.d/conda.sh" || {
-    echo "Error: unable to initialize Conda from ${CONDA_BASE}."
-    exit 1
-}
+CONDA_BASE=$(conda info --base) || exit 1
+source "${CONDA_BASE}/etc/profile.d/conda.sh" || exit 1
+conda activate "${CONDA_ENV}" || exit 1
+command -v v2dl3-eventdisplay >/dev/null 2>&1 || exit 1
+command -v v2dl3-eventdisplay-query-runparameters >/dev/null 2>&1 || exit 1
 
-CONDA_ENV="v2dl3Eventdisplay-${V2DL3VERSION}"
-conda activate "${CONDA_ENV}" || {
-    echo "Error: unable to activate Conda environment '${CONDA_ENV}'."
-    exit 1
-}
-
-python -m pip install -e "${V2DL3SYS%/}" || {
-    echo "Error: unable to install V2DL3 from ${V2DL3SYS}."
-    exit 1
-}
-
-command -v v2dl3-eventdisplay || {
-    echo "Error: v2dl3-eventdisplay is not available in Conda environment '${CONDA_ENV}'."
-    exit 1
-}
-
-V2DL3OPT="--fuzzy_boundary zenith 0.05 --fuzzy_boundary pedvar 0.5 --save_multiplicity"
+V2DL3OPT=(
+    --fuzzy_boundary zenith 0.05
+    --fuzzy_boundary pedvar 0.5
+    --save_multiplicity
+)
 # selection for full-gamma files
 EVENTFILTER="${TEMPDIR}/tmp_select.yml"
-echo "IsGamma: 1" > $EVENTFILTER
+echo "IsGamma: 1" > "$EVENTFILTER"
 echo "Event filter file: ${EVENTFILTER}"
-ls -l ${EVENTFILTER}
-cat ${EVENTFILTER}
+ls -l "${EVENTFILTER}"
+cat "${EVENTFILTER}"
 
 # directory schema for preprocessed files
 getNumberedDirectory()
@@ -99,7 +87,7 @@ getNumberedDirectory()
     else
         ODIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${ODIR}
+    echo "${ODIR}"
 }
 
 # interpolator; might depend on IRF type
@@ -122,24 +110,30 @@ getInterpolator()
 
 for RUN in $FILES
 do
-    echo $RUN
-    ANASUMFILE="$(getNumberedDirectory $RUN $VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/anasum_${CUT})/${RUN}.anasum.root"
+    echo "$RUN"
+    ANASUMFILE="$(getNumberedDirectory "$RUN" "$VERITAS_PREPROCESSED_DATA_DIR"/"${VERITAS_ANALYSIS_TYPE:0:2}"/anasum_${CUT})/${RUN}.anasum.root"
     if [[ ! -e ${ANASUMFILE} ]]; then
         echo "File ${ANASUMFILE} not found"
         echo "Skipping run $RUN"
         continue
     fi
     echo "   ANASUM file: ${ANASUMFILE}"
-    result=$(v2dl3-eventdisplay-query-runparameters ${ANASUMFILE} ${RUN})
-    EPOCH=$(echo $result |  awk '{print $2}')
-    EFFAREA=$(echo $result | awk '{print $5}')
-    # The effective-area filename is the authoritative source for the
-    # EventDisplay generation and HV configuration used for this run.
+    QUERY_ERROR_LOG="${TEMPDIR}/${RUN}.v2dl3-query.stderr.log"
+    : > "${QUERY_ERROR_LOG}"
+    result=$(v2dl3-eventdisplay-query-runparameters "${ANASUMFILE}" "${RUN}" 2>"${QUERY_ERROR_LOG}")
+    EPOCH=$(printf '%s\n' "$result" | awk -F': ' '/^Epoch:/ {print $2; exit}')
+    EFFAREA=$(printf '%s\n' "$result" | awk -F': ' '/^Effective Area:/ {print $2; exit}')
+    if [[ -z "$EPOCH" || -z "$EFFAREA" ]]; then
+        echo "Error: could not extract epoch/effective area for run ${RUN}."
+        cat "${QUERY_ERROR_LOG}"
+        echo "Query output: ${result}"
+        echo "Skipping run ${RUN}"
+        continue
+    fi
     EVNDISPVERSION=$(echo "${EFFAREA}" | grep -oE 'v[0-9]+' | head -n 1)
     echo "   Effective area file: $EFFAREA Epoch: $EPOCH"
-    echo "   EventDisplay version from effective area: ${EVNDISPVERSION}"
-    DBFITSFILE=$(getNumberedDirectory $RUN $VERITAS_DATA_DIR/shared/DBFITS)/$RUN.db.fits.gz
-    INTERPOLATOR=$(getInterpolator $EFFAREA)
+    DBFITSFILE=$(getNumberedDirectory "$RUN" "$VERITAS_DATA_DIR"/shared/DBFITS)/$RUN.db.fits.gz
+    INTERPOLATOR=$(getInterpolator "$EFFAREA")
     if [[ ! -e ${DBFITSFILE} ]]; then
         echo "DB File ${DBFITSFILE} not found"
         echo "Skipping run $RUN"
@@ -151,40 +145,46 @@ do
     do
         if [[ "$m" == "full-enclosure" && \
               "${EVNDISPVERSION,,}" == *v490* && \
-              "${EFFAREA,,}" == *redhv* ]]; then
-            echo "   Skipping full-enclosure conversion for EVNDISPVERSION=${EVNDISPVERSION} and redHV ANASUM file"
+              ( "${EFFAREA,,}" == *redhv* || \
+                "${EFFAREA,,}" == *uv* ) ]]; then
+            echo "   Skipping full-enclosure conversion for EVNDISPVERSION=${EVNDISPVERSION} and RedHV/UV effective-area file"
             continue
         fi
 
-        echo "   Converting (${m}, ${V2DL3OPT})"
+        echo "   Converting (${m}, ${V2DL3OPT[*]})"
 
         for p in "" "-all-events"
         do
             if [[ "$p" != "-all-events" ]]; then
-                V2DL3SELECT="--evt_filter ${EVENTFILTER}"
-                ls -1 ${EVENTFILTER}
+                V2DL3SELECT=(--evt_filter "${EVENTFILTER}")
+                ls -1 "${EVENTFILTER}"
             else
-                V2DL3SELECT=""
+                V2DL3SELECT=()
             fi
-            echo "EVENTFILTER $V2DL3SELECT"
+            echo "EVENTFILTER ${V2DL3SELECT[*]}"
 
             mkdir -p ${ODIR}/${m}${p}
-            rm -f ${ODIR}/${m}${p}/${RUN}.log
+            rm -f ${ODIR}/${m}${p}/"${RUN}".log
+
+            if [[ -s "${QUERY_ERROR_LOG}" ]]; then
+                cat "${QUERY_ERROR_LOG}" >> ${ODIR}/${m}${p}/"${RUN}".log
+            fi
 
             v2dl3-eventdisplay \
                 --${m} \
-                ${V2DL3OPT} ${V2DL3SELECT} \
-                --file_pair ${ANASUMFILE} $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA} \
-                --logfile ${ODIR}/${m}${p}/${RUN}.log \
-                --instrument_epoch ${EPOCH} \
-                --interpolator_name ${INTERPOLATOR} \
-                --db_fits_file ${DBFITSFILE} \
-                ${ODIR}/${m}${p}/${RUN}.fits.gz
+                "${V2DL3OPT[@]}" "${V2DL3SELECT[@]}" \
+                --file_pair "${ANASUMFILE}" "$VERITAS_EVNDISP_AUX_DIR"/EffectiveAreas/"${EFFAREA}" \
+                --logfile ${ODIR}/${m}${p}/"${RUN}".log \
+                --instrument_epoch "${EPOCH}" \
+                --interpolator_name "${INTERPOLATOR}" \
+                --db_fits_file "${DBFITSFILE}" \
+                ${ODIR}/${m}${p}/"${RUN}".fits.gz \
+                2>> ${ODIR}/${m}${p}/"${RUN}".log
 
-            python --version >> ${ODIR}/${m}${p}/${RUN}.log
-            conda list -n v2dl3Eventdisplay-${V2DL3VERSION} >> ${ODIR}/${m}${p}/${RUN}.log
+            python --version >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
+            conda list -n "${CONDA_ENV}" >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
             PDIR=$(pwd)
-            cd ${PDIR}
+            cd "${PDIR}" || exit
         done
     done
 done

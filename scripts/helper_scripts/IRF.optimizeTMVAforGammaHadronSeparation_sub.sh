@@ -15,6 +15,8 @@ ATM=AATM
 ENBINS=EEBINS
 ZEBINS=ZZBINS
 TMVAPARFILES=TMVARUNPARA
+MINEVENTS=MMINEVENTS
+OBSTIME_MODERATE=OOBSTIMEMODERATE
 
 if [[ -n $TMPDIR ]]; then
     TEMPDIR=$TMPDIR/${CUT}
@@ -26,9 +28,9 @@ mkdir -p $TEMPDIR
 ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
 
 OBSTIME="5."
-MINEVENTS="5."
+MINEVENTS=${MINEVENTS}
 if [[ $CUT == *"Moderate"* ]]; then
-    OBSTIME="3.0"
+    OBSTIME=${OBSTIME_MODERATE}
 elif [[ $CUT == *"Soft"* ]]; then
     OBSTIME="0.2"
 elif [[ $CUT == *"Hard"* ]]; then

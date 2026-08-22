@@ -65,6 +65,14 @@ LOGDIR="$PREDIR/${CUTTYPE}/$DATE/"
 echo -e "Log files will be written to:\n $LOGDIR"
 mkdir -p $LOGDIR
 
+if [[ $IRFVERSION == *"v490"* ]]; then
+    MINEVENTS=10
+    OBSTIME_MODERATE=1
+else
+    MINEVENTS=5
+    OBSTIME_MODERATE=3
+fi
+
 # EffAreaFile
 if [[ $CUTTYPE == *"Moderate"* ]]; then
     EFFFILE=effArea-${IRFVERSION}-auxv01-${SIMTYPE}-Cut-NTel2-PointSource-Moderate-TMVA-Preselection-${VERITAS_ANALYSIS_TYPE/_/-}-${EPOCH}-ATM${ATM}-T1234.root
@@ -130,6 +138,8 @@ sed -e "s|EFFFILE|$EFFFILE|"  \
     -e "s|EEBINS|${NENE}|" \
     -e "s|ZZBINS|${NZEW}|" \
     -e "s|TMVARUNPARA|${RUNPAR}|" \
+    -e "s|MMINEVENTS|${MINEVENTS}|" \
+    -e "s|OOBSTIMEMODERATE|${OBSTIME_MODERATE}|" \
     -e "s|CUTTYPE|${CUTTYPE}|" $SUBSCRIPT.sh > $FSCRIPT.sh
 
 chmod u+x $FSCRIPT.sh
