@@ -53,7 +53,7 @@ get_file_status()
     else
         TARF="$(getDBTextFileDirectory "${TRUN}").tar.gz"
         if [[ -e ${TARF} ]]; then
-            FFIL="${RRUN}/$(basename "${TFIL}")"
+            FFIL="${TRUN}/$(basename "${TFIL}")"
             CFIL=$(tar -tzf "${TARF}" "${FFIL}" 2>/dev/null)
             if [[ "${CFIL}" == "${FFIL}" ]]; then
                 echo "1"
