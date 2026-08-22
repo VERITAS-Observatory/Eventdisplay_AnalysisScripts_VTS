@@ -31,6 +31,24 @@ move_list()
     done
 }
 
+# for xgb products: require the eventdisplay-ml completion message
+if [[ $FTYPE == "xgb" ]]; then
+    xgb_bad_logs=""
+    shopt -s nullglob
+    for F in "$FTYPE"/*.log; do
+        if ! grep -qF "INFO:eventdisplay_ml.models:Total processed events written" "$F"; then
+            xgb_bad_logs+="$F "$'\n'
+        fi
+    done
+    shopt -u nullglob
+
+    if [[ -n $xgb_bad_logs ]]; then
+        file_count=$(echo "$xgb_bad_logs" | wc -w)
+        echo "FOUND $file_count xgb log files without the eventdisplay-ml completion message"
+        move_list error "$xgb_bad_logs"
+    fi
+fi
+
 # for anasum products: require VERITAS_ANALYSIS_TYPE in the last log line
 if [[ $FTYPE == anasum* ]]; then
     anasum_bad_logs=""

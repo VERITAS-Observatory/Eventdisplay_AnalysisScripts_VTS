@@ -51,9 +51,9 @@ get_file_status()
     elif [[ -e ${TFIL} ]]; then
         echo "2"
     else
-        TARF="$(getDBTextFileDirectory "${RRUN}").tar.gz"
+        TARF="$(getDBTextFileDirectory "${TRUN}").tar.gz"
         if [[ -e ${TARF} ]]; then
-            FFIL="${RRUN}/$(basename "${TFIL}")"
+            FFIL="${TRUN}/$(basename "${TFIL}")"
             CFIL=$(tar -tzf "${TARF}" "${FFIL}" 2>/dev/null)
             if [[ "${CFIL}" == "${FFIL}" ]]; then
                 echo "1"
@@ -119,13 +119,11 @@ get_end_time()
 get_laser_run()
 {
     OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.laserrun"
-    LASERRUN=""
     while IFS="|" read -ra a; do
         if [[ ${a[0]} != "run_id" ]]; then
-            LASERRUN="${LASERRUN} ${a[0]}"
+            printf '%s\n' "${a[0]}"
         fi
     done < "${OFIL}"
-    echo "${LASERRUN}"
 }
 
 get_excluded_telescopes()

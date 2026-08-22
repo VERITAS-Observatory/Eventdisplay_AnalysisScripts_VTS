@@ -165,9 +165,21 @@ do
         # Check DQM
         # DQM string
         DQMSTRING=$(tar -axf "${DBTEXTFILE}" "${DQMFILE}" -O)
+        # A zero-sized archive member is possible when no DQM record exists.
+        # Treat it like a missing DQM file instead of trying to parse it.
+        if [[ -z "${DQMSTRING//[[:space:]]/}" ]]; then
+            echo "   RUN $R empty DQM file ${DQMFILE} found (NODQMFILE CUT APPLIED)"
+            echo "${R}" >> runlist_NODQM.dat
+            continue
+        fi
         echo "$DQMSTRING"
         # data category
-        RCAT=$(echo "${DQMSTRING}" | cut -d '|' -f 2 "${RDQM}" | grep -v data_category)
+        RCAT=$(echo "${DQMSTRING}" | cut -d '|' -f 2 | grep -v data_category)
+        if [[ -z "${RCAT//[[:space:]]/}" ]]; then
+            echo "   RUN $R malformed DQM file ${DQMFILE} (no data category; NODQMFILE CUT APPLIED)"
+            echo "${R}" >> runlist_NODQM.dat
+            continue
+        fi
         # (especially early runs do not have a science category)
         if [[ ${RCAT} != "science" ]] \
             && [[ ${RCAT} != "reducedhv" ]] \
@@ -177,7 +189,7 @@ do
             continue
         fi
         # DQM status
-        RSTATUS=$(echo "${DQMSTRING}" | cut -d '|' -f 3 "${RDQM}" | grep -v status)
+        RSTATUS=$(echo "${DQMSTRING}" | cut -d '|' -f 3 | grep -v status)
         if [[ ${RSTATUS} == "do_not_use" ]] || [[ ${RSTATUS} == "NULL" ]]; then
             # early V4 runs without DQM
             if [[ ${RSTATUS} == "do_not_use" ]] || [[ $R -gt 46642 ]]; then
@@ -191,7 +203,7 @@ do
         INFOSTRING=$(tar -axf "${DBTEXTFILE}" "${INFOFILE}" -O)
         echo "$INFOSTRING"
         # usable duration
-        RUSABLE=$(echo "${DQMSTRING}" | cut -d '|' -f 6 "${RDQM}" | grep -v usable_duration)
+        RUSABLE=$(echo "${DQMSTRING}" | cut -d '|' -f 6 | grep -v usable_duration)
         if [[ $RUSABLE != "NULL" ]]; then
             RTUSABLE=$(echo "$RUSABLE" | awk 'NR==1 {split($1, arr, "[:]"); print arr[2]}')
             if [[ $((10#$RTUSABLE)) -lt 2 ]]; then
@@ -204,8 +216,8 @@ do
             continue
         fi
         # data duration frum run info
-        RDATAT1=$(echo "${INFOSTRING}" | cut -d '|' -f 7 "${RDQM}" | grep -v data_start_time)
-        RDATAT2=$(echo "${INFOSTRING}" | cut -d '|' -f 8 "${RDQM}" | grep -v data_end_time)
+        RDATAT1=$(echo "${INFOSTRING}" | cut -d '|' -f 7 | grep -v data_start_time)
+        RDATAT2=$(echo "${INFOSTRING}" | cut -d '|' -f 8 | grep -v data_end_time)
         echo "  RUN $R $RDATAT1 $RDATAT2"
         RDATAT1=$(date -u -d "$RDATAT1" +%s)
         RDATAT2=$(date -u -d "$RDATAT2" +%s)
@@ -216,7 +228,7 @@ do
             continue
         fi
         # time mask
-        RCUTMASK=$(echo "${DQMSTRING}" | cut -d '|' -f 7 "${RDQM}" | grep -v time_cut_mask)
+        RCUTMASK=$(echo "${DQMSTRING}" | cut -d '|' -f 7 | grep -v time_cut_mask)
         if [[ $RCUTMASK != "NULL" ]]; then
             IFS=','
             for TCUT in $RCUTMASK

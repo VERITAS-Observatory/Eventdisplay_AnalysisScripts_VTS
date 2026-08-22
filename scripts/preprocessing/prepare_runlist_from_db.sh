@@ -7,7 +7,7 @@ echo "
 EVNDISP runlist script: generate a simple run list (one run per line)
 with loose quality cuts used for preprocessing.
 
-RUNLIST.preprocessing.sh [start date] [end date]
+./prepare_runlist_from_db [start date] [end date]
 
     [start date]            select all runs on or after this date
                             (default: 2011-01-01, format = YYYY-MM-DD)
@@ -24,7 +24,7 @@ exit
 fi
 
 # Run init script
-bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
+bash "$( cd "$( dirname "$0" )" && pwd )/../helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 [[ "$1" ]] && START_DATE=$1" 00:00:00" || START_DATE="2011-01-01 00:00:00"

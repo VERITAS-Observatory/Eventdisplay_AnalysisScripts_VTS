@@ -76,7 +76,6 @@ fi
 rm -f $OUTPUTLOGFILE
 touch $OUTPUTLOGFILE
 
-
 inspect_executables()
 {
     if [ -n "$EVNDISP_APPTAINER" ]; then

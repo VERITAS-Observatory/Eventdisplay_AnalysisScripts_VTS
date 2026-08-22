@@ -36,6 +36,14 @@ process_sync() {
 
 # ---- Jobs ----
 
+# DBFITS
+echo "Syncing DBFITS"
+process_sync "$IDIR/DBFITS/" "$BDIR/DBFITS/"
+
+# DBTEXT
+echo "Syncing DBTEXT"
+process_sync "$IDIR/DBTEXT/" "$BDIR/DBTEXT/"
+
 # v490.7
 echo "Syncing evndisp v490.7 AP"
 process_sync "$IDIR/processed_data_v490.7/AP/evndisp/" "$BDIR/v490.7/AP/evndisp/"
@@ -51,11 +59,3 @@ echo "Syncing DL3 v491.0"
 process_sync "$IDIR/processed_data_v491.0/AP/" "$BDIR/v491.0/DL3/" "dl3*.tar.gz"
 echo "Syncing mscw v491.0"
 process_sync "$IDIR/processed_data_v491.0/AP/mscw/" "$BDIR/v491.0/AP/mscw/"
-
-# DBFITS
-echo "Syncing DBFITS"
-process_sync "$IDIR/DBFITS" "$BDIR/DBFITS"
-
-# DBTEXT
-echo "Syncing DBTEXT"
-process_sync "$IDIR/DBTEXT" "$BDIR/DBTEXT"

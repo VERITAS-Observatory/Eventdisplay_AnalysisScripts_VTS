@@ -151,7 +151,9 @@ while read -r RUNID RUNDATE ; do
 # You have to do it this way, because using a pipe | calls the command in a
 # subshell, and that prevents variables from being saved within the 'while' loop
 # http://stackoverflow.com/questions/14585045/is-it-possible-to-avoid-pipes-when-reading-from-mysql-in-bash
-done < <("${MYSQL[@]}" -e "USE VERITAS ; SELECT run_id, data_start_time FROM tblRun_Info WHERE $SUB")
+# Use the database start time for runs whose data start time is NULL (for
+# example, aborted runs).
+done < <("${MYSQL[@]}" -e "USE VERITAS ; SELECT run_id, COALESCE(data_start_time, db_start_time) FROM tblRun_Info WHERE $SUB")
 
 if $DELETEFLAG; then
     if (( ${#FILES_TO_DELETE[@]} == 0 )); then
