@@ -11,8 +11,8 @@ fi
 
 export VERITAS_ANALYSIS_TYPE="${1}"
 PROCESS="${2}"
-EVNDISPVERSION="v492.0"
-EVNDISPMINORVERSION="$EVNDISPVERSION"
+EVNDISPVERSION="v490.7"
+EVNDISPMINORVERSION="v490.7.2"
 
 # Test for allowed processing types
 allowed_processing_types=("apptainer" "apptainer-dev" "al9")
@@ -51,16 +51,17 @@ export VERITAS_IRFPRODUCTION_DIR=${GROUPLUSTDIR}/IRFPRODUCTION
 # user data
 export VERITAS_USER_DATA_DIR=${USERLUSTDIR}
 # user log
-export VERITAS_USER_LOG_DIR=${USERAFSDIR}/LOGS/VERITAS
+export VERITAS_USER_LOG_DIR=${USERLUSTDIR}/LOGS/VERITAS
 # EVENTDISPLAY script directory (this directory)
 export EVNDISPSCRIPTS="$(pwd)"
 
 ########################################################################
 # software settings
-export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3/
+# export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3-v0.8.1
+export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/V2DL3
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
-    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPVERSION}.sif"
+    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPMINORVERSION}.sif"
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
     # Alma Linux 9 (al9) processing

@@ -15,6 +15,7 @@ required parameters:
     <sim type>              simulation type
                             (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
                             CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
+                            V6 basic types (>=v491): CARE_202404, CARE_RedHV_Feb2024
 
     <IRF type>              type of instrument response function to produce
                             (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
@@ -383,12 +384,8 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        SIMDIRZA="$SIMDIR"
-                       # if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
-                       #   SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
-                       #    echo "Using curved atmosphere simulations from $SIMDIRZA"
                        if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
-                          echo "Using flat atmosphere simulations from $SIMDIRZA"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            $(dirname "$0")/IRF.evndisp_MC.sh \
