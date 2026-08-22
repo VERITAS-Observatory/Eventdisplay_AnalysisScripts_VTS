@@ -11,8 +11,8 @@ fi
 
 export VERITAS_ANALYSIS_TYPE="${1}"
 PROCESS="${2}"
-EVNDISPVERSION="v491.0"
-EVNDISPMINORVERSION="$EVNDISPVERSION"
+EVNDISPVERSION="v490.7"
+EVNDISPMINORVERSION="v490.7.2"
 
 # Test for allowed processing types
 allowed_processing_types=("apptainer" "apptainer-dev" "al9")
