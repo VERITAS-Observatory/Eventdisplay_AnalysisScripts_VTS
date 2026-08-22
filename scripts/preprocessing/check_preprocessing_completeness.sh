@@ -67,7 +67,7 @@ fi
 
 # Edit these lists when a new standard cut is introduced. NN productions use
 # only the supersoftNN2tel cut; all other productions use the standard cuts.
-if [[ "$ROOT" == *NN* ]]; then
+if [[ "${ROOT##*/}" == "NN" ]]; then
     CUTS=(supersoftNN2tel)
 else
     CUTS=(hard2tel hard3tel moderate2tel soft2tel)
