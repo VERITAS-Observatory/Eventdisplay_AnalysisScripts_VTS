@@ -30,7 +30,7 @@ ROOT=$(cd "$1" && pwd -P) || exit 2
 REFERENCE_SUBDIR=${3:-evndisp}
 EXCLUDE_RUN_LIST=${4:-}
 case "/$REFERENCE_SUBDIR/" in
-    //|/*/../*|*/./*|//*)
+    //|*/../*|*/./*|//*)
         echo "Error: reference subdirectory must be a non-empty relative path without '.' or '..' components" >&2
         exit 2
         ;;
