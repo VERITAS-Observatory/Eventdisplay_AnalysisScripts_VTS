@@ -71,8 +71,10 @@ EWEIGHT=""
 if [[ $IRFVERSION != v490* ]]; then
     # TMVA options
     TMVAOPTIONS="$(grep 'MVAOPTIONS' $TMVAO | awk '{print $3}')"
+    echo "TMVAOPTIONS: $TMVAOPTIONS"
     # quality cuts
     QUALITYCUTS="$(grep 'MVAQUALITYCUTS' $TMVAO | awk '{print $3}')"
+    echo "QUALITYCUTS: $QUALITYCUTS"
 
     $EVNDISPSYS/bin/trainTMVAforAngularReconstruction \
         "${DDIR}/${NLIST}" \
@@ -98,4 +100,4 @@ fi
 cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
 cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/
 # (potentially large training file)
-cp -v ${DDIR}/BDTDisp.root ${ODIR}/
+cp -v ${DDIR}/BDTDisp_${TELTYPE}.root ${ODIR}/
