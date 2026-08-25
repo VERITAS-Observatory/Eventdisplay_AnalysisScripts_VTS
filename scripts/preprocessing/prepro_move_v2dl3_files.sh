@@ -75,7 +75,7 @@ else
     for F in 11 10 9 8 7 6 5 4 3; do
         OFDIR="$ODIR/$DDIR/$F"
         echo "Syncing $OFDIR with ${FTYPE}"
-        for FITS in "$FTYPE"/${F}*.fits.gz; do
+        for FITS in "$FTYPE"/"${F}"*.fits.gz; do
             [[ -f "$FITS" ]] || continue
             move_pair "$FITS" "$OFDIR"
         done
