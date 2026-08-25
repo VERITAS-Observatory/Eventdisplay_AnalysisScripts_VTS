@@ -83,5 +83,8 @@ These are all files staring with `prepro_`:
 
 ```bash
 ./prepro_check_and_move_anasum_files.sh
-./prepro_check_and_move_v2dl3_files.sh
+./prepro_check_and_move_v2dl3_files.sh [batch-size]
 ```
+
+The DL3 mover defaults to batches of 1000 logs; a batch size from 1 to 1000
+can be supplied to process smaller groups.
