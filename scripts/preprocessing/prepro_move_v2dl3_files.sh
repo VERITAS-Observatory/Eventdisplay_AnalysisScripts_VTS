@@ -53,17 +53,65 @@ move_specific_files()
     local FITS
     local NAME
     local F
+    local LOG
+    local GREP_STATUS
+    local -a FILES_11=()
+    local -a FILES_10=()
+    local -a FILES_9=()
+    local -a FILES_8=()
+    local -a FILES_7=()
+    local -a FILES_6=()
+    local -a FILES_5=()
+    local -a FILES_4=()
+    local -a FILES_3=()
 
     for FITS in "$@"; do
         [[ -f "$FITS" ]] || continue
         NAME=${FITS##*/}
         for F in 11 10 9 8 7 6 5 4 3; do
             if [[ $NAME == "${F}"*.fits.gz ]]; then
-                echo "Syncing $ODIR/$DDIR/$F with ${FTYPE}"
-                move_pair "$FITS" "$ODIR/$DDIR/$F"
+                LOG="${FITS%.fits.gz}.log"
+                if [[ ! -f "$LOG" ]]; then
+                    echo "Skipping $FITS: matching log file is missing" >&2
+                    break
+                fi
+
+                if grep -qi -- "Error" "$LOG"; then
+                    echo "Skipping $FITS and $LOG: log contains Error" >&2
+                    break
+                else
+                    GREP_STATUS=$?
+                    if [[ $GREP_STATUS -ne 1 ]]; then
+                        echo "Skipping $FITS and $LOG: unable to inspect log file" >&2
+                        break
+                    fi
+                fi
+
+                # Collect complete pairs first so rsync can transfer one
+                # batch per destination instead of one batch per product.
+                case "$F" in
+                    11) FILES_11+=("$FITS" "$LOG") ;;
+                    10) FILES_10+=("$FITS" "$LOG") ;;
+                    9)  FILES_9+=("$FITS" "$LOG") ;;
+                    8)  FILES_8+=("$FITS" "$LOG") ;;
+                    7)  FILES_7+=("$FITS" "$LOG") ;;
+                    6)  FILES_6+=("$FITS" "$LOG") ;;
+                    5)  FILES_5+=("$FITS" "$LOG") ;;
+                    4)  FILES_4+=("$FITS" "$LOG") ;;
+                    3)  FILES_3+=("$FITS" "$LOG") ;;
+                esac
                 break
             fi
         done
+    done
+
+    for F in 11 10 9 8 7 6 5 4 3; do
+        local -n FILES="FILES_${F}"
+        ((${#FILES[@]} > 0)) || continue
+        OFDIR="$ODIR/$DDIR/$F"
+        mkdir -p "$OFDIR"
+        echo "Syncing $OFDIR with ${FTYPE} (${#FILES[@]} files)"
+        rsync -av --remove-source-files "${FILES[@]}" "$OFDIR"/
     done
 }
 
