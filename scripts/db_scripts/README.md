@@ -37,6 +37,13 @@ with the script:
 
 (new directories need to be deleted by hand after packing)
 
+Before packaging, each run directory receives a `<run>.metadata.json` manifest.
+The manifest records the extraction times, database-server UTC timestamps, file
+sizes and UTC modification times, and SHA-256 checksums for all payload files.
+The manifest itself is included in the tar package and is excluded from its own
+checksum list. Packages created before this metadata support need to be
+re-read/repacked (or migrated separately) to receive a manifest.
+
 To use this in `evndisp`, add a command line parameter `-dbtextdirectory $VERITAS_DATA_DIR/shared/DBTEXT/<run>`. The analysis script `ANALYSIS.evndisp.sh` will automatically use the DBTEXT files if they are present.
 
 ## Old (V4) laser runs without database entries
