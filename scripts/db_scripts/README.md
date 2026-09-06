@@ -66,6 +66,12 @@ files differs byte-for-byte. `changed-runs.txt` is the reprocessing trigger:
 it includes requested observations with a changed payload and observations
 whose referenced laser-run DQM changed. The adjacent
 `changed-runs.packages.txt` lists every tar package actually replaced.
+`changed-runs.not-found.txt` lists refreshed run IDs for which no usable
+original tar package exists, including missing and corrupted/unreadable
+archives. It is written separately so packages requiring recovery cannot be
+silently overlooked.
+`changed-runs.unreadable.txt` lists existing package IDs that are not valid
+gzip/tar archives, such as truncated or zero-filled files.
 Use either list only after the command has completed successfully (exit status
 zero); a nonzero status means that at least one archive could not be checked
 or updated.
