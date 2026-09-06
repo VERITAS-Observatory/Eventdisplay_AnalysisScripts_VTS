@@ -68,7 +68,7 @@ command -v v2dl3-eventdisplay-query-runparameters >/dev/null 2>&1 || exit 1
 
 V2DL3OPT=(
     --fuzzy_boundary zenith 0.05
-    --fuzzy_boundary pedvar 0.5
+    --fuzzy_boundary pedvar 0.75
     --save_multiplicity
 )
 # selection for full-gamma files
