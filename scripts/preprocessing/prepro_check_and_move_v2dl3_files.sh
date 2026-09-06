@@ -15,16 +15,36 @@ BATCH_RESULT=$(mktemp "${TMPDIR:-/tmp}/prepro-v2dl3-batch.XXXXXX") || {
 }
 trap 'rm -f "$BATCH_RESULT"' EXIT
 
-# Move all products belonging to a failed log to the product's error directory.
+# Error directories used for failed products. The specific directories match
+# the v2dl3 messages checked below; other failures continue to use error/.
+ERROR_DIRECTORIES=(error empty_event_list outside_zenith outside_pedvar)
+
+# Move all products belonging to a failed log to the selected error directory.
 move_products_to_error()
 {
     local log_file=$1
+    local error_type=${2:-error}
     local source_dir=${log_file%/*}
     local stem=${log_file##*/}
     local error_dir
+    local existing_error_type
+    local existing_error_dir
+    local product
 
     stem=${stem%.log}
-    error_dir="$source_dir/error"
+
+    # Remove stale copies first so a product cannot remain in both the generic
+    # error directory and a more specific error directory.
+    for existing_error_type in "${ERROR_DIRECTORIES[@]}"; do
+        existing_error_dir="$source_dir/$existing_error_type"
+        [[ -d "$existing_error_dir" ]] || continue
+        for product in "$existing_error_dir/$stem".*; do
+            [[ -f "$product" ]] || continue
+            rm -f "$product"
+        done
+    done
+
+    error_dir="$source_dir/$error_type"
     mkdir -p "$error_dir"
 
     for product in "$source_dir/$stem".*; do
@@ -39,15 +59,17 @@ clean_error_products()
     local log_file=$1
     local source_dir=${log_file%/*}
     local stem=${log_file##*/}
+    local error_type
     local error_dir
-
     stem=${stem%.log}
-    error_dir="$source_dir/error"
-    [[ -d "$error_dir" ]] || return 0
+    for error_type in "${ERROR_DIRECTORIES[@]}"; do
+        error_dir="$source_dir/$error_type"
+        [[ -d "$error_dir" ]] || continue
 
-    for product in "$error_dir/$stem".*; do
-        [[ -f "$product" ]] || continue
-        rm -f "$product"
+        for product in "$error_dir/$stem".*; do
+            [[ -f "$product" ]] || continue
+            rm -f "$product"
+        done
     done
 }
 
@@ -58,7 +80,9 @@ for C in v2dl3_*/; do
     for A in "$C"/*/; do
         A=${A%/}
         PRODUCT=${A##*/}
-        [[ $PRODUCT == "error" ]] && continue
+        case "$PRODUCT" in
+            error|empty_event_list|outside_zenith|outside_pedvar) continue ;;
+        esac
         DDIR=${PRODUCT/full-enclosure/fullenclosure}
         DDIR=${DDIR/point-like/pointlike}
         DDIR=dl3_${DDIR}_${CUT}
@@ -84,6 +108,7 @@ use warnings;
 
 for my $file (@ARGV) {
     my ($has_completion, $has_error, $has_segmentation) = (0, 0, 0);
+    my $error_type = '';
     my $fh;
     if (!open($fh, '<', $file)) {
         print 'unreadable', "\0", $file, "\0";
@@ -94,6 +119,12 @@ for my $file (@ARGV) {
         $has_completion = 1 if index($line, 'INFO:v2dl3: FITS output written to') >= 0;
         $has_error = 1 if lc($line) =~ /error/;
         $has_segmentation = 1 if $line =~ /segmentation/;
+        $error_type = 'empty_event_list'
+            if !$error_type && index($line, 'ERROR:v2dl3: Empty event list') >= 0;
+        $error_type = 'outside_zenith'
+            if !$error_type && index($line, 'ERROR:v2dl3: Coordinate zenith tolerance') >= 0;
+        $error_type = 'outside_pedvar'
+            if !$error_type && index($line, 'ERROR:v2dl3: Coordinate pedvar tolerance') >= 0;
     }
 
     if (!close($fh)) {
@@ -102,6 +133,7 @@ for my $file (@ARGV) {
     }
 
     my $status = (!$has_completion || $has_error || $has_segmentation) ? 'bad' : 'good';
+    $status .= ":$error_type" if $status eq 'bad' && $error_type;
     print $status, "\0", $file, "\0";
 }
 PERL
@@ -113,6 +145,10 @@ PERL
             while IFS= read -r -d '' STATUS && IFS= read -r -d '' LOG; do
                 STEM=${LOG%.log}
                 case "$STATUS" in
+                    bad:empty_event_list|bad:outside_zenith|bad:outside_pedvar)
+                        move_products_to_error "$LOG" "${STATUS#bad:}"
+                        BATCH_BAD=$((BATCH_BAD + 1))
+                        ;;
                     bad|unreadable)
                         move_products_to_error "$LOG"
                         BATCH_BAD=$((BATCH_BAD + 1))
