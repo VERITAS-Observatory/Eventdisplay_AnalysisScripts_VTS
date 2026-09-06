@@ -37,6 +37,7 @@ write_db_metadata()
     local metadata_file="${run_dir}/${run_id}.metadata.json"
     local temporary_file="${metadata_file}.$$"
     local file relative_path checksum_line checksum file_size file_mtime mtime_utc
+    local -a payload_files=()
     local overwrite_json metadata_created_utc
     local first_file=1
 
@@ -52,6 +53,14 @@ write_db_metadata()
     fi
 
     metadata_created_utc=$(date -u +'%Y-%m-%dT%H:%M:%SZ') || return 1
+
+    while IFS= read -r -d '' file
+    do
+        payload_files+=("${file}")
+    done < <(find "${run_dir}" -type f \
+        ! -name "$(basename "${metadata_file}")" \
+        ! -name "$(basename "${temporary_file}")" \
+        -print0 | sort -z)
 
     {
         printf '{\n'
@@ -81,9 +90,9 @@ write_db_metadata()
         printf '  "checksum_scope": "all payload files below; this metadata file is excluded",\n'
         printf '  "files": [\n'
 
-        while IFS= read -r -d '' file
+        for file in "${payload_files[@]}"
         do
-            relative_path="${file#${run_dir}/}"
+            relative_path="${file#"${run_dir}"/}"
             file_size=$(stat -c '%s' -- "${file}") || return 1
             file_mtime=$(stat -c '%Y' -- "${file}") || return 1
             mtime_utc=$(date -u -d "@${file_mtime}" +'%Y-%m-%dT%H:%M:%SZ') || return 1
@@ -101,10 +110,7 @@ write_db_metadata()
             printf '", "sha256": "'
             json_escape "${checksum}"
             printf '"}'
-        done < <(find "${run_dir}" -type f \
-            ! -name "$(basename "${metadata_file}")" \
-            ! -name "$(basename "${temporary_file}")" \
-            -print0 | sort -z)
+        done
 
         printf '\n  ]\n'
         printf '}\n'

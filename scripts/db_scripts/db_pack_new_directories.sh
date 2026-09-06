@@ -5,7 +5,8 @@
 
 DBTEXTDIR="$VERITAS_DATA_DIR/shared/DBTEXT"
 
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091 # The source path is resolved relative to this script.
 source "${SCRIPT_DIR}/db_metadata.sh"
 
 get_run_directory()
