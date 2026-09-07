@@ -37,6 +37,23 @@ curl -u username -T 10.tar.gz \
 
 ## Checking preprocessed files for errors and moving of files
 
+### Check Laser/Flasher runs against DBTEXT
+
+Compare the `Laser/Flasher runs:` line in each numeric evndisp log with the
+corresponding `.laserrun` member of its DBTEXT tar package:
+
+```bash
+./check_laser_run_consistency.sh \
+    "$VERITAS_DATA_DIR/shared/processed_data_v490.7/AP/evndisp" \
+    "$VERITAS_DATA_DIR/shared/DBTEXT" \
+    laser_run_discrepancies.tsv
+```
+
+The report is tab-separated and contains one row per telescope discrepancy.
+The check applies the `excluded_telescopes` bit mask from `.laserrun`: bits 0,
+1, 2, and 3 correspond to T1, T2, T3, and T4. A nonzero exit status means
+that at least one discrepancy or missing/unreadable input was found.
+
 ### Move files for all data products from list of runs
 
 Move Eventdisplay data products from all stages into an runs_with_issues directory.
