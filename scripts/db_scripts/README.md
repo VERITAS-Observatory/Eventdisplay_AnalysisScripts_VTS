@@ -72,9 +72,15 @@ archives. It is written separately so packages requiring recovery cannot be
 silently overlooked.
 `changed-runs.unreadable.txt` lists existing package IDs that are not valid
 gzip/tar archives, such as truncated or zero-filled files.
+The files `changed-runs.runinfo.txt`, `changed-runs.laserrun.txt`,
+`changed-runs.rundqm.txt`, and `changed-runs.target.txt` list the package IDs
+for each changed payload type. A run can occur in more than one of these
+lists; laser dependency IDs are included in the `rundqm` list.
 Use either list only after the command has completed successfully (exit status
 zero); a nonzero status means that at least one archive could not be checked
 or updated.
+Add `--min-run-id 63372` to inspect only refresh entries with run IDs greater
+than or equal to `63372`.
 
 Files are downloaded and saved in individual small files. They should be tar-packaged
 with the script:
