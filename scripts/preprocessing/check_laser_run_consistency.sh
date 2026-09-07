@@ -137,7 +137,7 @@ while IFS= read -r -d '' log_file; do
         elif [[ ${db_candidates} == *' '* ]]; then
             report "${run_id}" "T${telescope_number}" "${log_runs[$((telescope_number - 1))]}" \
                 "${db_candidates}" "multiple_eligible_laser_runs" "${log_file}" "${archive}"
-        elif [[ ${log_runs[$((telescope_number - 1))]} != ${db_candidates} ]]; then
+        elif [[ ${log_runs[$((telescope_number - 1))]} != "${db_candidates}" ]]; then
             report "${run_id}" "T${telescope_number}" "${log_runs[$((telescope_number - 1))]}" \
                 "${db_candidates}" "different_laser_run" "${log_file}" "${archive}"
         fi
