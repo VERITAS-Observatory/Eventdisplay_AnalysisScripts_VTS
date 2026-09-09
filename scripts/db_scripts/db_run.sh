@@ -27,6 +27,15 @@ OVERWRITE="0"
 [[ "$2" ]] && OVERWRITE=$2 || OVERWRITE=0
 NTEL="4"
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091 # The source path is resolved relative to this script.
+source "${SCRIPT_DIR}/db_metadata.sh"
+
+EXTRACTION_START_UTC=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+# A DB server timestamp may be supplied once by a batch driver. Do not open
+# extra MySQL connections per run just to populate metadata.
+DB_SERVER_TIME_START_UTC="${DBTEXT_DB_SERVER_TIME_UTC:-}"
+
 DBDIR="${VERITAS_DATA_DIR%/}/shared/DBTEXT/"
 mkdir -p "${DBDIR}"
 
@@ -308,3 +317,17 @@ read_run_from_DB lidar "${RUN}" "" 1
 read_run_from_DB L3 "${RUN}" "" 1
 read_run_from_DB weather "${RUN}" "" 1
 read_run_from_DB fir "${RUN}" "" 1
+
+EXTRACTION_END_UTC=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+DB_SERVER_TIME_END_UTC="${DBTEXT_DB_SERVER_TIME_UTC:-}"
+
+if [[ -d "${RUND}" ]]; then
+    if ! write_db_metadata "${RUND}" "${RUN}" \
+        "${EXTRACTION_START_UTC}" "${EXTRACTION_END_UTC}" \
+        "${DB_SERVER_TIME_START_UTC}" "${DB_SERVER_TIME_END_UTC}" \
+        "${OVERWRITE}"; then
+        echo "Failed to write metadata for run ${RUN}" >&2
+        exit 1
+    fi
+    echo "metadata file (written): ${RUND}/${RUN}.metadata.json"
+fi
