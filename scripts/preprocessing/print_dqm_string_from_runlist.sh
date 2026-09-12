@@ -44,7 +44,9 @@ anasum_time_cut()
     data=$(echo "$MASK" | sed 's/.*time_cut_mask[^0-9]*//')
     echo "$data" | tr ',' '\n' | while IFS='/' read -r num denom; do
       if [[ -n "$num" && -n "$denom" ]]; then
-          diff=$((denom - num))
+          # Time-cut masks may contain decimal values (for example
+          # 720.0/840.0), which Bash arithmetic cannot evaluate directly.
+          diff=$(awk -v denom="$denom" -v num="$num" 'BEGIN { print denom - num }')
           echo "TIMECUT * $RUN $num $diff 0"
       fi
     done
