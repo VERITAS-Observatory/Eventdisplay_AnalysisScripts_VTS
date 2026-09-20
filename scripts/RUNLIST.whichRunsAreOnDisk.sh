@@ -141,7 +141,7 @@ while read -r RUNID RUNDATE ; do
 				echo "$RUNID"
             elif $CHECKFLAG ; then
                 echo "file not found - date: $YY$MM$DD"
-            elif ! $DELETEFLAG && ! $PRINTPATH ; then
+            elif ! $DELETEFLAG ; then
                 RAWDATASERVER=$(grep "\* VTSRAWDATA" "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/EVNDISP.global.runparameter | awk '{print $3}')
                 echo "[[ ! -f \"$VERITAS_DATA_DIR/data/d$YY$MM$DD/$RUNID.cvbf\" ]] && bbftp -V -S -p 12 -u bbftp -e \"mget /veritas/data/d$YY$MM$DD/$RUNID.cvbf $VERITAS_DATA_DIR/data/d$YY$MM$DD/\" $RAWDATASERVER || echo 'File already exists, skipping download.'"
 			fi

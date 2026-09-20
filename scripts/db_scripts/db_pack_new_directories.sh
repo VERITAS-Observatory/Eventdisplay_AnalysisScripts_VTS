@@ -5,6 +5,10 @@
 
 DBTEXTDIR="$VERITAS_DATA_DIR/shared/DBTEXT"
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091 # The source path is resolved relative to this script.
+source "${SCRIPT_DIR}/db_metadata.sh"
+
 get_run_directory()
 {
     RRUN=${1}
@@ -31,6 +35,15 @@ do
     echo "$RUN" "$TDIR"/"$RUN"
     cd "$TDIR" || exit
 
+    METADATA_FILE="${RUN}/${RUN}.metadata.json"
+    if [[ ! -f "${METADATA_FILE}" ]]; then
+        echo "Metadata file missing for ${RUN}; creating a packaging-time manifest" >&2
+        if ! write_db_metadata "${RUN}" "${RUN}" "" "" "" "" "0"; then
+            echo "Failed to create metadata for ${RUN}; skipping" >&2
+            continue
+        fi
+    fi
+
     ARCHIVE="${RUN}.tar.gz"
     TEMP_ARCHIVE="${ARCHIVE}.$$"
 
@@ -38,6 +51,7 @@ do
     # created successfully and can be read back by tar.
     if tar -czf "$TEMP_ARCHIVE" -- "$RUN" \
         && tar -tzf "$TEMP_ARCHIVE" >/dev/null \
+        && tar -tzf "$TEMP_ARCHIVE" "${METADATA_FILE}" >/dev/null 2>&1 \
         && mv -f -- "$TEMP_ARCHIVE" "$ARCHIVE"; then
         rm -rf -- "$RUN"
     else
