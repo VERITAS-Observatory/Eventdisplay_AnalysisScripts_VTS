@@ -123,12 +123,8 @@ while read -r RUNID RUNDATE ; do
 		# test to see if the file exists
 		#echo "  Does file exist: $TARGFILE"
 		if [ -e $TARGFILE ] ; then # file exists
-			if ! $NOTFLAG ; then # $NOTFLAG is false, and we should print the runnumber
-                if $PRINTPATH ; then
-                    echo "$TARGFILE"
-                else
-                    echo "$RUNID"
-                fi
+			if ! $NOTFLAG && ! $PRINTPATH ; then # $NOTFLAG is false, and we should print the runnumber
+				echo "$RUNID"
 			fi
 		else # file does not exist
 			if $NOTFLAG ; then # $NOTFLAG is true, and we should print the runnumber
