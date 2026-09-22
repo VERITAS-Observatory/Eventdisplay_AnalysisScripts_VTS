@@ -49,6 +49,19 @@ OUTFILE=$3
 OUTFILE=${OUTFILE%%.root}
 [[ "$4" ]] && RUNP=$4 || RUNP="ANASUM.runparameter"
 
+if [[ "$DDIR" == '$VERITAS_DATA_DIR/'* ]]; then
+    DDIR="${VERITAS_DATA_DIR}/${DDIR#\$VERITAS_DATA_DIR/}"
+elif [[ "$DDIR" == 'VERITAS_DATA_DIR/'* ]]; then
+    DDIR="${VERITAS_DATA_DIR}/${DDIR#VERITAS_DATA_DIR/}"
+fi
+
+# Check that input directory exists
+if [[ ! -d "$DDIR" ]]; then
+     echo "Error, input directory not found: $DDIR"
+     exit 1
+fi
+echo "Input data directory " $DDIR
+
 # Check that run list exists
 if [[ ! -f "$RUNLIST" ]]; then
     echo "Error, anasum runlist $RUNLIST not found, exiting..."
