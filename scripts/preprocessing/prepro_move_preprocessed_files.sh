@@ -31,9 +31,14 @@ for F in 11 10 9 8 7 6 5 4 3; do
     OFDIR="$ODIR/$F"
     echo "Syncing $OFDIR with ${FTYPE}"
     mkdir -p "$OFDIR"
-    NFIL=$(find "$FTYPE" -maxdepth 1 -name "${F}*.root" 2>/dev/null | wc -l)
-    if [[ $NFIL -gt 0 ]]; then
-        rsync -av --remove-source-files "${RSYNC_BACKUP_OPTIONS[@]}" "${FTYPE}"/${F}*.root "$OFDIR"/
-        rsync -av --remove-source-files "${RSYNC_BACKUP_OPTIONS[@]}" "${FTYPE}"/${F}*.log "$OFDIR"/
+    ROOT_MATCH=$(find "$FTYPE" -maxdepth 1 -type f -name "${F}*.root" -print -quit 2>/dev/null)
+    if [[ -n "$ROOT_MATCH" ]]; then
+        rsync -a --whole-file --remove-source-files \
+            --human-readable --info=progress2 \
+            "${RSYNC_BACKUP_OPTIONS[@]}" \
+            --include="${F}*.root" \
+            --include="${F}*.log" \
+            --exclude='*' \
+            "$FTYPE/" "$OFDIR/"
     fi
 done

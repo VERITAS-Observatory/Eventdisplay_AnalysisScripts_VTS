@@ -25,10 +25,30 @@ fi
 # find all files with errors in the log file
 move_list()
 {
-    mkdir -p "${FTYPE}"/"${1}"
-    for F in ${2}; do
-        mv -f "${FTYPE}/$(basename "$F" .log)."* "${FTYPE}/${1}/"
-    done
+    local destination=$1
+    local files=$2
+    local include_list
+    local F
+    local status
+
+    [[ -n $files ]] || return 0
+
+    mkdir -p "${FTYPE}/${destination}"
+    include_list=$(mktemp) || return 1
+
+    while IFS= read -r F; do
+        F=${F##*/}
+        printf '%s.*\n' "${F%.log}" >> "$include_list"
+    done <<< "$files"
+
+    # Move all products in a single rsync invocation.
+    rsync -a --remove-source-files \
+        --include-from="$include_list" --exclude='*' \
+        "${FTYPE}/" "${FTYPE}/${destination}/"
+    status=$?
+
+    rm -f "$include_list"
+    return $status
 }
 
 # for xgb products: require the eventdisplay-ml completion message
@@ -37,7 +57,7 @@ if [[ $FTYPE == "xgb" ]]; then
     shopt -s nullglob
     for F in "$FTYPE"/*.log; do
         if ! grep -qF "INFO:eventdisplay_ml.models:Total processed events written" "$F"; then
-            xgb_bad_logs+="$F "$'\n'
+            xgb_bad_logs+="$F"$'\n'
         fi
     done
     shopt -u nullglob
@@ -163,14 +183,18 @@ fi
 
 # for anasum products: require VERITAS_ANALYSIS_TYPE in the last log line
 if [[ $FTYPE == anasum* ]]; then
-    anasum_bad_logs=""
-    shopt -s nullglob
-    for F in "$FTYPE"/*.log; do
-        if ! tail -n 1 "$F" | grep -q "VERITAS_ANALYSIS_TYPE"; then
-            anasum_bad_logs+="$F "$'\n'
-        fi
-    done
-    shopt -u nullglob
+    # Check all logs in one process instead of starting tail and grep for
+    # every file.
+    anasum_bad_logs=$(find "$FTYPE" -maxdepth 1 -type f -name '*.log' -print0 |
+        perl -0ne '
+            my $file = $_;
+            chomp $file;
+            open my $fh, "<", $file or die "Cannot read $file: $!";
+            my $last_line = "";
+            $last_line = $_ while <$fh>;
+            close $fh or die "Cannot close $file: $!";
+            print "$file\n" unless $last_line =~ /VERITAS_ANALYSIS_TYPE/;
+        ')
 
     if [[ -n $anasum_bad_logs ]]; then
         file_count=$(echo "$anasum_bad_logs" | wc -w)
