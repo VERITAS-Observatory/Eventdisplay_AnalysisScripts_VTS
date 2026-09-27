@@ -167,7 +167,10 @@ PERL
             done < "$BATCH_RESULT"
 
             if ((${#VALID_FITS[@]} > 0)); then
-                "${script_dir}/prepro_move_v2dl3_files.sh" "$A" "$DDIR" "${VALID_FITS[@]}"
+                if ! "${script_dir}/prepro_move_v2dl3_files.sh" "$A" "$DDIR" "${VALID_FITS[@]}"; then
+                    echo "Error: failed to move validated DL3 files from $A" >&2
+                    exit 1
+                fi
             fi
 
             echo "Completed batch $((offset / BATCH_SIZE + 1)) in $A: " \
