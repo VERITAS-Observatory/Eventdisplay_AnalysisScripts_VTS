@@ -12,7 +12,9 @@ Usage: check_preprocessing_completeness.sh <production-directory> [report-direct
 Check every baseline <run>.root file against the standard evndisp, mscw, anasum,
 and DL3 products. Reports are written to the optional report directory. The
 reference subdirectory defaults to 'evndisp'. Runs listed in the optional
-run-list file are excluded from the completeness check.
+run-list file are excluded from the completeness check. Each line may contain
+either a numeric run ID or a numeric run ID followed by a description, for
+example '<run> - reason'.
 EOF
 }
 
@@ -122,18 +124,19 @@ if [[ -n "$EXCLUDE_RUN_LIST" ]]; then
     if ! awk '
         /^[[:space:]]*($|#)/ { next }
         {
-            run = $0
-            sub(/^[[:space:]]+/, "", run)
-            sub(/[[:space:]]+$/, "", run)
-            if (run !~ /^[0-9]+$/) {
+            line = $0
+            if (line !~ /^[[:space:]]*[0-9]+([[:space:]]+-([[:space:]]+.*)?)?[[:space:]]*$/) {
                 invalid = 1
                 next
             }
+            run = line
+            sub(/^[[:space:]]*/, "", run)
+            sub(/[[:space:]].*$/, "", run)
             print run
         }
         END { exit invalid }
     ' "$EXCLUDE_RUN_LIST" | sort -nu > "$EXCLUDED_RUNS_FILE"; then
-        echo "Error: run-list file '$EXCLUDE_RUN_LIST' must contain one numeric run per line" >&2
+        echo "Error: run-list file '$EXCLUDE_RUN_LIST' must contain numeric runs, optionally followed by ' - description'" >&2
         exit 2
     fi
     while IFS= read -r run; do
