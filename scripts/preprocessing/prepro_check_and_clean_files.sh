@@ -17,7 +17,14 @@ echo "Searching for errors for data type $FTYPE"
 
 # simplified search for mscw
 if [[ $FTYPE == "mscw" ]]; then
+    mkdir -p ./mscw/error
     grep -i error ./mscw/*.log | grep -Ev 'BDTDispError|BDT disp|weighting'
+    mkdir -p ./mscw/error/
+
+    grep -lP "total number of events in output tree:\s*0" ./mscw/*.mscw.log | while read -r log; do
+      prefix="${log%.mscw.log}"
+      mv "${prefix}".mscw.* ./mscw/error/
+    done
     echo "Finalized error search for mscw"
     exit
 fi
