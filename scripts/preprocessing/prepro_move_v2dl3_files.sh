@@ -111,7 +111,7 @@ move_specific_files()
         OFDIR="$ODIR/$DDIR/$F"
         mkdir -p "$OFDIR"
         echo "Syncing $OFDIR with ${FTYPE} (${#FILES[@]} files)"
-        rsync -av --remove-source-files "${FILES[@]}" "$OFDIR"/
+        rsync -av --remove-source-files "${FILES[@]}" "$OFDIR"/ || return
     done
 }
 
