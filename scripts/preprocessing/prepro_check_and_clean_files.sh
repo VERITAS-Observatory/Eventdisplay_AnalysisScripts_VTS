@@ -15,20 +15,6 @@ fi
 FTYPE="$1"
 echo "Searching for errors for data type $FTYPE"
 
-# simplified search for mscw
-if [[ $FTYPE == "mscw" ]]; then
-    mkdir -p ./mscw/error
-    grep -i error ./mscw/*.log | grep -Ev 'BDTDispError|BDT disp|weighting'
-    mkdir -p ./mscw/error/
-
-    grep -lP "total number of events in output tree:\s*0" ./mscw/*.mscw.log | while read -r log; do
-      prefix="${log%.mscw.log}"
-      mv "${prefix}".mscw.* ./mscw/error/
-    done
-    echo "Finalized error search for mscw"
-    exit
-fi
-
 # find all files with errors in the log file
 move_list()
 {
@@ -188,11 +174,11 @@ if [[ $FTYPE == "v2dl3" ]]; then
     exit
 fi
 
-# for anasum products: require VERITAS_ANALYSIS_TYPE in the last log line
-if [[ $FTYPE == anasum* ]]; then
+# for anasum and mscw products: require VERITAS_ANALYSIS_TYPE in the last log line
+if [[ $FTYPE == anasum* || $FTYPE == "mscw" ]]; then
     # Check all logs in one process instead of starting tail and grep for
     # every file.
-    anasum_bad_logs=$(find "$FTYPE" -maxdepth 1 -type f -name '*.log' -print0 |
+    analysis_type_bad_logs=$(find "$FTYPE" -maxdepth 1 -type f -name '*.log' -print0 |
         perl -0ne '
             my $file = $_;
             chomp $file;
@@ -203,11 +189,24 @@ if [[ $FTYPE == anasum* ]]; then
             print "$file\n" unless $last_line =~ /VERITAS_ANALYSIS_TYPE/;
         ')
 
-    if [[ -n $anasum_bad_logs ]]; then
-        file_count=$(echo "$anasum_bad_logs" | wc -w)
-        echo "FOUND $file_count anasum log files without VERITAS_ANALYSIS_TYPE in the last line"
-        move_list error "$anasum_bad_logs"
+    if [[ -n $analysis_type_bad_logs ]]; then
+        file_count=$(echo "$analysis_type_bad_logs" | wc -w)
+        echo "FOUND $file_count $FTYPE log files without VERITAS_ANALYSIS_TYPE in the last line"
+        move_list error "$analysis_type_bad_logs"
     fi
+fi
+
+# simplified search for mscw
+if [[ $FTYPE == "mscw" ]]; then
+    mkdir -p ./mscw/error
+    grep -i error ./mscw/*.log | grep -Ev 'BDTDispError|BDT disp|weighting'
+
+    grep -lP "total number of events in output tree:\s*0" ./mscw/*.mscw.log | while read -r log; do
+      prefix="${log%.mscw.log}"
+      mv "${prefix}".mscw.* ./mscw/error/
+    done
+    echo "Finalized error search for mscw"
+    exit
 fi
 
 # find all runs with errors and move them
