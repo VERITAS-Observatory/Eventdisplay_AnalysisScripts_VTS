@@ -399,7 +399,7 @@ def main() -> int:
             failures.append(str(error))
             print(f"ERROR {run_id}: {error}", file=sys.stderr)
 
-    changed_laser_dependencies = changed_packages - set(requested)
+    changed_laser_dependencies = changed_by_file["rundqm"]
     for run_id, refresh_dir in requested.items():
         if laser_dependencies(refresh_dir, run_id) & changed_laser_dependencies:
             changed_requested.add(run_id)
