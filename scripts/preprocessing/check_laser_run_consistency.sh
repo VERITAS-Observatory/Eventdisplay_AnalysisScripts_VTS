@@ -110,11 +110,13 @@ while IFS= read -r -d '' log_file; do
     fi
 
     db_runs_for_telescope=()
+    malformed_laserrun=0
     while IFS='|' read -r laser_id excluded_telescopes _config_mask; do
         [[ ${laser_id} == "run_id" || -z ${laser_id} ]] && continue
         if [[ ! ${laser_id} =~ ^[0-9]+$ || ! ${excluded_telescopes} =~ ^[0-9]+$ ]]; then
             report "${run_id}" "-" "-" "-" "malformed_laserrun_row" "${log_file}" "${archive}"
             db_runs_for_telescope=()
+            malformed_laserrun=1
             break
         fi
         for telescope_number in 1 2 3 4; do
@@ -125,7 +127,7 @@ while IFS= read -r -d '' log_file; do
         done
     done <<< "${laserrun}"
 
-    if [[ ${#db_runs_for_telescope[@]} -eq 0 ]]; then
+    if (( malformed_laserrun )); then
         continue
     fi
     for telescope_number in 1 2 3 4; do
