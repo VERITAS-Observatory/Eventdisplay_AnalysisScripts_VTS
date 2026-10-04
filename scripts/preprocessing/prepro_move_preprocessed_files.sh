@@ -27,18 +27,17 @@ if [[ $FTYPE == "xgb" ]]; then
     ODIR="$VERITAS_DATA_DIR/shared/processed_data_${VERSION}/${ANATYPE}/mscw"
 fi
 
-for F in 11 10 9 8 7 6 5 4 3; do
+mapfile -t PREFIXES < <(find "$FTYPE" -maxdepth 1 -type f -name '*.root' -printf '%f\n' |
+    awk -F. '$1 ~ /^[0-9]+$/ && length($1) >= 5 {print substr($1,1,length($1)-4)}' | sort -nu)
+for F in "${PREFIXES[@]}"; do
     OFDIR="$ODIR/$F"
     echo "Syncing $OFDIR with ${FTYPE}"
     mkdir -p "$OFDIR"
-    ROOT_MATCH=$(find "$FTYPE" -maxdepth 1 -type f -name "${F}*.root" -print -quit 2>/dev/null)
-    if [[ -n "$ROOT_MATCH" ]]; then
-        rsync -a --whole-file --remove-source-files \
-            --human-readable --info=progress2 \
-            "${RSYNC_BACKUP_OPTIONS[@]}" \
-            --include="${F}*.root" \
-            --include="${F}*.log" \
-            --exclude='*' \
-            "$FTYPE/" "$OFDIR/"
-    fi
+    mapfile -t FILES < <(find "$FTYPE" -maxdepth 1 -type f \( -name '*.root' -o -name '*.log' \) -printf '%f\n' |
+        awk -F. -v prefix="$F" '$1 ~ /^[0-9]+$/ && substr($1,1,length($1)-4) == prefix')
+    ((${#FILES[@]})) || continue
+    printf '%s\n' "${FILES[@]}" | rsync -a --whole-file --remove-source-files \
+        --human-readable --info=progress2 "${RSYNC_BACKUP_OPTIONS[@]}" \
+        --files-from=- "$FTYPE/" "$OFDIR/" || exit 1
+
 done
