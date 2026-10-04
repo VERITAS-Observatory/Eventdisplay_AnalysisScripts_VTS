@@ -17,11 +17,8 @@ SUMW=SUMWINDOW
 LMULT=LLLOWGAIN
 
 # temporary (scratch) directory
-if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR/$RUN
-else
-    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
-fi
+TEMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/make_DST_sub-XXXXXX") || exit 1
+trap 'rm -rf -- "$TEMPDIR"' EXIT
 echo "Temporary directory: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 

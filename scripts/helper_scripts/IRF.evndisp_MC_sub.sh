@@ -61,11 +61,8 @@ echo "Runnumber $RUNNUM"
 # fi
 
 # temporary directory
-if [[ -n "$TMPDIR" ]]; then
-    DDIR="$TMPDIR/evn_${ZA}_${NOISE}_${WOG}"
-else
-    DDIR="/tmp/evn_${ZA}_${NOISE}_${WOG}"
-fi
+DDIR=$(mktemp -d "${TMPDIR:-/tmp}/evndisp_MC_sub-XXXXXX") || exit 1
+trap 'rm -rf -- "$DDIR"' EXIT
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 

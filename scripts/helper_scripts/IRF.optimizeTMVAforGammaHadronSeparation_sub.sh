@@ -21,11 +21,8 @@ ENBINS=EEBINS
 ZEBINS=ZZBINS
 TMVAPARFILES=TMVARUNPARA
 
-if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR/${CUT}
-else
-    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/${CUT}/"
-fi
+TEMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/optimizeTMVAforGammaHadronSeparation_sub-XXXXXX") || exit 1
+trap 'rm -rf -- "$TEMPDIR"' EXIT
 echo "Temporary directory: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 ls -1 ${PREDIR}/${CUT}/*.anasum.root > "${TEMPDIR}"/anasum.list

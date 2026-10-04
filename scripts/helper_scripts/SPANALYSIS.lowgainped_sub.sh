@@ -18,11 +18,8 @@ CALIBRATIONSUMFIRST=CALIBFIRST
 CALIBRATIONSUMWINDOW=CALIBSUMWINDOW
 
 # temporary (scratch) directory
-if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR/$RUN
-else
-    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
-fi
+TEMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/lowgainped_sub-XXXXXX") || exit 1
+trap 'rm -rf -- "$TEMPDIR"' EXIT
 echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 

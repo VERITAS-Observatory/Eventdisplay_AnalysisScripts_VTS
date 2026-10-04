@@ -25,11 +25,8 @@ XGBGAMMAHADRONFILESUFFIX="GHXGB"
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
 # temporary directory
-if [[ -n "$TMPDIR" ]]; then
-    DDIR="$TMPDIR/EFFAREA/"
-else
-    DDIR="/tmp/EFFAREA"
-fi
+DDIR=$(mktemp -d "${TMPDIR:-/tmp}/effective_area_parallel_sub-XXXXXX") || exit 1
+trap 'rm -rf -- "$DDIR"' EXIT
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 
