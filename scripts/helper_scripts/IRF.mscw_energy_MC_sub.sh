@@ -215,18 +215,21 @@ echo "Effective area generation (cut list: $EFFAREACUTLIST)"
 # read cut list file
 read_cutlist()
 {
-    CUTFILE="${1}"
-    if [[ $CUTFILE == "" ]] || [ ! -f "$CUTFILE" ]; then
-        echo "Error, cuts list file not found, exiting..." >&2
-        echo "$CUTFILE"
-        exit 1
+    local cutfile="$1" cut
+    if [[ ! -f "$cutfile" ]]; then
+        echo "Error: cut list not found: $cutfile" >&2
+        return 1
     fi
-    CUTLISTFROMFILE=$(cat "$CUTFILE")
-    CUTLIST=""
-    for CUT in "${CUTLISTFROMFILE[@]}"; do
-        CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
-    done
-    echo "$CUTLIST"
+    CUTLIST=()
+    while IFS= read -r cut || [[ -n "$cut" ]]; do
+        cut="${cut%$'\r'}"
+        [[ -z "$cut" || "$cut" == \#* ]] && continue
+        CUTLIST+=("ANASUM.GammaHadron-Cut-${cut}.dat")
+    done < "$cutfile"
+    if (( ${#CUTLIST[@]} == 0 )); then
+        echo "Error: empty cut list: $cutfile" >&2
+        return 1
+    fi
 }
 
 # Required for DISP XGB
@@ -304,7 +307,7 @@ run_xgb()
     echo "Finished calculated XGB"
 }
 
-CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
+read_cutlist "$EFFAREACUTLIST" || exit 1
 
 # loop over 4 and 3-telescope combinations
 for ID in 15 14 13 11 7; do

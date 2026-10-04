@@ -300,18 +300,21 @@ irftype_requires_sim_parameter_space()
 # read cut list file
 read_cutlist()
 {
-    CUTFILE="${1}"
-    if [[ $CUTFILE == "" ]] || [ ! -f "$CUTFILE" ]; then
-        echo "Error, cuts list file not found, exiting..." >&2
-        echo "$CUTFILE"
-        exit 1
+    local cutfile="$1" cut
+    if [[ ! -f "$cutfile" ]]; then
+        echo "Error: cut list not found: $cutfile" >&2
+        return 1
     fi
-    CUTLISTFROMFILE=$(cat "$CUTFILE")
-    CUTLIST=""
-    for CUT in "${CUTLISTFROMFILE[@]}"; do
-        CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
-    done
-    echo "${CUTLIST# }"
+    CUTLIST=()
+    while IFS= read -r cut || [[ -n "$cut" ]]; do
+        cut="${cut%$'\r'}"
+        [[ -z "$cut" || "$cut" == \#* ]] && continue
+        CUTLIST+=("ANASUM.GammaHadron-Cut-${cut}.dat")
+    done < "$cutfile"
+    if (( ${#CUTLIST[@]} == 0 )); then
+        echo "Error: empty cut list: $cutfile" >&2
+        return 1
+    fi
 }
 
 # Cut types are used for BDT training and optimisation
@@ -350,8 +353,8 @@ for VX in $EPOCH; do
        ######################
        # combine effective areas
        if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]] || [[ $IRFTYPE == "COMBINEPRESELECTEFFECTIVEAREAS" ]]; then
-            CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-            echo "CUTLIST: $CUTLIST"
+            read_cutlist "$CUTSLISTFILE" || exit 1
+            echo "CUTLIST: ${CUTLIST[*]}"
             for ID in $RECID; do
                 for CUTS in "${CUTLIST[@]}"; do
                     echo "combine effective areas $CUTS"
@@ -544,8 +547,8 @@ elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN"
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
-                        CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-                        echo "CUTLIST: $CUTLIST"
+                        read_cutlist "$CUTSLISTFILE" || exit 1
+                        echo "CUTLIST: ${CUTLIST[*]}"
                         for ID in ${RECID}; do
                             for CUTS in "${CUTLIST[@]}"; do
                                echo "calculate effective areas $CUTS (ID $ID)"

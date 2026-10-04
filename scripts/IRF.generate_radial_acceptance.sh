@@ -79,7 +79,13 @@ if [[ ! -f "$CUTLISTFILE" ]]; then
     echo "$CUTLISTFILE"
     exit 1
 fi
-CUTLIST=$(IFS=$'\r\n'; cat "$CUTLISTFILE")
+CUTLIST=()
+while IFS= read -r cut || [[ -n "$cut" ]]; do
+    cut="${cut%$'\r'}"
+    [[ -z "$cut" || "$cut" == \#* ]] && continue
+    CUTLIST+=("$cut")
+done < "$CUTLISTFILE"
+(( ${#CUTLIST[@]} > 0 )) || { echo "Error: empty cut list" >&2; exit 1; }
 
 # run scripts and logs are written into this directory
 DATE=$(date +"%y%m%d")
