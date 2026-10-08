@@ -2,36 +2,33 @@
 set -euo pipefail
 
 BDIR="/pnfs/ifh.de/acs/veritas/diskonly/processed_data"
-IDIR="$VERITAS_DATA_DIR/shared/"
+: "${VERITAS_DATA_DIR:?VERITAS_DATA_DIR must be set and non-empty}"
+IDIR="${VERITAS_DATA_DIR%/}/shared"
 
 process_sync() {
-    local SRC="$1"
-    local DST="$2"
+    local SRC="${1%/}"
+    local DST="${2%/}"
     local FILTER="${3:-}"
+    # Keep one previous destination version when rsync replaces a file.
+    # Exclude source backups before applying any product include rules.
+    local -a OPTS=(
+        -av --prune-empty-dirs
+        --backup --suffix=.back
+        '--exclude=*.back'
+    )
 
-    echo "Scanning: $SRC -> $DST"
-    rsync -av --dry-run --size-only --prune-empty-dirs --itemize-changes \
-        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
-        "$SRC/" "$DST/" | awk '/^>f/ {print $2}' | while IFS= read -r f; do
-        # skip any backup files in source
-        case "$f" in
-            *.back) continue ;;  # ignore backup files
-        esac
+    if [[ -n "$FILTER" ]]; then
+        OPTS+=('--include=*/' "--include=$FILTER" '--exclude=*')
+    fi
 
-        dst_file="$DST/$f"
-        mkdir -p "$(dirname "$dst_file")"
-
-        # remove any previous backup (only one)
-        [ -f "${dst_file}.back" ] && rm -f -v "${dst_file}.back"
-
-        # move current file to .back if it exists
-        [ -f "$dst_file" ] && mv -v "$dst_file" "${dst_file}.back"
-    done || true
+    if [[ ! -d "$SRC" ]]; then
+        echo "Source directory does not exist: $SRC" >&2
+        return 1
+    fi
 
     echo "Syncing: $SRC -> $DST"
-    rsync -av --size-only --prune-empty-dirs \
-        ${FILTER:+--include="*/" --include="$FILTER" --exclude="*"} \
-        "$SRC" "$DST"
+    mkdir -p -- "$DST" || return
+    rsync "${OPTS[@]}" -- "$SRC/" "$DST/"
 }
 
 # ---- Jobs ----
