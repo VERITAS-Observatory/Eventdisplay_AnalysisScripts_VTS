@@ -35,3 +35,15 @@ repos:
         args: [
           "--ignore-words-list=trun,afile,runn,FIRs"
         ]
+
+  # Match the shell script checks in CI (requires shellcheck on PATH).
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: ShellCheck
+        entry: >-
+          bash -c 'find scripts -name "*.sh" -print0 | sort -z | xargs -0 shellcheck --severity=info'
+        language: system
+        files: ^scripts/.*\.sh$
+        types: [file]
+        pass_filenames: false
