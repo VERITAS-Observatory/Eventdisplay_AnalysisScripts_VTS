@@ -10,21 +10,45 @@
 RUNLIST=RRUNLIST
 ODIR=OODIR
 CUT=CCUT
-# Set to "" to use the unversioned environment v2dl3Eventdisplay.
-# V2DL3VERSION="v0.8.1"
-V2DL3VERSION=""
-if [[ -n "${V2DL3VERSION}" ]]; then
-    CONDA_ENV="v2dl3Eventdisplay-${V2DL3VERSION}"
-else
-    CONDA_ENV="v2dl3Eventdisplay"
+V2DL3_RUNTIME=RUNTIMEIMAGE
+
+# Stage the immutable image once per node, including simultaneous job starts.
+if [[ -z "${_V2DL3_IN_CONTAINER:-}" ]]; then
+    command -v apptainer >/dev/null 2>&1 || { echo "Apptainer not found" >&2; exit 1; }
+    [[ -r "$V2DL3_RUNTIME" ]] || { echo "Runtime not readable: $V2DL3_RUNTIME" >&2; exit 1; }
+    CACHE_DIR=${V2DL3_NODE_CACHE:-/tmp/${USER:-$(id -u)}-v2dl3-cache}
+    mkdir -p "$CACHE_DIR"
+    IMAGE_KEY=$(basename "$V2DL3_RUNTIME")
+    exec 9>"$CACHE_DIR/$IMAGE_KEY.lock"
+    flock 9
+    LOCAL_IMAGE="$CACHE_DIR/$IMAGE_KEY"
+    if [[ ! -s "$LOCAL_IMAGE" ]]; then
+        cp "$V2DL3_RUNTIME" "$LOCAL_IMAGE.tmp.$$"
+        mv "$LOCAL_IMAGE.tmp.$$" "$LOCAL_IMAGE"
+    fi
+
+    BIND_ARGS=()
+    declare -A BOUND_PATHS=()
+    for BIND_PATH in \
+        "$(dirname "$RUNLIST")" "$ODIR" "$(dirname "$0")" \
+        "${VERITAS_DATA_DIR:-}" "${VERITAS_PREPROCESSED_DATA_DIR:-}" \
+        "${VERITAS_EVNDISP_AUX_DIR:-}" "${VERITAS_USER_DATA_DIR:-}" \
+        "${TMPDIR:-}"; do
+        [[ -d "$BIND_PATH" && -z "${BOUND_PATHS[$BIND_PATH]:-}" ]] || continue
+        BOUND_PATHS[$BIND_PATH]=1
+        BIND_ARGS+=(--bind "$BIND_PATH:$BIND_PATH")
+    done
+    APPTAINER_ENV=(--env "_V2DL3_IN_CONTAINER=1")
+    for ENV_NAME in VERITAS_DATA_DIR VERITAS_PREPROCESSED_DATA_DIR \
+        VERITAS_ANALYSIS_TYPE VERITAS_EVNDISP_AUX_DIR VERITAS_USER_DATA_DIR TMPDIR; do
+        [[ -n "${!ENV_NAME:-}" ]] && APPTAINER_ENV+=(--env "$ENV_NAME=${!ENV_NAME}")
+    done
+    exec apptainer exec --cleanenv "${BIND_ARGS[@]}" "${APPTAINER_ENV[@]}" \
+        "$LOCAL_IMAGE" bash "$0"
 fi
 
-# temporary (scratch) directory
-if [[ -n $TMPDIR ]]; then
-    TEMPDIR=$TMPDIR/$RUN
-else
-    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
-fi
+# temporary (scratch) directory, kept on node-local storage
+TEMPDIR="${TMPDIR:-/tmp}/v2dl3-${JOB_ID:-$$}"
 echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 
@@ -38,30 +62,6 @@ echo
 mkdir -p ${ODIR}
 echo -e "Output files will be written to:\n ${ODIR}"
 
-check_conda_installation()
-{
-    if command -v conda &> /dev/null; then
-        echo "Found conda installation."
-    else
-        echo "Error: found no conda installation."
-        echo "exiting..."
-        exit
-    fi
-    env_info=$(conda info --envs)
-    if awk '$1 !~ /^#/ {print $1}' <<< "$env_info" | grep -Fxq "$CONDA_ENV"; then
-        echo "Found conda environment '$CONDA_ENV'"
-    else
-        echo "Error: the conda environment '$CONDA_ENV' does not exist."
-        echo "exiting..."
-        exit
-    fi
-}
-
-check_conda_installation
-
-CONDA_BASE=$(conda info --base) || exit 1
-source "${CONDA_BASE}/etc/profile.d/conda.sh" || exit 1
-conda activate "${CONDA_ENV}" || exit 1
 command -v v2dl3-eventdisplay >/dev/null 2>&1 || exit 1
 command -v v2dl3-eventdisplay-query-runparameters >/dev/null 2>&1 || exit 1
 
@@ -76,6 +76,8 @@ echo "IsGamma: 1" > "$EVENTFILTER"
 echo "Event filter file: ${EVENTFILTER}"
 ls -l "${EVENTFILTER}"
 cat "${EVENTFILTER}"
+mkdir -p "$ODIR/point-like" "$ODIR/point-like-all-events" \
+    "$ODIR/full-enclosure" "$ODIR/full-enclosure-all-events"
 
 # directory schema for preprocessed files
 getNumberedDirectory()
@@ -168,7 +170,6 @@ do
             fi
             echo "EVENTFILTER ${V2DL3SELECT[*]}"
 
-            mkdir -p ${ODIR}/${m}${p}
             rm -f ${ODIR}/${m}${p}/"${RUN}".log
 
             if [[ -s "${QUERY_ERROR_LOG}" ]]; then
@@ -186,8 +187,7 @@ do
                 ${ODIR}/${m}${p}/"${RUN}".fits.gz \
                 2>> ${ODIR}/${m}${p}/"${RUN}".log
 
-            python --version >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
-            conda list -n "${CONDA_ENV}" >> ${ODIR}/${m}${p}/"${RUN}".log 2>&1
+            printf 'Runtime: %s\n' "$V2DL3_RUNTIME" >> "${ODIR}/${m}${p}/${RUN}.log"
             PDIR=$(pwd)
             cd "${PDIR}" || exit
         done

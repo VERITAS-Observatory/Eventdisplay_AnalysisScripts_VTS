@@ -23,8 +23,8 @@ required parameters:
 
     [nruns per job]        number of runs per job (default: 25)
 
-Expect installation of V2DL3 (https://github.com/VERITAS-Observatory/V2DL3) and
-corresponding conda installation (v2dl3Eventdisplay)
+Build a V2DL3 Apptainer runtime once with BUILD.v2dl3_runtime.sh, then set
+V2DL3_RUNTIME to its .sif path before submitting this analysis.
 
 "
 exit
@@ -34,6 +34,16 @@ RUNLIST=$1
 ODIR=$2
 CUT=$3
 [[ "$4" ]] && SPLITRUN=$4 || SPLITRUN=25
+
+if [[ -z "${V2DL3_RUNTIME:-}" || ! -r "$V2DL3_RUNTIME" ]]; then
+    echo "Set V2DL3_RUNTIME to a readable V2DL3 runtime .sif before submission." >&2
+    exit 1
+fi
+if ! command -v apptainer >/dev/null 2>&1; then
+    echo "Apptainer is required to submit V2DL3 jobs." >&2
+    exit 1
+fi
+export V2DL3_RUNTIME
 
 # Check that run list exists
 if [[ ! -f "$RUNLIST" ]]; then
@@ -77,9 +87,9 @@ do
     rm -f $FSCRIPT.sh
     echo "Run script written to $FSCRIPT"
 
-    sed -e "s|RRUNLIST|$J|" \
-        -e "s|OODIR|$ODIR|" \
-        -e "s|CCUT|$CUT|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    sed -e "s|RRUNLIST|$J|" -e "s|OODIR|$ODIR|" \
+        -e "s|CCUT|$CUT|" -e "s|RUNTIMEIMAGE|$V2DL3_RUNTIME|" \
+        "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
 
     chmod u+x "$FSCRIPT.sh"
 
