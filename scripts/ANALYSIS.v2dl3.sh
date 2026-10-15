@@ -46,6 +46,7 @@ if ! command -v apptainer >/dev/null 2>&1; then
     echo "Apptainer is required to submit V2DL3 jobs." >&2
     exit 1
 fi
+V2DL3_RUNTIME=$(realpath -- "$V2DL3_RUNTIME") || exit 1
 export V2DL3_RUNTIME
 
 # Check that run list exists
