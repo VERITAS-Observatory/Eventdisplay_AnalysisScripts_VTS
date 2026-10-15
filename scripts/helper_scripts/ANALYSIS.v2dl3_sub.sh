@@ -23,8 +23,11 @@ if [[ -z "${_V2DL3_IN_CONTAINER:-}" ]]; then
     flock 9
     LOCAL_IMAGE="$CACHE_DIR/$IMAGE_KEY"
     if [[ ! -s "$LOCAL_IMAGE" ]]; then
-        cp "$V2DL3_RUNTIME" "$LOCAL_IMAGE.tmp.$$"
-        mv "$LOCAL_IMAGE.tmp.$$" "$LOCAL_IMAGE"
+        if ! cp "$V2DL3_RUNTIME" "$LOCAL_IMAGE.tmp.$$"; then
+            rm -f "$LOCAL_IMAGE.tmp.$$"
+            exit 1
+        fi
+        mv "$LOCAL_IMAGE.tmp.$$" "$LOCAL_IMAGE" || exit 1
     fi
     flock -u 9
     exec 9>&-
