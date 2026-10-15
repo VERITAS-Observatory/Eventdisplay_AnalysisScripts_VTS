@@ -22,12 +22,14 @@ if [[ -z "${_V2DL3_IN_CONTAINER:-}" ]]; then
         echo "Cache must be a private, user-owned directory: $CACHE_DIR" >&2
         exit 1
     fi
-    IMAGE_KEY=$(basename "$V2DL3_RUNTIME")
+    RUNTIME_SOURCE=$(readlink -f -- "$V2DL3_RUNTIME") || { echo "Could not resolve runtime path: $V2DL3_RUNTIME" >&2; exit 1; }
+    IMAGE_PATH_HASH=$(printf '%s' "$RUNTIME_SOURCE" | sha256sum | awk '{print $1}')
+    IMAGE_KEY="$(basename "$RUNTIME_SOURCE").${IMAGE_PATH_HASH}"
     exec 9>"$CACHE_DIR/$IMAGE_KEY.lock"
     flock 9
     LOCAL_IMAGE="$CACHE_DIR/$IMAGE_KEY"
     if [[ ! -s "$LOCAL_IMAGE" ]]; then
-        if ! cp "$V2DL3_RUNTIME" "$LOCAL_IMAGE.tmp.$$"; then
+        if ! cp "$RUNTIME_SOURCE" "$LOCAL_IMAGE.tmp.$$"; then
             rm -f "$LOCAL_IMAGE.tmp.$$"
             exit 1
         fi
