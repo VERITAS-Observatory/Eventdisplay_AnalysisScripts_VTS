@@ -43,7 +43,9 @@ if [[ -z "${_V2DL3_IN_CONTAINER:-}" ]]; then
         "${VERITAS_DATA_DIR:-}" "${VERITAS_PREPROCESSED_DATA_DIR:-}" \
         "${VERITAS_EVNDISP_AUX_DIR:-}" "${VERITAS_USER_DATA_DIR:-}" \
         "${TMPDIR:-}"; do
-        [[ -d "$BIND_PATH" && -z "${BOUND_PATHS[$BIND_PATH]:-}" ]] || continue
+        [[ -d "$BIND_PATH" ]] || continue
+        BIND_PATH=$(cd -- "$BIND_PATH" >/dev/null && pwd -L) || exit 1
+        [[ -z "${BOUND_PATHS[$BIND_PATH]:-}" ]] || continue
         BOUND_PATHS[$BIND_PATH]=1
         BIND_ARGS+=(--bind "$BIND_PATH:$BIND_PATH")
     done
