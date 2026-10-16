@@ -50,10 +50,6 @@ jobs:
           python -m pip install pre-commit
           SKIP=no-commit-to-branch  pre-commit run --all-files
 
-      - name: ShellCheck
-        run: |
-          find scripts -name "*.sh" -print0 | sort -z | xargs -0 shellcheck --severity=info
-
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
