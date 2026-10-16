@@ -59,6 +59,13 @@ for ZE_EDGE in "${ZEBINARRAY[@]}"; do
     fi
 done
 
+for (( j=1; j < ${#ZEBINARRAY[@]}; j++ )); do
+    if (( $(echo "${ZEBINARRAY[$j]} <= ${ZEBINARRAY[$j-1]}" | bc -l) )); then
+        echo "Error: zenith bin edges must be strictly increasing" >&2
+        exit 1
+    fi
+done
+
 # Find files and store in array to handle filenames with spaces
 if [[ $MEPOCH == "V4" ]]; then
     mapfile -t FLIST < <(find "${2}" -name "[34]*[0-9].mscw.root" | sed 's/\.root$//')
@@ -168,14 +175,20 @@ do
     [[ $SKIP_SOURCE -eq 1 ]] && { ((SKIPPED++)); continue; }
 
     # Find zenith bin using numeric comparison (bc for float comparison)
-    ZEBIN=0
+    ZEBIN=-1
     for (( j=0; j < NZEW; j++ )); do
-        if (( $(echo "${RUNZENITH} > ${ZEBINARRAY[$j]}" | bc -l) )) && \
+        if (( $(echo "${RUNZENITH} >= ${ZEBINARRAY[$j]}" | bc -l) )) && \
            (( $(echo "${RUNZENITH} < ${ZEBINARRAY[$j+1]}" | bc -l) )); then
             ZEBIN=$j
             break
         fi
     done
+
+    if (( ZEBIN < 0 )); then
+        ((SKIPPED++))
+        [[ $VERBOSE -eq 1 ]] && echo "  SKIP: zenith ${RUNZENITH} outside training bins"
+        continue
+    fi
 
     [[ $VERBOSE -eq 1 ]] && echo "  ACCEPT: ${TMPTARGET} Ze=${RUNZENITH} (bin ${ZEBIN}), t=${TMPOBSTIME}s"
 
