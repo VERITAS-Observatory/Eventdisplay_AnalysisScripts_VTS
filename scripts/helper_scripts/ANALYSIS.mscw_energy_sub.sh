@@ -153,7 +153,7 @@ get_disp_dir()
         if [[ ${HVSETTINGS} == "obsLowHV" ]]; then  # fix for incomplete RedHV MC set
             DISPDIR="${DISPDIR}/55deg/"
         else
-            DISPDIR="${DISPDIR}/60deg/"
+            DISPDIR="${DISPDIR}/65deg/"
         fi
     fi
     echo "${VERITAS_EVNDISP_AUX_DIR}/${DISPDIR}/"
