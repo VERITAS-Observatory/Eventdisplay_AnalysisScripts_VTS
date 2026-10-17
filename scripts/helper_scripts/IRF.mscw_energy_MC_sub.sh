@@ -346,24 +346,18 @@ for ID in 15 14 13 11 7; do
         echo -e "Output files will be written to:\n $OSUBDIR"
         mkdir -p "$OSUBDIR"
 
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            XGBFILESUFFIX=${XGBVERSION}_ImgSel${ID}
+        else
+            XGBFILESUFFIX=None
+        fi
+
         ENERGYRECONSTRUCTIONMETHOD=0
         DIRECTIONRECONSTRUCTIONMETHOD=0
-        [[ $IRFVERSION == v490* ]] && ENERGYRECONSTRUCTIONMETHOD=1
-        XGBFILESUFFIX=None
-        XGBGAMMAHADRONFILESUFFIX=None
-        if [[ $CUTS_NAME == *XGB* ]]; then
-            [[ -n $XGBVERSION && $XGBVERSION != None ]] || exit 1
+        if [[ $IRFVERSION =~ ^v([0-9]+) ]] && (( 10#${BASH_REMATCH[1]} >= 492 )) &&
+            [[ $CUTS_NAME == *XGB* && $XGBFILESUFFIX != None ]]; then
             ENERGYRECONSTRUCTIONMETHOD=2
             DIRECTIONRECONSTRUCTIONMETHOD=2
-            XGBFILESUFFIX=${XGBVERSION}_ImgSel${ID}
-            if awk '$1 == "*" && $2 == "cutselection" && $3 == 52 {found=1} END {exit !found}' "$CUTSFILE"; then
-                XGBGAMMAHADRONFILESUFFIX=xgb_gh
-                GHFILE="${outputfilename%.root}.xgb_gh.root"
-                if [[ ! -s $GHFILE ]]; then
-                    echo "Error: classified XGB IRF requires $GHFILE; run IRF.dispXGB classification first" >&2
-                    exit 1
-                fi
-            fi
         fi
 
 PARAMFILE="
@@ -382,11 +376,10 @@ PARAMFILE="
 * CUTFILE $DDIR/$(basename "$CUTSFILE")
  IGNOREFRACTIONOFEVENTS 0.5
 * SIMULATIONFILE_DATA $outputfilename
-* XGBSTEREOFILESUFFIX ${XGBFILESUFFIX}
-* XGBGAMMAHADRONFILESUFFIX ${XGBGAMMAHADRONFILESUFFIX}"
+* XGBSTEREOFILESUFFIX ${XGBFILESUFFIX}"
 
-        if [[ $DIRECTIONRECONSTRUCTIONMETHOD == 2 ]]; then
-            run_xgb "$ID"
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            run_xgb $ID
         fi
 
         # create makeEffectiveArea parameter file
