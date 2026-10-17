@@ -79,10 +79,10 @@ move_specific_files()
         FILES+=("$FITS" "$LOG")
     done
     for F in "${!PREFIX_SET[@]}"; do
-        local -n FILES="FILES_${F}"
+        local -n PREFIX_FILES="FILES_${F}"
         OFDIR="$ODIR/$DDIR/$F"
         mkdir -p "$OFDIR" || return 1
-        rsync -av --remove-source-files "${FILES[@]}" "$OFDIR/" || return 1
+        rsync -av --remove-source-files "${PREFIX_FILES[@]}" "$OFDIR/" || return 1
     done
 }
 
