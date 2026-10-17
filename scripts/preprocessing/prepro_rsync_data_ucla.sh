@@ -7,7 +7,10 @@ shopt -s nullglob
 
 usage() {
     cat <<'EOF'
-Usage: ./prepro_rsync_data_ucla.sh <backup suffix> <Eventdisplay version> <analysis type>
+Usage: ./prepro_rsync_data_ucla.sh <backup suffix> [<Eventdisplay version> <analysis type>]
+
+When version and analysis type are omitted, use the VERITAS environment and
+optional ARCHIVE_VERSION_OVERRIDE / ARCHIVE_ANALYSIS_TYPE_OVERRIDE settings.
 
 Run this script at DESY from '/lustre/fs24/group/veritas/shared/'.
 Example: ./prepro_rsync_data_ucla.sh .v3.4 v490.7 AP
@@ -19,7 +22,7 @@ if (( $# == 1 )) && [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 
-if (( $# != 3 )); then
+if (( $# != 1 && $# != 3 )); then
     usage
     exit 2
 fi
@@ -30,8 +33,19 @@ if [[ -z "${VTS_UCLA_USER:-}" ]]; then
 fi
 
 BACKUP=$1
-VERSION=$2
-ANATYPE=$3
+if (( $# == 3 )); then
+    VERSION=$2
+    ANATYPE=$3
+else
+    VERSION=${ARCHIVE_VERSION_OVERRIDE:-}
+    if [[ -z "$VERSION" ]]; then
+        : "${VERITAS_EVNDISP_AUX_DIR:?VERITAS_EVNDISP_AUX_DIR must be set}"
+        VERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION")
+    fi
+    ANATYPE=${ARCHIVE_ANALYSIS_TYPE_OVERRIDE:-${VERITAS_ANALYSIS_TYPE:-}}
+    ANATYPE=${ANATYPE:0:2}
+    : "${ANATYPE:?Set VERITAS_ANALYSIS_TYPE or ARCHIVE_ANALYSIS_TYPE_OVERRIDE}"
+fi
 UCLA_USER=$VTS_UCLA_USER
 UCLA_DIR="/home/maierg/processed_Eventdisplay/${VERSION}/${ANATYPE}"
 SOURCE_DIR="./processed_data_${VERSION}/${ANATYPE}"
