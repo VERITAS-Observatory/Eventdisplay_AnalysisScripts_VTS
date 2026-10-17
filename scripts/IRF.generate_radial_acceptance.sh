@@ -92,6 +92,7 @@ SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.radial_acceptance_sub.sh"
 
 # loop over all files/cases
 for CUTS in "${CUTLIST[@]}"; do
+    CUTS=${CUTS%$'\r'}
     for VX in $EPOCH; do
         for ID in $RECID; do
             echo "Now generating radial acceptance for $CUTS, epoch $VX, Rec ID $ID"

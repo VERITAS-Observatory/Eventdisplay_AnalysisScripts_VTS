@@ -309,6 +309,7 @@ read_cutlist()
     mapfile -t CUTLISTFROMFILE < "$CUTFILE"
     CUTLIST=()
     for CUT in "${CUTLISTFROMFILE[@]}"; do
+        CUT=${CUT%$'\r'}
         CUTLIST+=("ANASUM.GammaHadron-Cut-$CUT.dat")
     done
 }
