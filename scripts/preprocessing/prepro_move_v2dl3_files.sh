@@ -48,70 +48,45 @@ move_pair()
     rsync -av --remove-source-files "$FITS" "$LOG" "$OFDIR"/
 }
 
+run_prefix()
+{
+    local name=${1##*/} run
+    run=${name%%.*}
+    [[ $run =~ ^[0-9]{5,}$ ]] || return 1
+    if (( 10#$run < 100000 )); then
+        echo "${run:0:1}"
+    else
+        echo "${run:0:2}"
+    fi
+}
+
 move_specific_files()
 {
-    local FITS
-    local NAME
-    local F
-    local LOG
-    local GREP_STATUS
-    local -a FILES_11=()
-    local -a FILES_10=()
-    local -a FILES_9=()
-    local -a FILES_8=()
-    local -a FILES_7=()
-    local -a FILES_6=()
-    local -a FILES_5=()
-    local -a FILES_4=()
-    local -a FILES_3=()
-
+    local FITS LOG F OFDIR
+    local -A PREFIX_SET=()
     for FITS in "$@"; do
-        [[ -f "$FITS" ]] || continue
-        NAME=${FITS##*/}
-        for F in 11 10 9 8 7 6 5 4 3; do
-            if [[ $NAME == "${F}"*.fits.gz ]]; then
-                LOG="${FITS%.fits.gz}.log"
-                if [[ ! -f "$LOG" ]]; then
-                    echo "Skipping $FITS: matching log file is missing" >&2
-                    break
-                fi
-
-                if grep -qi -- "Error" "$LOG"; then
-                    echo "Skipping $FITS and $LOG: log contains Error" >&2
-                    break
-                else
-                    GREP_STATUS=$?
-                    if [[ $GREP_STATUS -ne 1 ]]; then
-                        echo "Skipping $FITS and $LOG: unable to inspect log file" >&2
-                        break
-                    fi
-                fi
-
-                # Collect complete pairs first so rsync can transfer one
-                # batch per destination instead of one batch per product.
-                case "$F" in
-                    11) FILES_11+=("$FITS" "$LOG") ;;
-                    10) FILES_10+=("$FITS" "$LOG") ;;
-                    9)  FILES_9+=("$FITS" "$LOG") ;;
-                    8)  FILES_8+=("$FITS" "$LOG") ;;
-                    7)  FILES_7+=("$FITS" "$LOG") ;;
-                    6)  FILES_6+=("$FITS" "$LOG") ;;
-                    5)  FILES_5+=("$FITS" "$LOG") ;;
-                    4)  FILES_4+=("$FITS" "$LOG") ;;
-                    3)  FILES_3+=("$FITS" "$LOG") ;;
-                esac
-                break
-            fi
-        done
-    done
-
-    for F in 11 10 9 8 7 6 5 4 3; do
+        [[ -f $FITS ]] || continue
+        F=$(run_prefix "$FITS") || { echo "Invalid run filename: $FITS" >&2; return 1; }
+        LOG="${FITS%.fits.gz}.log"
+        [[ -f $LOG ]] || { echo "Missing log: $LOG" >&2; return 1; }
+        if grep -qi -- "Error" "$LOG"; then
+            echo "Conversion error in $LOG" >&2
+            return 1
+        else
+            [[ $? == 1 ]] || return 1
+        fi
+        if [[ -z ${PREFIX_SET[$F]+set} ]]; then
+            local -a "FILES_${F}=()"
+            PREFIX_SET[$F]=1
+        fi
         local -n FILES="FILES_${F}"
-        ((${#FILES[@]} > 0)) || continue
+        FILES+=("$FITS" "$LOG")
+    done
+    for F in "${!PREFIX_SET[@]}"; do
+        local -n PREFIX_FILES="FILES_${F}"
         OFDIR="$ODIR/$DDIR/$F"
-        mkdir -p "$OFDIR"
-        echo "Syncing $OFDIR with ${FTYPE} (${#FILES[@]} files)"
-        rsync -av --remove-source-files "${FILES[@]}" "$OFDIR"/ || return
+        mkdir -p "$OFDIR" || return 1
+        rsync -av --remove-source-files "${PREFIX_FILES[@]}" "$OFDIR/" || return 1
     done
 }
 
@@ -120,12 +95,10 @@ if [[ $# -gt 2 ]]; then
     # validated files from the current batch are moved.
     move_specific_files "${@:3}"
 else
-    for F in 11 10 9 8 7 6 5 4 3; do
+    for FITS in "$FTYPE"/*.fits.gz; do
+        [[ -f $FITS ]] || continue
+        F=$(run_prefix "$FITS") || exit 1
         OFDIR="$ODIR/$DDIR/$F"
-        echo "Syncing $OFDIR with ${FTYPE}"
-        for FITS in "$FTYPE"/"${F}"*.fits.gz; do
-            [[ -f "$FITS" ]] || continue
-            move_pair "$FITS" "$OFDIR"
-        done
+        move_pair "$FITS" "$OFDIR" || exit 1
     done
 fi

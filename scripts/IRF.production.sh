@@ -306,12 +306,12 @@ read_cutlist()
         echo "$CUTFILE"
         exit 1
     fi
-    CUTLISTFROMFILE=$(cat "$CUTFILE")
-    CUTLIST=""
+    mapfile -t CUTLISTFROMFILE < "$CUTFILE"
+    CUTLIST=()
     for CUT in "${CUTLISTFROMFILE[@]}"; do
-        CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
+        CUT=${CUT%$'\r'}
+        CUTLIST+=("ANASUM.GammaHadron-Cut-$CUT.dat")
     done
-    echo "${CUTLIST# }"
 }
 
 # Cut types are used for BDT training and optimisation
@@ -350,8 +350,8 @@ for VX in $EPOCH; do
        ######################
        # combine effective areas
        if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]] || [[ $IRFTYPE == "COMBINEPRESELECTEFFECTIVEAREAS" ]]; then
-            CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-            echo "CUTLIST: $CUTLIST"
+            read_cutlist "$CUTSLISTFILE"
+            echo "CUTLIST: ${CUTLIST[*]}"
             for ID in $RECID; do
                 for CUTS in "${CUTLIST[@]}"; do
                     echo "combine effective areas $CUTS"
@@ -544,8 +544,8 @@ elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN"
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
-                        CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-                        echo "CUTLIST: $CUTLIST"
+                        read_cutlist "$CUTSLISTFILE"
+                        echo "CUTLIST: ${CUTLIST[*]}"
                         for ID in ${RECID}; do
                             for CUTS in "${CUTLIST[@]}"; do
                                echo "calculate effective areas $CUTS (ID $ID)"

@@ -44,17 +44,18 @@ if [[ ! -f "$RLIST" ]]; then
 fi
 RUNNUMS=$(cat "$RLIST")
 
-for RUN in $RUNNUMS; do
+for DATA_RUN in $RUNNUMS; do
     for i in $TELTOANA; do
-        RUN=$("$EVNDISPSYS"/bin/VTS.getLaserRunFromDB "$i" "$RUN")
-        echo "Checking telescope $i, laser run $RUN, data run $RUN:"
-        echo "$CALIBDIR/Tel_$i/$RUN.gain.root"
+        LASER_RUN=$("$EVNDISPSYS"/bin/VTS.getLaserRunFromDB "$i" "$DATA_RUN") || exit 1
+        [[ $LASER_RUN =~ ^[0-9]+$ ]] || exit 1
+        echo "Checking telescope $i, laser run $LASER_RUN, data run $DATA_RUN:"
+        echo "$CALIBDIR/Tel_$i/$LASER_RUN.gain.root"
 
-        if [[ ! -f "$CALIBDIR/Tel_$i/$RUN.gain.root" ]]; then
-            echo "Processing gains from laser/flash run $RUN, telescope $i"
-            RUNFILE=$(find -L "$DDIR" -name "$RUN.cvbf")
+        if [[ ! -f "$CALIBDIR/Tel_$i/$LASER_RUN.gain.root" ]]; then
+            echo "Processing gains from laser/flash run $LASER_RUN, telescope $i"
+            RUNFILE=$(find -L "$DDIR" -name "$LASER_RUN.cvbf")
             if [[ -f $RUNFILE ]]; then
-                "$EVNDISPSYS"/scripts/VTS/SPANALYSIS.evndisp_laser_run.sh "$i" "$RUNFILE"
+                "$(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh" "$LASER_RUN" "$i" || exit 1
             else
                 echo "Missing laser/flasher file $RUNFILE, please download it"
             fi
