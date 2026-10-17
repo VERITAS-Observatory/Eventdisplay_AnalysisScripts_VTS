@@ -4,16 +4,20 @@ set -euo pipefail
 base=''
 reports=''
 dry_run=false
+remove_local_dl3=false
+local_directory=$PWD
 while (($#)); do
     case $1 in
         --base|--reports)
             (($# >= 2)) && [[ -n $2 && $2 != --* ]] || { echo "$1 requires a directory" >&2; exit 1; }
             if [[ $1 == --base ]]; then base=$2; else reports=$2; fi
             shift 2 ;;
+        --remove-local-dl3) remove_local_dl3=true; shift ;;
         --dry-run) dry_run=true; shift ;;
         -h|--help)
-            echo 'Usage: bash prepro_move_do_not_use_files.sh --base AP_DIR --reports REPORT_DIR [--dry-run]'
+            echo 'Usage: bash prepro_move_do_not_use_files.sh --base AP_DIR --reports REPORT_DIR [--dry-run] [--remove-local-dl3]'
             echo 'Move runs from do_not_use.txt, zero_usable_duration.txt, and less_than_2_minutes.txt into AP_DIR/do_not_use.'
+            echo '  --remove-local-dl3  Also delete selected run files in ./v2dl3_*/*/*/ relative to the invocation directory; skip symlinks.'
             echo '  --dry-run  Print proposed directory creation and file moves without changing anything.'
             exit 0 ;;
         *) echo "Unknown argument: $1" >&2; exit 1 ;;
@@ -81,4 +85,30 @@ for directory in ./anasum_* ./dl3_* ./mscw ./evndisp; do
         done
     done
 done
+if $remove_local_dl3; then
+    # Local layout: v2dl3 configuration / analysis mode / category / run files.
+    cd -- "$local_directory"
+    for directory in ./v2dl3_*; do
+        [[ -d $directory && ! -L $directory ]] || continue
+        for mode in "$directory"/*; do
+            [[ -d $mode && ! -L $mode ]] || continue
+            for category in "$mode"/*; do
+                [[ -d $category && ! -L $category ]] || continue
+                for path in "$category"/*; do
+                    name=${path##*/}
+                    [[ $name =~ ^([0-9]+)([^0-9]|$) ]] || continue
+                    run=${BASH_REMATCH[1]}
+                    [[ ${runs[$run]+present} ]] || continue
+                    [[ ! -L $path && -f $path ]] || continue
+                    if $dry_run; then
+                        printf 'Would remove run %s: %s\n' "$run" "$path"
+                    else
+                        rm -- "$path"
+                        printf 'Removed run %s: %s\n' "$run" "$path"
+                    fi
+                done
+            done
+        done
+    done
+fi
 echo 'Processing complete.'

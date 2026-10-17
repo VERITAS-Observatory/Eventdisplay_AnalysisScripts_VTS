@@ -6,7 +6,7 @@ usage() {
 Usage: prepro_report_v2dl3_dqm.sh [--output DIR] [DIRECTORY ...]
 
 Scan error/ and empty_event_list/ directories recursively (default: v2dl3_*).
-Read $VERITAS_DATA_DIR/shared/DBTEXT/<first run digit>/<run>.tar.gz.
+Read $VERITAS_DATA_DIR/shared/DBTEXT/<run ID divided by 10000>/<run>.tar.gz.
 Write sorted unique run IDs to <status>.txt and per-file details to report.tsv.
 Also list runs with usable_duration 00:00:00 in zero_usable_duration.txt.
 Classify good_run records with observing_mode off as good_run_off.
@@ -66,7 +66,7 @@ while IFS= read -r -d '' path; do
         continue
     fi
     if [[ ! ${statuses[$run]+present} ]]; then
-        archive=$VERITAS_DATA_DIR/shared/DBTEXT/${run:0:1}/$run.tar.gz
+        archive=$VERITAS_DATA_DIR/shared/DBTEXT/$((10#$run / 10000))/$run.tar.gz
         status=missing_archive
         reason='Archive not found'
         if [[ -e $archive ]]; then
@@ -188,7 +188,7 @@ done
 : > "$output/good_run_details.log"
 if [[ -f $output/good_run.txt ]]; then
     while IFS= read -r run; do
-        archive=$VERITAS_DATA_DIR/shared/DBTEXT/${run:0:1}/$run.tar.gz
+        archive=$VERITAS_DATA_DIR/shared/DBTEXT/$((10#$run / 10000))/$run.tar.gz
         {
             printf '========== Run %s ==========\nArchive: %s\n' "$run" "$archive"
             for kind in rundqm runinfo; do
