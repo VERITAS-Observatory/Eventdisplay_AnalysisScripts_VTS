@@ -44,8 +44,11 @@ echo "Output directory for data products: " $OSUBDIR
 OFILE="${ZA}deg_${WOBBLE}wob_NOISE${NOISE}"
 
 # temporary directory
-DDIR=$(mktemp -d "${TMPDIR:-/tmp}/mscw_energy_MC_sub-XXXXXX") || exit 1
-trap 'rm -rf -- "$DDIR"' EXIT
+if [[ -n "$TMPDIR" ]]; then
+    DDIR="$TMPDIR/MSCW_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
+else
+    DDIR="/tmp/MSCW_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
+fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 

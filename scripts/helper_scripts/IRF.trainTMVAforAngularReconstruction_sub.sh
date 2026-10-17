@@ -20,8 +20,11 @@ BDT=BDTTYPE
 TMVAO=TMVAOPTIONFILE
 
 # temporary directory
-DDIR=$(mktemp -d "${TMPDIR:-/tmp}/trainTMVAforAngularReconstruction_sub-XXXXXX") || exit 1
-trap 'rm -rf -- "$DDIR"' EXIT
+if [[ -n "$TMPDIR" ]]; then
+    DDIR="$TMPDIR/dispBDT_${BDT}/"
+else
+    DDIR="/tmp/dispBDT_${BDT}/"
+fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 

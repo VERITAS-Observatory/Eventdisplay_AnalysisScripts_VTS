@@ -18,8 +18,11 @@ N="5000000"
 MAXCORES=NCORES
 
 # temporary (scratch) directory
-TEMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/trainXGBforGammaHadronSeparation_sub-XXXXXX") || exit 1
-trap 'rm -rf -- "$TEMPDIR"' EXIT
+if [[ -n "$TMPDIR" ]]; then
+    TEMPDIR="$TMPDIR"
+else
+    TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR"
+fi
 echo "Scratch dir: $TEMPDIR"
 mkdir -p "$TEMPDIR"
 

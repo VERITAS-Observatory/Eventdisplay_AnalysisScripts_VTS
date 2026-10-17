@@ -32,8 +32,11 @@ rm -f "$ODIR/$TABFILE.root"
 rm -f "$ODIR/$TABFILE.log"
 
 # temporary directory
-DDIR=$(mktemp -d "${TMPDIR:-/tmp}/lookup_table_parallel_sub-XXXXXX") || exit 1
-trap 'rm -rf -- "$DDIR"' EXIT
+if [[ -n "$TMPDIR" ]]; then
+    DDIR="$TMPDIR/TABLES_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
+else
+    DDIR="/tmp/TABLES_${ZA}deg_${WOBBLE}deg_NOISE${NOISE}_ID${RECID}"
+fi
 mkdir -p "$DDIR"
 echo "Temporary directory: $DDIR"
 
