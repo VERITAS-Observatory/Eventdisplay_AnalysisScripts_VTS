@@ -28,13 +28,13 @@ if [[ $FTYPE == "xgb" ]]; then
 fi
 
 mapfile -t PREFIXES < <(find "$FTYPE" -maxdepth 1 -type f -name '*.root' -printf '%f\n' |
-    awk -F. '$1 ~ /^[0-9]+$/ && length($1) >= 5 {print substr($1,1,length($1)-4)}' | sort -nu)
+    awk -F. '$1 ~ /^[0-9]+$/ && length($1) >= 5 {print substr($1,1,($1 < 100000 ? 1 : 2))}' | sort -nu)
 for F in "${PREFIXES[@]}"; do
     OFDIR="$ODIR/$F"
     echo "Syncing $OFDIR with ${FTYPE}"
     mkdir -p "$OFDIR"
     mapfile -t FILES < <(find "$FTYPE" -maxdepth 1 -type f \( -name '*.root' -o -name '*.log' \) -printf '%f\n' |
-        awk -F. -v prefix="$F" '$1 ~ /^[0-9]+$/ && substr($1,1,length($1)-4) == prefix')
+        awk -F. -v prefix="$F" '$1 ~ /^[0-9]+$/ && substr($1,1,($1 < 100000 ? 1 : 2)) == prefix')
     ((${#FILES[@]})) || continue
     printf '%s\n' "${FILES[@]}" | rsync -a --whole-file --remove-source-files \
         --human-readable --info=progress2 "${RSYNC_BACKUP_OPTIONS[@]}" \

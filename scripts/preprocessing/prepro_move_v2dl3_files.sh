@@ -53,7 +53,11 @@ run_prefix()
     local name=${1##*/} run
     run=${name%%.*}
     [[ $run =~ ^[0-9]{5,}$ ]] || return 1
-    echo "${run:0:${#run}-4}"
+    if (( 10#$run < 100000 )); then
+        echo "${run:0:1}"
+    else
+        echo "${run:0:2}"
+    fi
 }
 
 move_specific_files()
