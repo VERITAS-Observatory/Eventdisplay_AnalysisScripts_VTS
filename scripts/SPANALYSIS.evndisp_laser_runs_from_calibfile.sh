@@ -31,13 +31,13 @@ FILES=$(grep LASER "$CALIBFILE" | awk '{print $2"_"$3}')
 
 for AFILE in $FILES
 do
-    RUN=${AFILE:0:5}
-    DTEL=${AFILE:6}
+    RUN=${AFILE%_*}
+    DTEL=${AFILE##*_}
     echo "$AFILE" "$RUN" "$DTEL"
     DFILE=$(find -L "$DDIR" -name "$RUN.cvbf")
 
     if [[ -f $DFILE ]]; then
-        "$(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh" "$DTEL" "$DFILE"
+        "$(dirname "$0")/SPANALYSIS.evndisp_laser_run.sh" "$RUN" "$DTEL" || exit 1
     else
 	    echo "Missing laser/flasher file $DFILE, please download it"
     fi
