@@ -9,7 +9,10 @@ local_directory=$PWD
 while (($#)); do
     case $1 in
         --base|--reports)
-            (($# >= 2)) && [[ -n $2 && $2 != --* ]] || { echo "$1 requires a directory" >&2; exit 1; }
+            if (($# < 2)) || [[ -z $2 || $2 == --* ]]; then
+                echo "$1 requires a directory" >&2
+                exit 1
+            fi
             if [[ $1 == --base ]]; then base=$2; else reports=$2; fi
             shift 2 ;;
         --remove-local-dl3) remove_local_dl3=true; shift ;;
