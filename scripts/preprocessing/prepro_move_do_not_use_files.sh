@@ -31,10 +31,14 @@ done
 }
 printf 'Base directory: %s\nReports directory: %s\n' "$base" "$reports"
 if $dry_run; then echo 'Mode: dry run (no changes)'; else echo 'Mode: move files'; fi
+[[ -d $reports && -r $reports && -x $reports ]] || {
+    echo "Cannot read report directory: $reports" >&2; exit 1
+}
 declare -A runs
 for list in "$reports/do_not_use.txt" "$reports/zero_usable_duration.txt" "$reports/less_than_2_minutes.txt"; do
     printf 'Reading run list: %s\n' "$list"
-    [[ -r $list ]] || { echo "Cannot read: $list" >&2; exit 1; }
+    [[ -e $list || -L $list ]] || continue
+    [[ -f $list && -r $list ]] || { echo "Cannot read: $list" >&2; exit 1; }
     while IFS= read -r run || [[ -n $run ]]; do
         [[ $run =~ ^[0-9]+$ ]] || { echo "Invalid run ID in $list: $run" >&2; exit 1; }
         runs[$run]=1

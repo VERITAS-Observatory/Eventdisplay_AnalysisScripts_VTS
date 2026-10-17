@@ -74,11 +74,12 @@ The checker supports productions with more than 50,000 files:
 ./check_preprocessing_completeness.sh <production-directory> [report-directory] [reference-subdirectory] [run-list-file]
 ```
 
-Exit codes: `0` complete, `1` missing/duplicate products, `2` usage or
+Exit codes: `0` complete, `1` missing products, `2` usage or
 filesystem error. Reports default to a new directory below the production
 directory. An optional run-list excludes runs; each line may be `106250` or
 `106250 - reason`. Reports include `summary.tsv`, `missing-*.txt`, and the
-filtered `reference-runs.txt`. Directory symlinks are followed.
+filtered `reference-runs.txt`. Duplicate and unexpected products do not affect
+completeness and have no report categories. Directory symlinks are followed.
 
 ### Check if runs read from a run list are processed with evndis/mscw
 
