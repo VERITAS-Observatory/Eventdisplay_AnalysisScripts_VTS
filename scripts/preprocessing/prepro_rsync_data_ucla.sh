@@ -88,12 +88,10 @@ fi
 
 if [[ $SYNC_DL3 == TRUE ]]; then
     echo "Syncing DL3 files"
-    DL_DIRS=()
-    while IFS= read -r -d '' dir; do
-        DL_DIRS+=("$dir")
-    done < <(find "$SOURCE_DIR" -type d -name 'dl3_*' -print0)
+    DL_DIRS=("$SOURCE_DIR"/dl3_*/)
 
     for dl_dir in "${DL_DIRS[@]}"; do
+        dl_dir=${dl_dir%/}
         dl_name=${dl_dir##*/}
         echo "Syncing $dl_dir to ${UCLA_USER}:${UCLA_DIR}/${dl_name}/"
         rsync -avz -e ssh --backup --suffix="$BACKUP" -- \
