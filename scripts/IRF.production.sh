@@ -505,7 +505,6 @@ for VX in $EPOCH; do
                        #    echo "Using curved atmosphere simulations from $SIMDIRZA"
                        if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
-                          echo "Using flat atmosphere simulations from $SIMDIRZA"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
                            "$(dirname "$0")/IRF.evndisp_MC.sh" \
