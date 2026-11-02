@@ -51,7 +51,7 @@ OUTFILE=$3
 OUTFILE=${OUTFILE%%.root}
 [[ "$4" ]] && RUNP=$4 || RUNP="ANASUM.runparameter"
 
-if [[ "$DDIR" == "$VERITAS_DATA_DIR/"* ]]; then
+if [[ "$DDIR" == "\$VERITAS_DATA_DIR/"* ]]; then
     DDIR="${VERITAS_DATA_DIR}/${DDIR#\$VERITAS_DATA_DIR/}"
 elif [[ "$DDIR" == "VERITAS_DATA_DIR/"* ]]; then
     DDIR="${VERITAS_DATA_DIR}/${DDIR#VERITAS_DATA_DIR/}"

@@ -128,6 +128,8 @@ sed -e "s|EFFFILE|$EFFFILE|"  \
     -e "s|EEBINS|${NENE}|" \
     -e "s|ZZBINS|${NZEW}|" \
     -e "s|TMVARUNPARA|${RUNPAR}|" \
+    -e "s|MMINEVENTS|${MINEVENTS}|" \
+    -e "s|OBSTIME_MODERATE|${OBSTIME_MODERATE}.|" \
     -e "s|CUTTYPE|${CUTTYPE}|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
 chmod u+x "$FSCRIPT".sh
