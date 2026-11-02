@@ -3,10 +3,13 @@
 # (generated tables need to be combined afterwards)
 
 # qsub parameters
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=03:29:00; h_vmem=12000M; tmpdir_size=20G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 EVNIRFVERSION="v4N"
 
 if [ $# -lt 7 ]; then
@@ -46,9 +49,8 @@ fi
 
 # Run init script
 if [ -z "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 EPOCH="$1"
 ATM="$2"
@@ -65,15 +67,19 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     exit 1
 fi
 # input directory containing evndisp products
+# CURVED_ATMOSPHERE_MC INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_curved_offset${WOBBLE}deg_NSB${NOISE}MHz"
 INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
 if [[ ! -d $INDIR ]]; then
-    echo "Error, could not locate input directory. Locations searched:"
-    echo "$INDIR"
-    exit 1
+    INDIR="$VERITAS_IRFPRODUCTION_DIR/${EVNIRFVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/ze${ZA}deg_offset${WOBBLE}deg_NSB${NOISE}MHz"
+    if [[ ! -d $INDIR ]]; then
+        echo "Error, could not locate input directory. Locations searched (minus curved):"
+        echo "$INDIR"
+        exit 1
+    fi
 fi
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/Tables"
-LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-MAKETABLES-${UUID}/"
+LOGDIR="${ODIR}/submit-MAKETABLES-${UUID}/"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
 mkdir -p "$LOGDIR"
@@ -82,7 +88,7 @@ echo "Output: $ODIR"
 echo "Logs: $LOGDIR"
 
 # run script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.lookup_table_parallel_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.lookup_table_parallel_sub"
 FSCRIPT="$LOGDIR/TABLE-$EPOCH-MK-TBL.MC-$SIMTYPE-$ZA-$WOBBLE-$NOISE-$EPOCH-$ATM-$RECID.sh"
 rm -f "$FSCRIPT"
 sed -e "s|ZENITHANGLE|$ZA|" \
@@ -107,19 +113,7 @@ if [[ $SUBC == *"ERROR"* ]]; then
     echo "Error: reading submission type from $SUBMISSION_SCRIPT"
     exit 1
 fi
+submit_job "$FSCRIPT" "$FSCRIPT &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
-elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    echo "-------------------------------------------------------------------------------"
-    echo "Job submission using HTCondor - run the following script to submit jobs:"
-    echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-    echo "-------------------------------------------------------------------------------"
-elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT.sh
-elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-elif [[ "$SUBC" == *simple* ]]; then
-    "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi

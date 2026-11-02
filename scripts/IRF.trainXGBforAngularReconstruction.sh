@@ -1,0 +1,129 @@
+#!/bin/bash
+# train XGB for angular reconstruction
+
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
+h_cpu=47:29:00; h_vmem=12000M; tmpdir_size=100G; ncore=8
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
+
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
+
+if [ $# -lt 7 ]; then
+echo "
+XGB (BDT) training for stereo reconstruction from MC mscw files for different zenith angle bins
+
+IRF.trainXGBforAngularReconstruction.sh <epoch> <atmosphere> <zenith range> <offset angle> <NSB level> <Rec ID> <sim type> [analysis type]
+
+required parameters:
+
+    <epoch>                 array epoch (e.g., V4, V5, V6)
+
+    <atmosphere>            atmosphere model (61 = winter, 62 = summer)
+
+    <zenith range>          zenith angle range (SZE, MZE, LZE, XZE)
+
+    <offset angle>          list of offset angle of simulations [deg]
+
+    <NSB level>             list of NSB level of simulations [MHz]
+
+    <Rec ID>                reconstruction ID
+                            (see EVNDISP.reconstruction.runparameter)
+
+    <sim type>              simulation type (e.g. GRISU, CARE_June1425)
+
+optional parameters:
+
+    [analysis type]         type of analysis (default="")
+
+    [uuid]                  UUID used for submit directory
+
+--------------------------------------------------------------------------------
+"
+exit
+fi
+
+# Run init script
+if [ -z "$EVNDISP_APPTAINER" ]; then
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
+fi
+
+EPOCH="$1"
+ATM="$2"
+ZA="$3"
+WOBBLE="$4"
+NOISE="$5"
+RECID="$6"
+SIMTYPE="$7"
+ANALYSIS_TYPE="${8:-}"
+UUID="${9:-$(date +"%y%m%d")-$(uuidgen)}"
+
+if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
+    echo "Error: IRF production directory not found: $VERITAS_IRFPRODUCTION_DIR"
+    exit 1
+fi
+# output and log directories
+ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TrainXGBStereoAnalysis/${ZA}/"
+LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-trainXGBStereoAnalysis-RECID${RECID}-${UUID}"
+mkdir -p "$ODIR"
+chmod g+w "$ODIR"
+mkdir -p "$LOGDIR"
+echo "Output: $ODIR"
+echo "Logs: $LOGDIR"
+
+# prepare list of input files
+MSCWLIST="$ODIR/xgbFiles.list"
+rm -f "${MSCWLIST}"
+touch "${MSCWLIST}"
+
+INDIR="$VERITAS_IRFPRODUCTION_DIR/${EDVERSION}/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+
+STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+TRAIN_ANGLES=$(jq -r ".zenith[] | select(.id==\"$ZA\") | .train | join(\" \")" "$STEREO_PAR")
+if [[ -z "$TRAIN_ANGLES" ]]; then
+    echo "Error: Bin ID $ZA not found in $STEREO_PAR"
+    exit 1
+fi
+
+for W in ${WOBBLE}
+do
+    for N in ${NOISE}
+    do
+        for DEG in ${TRAIN_ANGLES}
+        do
+            FILE_PATH="${INDIR}/${DEG}deg_${W}wob_NOISE${N}.mscw.root"
+            if [[ -f "$FILE_PATH" ]]; then
+                echo "$FILE_PATH" >> "${MSCWLIST}"
+            else
+                echo "Warning: File not found: $FILE_PATH"
+            fi
+        done
+    done
+done
+echo "FILE LIST: ${MSCWLIST}"
+
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.trainXGBforAngularReconstruction_sub.sh"
+HELPER_SCRIPTS_DIR="$(cd "$(dirname "$0")/helper_scripts" && pwd)"
+
+echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
+
+FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
+sed -e "s|OUTPUTDIR|$ODIR|" \
+    -e "s|MSCWLIST|$MSCWLIST|" \
+    -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
+    -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
+    -e "s|NCORES|$ncore|" "$SUBSCRIPT" > "$FSCRIPT"
+
+chmod u+x "$FSCRIPT"
+echo "$FSCRIPT"
+
+# run locally or on cluster
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+SUBC=$(eval "echo \"$SUBC\"")
+if [[ $SUBC == *"ERROR"* ]]; then
+    echo "$SUBC"
+    exit
+fi
+    submit_job "$FSCRIPT" "$FSCRIPT &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
+    if [[ $SUBC == *qsub* ]]; then
+        echo "RUN $RUNNUM: JOBID $JOBID"
+    fi

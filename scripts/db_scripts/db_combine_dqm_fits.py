@@ -49,7 +49,7 @@ def combine_tables(file_list, output_file):
 
         combined_tables.extend(batch_tables)
 
-    final_combined_table = vstack(combined_tables, join_type="exact")
+    final_combined_table = vstack(combined_tables, join_type="outer")
     logging.info(f"Writing combined table to {output_file}")
     final_combined_table.write(output_file, overwrite=True)
 

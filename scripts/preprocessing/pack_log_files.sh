@@ -21,10 +21,10 @@ DLIST="${2}"
 
 DDIRS=$(cat "$DLIST")
 
-cd "${PDIR}"
+cd "${PDIR}" || exit
 
 for DIR in $DDIRS; do
-    echo $DIR
-    rm -f logs_${DIR}.tar.gz
-    find ${DIR} -type f -name "*.log" -exec tar -rf logs_${DIR}.tar.gz {} +
+    echo "$DIR"
+    rm -f logs_"${DIR}".tar.gz
+    find "${DIR}" -type f -name "*.log" -exec tar -rf logs_"${DIR}".tar.gz {} +
 done

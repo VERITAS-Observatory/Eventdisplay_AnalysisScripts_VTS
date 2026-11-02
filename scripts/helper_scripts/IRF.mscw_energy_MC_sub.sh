@@ -1,9 +1,12 @@
 #!/bin/bash
-# Analyse MC files with lookup tables
-# (optional) Calculate effective areas
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
+# Analyse MC files with lookup tables (mscw_energy stage)
+# (optional) Calculate instrument response functions (effective areas) for 4 and 3-telescope combinations
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 set -e
@@ -24,6 +27,8 @@ INDIR=INPUTDIR
 ODIR=OUTPUTDIR
 # Set EFFAREACUTLIST to 'NOEFFAREA' to run mscw analysis only
 EFFAREACUTLIST=EEFFAREACUTLIST
+XGBVERSION=VERSIONXGB
+env_name="${EVNDISP_ML_ENV:-eventdisplay_ml}"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -58,7 +63,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
     TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
 fi
 
@@ -67,26 +71,40 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/mscw_energy
+        ls -l "${EVNDISPSYS}"/bin/mscw_energy
     fi
 }
 
-
 # mscw_energy command line options
-MOPT="-noNoTrigger -nomctree -writeReconstructedEventsOnly=1 -arrayrecid=${RECID} -tablefile $TABFILE"
+MOPT=(
+    -noNoTrigger
+    -nomctree
+    -writeReconstructedEventsOnly=1
+    "-arrayrecid=${RECID}"
+    -tablefile
+    "$TABFILE"
+)
 # dispBDT reconstruction
 if [ $DISPBDT -eq 1 ]; then
-    MOPT="$MOPT -redo_stereo_reconstruction"
-    MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT+=(
+        -redo_stereo_reconstruction
+        -tmva_disperror_weight
+        50
+        -minangle_stereo_reconstruction=10.
+    )
     if [[ $IRFVERSION == v490* ]]; then
-        MOPT="$MOPT -maxloss=0.20"
+        MOPT+=("-maxloss=0.20")
     else
-        MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
-        MOPT="$MOPT -maxloss=0.40"
-        MOPT="$MOPT -use_evndisp_selected_images=0"
+        MOPT+=(
+            -maxdist=1.75
+            -minntubes=5
+            -minwidth=0.02
+            -minsize=100
+            -maxloss=0.40
+            -use_evndisp_selected_images=0
+        )
     fi
-    # MOPT="$MOPT -maxnevents=1000"
+    # MOPT+=("-maxnevents=1000")
     if [[ ${SIMTYPE} == *"RedHV"* ]]; then
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}_redHV/"
     elif [[ ${SIMTYPE} == *"UV"* ]]; then
@@ -94,44 +112,63 @@ if [ $DISPBDT -eq 1 ]; then
     else
         DISPDIR="${VERITAS_EVNDISP_AUX_DIR}/DispBDTs/${ANATYPE}/${EPOCH}_ATM${ATM}/"
     fi
+    # zenith angle dependent disp training; important at large zenith
     if [[ "${ZA}" -lt "38" ]]; then
-        DISPDIR="${DISPDIR}/SZE/"
+        DISPDIR="${DISPDIR}/20deg/"
     elif [[ "${ZA}" -lt "48" ]]; then
-        DISPDIR="${DISPDIR}/MZE/"
+        DISPDIR="${DISPDIR}/45deg/"
     elif [[ "${ZA}" -lt "58" ]]; then
-        DISPDIR="${DISPDIR}/LZE/"
+        DISPDIR="${DISPDIR}/55deg/"
+    elif [[ "${ZA}" -lt "62" ]]; then
+        if [[ ${SIMTYPE} == CARE_RedHV* ]]; then  # fix for incomplete RedHV MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/60deg/"
+        fi
     else
-        DISPDIR="${DISPDIR}/XZE/"
+        if [[ ${SIMTYPE} == CARE_RedHV* ]]; then  # fix for incomplete RedHV MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/65deg/"
+        fi
     fi
     # unzip XML files into DDIR
-    cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
-    gunzip -v ${DDIR}/*xml.gz
-    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
-    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
-    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
+    cp -v -f "${DISPDIR}"/*.xml.gz "${DDIR}"/
+    gunzip -v "${DDIR}"/*xml.gz
+    MOPT+=(
+        -tmva_filename_stereo_reconstruction
+        "${DDIR}/BDTDisp_BDT_"
+        -tmva_filename_disperror_reconstruction
+        "${DDIR}/BDTDispError_BDT_"
+        -tmva_filename_dispsign_reconstruction
+        "${DDIR}/BDTDispSign_BDT_"
+    )
     if [[ $IRFVERSION != v490* ]]; then
-        MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
+        MOPT+=(
+            -tmva_filename_energy_reconstruction
+            "${DDIR}/BDTDispEnergy_BDT_"
+        )
     fi
-    echo "DISP BDT options: $MOPT"
+    echo "DISP BDT options: ${MOPT[*]}"
 fi
 
 # input evndisp files
 rm -f $OSUBDIR/$OFILE.log
 rm -f $OSUBDIR/$OFILE.list
 echo "INDIR ${INDIR}"
-if [ -n "$(find "${INDIR}/" -name "*[0-9].root" 2>/dev/null)" ]; then
+if [ -n "$(find "${INDIR}/" -maxdepth 1 -name "*[0-9].root" 2>/dev/null)" ]; then
     echo "Using evndisp root files from ${INDIR}"
-    cp -v "${INDIR}/*[0-9].root" "$DDIR"
+    find "${INDIR}/" -maxdepth 1 -name "*[0-9].root" -exec cp -v {} "$DDIR" \;
 elif [ -n "$(find  "${INDIR}/" -name "*[0-9].root.zst" 2>/dev/null)" ]; then
-    if command -v zstd /dev/null; then
+    if command -v zstd &>/dev/null; then
         echo "Copying evndisp root.zst files to ${DDIR}"
         FLIST=$(find "${INDIR}/" -name "*[0-9].root.zst")
         for F in $FLIST
         do
             echo "unpacking $F"
-            cp -v -f $F ${DDIR}/
-            ofile=$(basename $F .zst)
-            zstd -d ${DDIR}/${ofile}.zst -o ${DDIR}/${ofile}
+            cp -v -f "$F" "${DDIR}"/
+            ofile=$(basename "$F" .zst)
+            zstd -d "${DDIR}"/"${ofile}".zst -o "${DDIR}"/"${ofile}"
         done
     else
         echo "Error: no zstd installation"
@@ -145,9 +182,9 @@ cat "$DDIR/$OFILE.list"
 echo "Running mscw_energy"
 outputfilename="$DDIR/$OFILE.mscw.root"
 logfile="$OSUBDIR/$OFILE.log"
-$EVNDISPSYS/bin/mscw_energy $MOPT \
+$EVNDISPSYS/bin/mscw_energy "${MOPT[@]}" \
     -inputfilelist "$DDIR/$OFILE.list" \
-    -outputfile $outputfilename \
+    -outputfile "$outputfilename" \
     -noise=$NOISE &> $logfile
 
 echo "READING evndisp files from ${INDIR}" >> $logfile
@@ -157,15 +194,15 @@ if [ $DISPBDT -eq 1 ]; then
     echo "Reading DISPBDT XML files from ${DISPDIR}" >> $logfile
 fi
 
-echo "$(inspect_executables)" >> "$logfile"
+inspect_executables >> "$logfile"
 cp -v "$logfile" "$DDIR/$OFILE.log"
-$EVNDISPSYS/bin/logFile mscwTableLog $outputfilename "$DDIR/$OFILE.log"
+$EVNDISPSYS/bin/logFile mscwTableLog "$outputfilename" "$DDIR/$OFILE.log"
 
 # cp results file back to data directory and clean up
-outputbasename=$( basename $outputfilename )
+outputbasename=$( basename "$outputfilename" )
 chmod g+w "$logfile"
 if [[ $EFFAREACUTLIST == "NOEFFAREA" ]]; then
-    cp -f -v $outputfilename $OSUBDIR/$outputbasename
+    cp -f -v "$outputfilename" $OSUBDIR/"$outputbasename"
     chmod g+w "$OSUBDIR/$outputbasename"
     exit
 fi
@@ -179,17 +216,92 @@ echo "Effective area generation (cut list: $EFFAREACUTLIST)"
 read_cutlist()
 {
     CUTFILE="${1}"
-    if [[ $CUTFILE == "" ]] || [ ! -f $CUTFILE ]; then
+    if [[ $CUTFILE == "" ]] || [ ! -f "$CUTFILE" ]; then
         echo "Error, cuts list file not found, exiting..." >&2
-        echo $CUTFILE
+        echo "$CUTFILE"
         exit 1
     fi
-    CUTLISTFROMFILE=$(cat $CUTFILE)
+    CUTLISTFROMFILE=$(cat "$CUTFILE")
     CUTLIST=""
-    for CUT in ${CUTLISTFROMFILE[@]}; do
+    for CUT in "${CUTLISTFROMFILE[@]}"; do
         CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
     done
-    echo $CUTLIST
+    echo "$CUTLIST"
+}
+
+# Required for DISP XGB
+check_conda_installation()
+{
+    if command -v conda &> /dev/null; then
+        echo "Found conda installation."
+    else
+        echo "Error: found no conda installation."
+        echo "exiting..."
+        exit
+    fi
+    env_info=$(conda info --envs)
+    if [[ "$env_info" == *"$env_name"* ]]; then
+        echo "Found conda environment '$env_name'"
+    else
+        echo "Error: the conda environment '$env_name' does not exist."
+        echo "exiting..."
+        exit
+    fi
+}
+
+###############################################
+# Run XGB DISP reconstruction
+###############################################
+get_xgb_output_file()
+{
+    XGBOFIL=$(basename "$MSCW_FILE" .root)
+    XGBOFIL="${DDIR}/${XGBOFIL}.${XGBVERSION}_ImgSel${1}"
+    echo "$XGBOFIL"
+}
+
+
+run_xgb()
+{
+    check_conda_installation
+# shellcheck source=/dev/null
+    source activate base
+    conda activate "$env_name"
+    MSCW_FILE="$outputfilename"
+    ZA=$(basename "$MSCW_FILE" | cut -d'_' -f1)
+    ZA=${ZA%deg}
+    echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg"
+
+    DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}/"
+    STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+    BIN_ID=$(jq -r --arg za "$ZA" '
+      .zenith[]
+      | select(has("eval_min"))
+      | select(($za|tonumber) >= (.eval_min|tonumber) and ($za|tonumber) < (.eval_max|tonumber))
+      | .id' "$STEREO_PAR")
+    if [[ -z "$BIN_ID" ]]; then
+        echo "Error: No zenith bin found in $STEREO_PAR for ZA=$ZA"
+        exit 1
+    fi
+    DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"
+    echo "DispXGB directory $DISPDIR"
+    echo "DispXGB options $XGBVERSION"
+    XGBOFIL=$(get_xgb_output_file "$1")
+    echo "XGB Output file $XGBOFIL"
+    echo "DispXGB inputfle $MSCW_FILE"
+
+    rm -f "$XGBOFIL".log
+
+    eventdisplay-ml-apply-xgb-stereo \
+        --input_file "$MSCW_FILE" \
+        --model_prefix "$DISPDIR" \
+        --output_file "$XGBOFIL.root" \
+        --image_selection "$1" > "$XGBOFIL.log" 2>&1
+
+    python --version >> "${XGBOFIL}.log"
+    conda list -n "$env_name" >> "${XGBOFIL}.log"
+
+    conda deactivate
+    echo "Finished calculated XGB"
 }
 
 CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
@@ -197,8 +309,8 @@ CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
 # loop over 4 and 3-telescope combinations
 for ID in 15 14 13 11 7; do
     # Gamma/hadron cut list (depends on analysis and observation type)
-    for CUTSFILE in ${CUTLIST[@]}; do
-        echo "calculate effective areas $CUTSFILE (ID $ID)"
+    for CUTSFILE in "${CUTLIST[@]}"; do
+        echo "Calculate effective areas $CUTSFILE (ID $ID)"
         EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID${RECID}-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
         if [[ $ID == "15" ]]; then
             EFFAREAFILE="EffArea-${SIMTYPE}-${EPOCH}-ID0-Ze${ZA}deg-${WOBBLE}wob-${NOISE}"
@@ -213,10 +325,10 @@ for ID in 15 14 13 11 7; do
         fi
         # Check that cuts file exists
         CUTSFILE=${CUTSFILE%%.dat}
-        echo $CUTSFILE
-        CUTS_NAME=$(basename $CUTSFILE)
+        echo "$CUTSFILE"
+        CUTS_NAME=$(basename "$CUTSFILE")
         CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-        if [[ "$CUTSFILE" == $(basename $CUTSFILE) ]]; then
+        if [[ "$CUTSFILE" == $(basename "$CUTSFILE") ]]; then
             CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
         else
             CUTSFILE="$CUTSFILE.dat"
@@ -232,11 +344,26 @@ for ID in 15 14 13 11 7; do
             OSUBDIR="${OSUBDIR}_DISP"
         fi
         echo -e "Output files will be written to:\n $OSUBDIR"
-        mkdir -p $OSUBDIR
+        mkdir -p "$OSUBDIR"
+
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            XGBFILESUFFIX=${XGBVERSION}_ImgSel${ID}
+        else
+            XGBFILESUFFIX=None
+        fi
+
+        ENERGYRECONSTRUCTIONMETHOD=0
+        DIRECTIONRECONSTRUCTIONMETHOD=0
+        if [[ $IRFVERSION =~ ^v([0-9]+) ]] && (( 10#${BASH_REMATCH[1]} >= 492 )) &&
+            [[ $CUTS_NAME == *XGB* && $XGBFILESUFFIX != None ]]; then
+            ENERGYRECONSTRUCTIONMETHOD=2
+            DIRECTIONRECONSTRUCTIONMETHOD=2
+        fi
 
 PARAMFILE="
 * FILLINGMODE 0
-* ENERGYRECONSTRUCTIONMETHOD 0
+* ENERGYRECONSTRUCTIONMETHOD $ENERGYRECONSTRUCTIONMETHOD
+* DIRECTIONRECONSTRUCTIONMETHOD $DIRECTIONRECONSTRUCTIONMETHOD
 * ENERGYAXISBINS 60
 * ENERGYAXISBINHISTOS 30
 * EBIASBINHISTOS 75
@@ -244,31 +371,46 @@ PARAMFILE="
 * RESPONSEMATRICESEBINS 200
 * AZIMUTHBINS 1
 * FILLMONTECARLOHISTOS 0
-* ENERGYSPECTRUMINDEX 27 1.6 0.2
+* ENERGYSPECTRUMINDEX 40 1.5 0.1
 * RERUN_STEREO_RECONSTRUCTION_3TEL $ID
-* CUTFILE $DDIR/$(basename $CUTSFILE)
+* CUTFILE $DDIR/$(basename "$CUTSFILE")
  IGNOREFRACTIONOFEVENTS 0.5
-* SIMULATIONFILE_DATA $outputfilename"
+* SIMULATIONFILE_DATA $outputfilename
+* XGBSTEREOFILESUFFIX ${XGBFILESUFFIX}"
+
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            run_xgb $ID
+        fi
 
         # create makeEffectiveArea parameter file
         EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
         rm -f "$DDIR/$EAPARAMS.dat"
-        eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+        eval "echo \"$PARAMFILE\"" > "$DDIR"/"$EAPARAMS".dat
+        echo "Run parameter file:"
+        cat "$DDIR"/"$EAPARAMS".dat
 
         # calculate effective areas
-        rm -f $OSUBDIR/$OFILE.root
-        $EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
+        rm -f "$OSUBDIR"/$OFILE.root
+        $EVNDISPSYS/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
 
         echo "Filling effAreaLog file into root file: $OSUBDIR/$EAPARAMS.log"
-        echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+        inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
         cp "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-        $EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
+        $EVNDISPSYS/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
         echo "Filling mscwTableLog file into root file: $OSUBDIR/$EAPARAMS.log"
-        $EVNDISPSYS/bin/logFile mscwTableLog $DDIR/$EAPARAMS.root "$DDIR/$OFILE.log"
-        rm -f $OSUBDIR/$EAPARAMS.log
-        cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
-        chmod -R g+w $OSUBDIR
-        chmod g+w $OSUBDIR/$EAPARAMS.root
-
+        $EVNDISPSYS/bin/logFile mscwTableLog "$DDIR"/"$EAPARAMS".root "$DDIR/$OFILE.log"
+        echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
+        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+            XGBLOGFILE="$(get_xgb_output_file $ID).log"
+            if [[ -f "$XGBLOGFILE" ]]; then
+                $EVNDISPSYS/bin/logFile xgbLog "$DDIR"/"$EAPARAMS".root "$XGBLOGFILE"
+            else
+                echo "XGB log file $XGBLOGFILE not found, skipping."
+            fi
+        fi
+        rm -f "$OSUBDIR"/"$EAPARAMS".log
+        cp -f -v "$DDIR"/"$EAPARAMS".root "$OSUBDIR"/"$EAPARAMS".root
+        chmod -R g+w "$OSUBDIR"
+        chmod g+w "$OSUBDIR"/"$EAPARAMS".root
     done
 done

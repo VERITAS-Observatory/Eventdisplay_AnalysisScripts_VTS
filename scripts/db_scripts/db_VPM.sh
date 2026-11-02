@@ -15,12 +15,12 @@ STARTDATE="$1"
 ENDDATE="$2"
 TELID="$3"
 
-STARTMJD=$($EVNDISPSYS/bin/printMJD "${STARTDATE}")
-ENDMJD=$($EVNDISPSYS/bin/printMJD "${ENDDATE}")
+STARTMJD=$("$EVNDISPSYS"/bin/printMJD "${STARTDATE}")
+ENDMJD=$("$EVNDISPSYS"/bin/printMJD "${ENDDATE}")
 
 if [[ "${STARTDATE}" == *NULL* ]] || [[ "${ENDDATE}" == *NULL* ]]; then
     echo ""
 else
     QUERY="SELECT mjd,ra,decl FROM tblPointing_Monitor_Telescope${TELID}_Calibrated_Pointing WHERE mjd<=${ENDMJD} AND mjd>=${STARTMJD}"
-    $($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VOFFLINE; ${QUERY}"  | sed 's/\t/|/g'
+    $("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VOFFLINE; ${QUERY}"  | sed 's/\t/|/g'
 fi

@@ -1,8 +1,9 @@
 #!/bin/bash
+# shellcheck disable=SC2178,SC2128,SC2068
 # IRF production script (VERITAS)
 
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 2 ]; then
 echo "
@@ -13,16 +14,23 @@ IRF.production.sh <sim type> <IRF type> [epoch] [atmosphere] [Rec ID] [cuts list
 required parameters:
 
     <sim type>              simulation type
-                            (e.g. GRISU, CARE_June2020, CARE_RedHV, CARE_UV,
-                            CARE_RedHV_Feb2024, CARE_202404, CARE_24_20)
-                            V6 basic types (>=v491): CARE_202404, CARE_RedHV_Feb2024
+                            Main types: GRISU CARE_24_20 CARE_RedHV_Feb2024 CARE_UV_2212
+                            CARE_RedHV_Feb2024 CARE_202404 CARE_24_20
+                            V6 basic types: CARE_202404 CARE_RedHV_Feb2024
+                            Other types: CARE_June2020 CARE_RedHV CARE_UV
 
-    <IRF type>              type of instrument response function to produce
-                            (e.g. EVNDISP, MAKETABLES, COMBINETABLES,
-                             (ANALYSETABLES, PRESELECTEFFECTIVEAREAS, EFFECTIVEAREAS,
-                             ANATABLESEFFAREAS, COMBINEPRESELECTEFFECTIVEAREAS, COMBINEEFFECTIVEAREAS,
-                             MVAEVNDISP, TRAINTMVA, OPTIMIZETMVA,
-                             TRAINMVANGRES, EVNDISPCOMPRESS)
+    <IRF type>              type of instrument response function to produce.
+                            EVNDISP
+                            MAKETABLES COMBINETABLES
+                            TRAINMVANGRES
+                            ANALYSETABLES ANALYSETABLESXGBTRAIN
+                            TRAINXGBANGRES ANAXGBANGRES
+                            TRAINXGBGH ANAXGBGH
+                            PRESELECTEFFECTIVEAREAS COMBINEPRESELECTEFFECTIVEAREAS
+                            TRAINTMVA OPTIMIZETMVA
+                            ANATABLESEFFAREAS
+                            EFFECTIVEAREAS COMBINEEFFECTIVEAREAS
+                            (EVNDISPCOMPRESS MVAEVNDISP)
 
 optional parameters:
 
@@ -58,13 +66,12 @@ fi
 # We need to be in the IRF.production.sh directory so that subscripts are called
 # (we call them ./).
 olddir=$(pwd)
-cd $(dirname "$0")
+cd "$(dirname "$0")" || exit
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh"
+    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # Parse command line arguments
 SIMTYPE="$1"
@@ -76,7 +83,7 @@ IRFTYPE="$2"
 [[ "$7" ]] && SIMDIR="$7" || SIMDIR=""
 
 # uuid for this job batch
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 UUID=${DATE}-$(uuidgen)
 
 # version string for aux files
@@ -119,145 +126,205 @@ fi
 echo "Cut list file: $CUTSLISTFILE"
 echo "Simulation type: $SIMTYPE"
 
-# simulation types and definition of parameter space
-if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
-    # GrISU simulation parameters
-    SIMDIR=${VERITAS_DCACHE_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
-    ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
-    NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
-    WOBBLE_OFFSETS=( 0.5 0.00 0.25 0.75 1.00 1.25 1.50 1.75 2.00 )
-    if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
-       NSB_LEVELS=( 200 )
-       WOBBLE_OFFSETS=( 0.5 )
-    fi
-elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
-    SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
-    if [[ $ATMOS == "62" ]]; then
-        ZENITH_ANGLES=( 00 30 50 )
+# simulation space and learner-specific training parameter spaces
+SIM_ZENITH_ANGLES=()
+SIM_NSB_LEVELS=()
+SIM_WOBBLE_OFFSETS=()
+TRAIN_TMVA_GH_ZENITH_ANGLES=()
+TRAIN_TMVA_GH_NSB_LEVELS=()
+TRAIN_TMVA_GH_WOBBLE_OFFSETS=()
+TRAIN_XGB_GH_ZENITH_ANGLES=()
+TRAIN_XGB_GH_NSB_LEVELS=()
+TRAIN_XGB_GH_WOBBLE_OFFSETS=()
+TRAIN_MVA_ANGRES_NSB_LEVELS=()
+TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=()
+TRAIN_XGB_ANGRES_ZENITH_ANGLES=()
+TRAIN_XGB_ANGRES_NSB_LEVELS=()
+TRAIN_XGB_ANGRES_WOBBLE_OFFSETS=()
+TRAIN_XGB_ANGRES_BIN_IDS=()
+
+set_gh_training_parameter_space()
+{
+    TRAIN_TMVA_GH_ZENITH_ANGLES=( 20 30 35 40 45 50 55 60 65 )
+    TRAIN_TMVA_GH_WOBBLE_OFFSETS=( 0.5 )
+    TRAIN_XGB_GH_WOBBLE_OFFSETS=( 0.5 )
+    if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
+        TRAIN_TMVA_GH_NSB_LEVELS=( 100 150 200 250 325 425 550 )
     else
-        ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
+        TRAIN_TMVA_GH_NSB_LEVELS=( 100 160 200 250 350 450 )
     fi
-    NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
-    WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
-    SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.bz2 | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.bz2 | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=( 0.5 )
-elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
-    SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
-elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
-    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR}/*.zst | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort | uniq)
-    NSB_LEVELS=$(ls ${SIMDIR}/*.zst | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort | uniq)
-    WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
-    SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
-    set -- $ZENITH_ANGLES
-    NSB_LEVELS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd*/* | awk -F "_" '{print $7}' |  awk -F "wob" '{print $1}' | sort -u)
-    ######################################
-    # TEST
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.0 )
-    # NSB_LEVELS=( 350 )
-    ######################################
-    # TRAINMVANGRES production
-    # (assume 0.5 deg wobble is done)
-    # NSB_LEVELS=( 160 200 250 )
-    # WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
-    # complete NSB bins from TRAINMVANGRES production
-    # (assume 0.5 deg wobble is done)
-    # NSB_LEVELS=( 50 75 100 130 300 350 400 450 )
-    # WOBBLE_OFFSETS=( 0.25 0.75 1.0 1.5 )
-    # complete wobble bins after TRAINMVANGRES production
-    # WOBBLE_OFFSETS=( 0.0 1.25 1.75 2.0 )
-    # (END TEMPORARY)
-    ######################################
-elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
-    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
-    # ZENITH_ANGLES=( 60 65 )
-    set -- $ZENITH_ANGLES
-    ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
-    # Note! Assumes same NSB and WOBBLE offsets for flat and curved atmosphere
-    NSB_LEVELS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*vbf.zst | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/Zd${ze_first_bin}/*.vbf.zst | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
-    ######################################
-    # TEST
-    # NSB_LEVELS=( 300 )
-    # ZENITH_ANGLES=( 20 )
-    # WOBBLE_OFFSETS=( 0.5 )
-elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
-    SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATMOS}"
-    ZENITH_ANGLES=$(ls ${SIMDIR} | awk -F "Zd" '{print $2}' | sort | uniq)
-    set -- $ZENITH_ANGLES
-    ze_first_bin=$(echo $ZENITH_ANGLES | awk '{print $1}')
-    # assume same NSB and wobble offsets in all bins
-    NSB_LEVELS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $9}' | awk -F "MHz" '{print $1}'| sort -u)
-    WOBBLE_OFFSETS=$(ls ${SIMDIR}/*${ze_first_bin}*/* | awk -F "_" '{print $8}' |  awk -F "wob" '{print $1}' | sort -u)
-    ######################################
-    # TEST
-    # ZENITH_ANGLES=( 00 20 30 35 40 45 )
-    # ZENITH_ANGLES=( 60 65 )
-    # WOBBLE_OFFSETS=( 0.5 )
-    # NSB_LEVELS=( 160 )
-    # IRF comparison
-    # ZENITH_ANGLES=( 20 40 50 60 65 )
-    # WOBBLE_OFFSETS=( 0.5 1.0 1.5 )
-    # NSB_LEVELS=( 200 )
-    ######################################
-    # TRAINMVANGRES production
-elif [ ${SIMTYPE:0:4} == "CARE" ]; then
-    # Older CARE simulation parameters
-    SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
-    ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
-    NSB_LEVELS=( 50 80 120 170 230 290 370 450 )
-    WOBBLE_OFFSETS=( 0.5 )
-    if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
-       NSB_LEVELS=( 170 )
-       WOBBLE_OFFSETS=( 0.5 )
+
+    TRAIN_XGB_GH_ZENITH_ANGLES=()
+    TRAIN_XGB_GH_NSB_LEVELS=()
+    XGB_GH_RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+    if [[ -f "$XGB_GH_RUNPAR" ]]; then
+        mapfile -t TRAIN_XGB_GH_ZENITH_ANGLES < <(jq -r '.input_zenith_angles[]' "$XGB_GH_RUNPAR")
+        mapfile -t TRAIN_XGB_GH_NSB_LEVELS < <(jq -r '.input_noise_values[]' "$XGB_GH_RUNPAR")
     fi
-else
-    echo "Invalid simulation type: ${SIMTYPE}. Exiting..."
-    exit 1
-fi
-echo "Zenith angle bins: ${ZENITH_ANGLES}"
-echo "NSB levels: ${NSB_LEVELS}"
-echo "Wobble offsets: ${WOBBLE_OFFSETS}"
+}
+
+set_angres_training_parameter_space()
+{
+    TRAIN_XGB_ANGRES_ZENITH_ANGLES=()
+    TRAIN_XGB_ANGRES_NSB_LEVELS=( 160 200 350 450 )
+    if [[ ${SIMTYPE} == "CARE_RedHV_"* ]]; then
+        TRAIN_XGB_ANGRES_NSB_LEVELS=( 300 450 600 750 )
+    fi
+    TRAIN_XGB_ANGRES_WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.25 1.5 1.75 2.0 )
+    TRAIN_XGB_ANGRES_BIN_IDS=()
+
+    STEREO_PAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+    if [[ -f "$STEREO_PAR" ]]; then
+        mapfile -t TRAIN_XGB_ANGRES_ZENITH_ANGLES < <(jq -r '.zenith[].train[]' "$STEREO_PAR" | sort -un | awk '{printf "%02d\n", $1}')
+        mapfile -t TRAIN_XGB_ANGRES_BIN_IDS < <(jq -r '.zenith[].id' "$STEREO_PAR")
+    fi
+
+    TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.0 1.5 )
+    if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 150 200 250 )
+        TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.25 0.5 0.75 1.00 1.50 )
+    elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 300 600 900 )
+        TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.5 )
+    elif [[ ${SIMTYPE} = "CARE_RedHV_"* ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 300 600 900 )
+    elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 160 200 300 )
+        TRAIN_MVA_ANGRES_WOBBLE_OFFSETS=( 0.5 )
+    elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
+        TRAIN_MVA_ANGRES_NSB_LEVELS=( 160 200 250 )
+    fi
+}
+
+set_sim_parameter_space()
+{
+    if [[ ${SIMTYPE:0:5} == "GRISU" ]]; then
+        # GrISU simulation parameters
+        SIMDIR=${VERITAS_DCACHE_DIR}/simulations/"$VX"_FLWO/grisu/ATM"$ATM"
+        SIM_ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
+        SIM_NSB_LEVELS=( 075 100 150 200 250 325 425 550 750 1000 )
+        SIM_WOBBLE_OFFSETS=( 0.5 0.00 0.25 0.75 1.00 1.25 1.50 1.75 2.00 )
+        if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
+           SIM_NSB_LEVELS=( 200 )
+           SIM_WOBBLE_OFFSETS=( 0.5 )
+        fi
+    elif [ "${SIMTYPE}" = "CARE_June1702" ]; then
+        SIMDIR="${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1702/"
+        if [[ $ATM == "62" ]]; then
+            SIM_ZENITH_ANGLES=( 00 30 50 )
+        else
+            SIM_ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 )
+        fi
+        SIM_NSB_LEVELS=( 50 75 100 130 160 200 250 300 350 400 450 )
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+    elif [ "${SIMTYPE}" == "CARE_UV_June1409" ]; then
+        SIMDIR=${VERITAS_DATA_DIR}/simulations/V6_FLWO/CARE_June1409_UV/
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "gamma_" '{print $2}' | awk -F "deg." '{print $1}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.bz2" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "mhz." '{print $1}' | sort -u)
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+    elif [ "${SIMTYPE}" == "CARE_UV_2212" ]; then
+        SIMDIR=${VERITAS_DATA_DIR}/simulations/UVF_Dec2022/CARE/
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "wob" '{print $1}' | sort -u)
+    elif [ "${SIMTYPE}" == "CARE_RedHV" ]; then
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/V6_FLWO/CARE_June1702_RHV/ATM${ATM}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "_zen" '{print $2}' | awk -F "deg." '{print $1}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -maxdepth 1 -name "*.zst" -exec basename {} \; | awk -F "wob_" '{print $2}' | awk -F "MHz." '{print $1}' | sort -u)
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+    elif [[ "${SIMTYPE}" == "CARE_June2020" ]]; then
+        SIMDIR="${VERITAS_DATA_DIR}/shared/simulations/NSOffsetSimulations/Atmosphere${ATM}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | sort -u)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $8}' | awk -F "MHz" '{print $1}' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}" -path '*/Zd*/*' -type f -exec basename {} \; | awk -F "_" '{print $7}' | awk -F "wob" '{print $1}' | sort -u)
+    elif [[ "${SIMTYPE}" == "CARE_RedHV_Feb2024" ]]; then
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_redHV/Atmosphere${ATM}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort -u)
+        ze_first_bin=$(printf '%s\n' "${SIM_ZENITH_ANGLES[@]}" | head -n 1)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
+    elif [[ "${SIMTYPE}" == "CARE_202404" ]] || [[ "${SIMTYPE}" == "CARE_24_20" ]]; then
+        SIMDIR="${VERITAS_DCACHE_DIR}/simulations/NSOffsetSimulations_202404/Atmosphere${ATM}"
+        mapfile -t SIM_ZENITH_ANGLES < <(find "${SIMDIR}" -mindepth 1 -maxdepth 1 -type d -name "Zd*" -exec basename {} \; | awk -F "Zd" '{print $2}' | grep -v curved | sort -u)
+        ze_first_bin=$(printf '%s\n' "${SIM_ZENITH_ANGLES[@]}" | head -n 1)
+        mapfile -t SIM_NSB_LEVELS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\2/p' | sort -u)
+        mapfile -t SIM_WOBBLE_OFFSETS < <(find "${SIMDIR}/Zd${ze_first_bin}" -maxdepth 1 -type f -name "*.zst" -exec basename {} \; | sed -nE 's/.*_([0-9.]+)wob_([0-9]+)MHz.*/\1/p' | sort -u)
+    elif [ "${SIMTYPE:0:4}" == "CARE" ]; then
+        # Older CARE simulation parameters
+        SIMDIR=$VERITAS_DATA_DIR/simulations/"${VX:0:2}"_FLWO/CARE_June1425/
+        SIM_ZENITH_ANGLES=( 00 20 30 35 40 45 50 55 60 65 )
+        SIM_NSB_LEVELS=( 50 80 120 170 230 290 370 450 )
+        SIM_WOBBLE_OFFSETS=( 0.5 )
+        if [[ $IRFTYPE == "MVAEVNDISP" ]]; then
+           SIM_NSB_LEVELS=( 170 )
+           SIM_WOBBLE_OFFSETS=( 0.5 )
+        fi
+    else
+        echo "Invalid simulation type: ${SIMTYPE}. Exiting..."
+        exit 1
+    fi
+}
+
+use_parameter_space()
+{
+    case "$1" in
+        sim)
+            ZENITH_ANGLES=( "${SIM_ZENITH_ANGLES[@]}" )
+            NSB_LEVELS=( "${SIM_NSB_LEVELS[@]}" )
+            WOBBLE_OFFSETS=( "${SIM_WOBBLE_OFFSETS[@]}" )
+            ;;
+        xgb-angres)
+            ZENITH_ANGLES=( "${TRAIN_XGB_ANGRES_ZENITH_ANGLES[@]}" )
+            NSB_LEVELS=( "${TRAIN_XGB_ANGRES_NSB_LEVELS[@]}" )
+            WOBBLE_OFFSETS=( "${TRAIN_XGB_ANGRES_WOBBLE_OFFSETS[@]}" )
+            ;;
+        *)
+            echo "Unknown parameter space '$1'"
+            exit 1
+            ;;
+    esac
+}
+
+irftype_requires_sim_parameter_space()
+{
+    case "$1" in
+        EVNDISP|MVAEVNDISP|EVNDISPCOMPRESS|MAKETABLES|ANALYSETABLES|ANALYSETABLESXGBTRAIN|ANATABLESEFFAREAS|EFFECTIVEAREAS|PRESELECTEFFECTIVEAREAS|TRAINMVANGRES)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
 
 # read cut list file
 read_cutlist()
 {
     CUTFILE="${1}"
-    if [[ $CUTFILE == "" ]] || [ ! -f $CUTFILE ]; then
+    if [[ $CUTFILE == "" ]] || [ ! -f "$CUTFILE" ]; then
         echo "Error, cuts list file not found, exiting..." >&2
-        echo $CUTFILE
+        echo "$CUTFILE"
         exit 1
     fi
-    CUTLISTFROMFILE=$(cat $CUTFILE)
-    CUTLIST=""
-    for CUT in ${CUTLISTFROMFILE[@]}; do
-        CUTLIST="${CUTLIST} ANASUM.GammaHadron-Cut-$CUT.dat"
+    mapfile -t CUTLISTFROMFILE < "$CUTFILE"
+    CUTLIST=()
+    for CUT in "${CUTLISTFROMFILE[@]}"; do
+        CUT=${CUT%$'\r'}
+        CUTLIST+=("ANASUM.GammaHadron-Cut-$CUT.dat")
     done
-    echo $CUTLIST
 }
 
 # Cut types are used for BDT training and optimisation
-CUTTYPES="NTel2-PointSource-Moderate
-          NTel2-PointSource-Soft
-          NTel2-PointSource-Hard
-          NTel3-PointSource-Hard"
+CUTTYPES=(
+    "NTel2-PointSource-Moderate"
+    "NTel2-PointSource-Soft"
+    "NTel2-PointSource-Hard"
+    "NTel3-PointSource-Hard"
+)
 # NN cuts for soft only
 if [[ $ANATYPE = "NN"* ]]; then
-    CUTTYPES="NTel2-PointSource-SuperSoft"
+    CUTTYPES=("NTel2-PointSource-SuperSoft")
 fi
-CUTTYPES=`echo $CUTTYPES |tr '\r' ' '`
-CUTTYPES=${CUTTYPES//$'\n'/}
 
 echo "===== Start submission ====="
 
@@ -274,7 +341,7 @@ for VX in $EPOCH; do
             TFIL="${TABLECOM}"
             for ID in $RECID; do
                 echo "combine lookup tables"
-                $(dirname "$0")/IRF.combine_lookup_table_parts.sh \
+                "$(dirname "$0")/IRF.combine_lookup_table_parts.sh" \
                     "${TFIL}${ANATYPE}" "$VX" "$ATM" \
                     "$ID" "$SIMTYPE" "$ANATYPE"
             done
@@ -283,12 +350,12 @@ for VX in $EPOCH; do
        ######################
        # combine effective areas
        if [[ $IRFTYPE == "COMBINEEFFECTIVEAREAS" ]] || [[ $IRFTYPE == "COMBINEPRESELECTEFFECTIVEAREAS" ]]; then
-            CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-            echo "CUTLIST: $CUTLIST"
+            read_cutlist "$CUTSLISTFILE"
+            echo "CUTLIST: ${CUTLIST[*]}"
             for ID in $RECID; do
-                for CUTS in ${CUTLIST[@]}; do
+                for CUTS in "${CUTLIST[@]}"; do
                     echo "combine effective areas $CUTS"
-                   $(dirname "$0")/IRF.combine_effective_area_parts.sh \
+                   "$(dirname "$0")/IRF.combine_effective_area_parts.sh" \
                        "$CUTS" "$VX" "$ATM" \
                        "$ID" "$SIMTYPE" "$AUX" "$ANATYPE" \
                        "$DISPBDT"
@@ -297,84 +364,132 @@ for VX in $EPOCH; do
             continue
        fi
        #############################################
+       # Analyse XGBs based on MSCW files (directory, energy)
+       if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB reconstruction reading from $MSCWDIR"
+            "$(dirname "$0")/IRF.dispXGB.sh" "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}"
+            continue
+       fi
+       #############################################
+       # Classification XGB based on MSCW files
+       if [[ $IRFTYPE == "ANAXGBGH" ]]; then
+            MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
+            echo "XGB classification reading from $MSCWDIR"
+            "$(dirname "$0")/IRF.dispXGB.sh" "classification" "${MSCWDIR}" "${MSCWDIR}"
+            continue
+       fi
+       #############################################
+       # XGB Classification Training
+       if [[ $IRFTYPE == "TRAINXGBGH" ]]; then
+           set_gh_training_parameter_space
+           if [[ ${#TRAIN_XGB_GH_ZENITH_ANGLES[@]} -eq 0 ]] || [[ ${#TRAIN_XGB_GH_NSB_LEVELS[@]} -eq 0 ]]; then
+               echo "Error: failed to read XGB gamma/hadron training parameter space from $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+               exit 1
+           fi
+           BCKDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining/mscw_${VX:0:2}_XGB"
+           RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-classify-parameter.json"
+           ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
+           echo "XGB Classification Training"
+           echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
+           "$(dirname "$0")/IRF.trainXGBforGammaHadronSeparationTraining.sh" \
+               "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}" \
+               "${UUID}" "${TRAIN_XGB_GH_ZENITH_ANGLES[*]}" "${TRAIN_XGB_GH_NSB_LEVELS[*]}" "${TRAIN_XGB_GH_WOBBLE_OFFSETS[*]}"
+           continue
+       fi
+       #############################################
        # MVA training
        # train per epoch and atmosphere and for each cut
        # (cut as sizesecondmax cut is applied)
        if [[ $IRFTYPE == "TRAINTMVA" ]] || [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
-            for VX in $EPOCH; do
-                for ATM in $ATMOS; do
-                    for C in ${CUTTYPES[@]}; do
-                        echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
-                        BDTDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining"
-                        MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
-                        # list of background files
-                        TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
-                        if [[ $DISPBDT == "1" ]]; then
-                            TRAINDIR="${BDTDIR}/mscw_${VX:0:2}_DISP/"
-                            MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
-                        fi
-                        mkdir -p -v "${MVADIR}"
-                        if [[ $IRFTYPE == "TRAINTMVA" ]]; then
-                            # retrieve size cut
-                            CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
-                            echo "CUTFILE: $CUTFIL"
-                            SIZECUT=`grep "* sizesecondmax" $CUTFIL | grep ${EPOCH:0:2} | awk '{print $3}' | sort -u`
-                            if [ -z "$SIZECUT" ]
-                            then
-                                echo "No size cut found; skipping cut $C"
-                                continue
-                            fi
-                            echo "Size cut applied: $SIZECUT"
-                            if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/BDT.runparameter
-                            else
-                                cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.runparameter "$MVADIR"/BDT.runparameter
-                            fi
-                            sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/BDT.runparameter
-                            if [[ $CUTFIL = *"NTel3"* ]]; then
-                                sed -i "s/NImages>1/NImages>2/" "$MVADIR"/BDT.runparameter
-                            fi
-                            ./IRF.trainTMVAforGammaHadronSeparation.sh \
-                                         "${TRAINDIR}" \
-                                         "$MVADIR"/BDT.runparameter \
-                                         "${MVADIR}" BDT ${SIMTYPE} ${VX} "${ATM}"
-                         # Cut optimization
-                         elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
-                             echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
-                             ./IRF.optimizeTMVAforGammaHadronSeparation.sh \
-                                 "${BDTDIR}/BackgroundRates/${VX:0:2}" \
-                                 "${C/PointSource-/}" \
-                                 ${SIMTYPE} ${VX} "${ATM}"
-                         fi
-                    done
-                done
+            set_gh_training_parameter_space
+            for C in "${CUTTYPES[@]}"; do
+                echo "Training/optimising TMVA for $C cuts, ${VX} ATM${ATM}"
+                BDTDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/BDTtraining"
+                MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                # list of background files
+                TRAINDIR="${BDTDIR}/mscw_${VX:0:2}/"
+                if [[ $DISPBDT == "1" ]]; then
+                    TRAINDIR="${BDTDIR}/mscw_${VX:0:2}_DISP/"
+                    MVADIR="${BDTDIR}/GammaHadronBDTs_${VX:0:2}_DISP/${VX}_ATM${ATM}/${C/PointSource-/}/"
+                fi
+                mkdir -p -v "${MVADIR}"
+                if [[ $IRFTYPE == "TRAINTMVA" ]]; then
+                    # retrieve size cut
+                    CUTFIL="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/ANASUM.GammaHadron-Cut-${C}-TMVA-Preselection.dat
+                    echo "CUTFILE: $CUTFIL"
+                    SIZECUT=$(grep '^\* sizesecondmax' "$CUTFIL" | grep "${VX:0:2}" | awk '{print $3}' | sort -u)
+                    if [ -z "$SIZECUT" ]
+                    then
+                        echo "No size cut found; skipping cut $C"
+                        continue
+                    fi
+                    echo "Size cut applied: $SIZECUT"
+                    RUNPAR="TMVA.BDT.runparameter"
+                    if [[ ${VX:0:2} == "V4" ]] || [[ ${VX:0:2} == "V5" ]]; then
+                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/TMVA.BDT.V4.runparameter "$MVADIR"/"$RUNPAR"
+                    else
+                        cp -f "$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/"$RUNPAR" "$MVADIR"/"$RUNPAR"
+                    fi
+                    sed -i "s/TMVASIZECUT/${SIZECUT}/" "$MVADIR"/"$RUNPAR"
+                    if [[ $CUTFIL = *"NTel3"* ]]; then
+                        sed -i "s/NImages>1/NImages>2/" "$MVADIR"/"$RUNPAR"
+                    fi
+                    "$(dirname "$0")/IRF.trainTMVAforGammaHadronSeparation.sh" \
+                                 "${TRAINDIR}" \
+                                 "$MVADIR"/"$RUNPAR" \
+                                 "${MVADIR}" BDT "${SIMTYPE}" "${VX}" "${ATM}" \
+                                 "${UUID}" "${TRAIN_TMVA_GH_ZENITH_ANGLES[*]}" "${TRAIN_TMVA_GH_NSB_LEVELS[*]}" "${TRAIN_TMVA_GH_WOBBLE_OFFSETS[*]}"
+                 # Cut optimization
+                 elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
+                     echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
+                     "$(dirname "$0")/IRF.optimizeTMVAforGammaHadronSeparation.sh" \
+                         "${BDTDIR}/BackgroundRates/${VX:0:2}" \
+                         "${C/PointSource-/}" \
+                         "${SIMTYPE}" "${VX}" "${ATM}"
+                 fi
             done
             continue
        fi
        #################################################
-       # zenith angle dependent analysis
-       for ZA in ${ZENITH_ANGLES[@]}; do
+       # zenith angle bin dependent analysis
+       #################################################
+       if [[ $IRFTYPE == "TRAINXGBANGRES" ]]; then
+           set_angres_training_parameter_space
+           if [[ ${#TRAIN_XGB_ANGRES_BIN_IDS[@]} -eq 0 ]]; then
+               echo "Error: failed to read XGB angular reconstruction bin IDs from $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/XGB-stereo-parameter.json"
+               exit 1
+           fi
+           for ZAB in "${TRAIN_XGB_ANGRES_BIN_IDS[@]}"; do
+                   "$(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh" \
+                       "$VX" "$ATM" "$ZAB" "${TRAIN_XGB_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_XGB_ANGRES_NSB_LEVELS[*]}" 0 \
+                       "$SIMTYPE" "$ANATYPE" "$UUID"
+           done
+           continue
+       fi
+       if irftype_requires_sim_parameter_space "$IRFTYPE"; then
+           set_sim_parameter_space
+           if [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]]; then
+               set_angres_training_parameter_space
+               use_parameter_space xgb-angres
+           elif [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
+               set_angres_training_parameter_space
+               use_parameter_space sim
+           else
+               use_parameter_space sim
+           fi
+           echo "Zenith angle bins: ${ZENITH_ANGLES[*]}"
+           echo "NSB levels: ${NSB_LEVELS[*]}"
+           echo "Wobble offsets: ${WOBBLE_OFFSETS[*]}"
+       fi
+    # zenith angle dependent analysis
+    for ZA in ${ZENITH_ANGLES[@]}; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               FIXEDWOBBLE="0.25 0.5 0.75 1.0 1.5"
-               if [[ ${SIMTYPE:0:5} = "GRISU" ]]; then
-                   FIXEDNSB="150 200 250"
-                   FIXEDWOBBLE="0.25 0.5 0.75 1.00 1.50"
-               elif [[ ${SIMTYPE} = "CARE_RedHV" ]]; then
-                   FIXEDWOBBLE="0.5"
-                   FIXEDNSB="300 600 900"
-               elif [[ ${SIMTYPE} = "CARE_RedHV_"* ]]; then
-                   FIXEDNSB="300 600 900"
-               elif [[ ${SIMTYPE} = "CARE_UV"* ]]; then
-                   FIXEDWOBBLE="0.5"
-                   FIXEDNSB="160 200 300"
-               elif [[ ${SIMTYPE:0:4} = "CARE" ]]; then
-                   FIXEDNSB="160 200 250"
-               fi
-               $(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh \
-                   $VX $ATM $ZA "$FIXEDWOBBLE" "$FIXEDNSB" 0 \
-                   $SIMTYPE $ANATYPE $UUID
+               "$(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh" \
+                   "$VX" "$ATM" "$ZA" "${TRAIN_MVA_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_MVA_ANGRES_NSB_LEVELS[*]}" 0 \
+                   "$SIMTYPE" "$ANATYPE" "$UUID"
                continue
             fi
             for NOISE in ${NSB_LEVELS[@]}; do
@@ -384,29 +499,33 @@ for VX in $EPOCH; do
                     # run simulations through evndisp
                     if [[ $IRFTYPE == "EVNDISP" ]] || [[ $IRFTYPE == "MVAEVNDISP" ]] || [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
                        SIMDIRZA="$SIMDIR"
+                       # CURVED_ATMOSPHERE_MC
+                       # if [[ -e "$SIMDIR/Zd${ZA}_curved/" ]]; then
+                       #   SIMDIRZA="$SIMDIR/Zd${ZA}_curved/"
+                       #    echo "Using curved atmosphere simulations from $SIMDIRZA"
                        if [[ -e "$SIMDIR/Zd${ZA}/" ]]; then
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
-                           $(dirname "$0")/IRF.evndisp_MC.sh \
-                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ACUTS 1 $ANATYPE $UUID
+                           "$(dirname "$0")/IRF.evndisp_MC.sh" \
+                               "$SIMDIRZA" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                               "$SIMTYPE" $ACUTS 1 "$ANATYPE" "$UUID"
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
-                           $(dirname "$0")/IRF.compress_evndisp_MC.sh \
-                               $SIMDIRZA $VX $ATM $ZA $WOBBLE $NOISE \
-                               $SIMTYPE $ANATYPE $UUID
+                           "$(dirname "$0")/IRF.compress_evndisp_MC.sh" \
+                               "$SIMDIRZA" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                               "$SIMTYPE" "$ANATYPE" "$UUID"
                        fi
                     ######################
                     # make tables
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
                         for ID in $RECID; do
-                           $(dirname "$0")/IRF.generate_lookup_table_parts.sh \
-                               $VX $ATM $ZA $WOBBLE $NOISE \
-                               $ID $SIMTYPE $ANATYPE $UUID
+                           "$(dirname "$0")/IRF.generate_lookup_table_parts.sh" \
+                               "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                               "$ID" "$SIMTYPE" "$ANATYPE" "$UUID"
                         done #recID
                     ######################
                     # analyse table files
-                    elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
+elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN" ]] || [[ $IRFTYPE == "ANATABLESEFFAREAS" ]]; then
                         for ID in $RECID; do
                             TFIL="${TABLECOM}"
                             # note: the IDs dependent on what is written in EVNDISP.reconstruction.runparameter
@@ -417,22 +536,22 @@ for VX in $EPOCH; do
                                 # run mscw and effective area code
                                 EFFAREACUTLIST="$CUTSLISTFILE"
                             fi
-                            $(dirname "$0")/IRF.mscw_energy_MC.sh \
-                                $TFILID $VX $ATM $ZA $WOBBLE $NOISE \
-                                $ID $SIMTYPE $ANATYPE $DISPBDT $EFFAREACUTLIST $UUID
+                            "$(dirname "$0")/IRF.mscw_energy_MC.sh" \
+                                "$TFILID" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                                "$ID" "$SIMTYPE" "$ANATYPE" $DISPBDT "$EFFAREACUTLIST" "$UUID"
 			            done #recID
                     ######################
                     # analyse effective areas
                     elif [[ $IRFTYPE == "EFFECTIVEAREAS" ]] || [[ $IRFTYPE == "PRESELECTEFFECTIVEAREAS" ]]; then
-                        CUTLIST=$(read_cutlist "$CUTSLISTFILE")
-                        echo "CUTLIST: $CUTLIST"
+                        read_cutlist "$CUTSLISTFILE"
+                        echo "CUTLIST: ${CUTLIST[*]}"
                         for ID in ${RECID}; do
-                            for CUTS in ${CUTLIST[@]}; do
+                            for CUTS in "${CUTLIST[@]}"; do
                                echo "calculate effective areas $CUTS (ID $ID)"
-                               $(dirname "$0")/IRF.generate_effective_area_parts.sh \
-                                   $CUTS $VX $ATM $ZA $WOBBLE $NOISE \
-                                   $ID $SIMTYPE $ANATYPE \
-                                   $DISPBDT $UUID
+                               "$(dirname "$0")/IRF.generate_effective_area_parts.sh" \
+                                   "$CUTS" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
+                                   "$ID" "$SIMTYPE" "$ANATYPE" \
+                                   $DISPBDT "$UUID"
                             done # cuts
                         done #recID
                     fi
@@ -443,5 +562,5 @@ for VX in $EPOCH; do
 done  #VX
 
 # Go back to the original user directory.
-cd $olddir
+cd "$olddir" || exit
 exit

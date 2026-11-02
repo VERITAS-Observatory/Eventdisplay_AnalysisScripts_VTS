@@ -106,7 +106,8 @@ def extract_l3_rate(run, temp_run_dir):
     table = table[condition]
     time_diffs = np.diff(np.array(table["timestamp"])) / 1000.0
     l3_values = np.diff(np.array(table["L3"], dtype=float))
-    l3_values /= time_diffs
+    with np.errstate(divide="ignore", invalid="ignore"):
+        l3_values = np.where(time_diffs > 0, l3_values / time_diffs, np.nan)
 
     if len(l3_values) > 0:
         l3_mean = np.mean(l3_values)
@@ -129,8 +130,10 @@ def extract_l3_rate(run, temp_run_dir):
         l3_busy = np.array(table["L3orVDAQBusyScaler"], dtype=float)
         busy = np.diff(l3_busy)
         ten_mhz = np.diff(np.array(table["TenMHzScaler"]))
-        dead_time = np.mean(busy / ten_mhz)
-        dead_time_std = np.std(busy / ten_mhz)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ratio = np.where(ten_mhz > 0, busy / ten_mhz, np.nan)
+        dead_time = np.mean(ratio)
+        dead_time_std = np.std(ratio)
     except ValueError:
         dead_time = np.nan
         dead_time_std = np.nan
@@ -426,9 +429,9 @@ def main():
             file_path = os.path.join(temp_run_files, file_name)
             logging.info("Converting %s", file_path)
             table = read_file(file_path)
-            if "dqm" in file_name.lower():
-                convert_table_comment_to_ascii(table)
             if table is not None:
+                if "dqm" in file_name.lower():
+                    convert_table_comment_to_ascii(table)
                 hdu.append(fits.BinTableHDU(table))
                 hdu[-1].name = file_name.split(".")[1]
 

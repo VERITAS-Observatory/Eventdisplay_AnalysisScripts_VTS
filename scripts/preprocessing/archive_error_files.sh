@@ -15,7 +15,7 @@ fi
 
 RUNLIST=${1}
 
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$("$EVNDISPSYS"/bin/evndisp --version | tr -d .)
 # list of data products
 DP="evndisp mscw anasum_moderate2tel"
 # archive directory
@@ -24,7 +24,7 @@ do
     DDIR=${VERITAS_DATA_DIR}/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/runs_with_issues/${D}
     for N in 3 4 5 6 7 8 9 10 11
     do
-        mkdir -p -v ${DDIR}/$N
+        mkdir -p -v "${DDIR}"/$N
     done
 done
 
@@ -36,10 +36,10 @@ get_suffix()
     else
         SRUN=${RRUN:0:2}
     fi
-    echo ${SRUN}
+    echo "${SRUN}"
 }
 
-FF=$(cat ${1})
+FF=$(cat "$RUNLIST")
 
 for D in $DP
 do
@@ -48,6 +48,7 @@ do
 
     for F in $FF
     do
-        mv -v ${DDIR}/$(get_suffix $F)/${F}* ${ODIR}/$(get_suffix $F)/
+        suffix=$(get_suffix "$F")
+        mv -v "${DDIR}/${suffix}/${F}"* "${ODIR}/${suffix}/"
     done
 done

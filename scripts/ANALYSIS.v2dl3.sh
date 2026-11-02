@@ -5,7 +5,10 @@
 #
 
 # qsub parameters
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:00; h_vmem=4000M; tmpdir_size=25G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 if [ "$#" -lt 3 ]; then
 echo "
@@ -43,6 +46,7 @@ if ! command -v apptainer >/dev/null 2>&1; then
     echo "Apptainer is required to submit V2DL3 jobs." >&2
     exit 1
 fi
+V2DL3_RUNTIME=$(realpath -- "$V2DL3_RUNTIME") || exit 1
 export V2DL3_RUNTIME
 
 # Check that run list exists
@@ -56,83 +60,64 @@ echo "total number of runs to analyze: $NRUNS"
 echo
 
 # make output directory if it doesn't exist
-mkdir -p $ODIR
+mkdir -p "$ODIR"
 echo -e "Output files will be written to:\n $ODIR"
 
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$VERITAS_USER_LOG_DIR/V2DL3-${DATE}-$(uuidgen)/"
 mkdir -p "$LOGDIR"
 echo -e "Log files will be written to:\n $LOGDIR"
-rm -f ${LOGIDR}/x* 2>/dev/null
+rm -f "${LOGDIR}"/x* 2>/dev/null
 
 # split run list into smaller run lists
 sort -u "${RUNLIST}" -o "${LOGDIR}/$(basename "${RUNLIST}")"
-(cd "${LOGDIR}" && split -l $SPLITRUN "${LOGDIR}/$(basename ${RUNLIST})")
+(cd "${LOGDIR}" && split -l "$SPLITRUN" "${LOGDIR}/$(basename "${RUNLIST}")")
 
-FILELISTS=$(ls ${LOGDIR}/x*)
-NFILELISTS=$(ls ${LOGDIR}/x* | wc -l)
+FILELISTS=$(find "$LOGDIR" -maxdepth 1 -name "x*" | sort)
+NFILELISTS=$(find "$LOGDIR" -maxdepth 1 -name "x*" | wc -l)
 
 echo -e "Processing $NFILELISTS file lists (equal to number of jobs)"
 
 # Job submission script
-SUBSCRIPT=$( dirname "$0" )"/helper_scripts/ANALYSIS.v2dl3_sub"
-TIMETAG=`date +"%s"`
+SUBSCRIPT="$(dirname "$0")/helper_scripts/ANALYSIS.v2dl3_sub"
+TIMETAG=$(date +"%s")
 
 for J in ${FILELISTS}
 do
     echo "Submitting analysis for file list $J"
 
-    FSCRIPT="$LOGDIR/V2DL3-$(basename $J)"
-    rm -f $FSCRIPT.sh
+    FSCRIPT="$LOGDIR/V2DL3-$(basename "$J")"
+    rm -f "$FSCRIPT".sh
     echo "Run script written to $FSCRIPT"
 
-    sed -e "s|RRUNLIST|$J|" -e "s|OODIR|$ODIR|" \
-        -e "s|CCUT|$CUT|" -e "s|RUNTIMEIMAGE|$V2DL3_RUNTIME|" \
-        "$SUBSCRIPT.sh" > "$FSCRIPT.sh"
+    sed -e "s|RRUNLIST|$J|" \
+        -e "s|OODIR|$ODIR|" \
+        -e "s|CCUT|$CUT|" \
+        -e "s|RUNTIMEIMAGE|$V2DL3_RUNTIME|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
     chmod u+x "$FSCRIPT.sh"
 
     # run locally or on cluster
-    SUBC=`$( dirname "$0" )/helper_scripts/UTILITY.readSubmissionCommand.sh`
-    SUBC=`eval "echo \"$SUBC\""`
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+    SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
         echo "$SUBC"
         exit
     fi
-    if [[ $SUBC == *qsub* ]]; then
-        JOBID=`$SUBC $FSCRIPT.sh`
-        # account for -terse changing the job number format
-        if [[ $SUBC != *-terse* ]] ; then
-            echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-            JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
+        CONDOR_SUBMIT_ARGS="submit 5"
+        submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.$TIMETAG.dat"
+        if [[ $SUBC == *qsub* ]]; then
+            echo "RUN $J JOBID $JOBID"
+            echo "RUN $J SCRIPT $FSCRIPT.sh"
+            if [[ $SUBC != */dev/null* ]] ; then
+                echo "RUN $J OLOG $FSCRIPT.sh.o$JOBID"
+                echo "RUN $J ELOG $FSCRIPT.sh.e$JOBID"
+            fi
+        elif [[ $SUBC == *parallel* ]]; then
+            echo "RUN $J OLOG $FSCRIPT.log"
         fi
-
-        echo "RUN $AFILE JOBID $JOBID"
-        echo "RUN $AFILE SCRIPT $FSCRIPT.sh"
-        if [[ $SUBC != */dev/null* ]] ; then
-            echo "RUN $AFILE OLOG $FSCRIPT.sh.o$JOBID"
-            echo "RUN $AFILE ELOG $FSCRIPT.sh.e$JOBID"
-        fi
-    elif [[ $SUBC == *condor* ]]; then
-        $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-        echo
-        echo "-------------------------------------------------------------------------------"
-        echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-        echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit 5"
-        echo "-------------------------------------------------------------------------------"
-        echo
-	elif [[ $SUBC == *sbatch* ]]; then
-        $SUBC $FSCRIPT.sh
-    elif [[ $SUBC == *parallel* ]]; then
-        echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.$TIMETAG.dat"
-        echo "RUN $AFILE OLOG $FSCRIPT.log"
-    elif [[ "$SUBC" == *simple* ]] ; then
-	    "$FSCRIPT.sh" |& tee "$FSCRIPT.log"
-	fi
 done
 
 # Execute all FSCRIPTs locally in parallel
-if [[ $SUBC == *parallel* ]]; then
-    cat "$LOGDIR/runscripts.$TIMETAG.dat" | $SUBC
-fi
+run_parallel_jobs "$LOGDIR/runscripts.$TIMETAG.dat"

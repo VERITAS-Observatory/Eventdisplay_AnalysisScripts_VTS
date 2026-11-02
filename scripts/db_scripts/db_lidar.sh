@@ -18,5 +18,5 @@ if [[ "${STARTDATE}" == *NULL* ]] || [[ "${ENDDATE}" == *NULL* ]]; then
     echo ""
 else
     QUERY="SELECT * FROM tblLIDAR_Info WHERE timestamp >= \"${STARTDATE}\" AND timestamp < \"${ENDDATE}\""
-    $($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}"  | sed 's/\t/|/g'
+    $("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}"  | sed 's/\t/|/g'
 fi

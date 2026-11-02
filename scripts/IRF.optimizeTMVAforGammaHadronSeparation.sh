@@ -3,7 +3,10 @@
 #
 #
 
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:59:59; h_vmem=4000M; tmpdir_size=1G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 
 if [[ $# -lt 5 ]]; then
 # begin help message
@@ -31,8 +34,7 @@ exit
 fi
 echo " "
 # Run init script
-bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
-[[ $? != "0" ]] && exit 1
+bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 
 # Parse command line arguments
 PREDIR=$1
@@ -41,16 +43,7 @@ SIMTYPE=$3
 EPOCH=$4
 ATM=$5
 # evndisplay version
-IRFVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
-
-DISPBDT=""
-ANATYPE="AP"
-if [[ ! -z $VERITAS_ANALYSIS_TYPE ]]; then
-    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
-    if [[ ${VERITAS_ANALYSIS_TYPE} == *"DISP"* ]]; then
-        DISPBDT="_DISP"
-    fi
-fi
+IRFVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 # Check that list of background files exists
 if [[ ! -d "${PREDIR}/${CUTTYPE}" ]]; then
@@ -60,10 +53,10 @@ fi
 
 #####################################
 # directory for run scripts
-DATE=`date +"%y%m%d"`
+DATE=$(date +"%y%m%d")
 LOGDIR="$PREDIR/${CUTTYPE}/$DATE/"
 echo -e "Log files will be written to:\n $LOGDIR"
-mkdir -p $LOGDIR
+mkdir -p "$LOGDIR"
 
 if [[ $IRFVERSION == *"v490"* ]]; then
     MINEVENTS=10
@@ -88,6 +81,7 @@ fi
 
 if [[ ! -e $VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFFILE} ]]; then
     echo "Error - effective area file not found ${EFFFILE}"
+    exit 1
 fi
 if [[ ${EPOCH:0:2} == "V4" ]] || [[ ${EPOCH:0:2} == "V5" ]]; then
     RUNPAR="$VERITAS_EVNDISP_AUX_DIR/ParameterFiles/TMVA.BDT.V4.runparameter"
@@ -96,39 +90,35 @@ else
 fi
 #####################################
 # energy bins
-if grep -q "^* ENERGYBINS" "$RUNPAR"; then
-    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINS 1" | sed -e 's/* ENERGYBINS 1//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) #convert to array
-    count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
-    for (( i=0; i < $NENE; i++ ))
-    do
-        EBINMIN[$i]=${EBINARRAY[$i]}
-        EBINMAX[$i]=${EBINARRAY[$i+1]}
-    done
+count1=1
+if grep -q "^[*] ENERGYBINS" "$RUNPAR"; then
+    ENBINS=$(awk '$1 == "*" && $2 == "ENERGYBINS" { for (i = 3; i <= NF; i++) print $i; exit }' "$RUNPAR")
+    mapfile -t EBINARRAY <<< "$ENBINS"
+    NENE=$(( ${#EBINARRAY[@]}-count1 )) #get number of bins
 else
-    ENBINS=$( cat "$RUNPAR" | grep "^* ENERGYBINEDGES" | sed -e 's/* ENERGYBINEDGES//' | sed -e 's/ /\n/g')
-    declare -a EBINARRAY=( $ENBINS ) #convert to array
-    count1=1
-    NENE=$((${#EBINARRAY[@]}-$count1)) #get number of bins
-    z="0"
-    for (( i=0; i < $NENE; i+=2 ))
-    do
-        EBINMIN[$z]=${EBINARRAY[$i]}
-        EBINMAX[$z]=${EBINARRAY[$i+1]}
-        let "z = ${z} + 1"
-    done
-    NENE=$((${#EBINMAX[@]}))
+    ENBINS=$(awk '$1 == "*" && $2 == "ENERGYBINEDGES" { for (i = 3; i <= NF; i++) print $i; exit }' "$RUNPAR")
+    mapfile -t EBINARRAY <<< "$ENBINS"
+    NENE=$(( ${#EBINARRAY[@]} / 2 ))
 fi
 
 #####################################
 # zenith angle bins
-ZEBINS=$( cat "$RUNPAR" | grep "^* ZENBINS " | sed -e 's/* ZENBINS//' | sed -e 's/ /\n/g')
-declare -a ZEBINARRAY=( $ZEBINS ) #convert to array
-NZEW=$((${#ZEBINARRAY[@]}-$count1)) #get number of bins
+ZEBINS=$(awk '$1 == "*" && $2 == "ZENBINS" { for (i = 3; i <= NF; i++) print $i; exit }' "$RUNPAR")
+mapfile -t ZEBINARRAY <<< "$ZEBINS"
+NZEW=$(( ${#ZEBINARRAY[@]}-count1 )) #get number of bins
+if [[ ${#ZEBINARRAY[@]} -lt 2 ]]; then
+    echo "Error: less than two zenith bin edges found in $RUNPAR"
+    exit 1
+fi
+for ZE_EDGE in "${ZEBINARRAY[@]}"; do
+    if [[ ! "$ZE_EDGE" =~ ^-?([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]]; then
+        echo "Error: invalid zenith bin edge '$ZE_EDGE' read from $RUNPAR"
+        exit 1
+    fi
+done
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.optimizeTMVAforGammaHadronSeparation_sub"
 
 FSCRIPT="$LOGDIR/IRF.optimizeTMVAforGammaHadronSeparation_sub_${EPOCH}_ATM${ATM}"
 sed -e "s|EFFFILE|$EFFFILE|"  \
@@ -138,36 +128,20 @@ sed -e "s|EFFFILE|$EFFFILE|"  \
     -e "s|EEBINS|${NENE}|" \
     -e "s|ZZBINS|${NZEW}|" \
     -e "s|TMVARUNPARA|${RUNPAR}|" \
-    -e "s|MMINEVENTS|${MINEVENTS}|" \
-    -e "s|OOBSTIMEMODERATE|${OBSTIME_MODERATE}|" \
-    -e "s|CUTTYPE|${CUTTYPE}|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|CUTTYPE|${CUTTYPE}|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
-chmod u+x $FSCRIPT.sh
-echo $FSCRIPT.sh
+chmod u+x "$FSCRIPT".sh
+echo "$FSCRIPT".sh
 
 # run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
-    echo $SUBC
+    echo "$SUBC"
     exit
 fi
+submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
 if [[ $SUBC == *qsub* ]]; then
- JOBID=`$SUBC $FSCRIPT.sh`
- # account for -terse changing the job number format
- if [[ $SUBC != *-terse* ]] ; then
-    echo "without -terse!"      # need to match VVVVVVVV  8539483  and 3843483.1-4:2
-    JOBID=$( echo "$JOBID" | grep -oP "Your job [0-9.-:]+" | awk '{ print $3 }' )
- fi
  echo "JOBID:  $JOBID"
-elif [[ $SUBC == *condor* ]]; then
-   $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-   condor_submit $FSCRIPT.sh.condor
-elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT.sh
-elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> $LOGDIR/runscripts.dat
-    cat $LOGDIR/runscripts.dat | $SUBC
-elif [[ "$SUBC" == *simple* ]] ; then
-    "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
+run_parallel_jobs "$LOGDIR/runscripts.dat"

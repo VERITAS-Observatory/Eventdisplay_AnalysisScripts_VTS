@@ -1,10 +1,15 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # script to calculate signal and background rates and
 # optimize BDTs with TMVA
 #
 
+# shellcheck source=/dev/null
 # set observatory environmental variables
-source $EVNDISPSYS/setObservatory.sh VTS
+if [ ! -n "$EVNDISP_APPTAINER" ]; then
+    source "$EVNDISPSYS"/setObservatory.sh VTS
+fi
 
 EFFAREA=EFFFILE
 PREDIR=ODIR
@@ -16,7 +21,6 @@ ENBINS=EEBINS
 ZEBINS=ZZBINS
 TMVAPARFILES=TMVARUNPARA
 MINEVENTS=MMINEVENTS
-OBSTIME_MODERATE=OOBSTIMEMODERATE
 
 if [[ -n $TMPDIR ]]; then
     TEMPDIR=$TMPDIR/${CUT}
@@ -24,30 +28,28 @@ else
     TEMPDIR="$VERITAS_USER_DATA_DIR/TMPDIR/${CUT}/"
 fi
 echo "Temporary directory: $TEMPDIR"
-mkdir -p $TEMPDIR
-ls -1 ${PREDIR}/${CUT}/*.anasum.root > ${TEMPDIR}/anasum.list
+mkdir -p "$TEMPDIR"
+ls -1 ${PREDIR}/${CUT}/*.anasum.root > "${TEMPDIR}"/anasum.list
 
 OBSTIME="5."
-MINEVENTS=${MINEVENTS}
+MINEVENTS="10."
 if [[ $CUT == *"Moderate"* ]]; then
-    OBSTIME=${OBSTIME_MODERATE}
-elif [[ $CUT == *"Soft"* ]]; then
-    OBSTIME="0.2"
-elif [[ $CUT == *"Hard"* ]]; then
     OBSTIME="5."
+elif [[ $CUT == *"Soft"* ]]; then
+    OBSTIME="1.0"
+    MINEVENTS="5."
+elif [[ $CUT == *"Hard"* ]]; then
+    OBSTIME="20."
     MINEVENTS="1."
 fi
 
 # effective area - fill path
 EFFAREA="$VERITAS_EVNDISP_AUX_DIR/EffectiveAreas/${EFFAREA}"
-
 # epoch / ATM
 EPAT="${EPOCH}_ATM${ATM}"
-
 # output directory
 WDIR="${PREDIR}/Optimize-${CUT}/"
 mkdir -p ${WDIR}
-
 # rates files
 RATEFILE="${WDIR}/rates_${EPAT}"
 
@@ -58,21 +60,22 @@ then
     rm -f ${RATEFILE}.log
 
     # calculate rates from Crab Nebula and from background rates
-    rm -f ${MVADIR}/rates.log
-    "$EVNDISPSYS"/bin/calculateCrabRateFromMC \
-        ${EFFAREA} \
+    $EVNDISPSYS/bin/calculateCrabRateFromMC \
+        "${EFFAREA}" \
         ${RATEFILE}.root \
         ${DEADTIME} \
         ${TMVAPARFILES} \
-        ${TEMPDIR}/anasum.list \
+        "${TEMPDIR}"/anasum.list \
         > ${RATEFILE}.log
 fi
 
-# optimize cuts
 echo "optimize cuts..."
 MVADIR="$VERITAS_EVNDISP_AUX_DIR/GammaHadronBDTs/${VERITAS_ANALYSIS_TYPE:0:2}/${EPAT}/${CUT}/"
-cd ${PREDIR}/${CUT}
+rm -f "${MVADIR}/rates.log"
+cd "${PREDIR}/${CUT}" || exit
 rm -f ${WDIR}/${EPAT}.optimised.dat
-root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat
-
-exit
+if [[ -f "$EVNDISPSYS/macros/optimizeBDTcuts.C" ]]; then
+    root -l -q -b "$EVNDISPSYS/macros/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat
+else
+    root -l -q -b "$EVNDISPSYS/macros/VTS/optimizeBDTcuts.C(\"${RATEFILE}.root\", \"$MVADIR\", \"${EPAT}\", 0, ${ENBINS}, 0, ${ZEBINS}, $OBSTIME, 5., $MINEVENTS )"  > ${WDIR}/${EPAT}.optimised.dat
+fi

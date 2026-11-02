@@ -1,8 +1,11 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # combine effective areas
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -25,7 +28,6 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
     DDIR="/opt/DDIR/"
     OPTODIR="/opt/ODIR/"
 fi
@@ -35,7 +37,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l "${EVNDISPSYS}"/bin/evndisp
     fi
 }
 
@@ -45,7 +47,7 @@ chmod -R g+w $ODIR
 rm -f "$ODIR"/"$OFILE".list
 touch  "$ODIR"/"$OFILE".list
 for F in $EAFILES; do
-    AP_FILE=$(basename $F)
+    AP_FILE=$(basename "$F")
     echo "$DDIR/$AP_FILE" >> "$ODIR"/"$OFILE".list
 done
 echo "Found $(cat $ODIR/$OFILE.list | wc -l) input files to merge"
@@ -54,5 +56,5 @@ echo "File list: $ODIR/$OFILE.list"
 $EVNDISPSYS/bin/combineEffectiveAreas "$OPTODIR/$OFILE.list" ${OPTODIR}/$OFILE DL3reduced &> ${ODIR}/$OFILE.log
 
 # log files
-echo "$(inspect_executables)" >> "$ODIR/$OFILE.log"
+inspect_executables >> "$ODIR/$OFILE.log"
 $EVNDISPSYS/bin/logFile effAreaCombineLog "${OPTODIR}/$OFILE.root" "${OPTODIR}/$OFILE.log"

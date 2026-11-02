@@ -2,10 +2,13 @@
 # combine effective area files into one
 
 # job requirements
+# shellcheck disable=SC2034  # SGE resource directives, read by job scheduler
 h_cpu=11:29:00; h_vmem=12000M; tmpdir_size=20G
+# shellcheck source=scripts/helper_scripts/UTILITY.submitJob.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.submitJob.sh"
 #
 # EventDisplay version
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 if [ $# -lt 5 ]; then
 echo "
@@ -44,9 +47,8 @@ fi
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash $(dirname "$0")"/helper_scripts/UTILITY.script_init.sh"
+    bash "$(dirname "$0")/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
-[[ $? != "0" ]] && exit 1
 
 # date used in run scripts / log file directories
 DATE=$(date +"%y%m%d")
@@ -63,7 +65,7 @@ SIMTYPE=$5
 [[ "${9}" ]] && UUID=${9} || UUID=${DATE}-$(uuidgen)
 
 # Generate EA base file name based on cuts file
-CUTS_NAME=`basename $CUTSFILE`
+CUTS_NAME=$(basename "$CUTSFILE")
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
 CUTS_NAME=${CUTS_NAME%%.dat}
 
@@ -123,42 +125,28 @@ fi
 OFILE="effArea-${EDVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM${ATMOS}-T${T}"
 
 # Job submission script
-SUBSCRIPT=$(dirname "$0")"/helper_scripts/IRF.effective_area_combine_sub"
+SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.effective_area_combine_sub"
 
 # make run script
 FSCRIPT="$LOGDIR/COMB-EFFAREA-ID${RECID}-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-${DISPBDT}-$(date +%s%N)"
-rm -f $FSCRIPT.sh
+rm -f "$FSCRIPT".sh
 
 sed -e "s|INPUTFILES|$INFILES|" \
     -e "s|OUTPUTFILE|$OFILE|"   \
-    -e "s|OUTPUTDIR|$ODIR|" $SUBSCRIPT.sh > $FSCRIPT.sh
+    -e "s|OUTPUTDIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 
 chmod u+x "$FSCRIPT.sh"
 echo "Run script written to: $FSCRIPT"
 
 # run locally or on cluster
-SUBC=`$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh`
-SUBC=`eval "echo \"$SUBC\""`
+SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+SUBC=$(eval "echo \"$SUBC\"")
 if [[ $SUBC == *"ERROR"* ]]; then
     echo "$SUBC"
     exit
 fi
+submit_job "$FSCRIPT.sh" "$FSCRIPT.sh &> $FSCRIPT.log" "$LOGDIR/runscripts.dat"
 if [[ $SUBC == *qsub* ]]; then
-    JOBID=`$SUBC $FSCRIPT.sh`
     echo "JOBID: $JOBID"
-elif [[ $SUBC == *condor* ]]; then
-    $(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh $FSCRIPT.sh $h_vmem $tmpdir_size
-    echo
-    echo "-------------------------------------------------------------------------------"
-    echo "Job submission using HTCondor - run the following script to submit jobs at once:"
-    echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
-    echo "-------------------------------------------------------------------------------"
-    echo
-elif [[ $SUBC == *sbatch* ]]; then
-    $SUBC $FSCRIPT.sh
-elif [[ $SUBC == *parallel* ]]; then
-    echo "$FSCRIPT.sh &> $FSCRIPT.log" >> "$LOGDIR/runscripts.dat"
-elif [[ "$SUBC" == *simple* ]]; then
-    "$FSCRIPT.sh" | tee "$FSCRIPT.log"
 fi
 echo "LOG/SUBMIT DIR: ${LOGDIR}"

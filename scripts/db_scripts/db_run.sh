@@ -27,8 +27,17 @@ OVERWRITE="0"
 [[ "$2" ]] && OVERWRITE=$2 || OVERWRITE=0
 NTEL="4"
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091 # The source path is resolved relative to this script.
+source "${SCRIPT_DIR}/db_metadata.sh"
+
+EXTRACTION_START_UTC=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+# A DB server timestamp may be supplied once by a batch driver. Do not open
+# extra MySQL connections per run just to populate metadata.
+DB_SERVER_TIME_START_UTC="${DBTEXT_DB_SERVER_TIME_UTC:-}"
+
 DBDIR="${VERITAS_DATA_DIR%/}/shared/DBTEXT/"
-mkdir -p ${DBDIR}
+mkdir -p "${DBDIR}"
 
 getDBTextFileDirectory()
 {
@@ -38,7 +47,7 @@ getDBTextFileDirectory()
     else
         ODIR="${DBDIR%/}/${TRUN:0:2}/${TRUN}"
     fi
-    echo ${ODIR}
+    echo "${ODIR}"
 }
 
 get_file_status()
@@ -51,10 +60,10 @@ get_file_status()
     elif [[ -e ${TFIL} ]]; then
         echo "2"
     else
-        TARF="$(getDBTextFileDirectory ${RRUN}).tar.gz"
+        TARF="$(getDBTextFileDirectory "${TRUN}").tar.gz"
         if [[ -e ${TARF} ]]; then
-            FFIL="${RRUN}/$(basename ${TFIL})"
-            CFIL=$(tar -tzf ${TARF} ${FFIL} 2>/dev/null)
+            FFIL="${TRUN}/$(basename "${TFIL}")"
+            CFIL=$(tar -tzf "${TARF}" "${FFIL}" 2>/dev/null)
             if [[ "${CFIL}" == "${FFIL}" ]]; then
                 echo "1"
             else
@@ -68,12 +77,13 @@ get_file_status()
 
 get_start_time()
 {
-    OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
-    if [[ "$1" == "DB" ]]; then
+    OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.runinfo"
+    if [[ "${1:-}" == "DB" ]]; then
         field_name="db_start_time"
     else
         field_name="data_start_time"
     fi
+    start_time_index=0
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ ));
@@ -85,18 +95,19 @@ get_start_time()
             done
         fi
         start_time="${a[$start_time_index]}"
-    done < ${OFIL}
+    done < "${OFIL}"
     echo "${start_time}"
 }
 
 get_end_time()
 {
-    OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
-    if [[ "$1" == "DB" ]]; then
+    OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.runinfo"
+    if [[ "${1:-}" == "DB" ]]; then
         field_name="db_end_time"
     else
         field_name="data_end_time"
     fi
+    end_time_index=0
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ ));
@@ -108,7 +119,7 @@ get_end_time()
             done
         fi
         end_time="${a[$end_time_index]}"
-    done < ${OFIL}
+    done < "${OFIL}"
     # add 1 minute to end time to be save
     end_time=$(date -d "${end_time} 1 minutes" +'%Y-%m-%d %H:%M:%S')
     echo "${end_time}"
@@ -116,19 +127,17 @@ get_end_time()
 
 get_laser_run()
 {
-    OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.laserrun"
-    LASERRUN=""
+    OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.laserrun"
     while IFS="|" read -ra a; do
         if [[ ${a[0]} != "run_id" ]]; then
-            LASERRUN="${LASERRUN} ${a[0]}"
+            printf '%s\n' "${a[0]}"
         fi
-    done < ${OFIL}
-    echo ${LASERRUN}
+    done < "${OFIL}"
 }
 
 get_excluded_telescopes()
 {
-    OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.laserrun"
+    OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.laserrun"
     excluded_telescopes=""
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
@@ -143,8 +152,8 @@ get_excluded_telescopes()
         if [[ ${a[0]} == "$1" ]]; then
             excluded_telescopes=${a[$excluded_telescopes_index]}
         fi
-    done < ${OFIL}
-    echo ${excluded_telescopes}
+    done < "${OFIL}"
+    echo "${excluded_telescopes}"
 }
 
 
@@ -164,12 +173,15 @@ hasbitset()
 
 get_source_id()
 {
-    OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.runinfo"
-    if [[ ! -e ${OFIL} ]] && [[ -e $(getDBTextFileDirectory ${RUN}).tar.gz ]]; then
-        OFIL=$(tar -xzf $(getDBTextFileDirectory ${RUN}).tar.gz ${RUN}/${RUN}.runinfo -O)
+    OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.runinfo"
+    local tar_file
+    tar_file="$(getDBTextFileDirectory "${RUN}").tar.gz"
+    if [[ ! -e ${OFIL} ]] && [[ -e ${tar_file} ]]; then
+        OFIL=$(tar -xzf "$tar_file" "${RUN}/${RUN}.runinfo" -O)
     else
-        OFIL=$(cat $OFIL)
+        OFIL=$(cat "$OFIL")
     fi
+    source_index=0
     while IFS="|" read -ra a; do
         if [[ ${a[0]} == "run_id" ]]; then
             for (( j=0; j<${#a[@]}; j++ ));
@@ -182,7 +194,7 @@ get_source_id()
         fi
         source_id="${a[$source_index]}"
     done <<< "$OFIL"
-    echo ${source_id}
+    echo "${source_id}"
 }
 
 # generic function to read call scripts reading from DB
@@ -194,20 +206,20 @@ read_run_from_DB()
     [[ "$3" ]] && TELID=$3 || TELID=""
     [[ "$4" ]] && USETIME=$4 || USETIME="0"
     if [[ -z ${TELID} ]]; then
-        OFIL="$(getDBTextFileDirectory ${RRUN})/${RRUN}.${TTOOL}"
+        OFIL="$(getDBTextFileDirectory "${RRUN}")/${RRUN}.${TTOOL}"
     else
-        OFIL="$(getDBTextFileDirectory ${RRUN})/${RRUN}.${TTOOL}_TEL${TELID}"
+        OFIL="$(getDBTextFileDirectory "${RRUN}")/${RRUN}.${TTOOL}_TEL${TELID}"
     fi
-    FILESTATUS="$(get_file_status ${RRUN} ${OFIL})"
+    FILESTATUS="$(get_file_status "${RRUN}" "${OFIL}")"
     if [[ ${FILESTATUS} == 0 ]]; then
-        mkdir -p "$(getDBTextFileDirectory ${RRUN})"
-        rm -f ${OFIL}
+        mkdir -p "$(getDBTextFileDirectory "${RRUN}")"
+        rm -f "${OFIL}"
         if [[ $USETIME -eq "0" ]]; then
             cmd="./db_${TTOOL}.sh ${RRUN} ${TELID}"
         else
-            cmd="./db_${TTOOL}.sh \"$(get_start_time)\" \"$(get_end_time)\" ${TELID}"
+            cmd="./db_${TTOOL}.sh \"$(get_start_time "")\" \"$(get_end_time "")\" ${TELID}"
         fi
-        eval "$cmd" > ${OFIL}
+        eval "$cmd" > "${OFIL}"
         echo "${TTOOL} file (written): ${OFIL}"
     elif [[ ${FILESTATUS} == 1 ]]; then
         echo "${TTOOL} file (in tar package): ${OFIL}"
@@ -219,22 +231,22 @@ read_run_from_DB()
 read_laser_run_and_dqm()
 {
     read_run_from_DB laserrun
-    LASERRUN=($(get_laser_run))
+    mapfile -t LASERRUN < <(get_laser_run)
     for L in "${LASERRUN[@]}"
     do
         if [[ -n ${L} ]]; then
-            read_run_from_DB rundqm ${L}
+            read_run_from_DB rundqm "${L}"
         fi
     done
 }
 
 read_target()
 {
-    OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.target"
+    OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.target"
     source_id=$(get_source_id)
-    FILESTATUS="$(get_file_status ${RUN} ${OFIL})"
+    FILESTATUS="$(get_file_status "${RUN}" "${OFIL}")"
     if [[ ${FILESTATUS} == 0 ]]; then
-        ./db_target.sh "${source_id}" > ${OFIL}
+        ./db_target.sh "${source_id}" > "${OFIL}"
         echo "target file (written): ${OFIL}"
     elif [[ ${FILESTATUS} == 1 ]]; then
         echo "target file (in tar package): ${OFIL}"
@@ -245,53 +257,55 @@ read_target()
 
 read_camera_rotation()
 {
-    OFIL="$(getDBTextFileDirectory ${RUN})/${RUN}.camerarotation"
-    read_run_from_DB camerarotation ${RUN} "" 1
+    OFIL="$(getDBTextFileDirectory "${RUN}")/${RUN}.camerarotation"
+    read_run_from_DB camerarotation "${RUN}" "" 1
 }
 
 read_pixel_data()
 {
     read_run_from_DB L1_TriggerInfo
 
-    for (( j=0; j<${NTEL}; j++ ));
+    for (( j=0; j<NTEL; j++ ));
     do
-        read_run_from_DB FADCsettings ${RUN} $j 1
-        read_run_from_DB HVsettings ${RUN} $j 1
+        read_run_from_DB FADCsettings "${RUN}" $j 1
+        read_run_from_DB HVsettings "${RUN}" $j 1
     done
 }
 
 read_laser_calibration()
 {
-    LASERRUN=($(get_laser_run))
+    mapfile -t LASERRUN < <(get_laser_run)
     for L in "${LASERRUN[@]}"
     do
-        excluded_telescopes=$(get_excluded_telescopes ${L})
-        for (( j=1; j<=${NTEL}; j++ ));
+        excluded_telescopes=$(get_excluded_telescopes "${L}")
+        for (( j=1; j<=NTEL; j++ ));
         do
-            bittest=$(hasbitset $excluded_telescopes $j)
+            bittest=$(hasbitset "$excluded_telescopes" $j)
             if [[ $bittest == "1" ]] && [[ $excluded_telescopes != "0" ]]; then
                 continue
             fi
-            read_run_from_DB gain ${L} ${j}
-            read_run_from_DB toffset ${L} ${j}
+            read_run_from_DB gain "${L}" ${j}
+            read_run_from_DB toffset "${L}" ${j}
         done
     done
 }
 
 read_pointing()
 {
-    for (( j=0; j<${NTEL}; j++ ));
+    for (( j=0; j<NTEL; j++ ));
     do
-        read_run_from_DB VPM ${RUN} $j 1
-        read_run_from_DB rawpointing ${RUN} $j 1
+        read_run_from_DB VPM "${RUN}" $j 1
+        read_run_from_DB rawpointing "${RUN}" $j 1
     done
 }
 
 read_run_from_DB runinfo
 read_run_from_DB rundqm
-# don't test and read if tar file exists
-# (implementation of testing missing)
-if [[ ! -e $(getDBTextFileDirectory ${RUN}).tar.gz ]] || [[ ${OVERWRITE} == "1" ]]; then
+# Re-read laser data if tarball is missing OR if sidecar .laserrun file is absent
+RUND="$(getDBTextFileDirectory "${RUN}")"
+if [[ ! -e "${RUND}.tar.gz" ]] || \
+   [[ $(get_file_status "${RUN}" "${RUND}/${RUN}.laserrun") == "0" ]] || \
+   [[ ${OVERWRITE} == "1" ]]; then
     read_laser_run_and_dqm
     read_laser_calibration
 fi
@@ -299,7 +313,21 @@ read_target
 read_camera_rotation
 read_pixel_data
 read_pointing
-read_run_from_DB lidar ${RUN} "" 1
-read_run_from_DB L3 ${RUN} "" 1
-read_run_from_DB weather ${RUN} "" 1
-read_run_from_DB fir ${RUN} "" 1
+read_run_from_DB lidar "${RUN}" "" 1
+read_run_from_DB L3 "${RUN}" "" 1
+read_run_from_DB weather "${RUN}" "" 1
+read_run_from_DB fir "${RUN}" "" 1
+
+EXTRACTION_END_UTC=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+DB_SERVER_TIME_END_UTC="${DBTEXT_DB_SERVER_TIME_UTC:-}"
+
+if [[ -d "${RUND}" ]]; then
+    if ! write_db_metadata "${RUND}" "${RUN}" \
+        "${EXTRACTION_START_UTC}" "${EXTRACTION_END_UTC}" \
+        "${DB_SERVER_TIME_START_UTC}" "${DB_SERVER_TIME_END_UTC}" \
+        "${OVERWRITE}"; then
+        echo "Failed to write metadata for run ${RUN}" >&2
+        exit 1
+    fi
+    echo "metadata file (written): ${RUND}/${RUN}.metadata.json"
+fi

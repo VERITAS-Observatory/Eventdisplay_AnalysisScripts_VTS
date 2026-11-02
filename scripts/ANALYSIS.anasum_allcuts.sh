@@ -4,7 +4,8 @@
 #
 
 if [[ ${VERITAS_ANALYSIS_TYPE:0:2} == "AP" ]]; then
-    CUTS="moderate2tel soft2tel hard2tel hard3tel"
+    CUTS="moderate2tel soft2tel hard2tel hard3tel moderate2telXGB soft2telXGB hard2telXGB hard3telXGB"
+    CUTS="NTel2ModeratePre NTel2ModerateXGBPre"
 else
     CUTS="supersoftNN2tel"
 fi
@@ -28,8 +29,8 @@ EPOCH="${3:-V6}"
 IGNORETYPE="IGNOREACCEPTANCE"
 # set this to zero to force reprocessing
 SKIPIFPROCESSED="1"
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
-EDMAJORVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFMINORVERSION)
+EDMAJORVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFVERSION)
 
 # anasum file are writing into this directory
 TMPDIR="$VERITAS_DATA_DIR/tmp/${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/"
@@ -46,13 +47,16 @@ if [[ ${RUNTYPE} == "PRECUTS" ]]; then
     TMPDIR="$VERITAS_IRFPRODUCTION_DIR/$EDMAJORVERSION/${VERITAS_ANALYSIS_TYPE:0:2}/BDTtraining/BackgroundRates/${EPOCH}"
 fi
 
+# TMP
+IGNORETYPE="IGNOREIRF"
+
 PREDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
-echo $PREDIR
+echo "$PREDIR"
 echo "TMP $TMPDIR"
 
 # temporary file for output
 TMPLOG="$(pwd)/anasum.submit.$(uuidgen).tmp.txt"
-rm -f ${TMPLOG}
+rm -f "${TMPLOG}"
 
 for C in $CUTS
 do
@@ -61,19 +65,24 @@ do
         if  [[ $RUNTYPE == "PRECUTS" ]]; then
             CDIR=$(echo "$CDIR" | sed -E 's/anasum_(NTel[23])([A-Za-z]+)Pre/\1-\2/')
         fi
-        echo $CDIR
+        ANARUNP="$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/ANASUM.runparameter
+        if [[ $C == *"XGB"* ]]; then
+            ANARUNP="$VERITAS_EVNDISP_AUX_DIR"/ParameterFiles/ANASUM.XGB.runparameter
+        fi
+
+        echo "$CDIR"
         mkdir -p "$TMPDIR/${CDIR}"
-        ./ANALYSIS.anasum_parallel_from_runlist.sh ${RUNL} \
+        "$(dirname "$0")/ANALYSIS.anasum_parallel_from_runlist.sh" "${RUNL}" \
             "$TMPDIR/${CDIR}" \
-            ${C} \
+            "${C}" \
             ${IGNORETYPE} \
-            $VERITAS_EVNDISP_AUX_DIR/ParameterFiles/ANASUM.runparameter \
-            $PREDIR $SKIPIFPROCESSED | tee -a ${TMPLOG}
+            "${ANARUNP}" \
+            "$PREDIR" $SKIPIFPROCESSED | tee -a "${TMPLOG}"
     elif [[ $RUNTYPE == "V2DL3" ]]; then
         mkdir -p "$TMPDIR/v2dl3_${C}"
-         ./ANALYSIS.v2dl3.sh ${RUNL} \
+         "$(dirname "$0")/ANALYSIS.v2dl3.sh" "${RUNL}" \
              "$TMPDIR/v2dl3_${C}" \
-             ${C} | tee -a ${TMPLOG}
+             "${C}" | tee -a "${TMPLOG}"
     else
         echo "Error: unknown run type $RUNTYPE (allowed: ANASUM, V2DL3, or PRECUTS)"
         exit
@@ -84,5 +93,5 @@ echo
 echo "===================================================================="
 echo "JOB SUBMISSION"
 echo "===================================================================="
-grep -A 1 "Job submission using HTCondor" ${TMPLOG} | sort -r -u
-rm -f ${TMPLOG}
+grep -A 1 "Job submission using HTCondor" "${TMPLOG}" | sort -r -u
+rm -f "${TMPLOG}"

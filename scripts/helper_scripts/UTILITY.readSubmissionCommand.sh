@@ -29,17 +29,17 @@ fi
 
 # Use submission command with * in front; if multiple commands have an *,
 # the command that is farthest down in the file will be used
-while read STAR LINE; do
+while read -r STAR LINE; do
     if [[ $STAR = "*" ]]; then
         CMD=$LINE
     fi
-done < $CMDFILE
+done < "$CMDFILE"
 
 if [[ -z "$CMD" ]]; then
     echo "ERROR! No submission command is selected in $CMDFILE."
     exit 1
 else
-    echo $CMD
+    echo "$CMD"
 fi
 
 exit

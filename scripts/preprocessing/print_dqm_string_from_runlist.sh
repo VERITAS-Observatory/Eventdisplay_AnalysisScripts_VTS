@@ -16,21 +16,27 @@ RUNLIST=${1}
 
 DBTEXTDIRECTORY="$VERITAS_DATA_DIR/shared/DBTEXT"
 
-unpack_db_textdirectory()
+get_db_text_tar_file()
 {
-    RRUN=${1}
-    TMP_DBTEXTDIRECTORY=${2}
+    local RRUN=${1}
+    local SRUN
     if [[ ${RRUN} -lt 100000 ]]; then
         SRUN=${RRUN:0:1}
     else
         SRUN=${RRUN:0:2}
     fi
-    DBRUNFIL="${DBTEXTDIRECTORY}/${SRUN}/${RRUN}.tar.gz"
-    if [[ -e ${DBRUNFIL} ]]; then
-        mkdir -p ${TMP_DBTEXTDIRECTORY}/
-        tar -xzf ${DBRUNFIL} -C ${TMP_DBTEXTDIRECTORY}/
-    fi
-    echo "${TMP_DBTEXTDIRECTORY}/${RRUN}/"
+    printf '%s/%s/%s.tar.gz\n' "${DBTEXTDIRECTORY}" "${SRUN}" "${RRUN}"
+}
+
+read_db_text_file()
+{
+    local RRUN=${1}
+    local DBFILE=${2}
+    local DBRUNFIL
+    DBRUNFIL=$(get_db_text_tar_file "${RRUN}")
+
+    [[ -f ${DBRUNFIL} ]] || return 1
+    tar -xOzf "${DBRUNFIL}" "${RRUN}/${RRUN}.${DBFILE}" 2>/dev/null
 }
 
 anasum_time_cut()
@@ -52,37 +58,31 @@ anasum_time_cut()
     done
 }
 
-for E in ""
-do
-    RUNS=$(cat $RUNLIST)
+RUNS=$(cat "$RUNLIST")
 
-    for R in $RUNS
-    do
-        DBTEXTDIR=$(unpack_db_textdirectory ${R} ./tmp_dbtext/)
-        RDQM="./tmp_dbtext/${R}/${R}.rundqm"
-        if [[ -e ${RDQM} ]]; then
-            RSTATUS=$(cut -d '|' -f 3 ${RDQM} | grep -v status)
-            RCUTMASK=$(cut -d '|' -f 7 ${RDQM} | grep -v status)
-            RCATEGORY=$(cut -d '|' -f 2 ${RDQM} | grep -v data_category)
+for R in $RUNS
+do
+        if RDQM=$(read_db_text_file "${R}" rundqm); then
+            RSTATUS=$(printf '%s\n' "${RDQM}" | cut -d '|' -f 3 | grep -v status)
+            RCUTMASK=$(printf '%s\n' "${RDQM}" | cut -d '|' -f 7 | grep -v status)
+            RCATEGORY=$(printf '%s\n' "${RDQM}" | cut -d '|' -f 2 | grep -v data_category)
         else
             RSTATUS="NODQMFILE"
             RCUTMASK="NULL"
             RCATEGORY="NOCATEGORY"
         fi
-        RINF="./tmp_dbtext/${R}/${R}.runinfo"
-        if [[ -e ${RINF} ]]; then
-            RLENGTH=$(cut -d '|' -f 9 ${RINF} | grep -v duration)
-            RWEATHER=$(cut -d '|' -f 10 ${RINF} | grep -v weather)
-            RTARGET=$(cut -d '|' -f 20 ${RINF} | grep -v source_id)
-            RTYPE=$(cut -d '|' -f 2 ${RINF} | grep -v run_type)
+        if RINF=$(read_db_text_file "${R}" runinfo); then
+            RLENGTH=$(printf '%s\n' "${RINF}" | cut -d '|' -f 9 | grep -v duration)
+            RWEATHER=$(printf '%s\n' "${RINF}" | cut -d '|' -f 10 | grep -v weather)
+            RTARGET=$(printf '%s\n' "${RINF}" | cut -d '|' -f 20 | grep -v source_id)
+            RTYPE=$(printf '%s\n' "${RINF}" | cut -d '|' -f 2 | grep -v run_type)
         else
             RLENGTH="NORUNINFOFILE"
             RWEATHER="NULL"
             RTARGET="NOTARGET"
             RTYPE="NOTYPE"
         fi
-        echo $R $RSTATUS $RCUTMASK LENGTH: $RLENGTH WEATHER-$RWEATHER $RCATEGORY $RTARGET $RTYPE
-        anasum_time_cut $R "$RCUTMASK"
+        echo "$R $RSTATUS $RCUTMASK LENGTH: $RLENGTH WEATHER-$RWEATHER $RCATEGORY $RTARGET $RTYPE"
+        anasum_time_cut "$R" "$RCUTMASK"
 
-    done
 done

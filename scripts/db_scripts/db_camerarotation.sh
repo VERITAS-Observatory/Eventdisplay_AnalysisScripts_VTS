@@ -17,4 +17,4 @@ fi
 STARTDATE="$1"
 ENDDATE="$2"
 QUERY="select telescope_id, version, pmt_rotation from tblPointing_Monitor_Camera_Parameters where start_date <=\"${STARTDATE}\" and end_date >\"${ENDDATE}\" ORDER BY version DESC"
-$($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VOFFLINE; ${QUERY}"  | sed 's/\t/|/g'
+$("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VOFFLINE; ${QUERY}"  | sed 's/\t/|/g'

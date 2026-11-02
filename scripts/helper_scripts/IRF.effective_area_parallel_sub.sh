@@ -1,10 +1,13 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # calculate effective areas
 #
 # v490: possible issue with "RERUN_STEREO_RECONSTRUCTION_3TEL" option
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -16,6 +19,8 @@ CUTSFILE="GAMMACUTS"
 EFFAREAFILE=EFFFILE
 REDO3TEL="15"
 IRFVERSION="VERSIONIRF"
+XGBSTEREOFILESUFFIX="STEREOXGB"
+XGBGAMMAHADRONFILESUFFIX="GHXGB"
 
 # output directory
 [[ ! -d "$ODIR" ]] && mkdir -p "$ODIR" && chmod g+w "$ODIR"
@@ -33,13 +38,12 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT=" --bind ${VERITAS_EVNDISP_AUX_DIR}:/opt/VERITAS_EVNDISP_AUX_DIR "
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
-    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
+    APPTAINER_MOUNT+=" --bind ${DDIR}:${DDIR}"
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
-    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=/opt/DDIR,CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
+    APPTAINER_ENV="--env VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,DDIR=${DDIR},CALDIR=/opt/ODIR,LOGDIR=/opt/ODIR,ODIR=/opt/ODIR"
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
 fi
 
 inspect_executables()
@@ -47,20 +51,30 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/evndisp
+        ls -l "${EVNDISPSYS}"/bin/evndisp
     fi
 }
 
+# cp XGB files to TMPDIR (if available)
+for XGB in "$XGBSTEREOFILESUFFIX" "$XGBGAMMAHADRONFILESUFFIX"
+do
+    echo "XGB $XGB"
+    if [[ -n $XGB ]] && [[ $XGB != "None" ]]; then
+        XGBFIL=$(basename $MCFILE .root)
+        XGBFIL="$(dirname $MCFILE)/${XGBFIL}.${XGB}.root"
+        cp -f -v "$XGBFIL" "$DDIR"/
+    fi
+done
 # cp MC file to TMPDIR
-cp -f "$MCFILE" "$DDIR"/
-MCFILE=`basename $MCFILE`
+cp -f -v "$MCFILE" "$DDIR"/
+MCFILE=$(basename $MCFILE)
 MCFILE=${DDIR}/${MCFILE}
 
 # Check that cuts file exists
 CUTSFILE=${CUTSFILE%%.dat}
-CUTS_NAME=`basename $CUTSFILE`
+CUTS_NAME=$(basename "$CUTSFILE")
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
-if [[ "$CUTSFILE" == `basename $CUTSFILE` ]]; then
+if [[ "$CUTSFILE" == $(basename "$CUTSFILE") ]]; then
     CUTSFILE="$VERITAS_EVNDISP_AUX_DIR"/GammaHadronCutFiles/$CUTSFILE.dat
 else
     CUTSFILE="$CUTSFILE.dat"
@@ -76,44 +90,54 @@ if [[ $DISPBDT == "1" ]]; then
     OSUBDIR="${OSUBDIR}_DISP"
 fi
 echo -e "Output files will be written to:\n $OSUBDIR"
-mkdir -p $OSUBDIR
+mkdir -p "$OSUBDIR"
 
 ENERGYRECONSTRUCTIONMETHOD="0"
 if [[ $IRFVERSION == *"v490"* ]]; then
     ENERGYRECONSTRUCTIONMETHOD="1"
 fi
 
+# XGB Reconstruction settings
+DIRECTIONRECONSTRUCTIONMETHOD="0"
+if [[ $CUTSFILE == *"XGB"* ]]; then
+   DIRECTIONRECONSTRUCTIONMETHOD="2"
+   ENERGYRECONSTRUCTIONMETHOD="2"
+fi
+
 # parameter file template, include "* IGNOREFRACTIONOFEVENTS 0.5" when doing BDT effective areas
 PARAMFILE="
 * FILLINGMODE 0
 * ENERGYRECONSTRUCTIONMETHOD $ENERGYRECONSTRUCTIONMETHOD
+* DIRECTIONRECONSTRUCTIONMETHOD $DIRECTIONRECONSTRUCTIONMETHOD
 * ENERGYAXISBINS 60
 * ENERGYAXISBINHISTOS 30
 * EBIASBINHISTOS 75
-* ANGULARRESOLUTIONBINHISTOS 40
+* ANGULARRESOLUTIONBINHISTOS 200
 * RESPONSEMATRICESEBINS 200
 * AZIMUTHBINS 1
 * FILLMONTECARLOHISTOS 0
-* ENERGYSPECTRUMINDEX 20 1.6 0.2
+* ENERGYSPECTRUMINDEX 40 1.5 0.1
 * RERUN_STEREO_RECONSTRUCTION_3TEL $REDO3TEL
-* CUTFILE $DDIR/$(basename $CUTSFILE)
+* CUTFILE $DDIR/$(basename "$CUTSFILE")
  IGNOREFRACTIONOFEVENTS 0.5
-* SIMULATIONFILE_DATA $MCFILE"
+* SIMULATIONFILE_DATA $MCFILE
+* XGBSTEREOFILESUFFIX $XGBSTEREOFILESUFFIX
+* XGBGAMMAHADRONFILESUFFIX $XGBGAMMAHADRONFILESUFFIX"
 
 # create makeEffectiveArea parameter file
 EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
 rm -f "$DDIR/$EAPARAMS.dat"
-eval "echo \"$PARAMFILE\"" > $DDIR/$EAPARAMS.dat
+eval "echo \"$PARAMFILE\"" > "$DDIR"/"$EAPARAMS".dat
 
 # calculate effective areas
-rm -f $OSUBDIR/$OFILE.root
-$EVNDISPSYS/bin/makeEffectiveArea $DDIR/$EAPARAMS.dat $DDIR/$EAPARAMS.root &> $OSUBDIR/$EAPARAMS.log
+rm -f "$OSUBDIR"/"$OFILE".root
+$EVNDISPSYS/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
 
 echo "Filling log file into root file"
-echo "$(inspect_executables)" >> "$OSUBDIR/$EAPARAMS.log"
+inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
 cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
-$EVNDISPSYS/bin/logFile effAreaLog $DDIR/$EAPARAMS.root $DDIR/$EAPARAMS.log
-cp -f $DDIR/$EAPARAMS.root $OSUBDIR/$EAPARAMS.root
-chmod -R g+w $OSUBDIR
-chmod g+w $OSUBDIR/$EAPARAMS.root
-rm -f $OSUBDIR/$EAPARAMS.log
+$EVNDISPSYS/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
+cp -f "$DDIR"/"$EAPARAMS".root "$OSUBDIR"/"$EAPARAMS".root
+chmod -R g+w "$OSUBDIR"
+chmod g+w "$OSUBDIR"/"$EAPARAMS".root
+rm -f "$OSUBDIR"/"$EAPARAMS".log

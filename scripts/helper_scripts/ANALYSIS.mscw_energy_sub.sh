@@ -1,7 +1,10 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # analyse MC files with lookup tables
 
 # set observatory environmental variables
+# shellcheck source=/dev/null
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
@@ -33,8 +36,8 @@ if [[ ! -z  $VERITAS_ANALYSIS_TYPE ]]; then
    ANATYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 fi
 
-INDIR=`dirname $INFILE`
-BFILE=`basename $INFILE .root`
+INDIR=$(dirname $INFILE)
+BFILE=$(basename $INFILE .root)
 INFILEPATH="$INFILE"
 
 # temporary directory
@@ -56,20 +59,20 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     APPTAINER_MOUNT+=" --bind  ${VERITAS_USER_DATA_DIR}:/opt/VERITAS_USER_DATA_DIR "
     APPTAINER_MOUNT+=" --bind ${ODIR}:/opt/ODIR "
     APPTAINER_MOUNT+=" --bind ${INDIR}:/opt/INDIR "
-    APPTAINER_MOUNT+=" --bind ${DDIR}:/opt/DDIR"
+    APPTAINER_MOUNT+=" --bind ${DDIR}:${DDIR}"
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT}"
-    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,DDIR=/opt/DDIR,LOGDIR=/opt/ODIR"
+    APPTAINER_ENV="--env VERITAS_DATA_DIR=/opt/VERITAS_DATA_DIR,VERITAS_EVNDISP_AUX_DIR=/opt/VERITAS_EVNDISP_AUX_DIR,VERITAS_USER_DATA_DIR=/opt/VERITAS_USER_DATA_DIR,VERITASODIR=/opt/ODIR,INDIR=/opt/INDIR,DDIR=${DDIR},LOGDIR=/opt/ODIR"
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
-    INFILEPATH="/opt/DDIR/$BFILE.root"
+    INFILEPATH="$DDIR/$BFILE.root"
     echo "APPTAINER INFILEPATH: $INFILEPATH"
 fi
 
 echo "READING RUNINFO from $INFILEPATH"
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH updated-runinfo)
-EPOCH=`echo $RUNINFO | awk '{print $(1)}'`
-ATMO=${FORCEDATMO:-`echo $RUNINFO | awk '{print $(3)}'`}
-HVSETTINGS=`echo $RUNINFO | awk '{print $(4)}'`
+RUNINFO=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" updated-runinfo)
+EPOCH=$(echo "$RUNINFO" | awk '{print $(1)}')
+ATMO=${FORCEDATMO:-$(echo "$RUNINFO" | awk '{print $(3)}')}
+HVSETTINGS=$(echo "$RUNINFO" | awk '{print $(4)}')
 if [[ $ATMO == *error* ]]; then
     echo "error finding atmosphere; skipping run $BFILE"
     exit
@@ -97,7 +100,7 @@ fi
 TABFILE=table-${IRFVERSION}-auxv01-${SIMTYPE_RUN}-ATM${ATMO}-${EPOCH}-${ANATYPE}.root
 echo "TABLEFILE: $TABFILE"
 # Check that table file exists
-if [[ "$TABFILE" == $(basename $TABFILE) ]]; then
+if [[ "$TABFILE" == $(basename "$TABFILE") ]]; then
     TABFILE="$VERITAS_EVNDISP_AUX_DIR/Tables/$TABFILE"
 fi
 echo "TABLEFILE $TABFILE"
@@ -106,7 +109,7 @@ if [ ! -f "$TABFILE" ]; then
     exit 1
 fi
 if [ -n "$EVNDISP_APPTAINER" ]; then
-    TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename $TABFILE)"
+    TABFILE="/opt/VERITAS_EVNDISP_AUX_DIR/Tables/$(basename "$TABFILE")"
 fi
 
 inspect_executables()
@@ -114,7 +117,7 @@ inspect_executables()
     if [ -n "$EVNDISP_APPTAINER" ]; then
         apptainer inspect "$EVNDISP_APPTAINER"
     else
-        ls -l ${EVNDISPSYS}/bin/mscw_energy
+        ls -l "${EVNDISPSYS}"/bin/mscw_energy
     fi
 }
 
@@ -131,95 +134,130 @@ get_disp_dir()
     else
         DISPDIR="DispBDTs//${ANATYPE}/${EPOCH}_ATM${ATMO}/"
     fi
-    ZA=$($EVNDISPSYS/bin/printRunParameter $INFILEPATH -elevation | awk '{print $3}')
-    if (( $(echo "90.-$ZA < 38" |bc -l) )); then
-        DISPDIR="${DISPDIR}/SZE/"
-    elif (( $(echo "90.-$ZA < 48" |bc -l) )); then
-        DISPDIR="${DISPDIR}/MZE/"
-    elif (( $(echo "90.-$ZA < 58" |bc -l) )); then
-        DISPDIR="${DISPDIR}/LZE/"
+    ZA=${1}
+    # zenith angle dependent disp training; important at large zenith
+    # requires bc as printRunParameter returns a float
+    if (( $(echo "$ZA < 38" | bc -l) )); then
+        DISPDIR="${DISPDIR}/20deg/"
+    elif (( $(echo "$ZA < 48" | bc -l) )); then
+        DISPDIR="${DISPDIR}/45deg/"
+    elif (( $(echo "$ZA < 58" | bc -l) )); then
+        DISPDIR="${DISPDIR}/55deg/"
+    elif (( $(echo "$ZA < 62" | bc -l) )); then
+        if [[ ${HVSETTINGS} == "obsLowHV" ]]; then  # fix for incomplete RedHV MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/60deg/"
+        fi
     else
-        DISPDIR="${DISPDIR}/XZE/"
+        if [[ ${HVSETTINGS} == "obsLowHV" ]]; then  # fix for incomplete RedHV MC set
+            DISPDIR="${DISPDIR}/55deg/"
+        else
+            DISPDIR="${DISPDIR}/65deg/"
+        fi
     fi
     echo "${VERITAS_EVNDISP_AUX_DIR}/${DISPDIR}/"
 }
 
 if [[ $DISPBDT == "1" ]]; then
-    DISPDIR=$(get_disp_dir)
-    echo "DISPDIR (Elevation is $ZA deg): " $DISPDIR
+    ZA=$($EVNDISPSYS/bin/printRunParameter "$INFILEPATH" -zenith | awk '{print $4}')
+    DISPDIR=$(get_disp_dir "${ZA}")
+    echo "DISPDIR (Zenith is $ZA deg): " "$DISPDIR"
+    if [[ ! -d "$DISPDIR" ]]; then
+        echo "Error: DispBDT directory $DISPDIR not found, exiting..."
+        exit 1
+    fi
 fi
 
 #################################
 # run analysis
 
 MSCWLOGFILE="$ODIR/$BFILE.mscw.log"
-rm -f ${MSCWLOGFILE}
+rm -f "${MSCWLOGFILE}"
 
 MSCWDATAFILE="$ODIR/$BFILE.mscw.root"
 echo "MSCWDATAFILE $MSCWDATAFILE"
 
 # mscw_energy command line options
-MOPT=""
+MOPT=()
 # dispBDT reconstruction
 if [ $DISPBDT -eq 1 ]; then
-    MOPT="$MOPT -redo_stereo_reconstruction"
-    MOPT="$MOPT -tmva_disperror_weight 50"
-    MOPT="$MOPT -minangle_stereo_reconstruction=10."
+    MOPT+=(
+        -redo_stereo_reconstruction
+        -tmva_disperror_weight
+        50
+        -minangle_stereo_reconstruction=10.
+    )
     if [[ $IRFVERSION == v490* ]]; then
-        MOPT="$MOPT -maxloss=0.20"
+        MOPT+=("-maxloss=0.20")
     else
-        MOPT="$MOPT -maxdist=1.75 -minntubes=5 -minwidth=0.02 -minsize=100"
-        MOPT="$MOPT -maxloss=0.40"
-        MOPT="$MOPT -use_evndisp_selected_images=0"
+        MOPT+=(
+            -maxdist=1.75
+            -minntubes=5
+            -minwidth=0.02
+            -minsize=100
+            -maxloss=0.40
+            -use_evndisp_selected_images=0
+        )
     fi
-    # MOPT="$MOPT -minfui=0.2"
-    # MOPT="$MOPT -minfitstat=3"
+    # MOPT+=("-minfui=0.2")
+    # MOPT+=("-minfitstat=3")
     # unzip XML files into DDIR
-    cp -v -f ${DISPDIR}/*.xml.gz ${DDIR}/
-    gunzip -v ${DDIR}/*xml.gz
-    MOPT="$MOPT -tmva_filename_stereo_reconstruction ${DDIR}/BDTDisp_BDT_"
-    MOPT="$MOPT -tmva_filename_disperror_reconstruction ${DDIR}/BDTDispError_BDT_"
-    MOPT="$MOPT -tmva_filename_dispsign_reconstruction ${DDIR}/BDTDispSign_BDT_"
+    cp -v -f "${DISPDIR}"/*.xml.gz "${DDIR}"/
+    gunzip -v "${DDIR}"/*xml.gz
+    MOPT+=(
+        -tmva_filename_stereo_reconstruction
+        "${DDIR}/BDTDisp_BDT_"
+        -tmva_filename_disperror_reconstruction
+        "${DDIR}/BDTDispError_BDT_"
+        -tmva_filename_dispsign_reconstruction
+        "${DDIR}/BDTDispSign_BDT_"
+    )
     if [[ $IRFVERSION != v490* ]]; then
-        MOPT="$MOPT -tmva_filename_energy_reconstruction ${DDIR}/BDTDispEnergy_BDT_"
+        MOPT+=(
+            -tmva_filename_energy_reconstruction
+            "${DDIR}/BDTDispEnergy_BDT_"
+        )
     fi
-    echo "DISP BDT options: $MOPT"
+    echo "DISP BDT options: ${MOPT[*]}"
 fi
 
 $EVNDISPSYS/bin/mscw_energy         \
-    ${MOPT} \
+    "${MOPT[@]}" \
     -updateEpoch=1 \
-    -tablefile $TABFILE             \
+    -tablefile "$TABFILE"             \
     -arrayrecid=$RECID              \
-    -inputfile $DDIR/$BFILE.root \
-    -writeReconstructedEventsOnly=1 &> ${MSCWLOGFILE}
+    -inputfile "$DDIR"/"$BFILE".root \
+    -writeReconstructedEventsOnly=1 &> "${MSCWLOGFILE}"
 
-echo "$(inspect_executables)" >> ${MSCWLOGFILE}
+inspect_executables >> "${MSCWLOGFILE}"
 
 # write DISP directory into log file (as tmp directories are used)
-if [[ DISPBDT != "NOTSET" ]]; then
-    echo "" >> ${MSCWLOGFILE}
-    echo "dispBDT XML files read from ${DISPDIR}" >> ${MSCWLOGFILE}
+if [[ $DISPBDT != "NOTSET" ]]; then
+    echo "" >> "${MSCWLOGFILE}"
+    echo "dispBDT XML files read from ${DISPDIR}" >> "${MSCWLOGFILE}"
 fi
-echo "EVNDISP file: ${INFILE}" >> ${MSCWLOGFILE}
-echo "VERITAS_EVNDISP_AUX: ${VERITAS_EVNDISP_AUX_DIR}" >> ${MSCWLOGFILE}
-echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}" >> ${MSCWLOGFILE}
+{
+    echo "EVNDISP file: ${INFILE}"
+    echo "VERITAS_EVNDISP_AUX: ${VERITAS_EVNDISP_AUX_DIR}"
+    echo "VERITAS_ANALYSIS_TYPE ${VERITAS_ANALYSIS_TYPE}"
+} >> "${MSCWLOGFILE}"
 
 # move logfiles into output file
 if [[ -e ${MSCWLOGFILE} ]]; then
-  cp -v ${MSCWLOGFILE} $DDIR/
-  LLF="${DDIR}/$(basename ${MSCWLOGFILE})"
+  cp -v "${MSCWLOGFILE}" "$DDIR"/
+  LLF="${DDIR}/$(basename "${MSCWLOGFILE}")"
   $EVNDISPSYS/bin/logFile mscwTableLog "$DDIR/$BFILE.mscw.root" "$LLF"
 fi
 
 # move output file from scratch and clean up
-cp -f -v $DDIR/$BFILE.mscw.root $MSCWDATAFILE
-rm -f $DDIR/$BFILE.mscw.root
-rm -f $DDIR/$BFILE.root
+cp -f -v "$DDIR"/"$BFILE".mscw.root "$MSCWDATAFILE"
+rm -f "$DDIR"/"$BFILE".mscw.root
+rm -f "$DDIR"/"$BFILE".root
 
 # write info to log
 echo "RUN$BFILE MSCWLOG ${MSCWLOGFILE}"
 echo "RUN$BFILE MSCWDATA $MSCWDATAFILE"
 
 # remove files in DDIR
-rm -rf $DDIR
+rm -rf "$DDIR"

@@ -15,4 +15,4 @@ STARTDATE="$1"
 ENDDATE="$2"
 
 QUERY="SELECT timestamp, telescope_id, ambient_temp, radiant_sky_temp FROM tblFIR_Pyrometer_Info  WHERE timestamp >= \"${STARTDATE}\" AND timestamp < \"${ENDDATE}\""
-$($EVNDISPSCRIPTS/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}"  | sed 's/\t/|/g'
+$("$EVNDISPSCRIPTS"/db_scripts/db_mysqldb.sh) -e "USE VERITAS; ${QUERY}"  | sed 's/\t/|/g'

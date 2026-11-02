@@ -15,7 +15,7 @@
 # - length of noise traces
 ##############################################################
 # EventDisplay version
-EDVERSION=`$EVNDISPSYS/bin/evndisp --version | tr -d .`
+EDVERSION=$("$EVNDISPSYS"/bin/evndisp --version | tr -d .)
 if [[ $EDVERSION = "v4"* ]]; then
    echo "Noise file writer not implemented for Eventdisplay version $EDVERSION"
    exit
@@ -53,6 +53,6 @@ do
     echo "reading $IFIL"
     echo "writing $OFIL"
 
-    $EVNDISPSYS/bin/VTS.NoiseFileWriter 4 499 $IFIL $OFIL $TLENGTH
+    "$EVNDISPSYS"/bin/VTS.NoiseFileWriter 4 499 "$IFIL" "$OFIL" $TLENGTH
 
 done

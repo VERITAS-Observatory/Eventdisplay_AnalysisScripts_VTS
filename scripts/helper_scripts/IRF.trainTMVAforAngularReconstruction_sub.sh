@@ -1,8 +1,11 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # train TMVA (BDTs) for angular reconstruction
 
 # set observatory environmental variables
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
+# shellcheck source=/dev/null
     source "$EVNDISPSYS"/setObservatory.sh VTS
 fi
 
@@ -36,23 +39,22 @@ if [ -n "$EVNDISP_APPTAINER" ]; then
     EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv $APPTAINER_ENV $APPTAINER_MOUNT}"
     echo "APPTAINER SYS: $EVNDISPSYS"
     # path used by EVNDISPSYS needs to be set
-    CALDIR="/opt/ODIR"
 fi
 
 # decompress
 NLIST=${ONAME}.list
-echo $NLIST
-for F in $(cat $LLIST)
+echo "$NLIST"
+while IFS= read -r F
 do
-    IDIR=$(dirname $F)
-    OF=${DDIR}/$(basename $IDIR)_$(basename $F)
-    cp -v -f $F ${OF}
-done
-find $DDIR -name "*.root.zst" -exec zstd -f -d {} \;
-ls -1 $DDIR
-ls -1 $DDIR/*.root > ${DDIR}/$NLIST
+    IDIR=$(dirname "$F")
+    OF=${DDIR}/$(basename "$IDIR")_$(basename "$F")
+    cp -v -f "$F" "${OF}"
+done < "$LLIST"
+find "$DDIR" -name "*.root.zst" -exec zstd -f -d {} \;
+ls -1 "$DDIR"
+ls -1 "$DDIR"/*.root > "${DDIR}"/$NLIST
 echo "FILELIST ${DDIR}/$NLIST"
-cat ${DDIR}/$NLIST
+cat "${DDIR}"/$NLIST
 
 ODIR="${ODIR}/${BDT}"
 mkdir -p ${ODIR}
@@ -97,7 +99,7 @@ else
 fi
 
 
-cp -f ${DDIR}/${BDT}_*.root ${ODIR}/
-cp -f ${DDIR}/${BDT}_*.xml ${ODIR}/
+cp -f "${DDIR}"/${BDT}_*.root ${ODIR}/
+cp -f "${DDIR}"/${BDT}_*.xml ${ODIR}/
 # (potentially large training file)
-cp -v ${DDIR}/BDTDisp_${TELTYPE}.root ${ODIR}/
+cp -v "${DDIR}"/BDTDisp_${TELTYPE}.root ${ODIR}/

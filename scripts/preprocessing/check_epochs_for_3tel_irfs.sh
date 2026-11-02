@@ -11,7 +11,7 @@ exit
 fi
 
 RUNLIST="${1}"
-RUNS=$(cat $RUNLIST)
+RUNS=$(cat "$RUNLIST")
 
 DDIR="$VERITAS_PREPROCESSED_DATA_DIR/${VERITAS_ANALYSIS_TYPE:0:2}/mscw/"
 
@@ -32,15 +32,15 @@ getNumberedDirectory()
     else
         NDIR="${IDIR}/${TRUN:0:2}/"
     fi
-    echo ${NDIR}
+    echo "${NDIR}"
 }
 
 for R in $RUNS; do
-    LOGDIR=$(getNumberedDirectory $R ${DDIR})
+    LOGDIR=$(getNumberedDirectory "$R" "${DDIR}")
     LOGFIL="${LOGDIR}/${R}.mscw.log"
     if [[ -e $LOGFIL ]]; then
-        TELSTRING=$(grep "Mean pedvar per telescope" ${LOGFIL})
-        pedvars=($(echo "$TELSTRING" | awk '{for(i=5;i<=NF;i++) print $i}'))
+        TELSTRING=$(grep "Mean pedvar per telescope" "${LOGFIL}")
+        mapfile -t pedvars < <(echo "$TELSTRING" | awk '{for(i=5;i<=NF;i++) print $i}')
         T="T"
         for i in "${!pedvars[@]}"; do
             telescope=$((i + 1))
@@ -49,9 +49,9 @@ for R in $RUNS; do
             fi
         done
         if [[ $T != "T1234" ]]; then
-            EPOCHSTRING=$(grep "Evaluating instrument" ${LOGFIL})
+            EPOCHSTRING=$(grep "Evaluating instrument" "${LOGFIL}")
             EPOCH=$(echo "$EPOCHSTRING" | sed -n 's/.*is: \([^)]*\)).*/\1/p')
-            ATMOSTRING=$(grep "Evaluating atmosphere ID" ${LOGFIL})
+            ATMOSTRING=$(grep "Evaluating atmosphere ID" "${LOGFIL}")
             ATMOID=$(echo "$ATMOSTRING" | sed -n 's/.*is: \([0-9]*\)).*/\1/p')
             if [[ $T == "T123" ]]; then
                 ID=5

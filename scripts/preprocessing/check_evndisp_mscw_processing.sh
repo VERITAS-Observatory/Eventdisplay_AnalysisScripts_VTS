@@ -12,13 +12,13 @@ echo "
 exit
 fi
 
-FF=$(cat ${1})
+FF=$(cat "${1}")
 DTYPE=${2}
-EDVERSION=$(cat $VERITAS_EVNDISP_AUX_DIR/IRFMINORVERSION)
+EDVERSION=$(cat "$VERITAS_EVNDISP_AUX_DIR"/IRFMINORVERSION)
 
 file_on_disk()
 {
-    ARCHIVEDIR="$VERITAS_DATA_DIR/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/${DTYPE}/"
+    ARCHIVEDIR="$VERITAS_DATA_DIR/shared/processed_data_${EDVERSION}/${VERITAS_ANALYSIS_TYPE:0:2}/${DTYPE}/"
     TRUN="$1"
     if [[ ${TRUN} -lt 100000 ]]; then
         EDIR="${ARCHIVEDIR}/${TRUN:0:1}/"
@@ -43,5 +43,5 @@ echo "Checking runs from ${1} for data type ${DTYPE}"
 
 for F in ${FF}
 do
-    echo $F $(file_on_disk $F)
+    echo "$F $(file_on_disk "$F")"
 done
