@@ -11,7 +11,7 @@ fi
 
 # parameters replaced by parent script using sed
 RUNLIST=RRUNLIST
-DDIR=DDDIR
+DDIR="DDDIR"
 RUNP=RRUNP
 OUTFILE=OOUTFILE
 
