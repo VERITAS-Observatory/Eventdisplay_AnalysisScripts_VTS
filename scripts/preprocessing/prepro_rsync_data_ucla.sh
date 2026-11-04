@@ -95,7 +95,9 @@ if [[ $SYNC_DL3TAR == TRUE ]]; then
                 fi
             done
             echo "Syncing ${#cut_files[@]} archives to $UCLA_DIR/$cut/"
-            rsync -avz --mkpath -e ssh -- "${cut_files[@]}" "${UCLA_USER}:${UCLA_DIR}/${cut}/"
+            printf -v remote_dir '%q' "${UCLA_DIR}/${cut}"
+            ssh -- "$UCLA_USER" "mkdir -p -- $remote_dir"
+            rsync -avz -e ssh -- "${cut_files[@]}" "${UCLA_USER}:${UCLA_DIR}/${cut}/"
         done
     else
         echo "No DL3 tar balls found in $SOURCE_DIR"
