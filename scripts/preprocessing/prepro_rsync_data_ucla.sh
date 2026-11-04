@@ -75,7 +75,28 @@ if [[ $SYNC_DL3TAR == TRUE ]]; then
     echo "Syncing DL3 tar balls"
     TAR_FILES=("$SOURCE_DIR"/*.tar.gz)
     if (( ${#TAR_FILES[@]} )); then
-        rsync -avz -e ssh -- "${TAR_FILES[@]}" "${UCLA_USER}:${UCLA_DIR}/"
+        declare -A CUTS=()
+        for tar_file in "${TAR_FILES[@]}"; do
+            tar_name=${tar_file##*/}
+            # Archives are named dl3_<type>_<cut>-<run>-<version>.tar.gz.
+            if [[ $tar_name =~ ^(dl3_.+)-[0-9]+-[^-]+\.tar\.gz$ ]]; then
+                CUTS["${BASH_REMATCH[1]}"]=1
+            else
+                echo "Unrecognized DL3 archive name: $tar_name" >&2
+                exit 1
+            fi
+        done
+        for cut in "${!CUTS[@]}"; do
+            cut_files=()
+            for tar_file in "${TAR_FILES[@]}"; do
+                tar_name=${tar_file##*/}
+                if [[ $tar_name =~ ^(dl3_.+)-[0-9]+-[^-]+\.tar\.gz$ ]] && [[ ${BASH_REMATCH[1]} == "$cut" ]]; then
+                    cut_files+=("$tar_file")
+                fi
+            done
+            echo "Syncing ${#cut_files[@]} archives to $UCLA_DIR/$cut/"
+            rsync -avz --mkpath -e ssh -- "${cut_files[@]}" "${UCLA_USER}:${UCLA_DIR}/${cut}/"
+        done
     else
         echo "No DL3 tar balls found in $SOURCE_DIR"
     fi
