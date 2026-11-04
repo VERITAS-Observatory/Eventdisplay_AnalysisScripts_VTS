@@ -19,6 +19,6 @@ while IFS= read -r -d '' L; do
         echo "Packing $D into $PACKAGE"
         tar -czf "$PACKAGE" "$D" || status=1
     done < <(find "$L" -mindepth 1 -maxdepth 1 -type d -print0)
-done < <(find . -maxdepth 1 -type d -name 'dl3*' ! -name 'dl3_archive*' -print0)
+done < <(find . -maxdepth 1 -type d -name 'dl3*' ! -name 'dl3_archive*' ! -name '*all-events*' -print0)
 
 exit "$status"
