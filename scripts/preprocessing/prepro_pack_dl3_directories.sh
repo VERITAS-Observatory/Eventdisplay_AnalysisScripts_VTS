@@ -8,12 +8,17 @@ if [[ $# -ne 1 || -z "$1" ]]; then
 fi
 
 VERSION="$1"
-LDIR=$(find . -maxdepth 1 -type d -name 'dl3*' ! -name '*all-events*' ! -name 'dl3_archive*')
 
 echo "Pack DL3 for version $VERSION"
 
-for L in $LDIR
-do
-    echo "Packing $L"
-    tar -czf "${L}-${VERSION}.tar.gz" "${L}" &
-done
+status=0
+while IFS= read -r -d '' L; do
+    # Package each immediate subdirectory (for example, runs 3 through 11).
+    while IFS= read -r -d '' D; do
+        PACKAGE="${L}-$(basename "$D")-${VERSION}.tar.gz"
+        echo "Packing $D into $PACKAGE"
+        tar -czf "$PACKAGE" "$D" || status=1
+    done < <(find "$L" -mindepth 1 -maxdepth 1 -type d -print0)
+done < <(find . -maxdepth 1 -type d -name 'dl3*' ! -name 'dl3_archive*' ! -name '*all-events*' -print0)
+
+exit "$status"

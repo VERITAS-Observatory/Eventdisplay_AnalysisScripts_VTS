@@ -59,28 +59,46 @@ echo "USER: $UCLA_USER VERSION $VERSION ANATYPE $ANATYPE BACKUP $BACKUP"
 
 SYNC_EVNDISP=FALSE
 SYNC_MSCW=FALSE
-SYNC_DL3TAR=FALSE
+SYNC_DL3TAR=TRUE
 SYNC_DL3=FALSE
 
 if [[ $VERSION == v490.7* ]]; then
     if [[ $ANATYPE == AP ]]; then
         SYNC_EVNDISP=TRUE
         SYNC_MSCW=TRUE
-        SYNC_DL3TAR=TRUE
-        SYNC_DL3=TRUE
-    else
-        SYNC_DL3TAR=TRUE
     fi
 else
     SYNC_MSCW=TRUE
-    SYNC_DL3=TRUE
 fi
 
 if [[ $SYNC_DL3TAR == TRUE ]]; then
     echo "Syncing DL3 tar balls"
     TAR_FILES=("$SOURCE_DIR"/*.tar.gz)
     if (( ${#TAR_FILES[@]} )); then
-        rsync -avz -e ssh -- "${TAR_FILES[@]}" "${UCLA_USER}:${UCLA_DIR}/"
+        declare -A CUTS=()
+        for tar_file in "${TAR_FILES[@]}"; do
+            tar_name=${tar_file##*/}
+            # Archives are named dl3_<type>_<cut>-<run>-<version>.tar.gz.
+            if [[ $tar_name =~ ^(dl3_.+)-[0-9]+-[^-]+\.tar\.gz$ ]]; then
+                CUTS["${BASH_REMATCH[1]}"]=1
+            else
+                echo "Unrecognized DL3 archive name: $tar_name" >&2
+                exit 1
+            fi
+        done
+        for cut in "${!CUTS[@]}"; do
+            cut_files=()
+            for tar_file in "${TAR_FILES[@]}"; do
+                tar_name=${tar_file##*/}
+                if [[ $tar_name =~ ^(dl3_.+)-[0-9]+-[^-]+\.tar\.gz$ ]] && [[ ${BASH_REMATCH[1]} == "$cut" ]]; then
+                    cut_files+=("$tar_file")
+                fi
+            done
+            echo "Syncing ${#cut_files[@]} archives to $UCLA_DIR/$cut/"
+            printf -v remote_dir '%q' "${UCLA_DIR}/${cut}"
+            ssh -- "$UCLA_USER" "mkdir -p -- $remote_dir"
+            rsync -avz -e ssh -- "${cut_files[@]}" "${UCLA_USER}:${UCLA_DIR}/${cut}/"
+        done
     else
         echo "No DL3 tar balls found in $SOURCE_DIR"
     fi
@@ -88,12 +106,10 @@ fi
 
 if [[ $SYNC_DL3 == TRUE ]]; then
     echo "Syncing DL3 files"
-    DL_DIRS=()
-    while IFS= read -r -d '' dir; do
-        DL_DIRS+=("$dir")
-    done < <(find "$SOURCE_DIR" -type d -name 'dl3_*' -print0)
+    DL_DIRS=("$SOURCE_DIR"/dl3_*/)
 
     for dl_dir in "${DL_DIRS[@]}"; do
+        dl_dir=${dl_dir%/}
         dl_name=${dl_dir##*/}
         echo "Syncing $dl_dir to ${UCLA_USER}:${UCLA_DIR}/${dl_name}/"
         rsync -avz -e ssh --backup --suffix="$BACKUP" -- \
