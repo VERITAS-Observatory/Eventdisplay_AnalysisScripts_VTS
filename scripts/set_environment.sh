@@ -41,7 +41,7 @@ GROUPDATADIR="/lustre/fs24/group/veritas"
 # data directory (VBF files)
 export VERITAS_DATA_DIR=${GROUPDATADIR}
 # data directory for simulations (dCache)
-export VERITAS_DCACHE_DIR="/pnfs/ifh.de/acs/veritas/diskonly/"
+export VERITAS_DCACHE_DIR="/pnfs/ifh.de/acs/veritas/archive/"
 # general auxiliary directory
 export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPVERSION}
 # pre-processed data products
