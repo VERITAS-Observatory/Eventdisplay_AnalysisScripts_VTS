@@ -255,7 +255,7 @@ check_conda_installation()
 get_xgb_output_file()
 {
     XGBOFIL=$(basename "$MSCW_FILE" .root)
-    XGBOFIL="${DDIR}/${XGBOFIL}.${XGBVERSION}_ImgSel${1}"
+    XGBOFIL="${DDIR}/${XGBOFIL}.${XGBVERSION}"
     echo "$XGBOFIL"
 }
 
@@ -285,7 +285,7 @@ run_xgb()
     DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"
     echo "DispXGB directory $DISPDIR"
     echo "DispXGB options $XGBVERSION"
-    XGBOFIL=$(get_xgb_output_file "$1")
+    XGBOFIL=$(get_xgb_output_file)
     echo "XGB Output file $XGBOFIL"
     echo "DispXGB inputfle $MSCW_FILE"
 
@@ -294,17 +294,29 @@ run_xgb()
     eventdisplay-ml-apply-xgb-stereo \
         --input_file "$MSCW_FILE" \
         --model_prefix "$DISPDIR" \
-        --output_file "$XGBOFIL.root" \
-        --image_selection "$1" > "$XGBOFIL.log" 2>&1
+        --output_file "$XGBOFIL.root" > "$XGBOFIL.log" 2>&1
+    ML_STATUS=$?
 
     python --version >> "${XGBOFIL}.log"
     conda list -n "$env_name" >> "${XGBOFIL}.log"
 
     conda deactivate
+    if [[ $ML_STATUS -ne 0 ]] || [[ ! -s "$XGBOFIL.root" ]] || \
+        ! grep -q "Total processed events written" "$XGBOFIL.log"; then
+        echo "ERROR: XGB apply step failed (exit status $ML_STATUS), see $XGBOFIL.log"
+        rm -f "$XGBOFIL.root"
+        exit 1
+    fi
     echo "Finished calculated XGB"
 }
 
 CUTLIST=$(read_cutlist "$EFFAREACUTLIST")
+
+# XGB stereo predictions use all four telescopes. They are calculated once per mscw file
+# and used only for 4-telescope IRFs (ID 15); see the 3-telescope skip below.
+if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
+    run_xgb
+fi
 
 # loop over 4 and 3-telescope combinations
 for ID in 15 14 13 11 7; do
@@ -347,9 +359,15 @@ for ID in 15 14 13 11 7; do
         mkdir -p "$OSUBDIR"
 
         if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
-            XGBFILESUFFIX=${XGBVERSION}_ImgSel${ID}
+            XGBFILESUFFIX=${XGBVERSION}
         else
             XGBFILESUFFIX=None
+        fi
+        # 3-telescope XGB IRFs are not supported: the 3-telescope rerun recalculates
+        # only the standard reconstruction, while the XGB predictions use all 4 telescopes.
+        if [[ $CUTS_NAME == *XGB* ]] && [[ $XGBFILESUFFIX != None ]] && [[ $ID != "15" ]]; then
+            echo "Skipping $CUTS_NAME for telescope combination $ID: 3-telescope XGB IRFs are not supported"
+            continue
         fi
 
         ENERGYRECONSTRUCTIONMETHOD=0
@@ -378,10 +396,6 @@ PARAMFILE="
 * SIMULATIONFILE_DATA $outputfilename
 * XGBSTEREOFILESUFFIX ${XGBFILESUFFIX}"
 
-        if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
-            run_xgb $ID
-        fi
-
         # create makeEffectiveArea parameter file
         EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
         rm -f "$DDIR/$EAPARAMS.dat"
@@ -401,7 +415,7 @@ PARAMFILE="
         $EVNDISPSYS/bin/logFile mscwTableLog "$DDIR"/"$EAPARAMS".root "$DDIR/$OFILE.log"
         echo "Trying to fill XGB log file into root file: $OSUBDIR/$EAPARAMS.log"
         if [[ -n $XGBVERSION ]] && [[ $XGBVERSION != "None" ]]; then
-            XGBLOGFILE="$(get_xgb_output_file $ID).log"
+            XGBLOGFILE="$(get_xgb_output_file).log"
             if [[ -f "$XGBLOGFILE" ]]; then
                 $EVNDISPSYS/bin/logFile xgbLog "$DDIR"/"$EAPARAMS".root "$XGBLOGFILE"
             else

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Train XGB disp direction analysis using MC mscw file
 
-# Don't do set -e.
-# set -e
+# Don't do set -e: the environment is logged after the ML step.
+# The ML exit status is checked explicitly (evndisp_ml_check_train).
 
 # parameters replaced by parent script using sed
 LLIST=MSCWLIST
@@ -28,6 +28,8 @@ echo -e "Output files will be written to:\n ${ODIR}"
 
 # shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
 source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
+# shellcheck source=scripts/helper_scripts/UTILITY.xgb_checks.sh
+source "${HELPER_SCRIPTS_DIR}/UTILITY.xgb_checks.sh"
 evndisp_ml_setup_python_cache "$TEMPDIR" "train_stereo_$(basename "$LLIST" .list)"
 evndisp_ml_activate_conda "$env_name"
 
@@ -42,7 +44,10 @@ eventdisplay-ml-train-xgb-stereo \
     --observatory VERITAS \
     --min_images 2 --memory_profile \
     --train_test_fraction $P --max_events $N >| "${LOGFILE}" 2>&1
+ML_STATUS=$?
 
 evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR"
 
 conda deactivate
+
+evndisp_ml_check_train "$ML_STATUS" "${PREFIX}" "$LOGFILE" || exit 1

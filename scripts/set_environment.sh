@@ -31,6 +31,7 @@ fi
 ########################################################################
 # host system settings
 USERAFSDIR="/afs/ifh.de/group/cta/scratch/$USER"
+PROJECTDIR="/cephfs/users/maierg/VTS/d202610_xgb"
 USERLUSTDIR="/lustre/fs23/group/veritas/users/$USER"
 GROUPLUSTDIR="/lustre/fs23/group/veritas"
 GROUPDATADIR="/lustre/fs24/group/veritas"
@@ -41,7 +42,7 @@ GROUPDATADIR="/lustre/fs24/group/veritas"
 # data directory (VBF files)
 export VERITAS_DATA_DIR=${GROUPDATADIR}
 # data directory for simulations (dCache)
-export VERITAS_DCACHE_DIR="/pnfs/ifh.de/acs/veritas/diskonly/"
+export VERITAS_DCACHE_DIR="/pnfs/ifh.de/acs/veritas/archive/"
 # general auxiliary directory
 export VERITAS_EVNDISP_AUX_DIR=${GROUPLUSTDIR}/Eventdisplay_AnalysisFiles/${EVNDISPVERSION}
 # pre-processed data products
@@ -53,16 +54,15 @@ export VERITAS_USER_DATA_DIR=${USERLUSTDIR}
 # user log
 export VERITAS_USER_LOG_DIR=${USERLUSTDIR}/LOGS/VERITAS
 # EVENTDISPLAY script directory (this directory)
-EVNDISPSCRIPTS="$(pwd)"
-export EVNDISPSCRIPTS
+export EVNDISPSCRIPTS="${PROJECTDIR}/Eventdisplay_AnalysisScripts_VTS/scripts"
 
 ########################################################################
 # software settings
 export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3-v0.8.1
-export EVNDISP_ML_SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/Eventdisplay-ML
+export EVNDISP_ML_SYS="${PROJECTDIR}/Eventdisplay-ML"
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
-    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPVERSION}-rc7.sif"
+    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPVERSION}-rc8.sif"
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
     # Alma Linux 9 (al9) processing
@@ -71,7 +71,7 @@ elif [[ $PROCESS == "al9" ]]; then
     TDIR=$(pwd)
     export ROOTSYS=/afs/ifh.de/group/cta/cta/software/root/root_v6.40.00.Linux-almalinux9.7-x86_64-gcc11.5
     export VBFSYS=/afs/ifh.de/group/cta/VERITAS/software/VBF-0.3.4-c17/
-    export EVNDISPSYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/EventDisplay_${EVNDISPVERSION:0:4}-${PROCESS}
+    export EVNDISPSYS="${PROJECTDIR}/EventDisplay_v4"
     cd "$ROOTSYS" || return
 # shellcheck source=/dev/null
     source ./bin/thisroot.sh
