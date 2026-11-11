@@ -1,6 +1,5 @@
 #!/bin/bash
 # shellcheck disable=SC2086
-# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # XGBoost disp stereo and classification analysis on mscw data file
 
 # Don't do set -e: the environment is logged after the ML step.
@@ -67,14 +66,21 @@ if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
     )
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT[*]}"
     APPTAINER_ENV_VALUE="VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_PREPROCESSED_DATA_DIR=${VERITAS_PREPROCESSED_DATA_DIR},ODIR=${ODIR},TMPDIR=${TEMPDIR},PYTHONPYCACHEPREFIX=${PYTHONPYCACHEPREFIX}"
-    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv --env ${APPTAINER_ENV_VALUE} ${APPTAINER_MOUNT[*]}}"
-    echo "APPTAINER SYS: $EVNDISPSYS"
     APPTAINER_EXEC=(apptainer exec --no-mount bind-paths --cleanenv)
     APPTAINER_EXEC+=(--env "${APPTAINER_ENV_VALUE}")
     APPTAINER_EXEC+=("${APPTAINER_MOUNT[@]}")
     APPTAINER_EXEC+=("${EVNDISP_APPTAINER}")
 fi
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${MSCW_FILE}" updated-runinfo)
+# run info (epoch, atmosphere, zenith angle) from Eventdisplay-ML; no compiled Eventdisplay required
+RUN_INFO_EXEC=(eventdisplay-ml-print-run-info)
+if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
+    RUN_INFO_EXEC=("${APPTAINER_EXEC[@]}" eventdisplay-ml-print-run-info)
+fi
+RUNINFO=$("${RUN_INFO_EXEC[@]}" "${MSCW_FILE}" --updated)
+if [[ -z "$RUNINFO" ]]; then
+    echo "Error: failed to read run information from ${MSCW_FILE}"
+    exit 1
+fi
 echo "RUNINFO $RUNINFO"
 ZA=$(echo "$RUNINFO" | awk '{print $8}')
 EPOCH=$(echo "$RUNINFO" | awk '{print $1}')
