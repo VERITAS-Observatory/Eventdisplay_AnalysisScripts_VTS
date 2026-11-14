@@ -15,6 +15,9 @@ XGB="XXGB"
 XGB_TYPE=XGB_TTYPE
 ANATYPE=ANALYSISTYPE
 MAXCORES=1
+VARIANT="VVARIANT"
+SMEAR_CONFIG="SSMEAR_CONFIG"
+MODEL_ROOT="MMODEL_ROOT"
 
 # temporary (scratch) directory
 if [[ -n $TMPDIR ]]; then
@@ -72,7 +75,7 @@ EPOCH=$(echo "$RUNINFO" | awk '{print $1}')
 ATM=$(echo "$RUNINFO" | awk '{print $3}')
 echo "MSCW file: ${MSCW_FILE} at zenith ${ZA} deg, epoch ${EPOCH}, ATM ${ATM}"
 DISPDIR="$VERITAS_EVNDISP_AUX_DIR/DispXGBs/${ANATYPE}/${EPOCH}_ATM${ATM}"
-if [[ ! -d "${DISPDIR}" ]]; then
+if [[ -z $MODEL_ROOT && ! -d "${DISPDIR}" ]]; then
     echo "Error finding model directory $DISPDIR"
     exit 1
 fi
@@ -88,9 +91,10 @@ if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
         echo "Error: No zenith bin found in $STEREO_PAR for ZA=$ZA"
         exit 1
     fi
+    [[ -n $MODEL_ROOT ]] && DISPDIR="$MODEL_ROOT"
     DISPDIR="${DISPDIR}/${BIN_ID}/dispdir_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-stereo"
-    OFIL="${ODIR}/${OFIL}.${XGB}_stereo"
+    OFIL="${ODIR}/${OFIL}.${XGB}_stereo${VARIANT:+_$VARIANT}"
 elif [[ "${XGB_TYPE}" == "classification" ]]; then
     DISPDIR="${DISPDIR}/gammahadron_bdt"
     ML_EXEC="eventdisplay-ml-apply-xgb-classify"
@@ -99,9 +103,30 @@ else
     echo "Invalid XGB type: ${XGB_TYPE}"
     exit 1
 fi
+SMEAR_ARGS=()
+if [[ -n $VARIANT ]]; then
+    [[ -f $SMEAR_CONFIG ]] || { echo "Error: missing smearing configuration $SMEAR_CONFIG"; exit 1; }
+    SMEAR_ARGS=(--smearing_config "$SMEAR_CONFIG")
+    [[ ! -e "$OFIL.root" && ! -e "$OFIL.log" ]] || { echo "Error: output exists: $OFIL"; exit 1; }
+    mkdir "$OFIL.lock" || { echo "Error: output locked: $OFIL"; exit 1; }
+    trap 'rmdir "$OFIL.lock"' EXIT
+    [[ ! -e "$OFIL.root" && ! -e "$OFIL.log" ]] || { echo "Error: output exists: $OFIL"; exit 1; }
+    if [[ -n ${EVNDISP_APPTAINER:-} ]]; then
+        APPTAINER_EXEC=("${APPTAINER_EXEC[@]:0:${#APPTAINER_EXEC[@]}-1}" --bind "$(dirname "$SMEAR_CONFIG"):$(dirname "$SMEAR_CONFIG")" "${EVNDISP_APPTAINER}")
+        [[ -n $MODEL_ROOT ]] && APPTAINER_EXEC=("${APPTAINER_EXEC[@]:0:${#APPTAINER_EXEC[@]}-1}" --bind "$MODEL_ROOT:$MODEL_ROOT" "${EVNDISP_APPTAINER}")
+    fi
+fi
+if [[ -n $VARIANT ]]; then
+    echo "Smearing configuration SHA256: $(sha256sum "$SMEAR_CONFIG")"
+    for model in "${DISPDIR}.joblib.gz" "${DISPDIR}.joblib"; do
+        [[ -f $model ]] && sha256sum "$model"
+    done
+fi
 echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
 echo "Output file $OFIL"
+OUTPUT_ROOT="$OFIL.root"
+[[ -n $VARIANT ]] && OUTPUT_ROOT="$OFIL.tmp.$$.root"
 LOGFILE="$OFIL".log
 rm -f "$LOGFILE"
 
@@ -109,8 +134,8 @@ if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
     "${APPTAINER_EXEC[@]}" "$ML_EXEC" \
         --input_file "$MSCW_FILE" \
         --model_prefix "$DISPDIR" \
-        --max_cores $MAXCORES \
-        --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+        --max_cores $MAXCORES "${SMEAR_ARGS[@]}" \
+        --output_file "$OUTPUT_ROOT" > "${LOGFILE}" 2>&1
     ML_STATUS=$?
     {
         echo
@@ -120,8 +145,8 @@ if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
 else
     $ML_EXEC --input_file "$MSCW_FILE" \
         --model_prefix "$DISPDIR" \
-        --max_cores $MAXCORES \
-        --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+        --max_cores $MAXCORES "${SMEAR_ARGS[@]}" \
+        --output_file "$OUTPUT_ROOT" > "${LOGFILE}" 2>&1
     ML_STATUS=$?
 fi
 
@@ -129,4 +154,8 @@ if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
     evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR" "$ENV_PREFIX"
 fi
 
-evndisp_ml_check_apply "$ML_STATUS" "$OFIL.root" "$LOGFILE" || exit 1
+evndisp_ml_check_apply "$ML_STATUS" "$OUTPUT_ROOT" "$LOGFILE" || exit 1
+if [[ -n $VARIANT ]]; then
+    ln "$OUTPUT_ROOT" "$OFIL.root" || { rm -f "$OUTPUT_ROOT"; echo "Error: cannot publish $OFIL.root"; exit 1; }
+    rm -f "$OUTPUT_ROOT"
+fi

@@ -19,6 +19,7 @@ CUTSFILE="GAMMACUTS"
 EFFAREAFILE=EFFFILE
 REDO3TEL="15"
 IRFVERSION="VERSIONIRF"
+VARIANT="VVARIANT"
 XGBSTEREOFILESUFFIX="STEREOXGB"
 XGBGAMMAHADRONFILESUFFIX="GHXGB"
 
@@ -62,7 +63,7 @@ do
     if [[ -n $XGB ]] && [[ $XGB != "None" ]]; then
         XGBFIL=$(basename $MCFILE .root)
         XGBFIL="$(dirname $MCFILE)/${XGBFIL}.${XGB}.root"
-        cp -f -v "$XGBFIL" "$DDIR"/
+        cp -f -v "$XGBFIL" "$DDIR"/ || { echo "Error: cannot copy $XGBFIL"; exit 1; }
     fi
 done
 # cp MC file to TMPDIR
@@ -89,6 +90,7 @@ OSUBDIR="$ODIR/EffectiveAreas_${CUTS_NAME}"
 if [[ $DISPBDT == "1" ]]; then
     OSUBDIR="${OSUBDIR}_DISP"
 fi
+[[ -n $VARIANT ]] && OSUBDIR="${OSUBDIR}_${VARIANT}"
 echo -e "Output files will be written to:\n $OSUBDIR"
 mkdir -p "$OSUBDIR"
 
@@ -129,15 +131,34 @@ EAPARAMS="$EFFAREAFILE-${CUTS_NAME}"
 rm -f "$DDIR/$EAPARAMS.dat"
 eval "echo \"$PARAMFILE\"" > "$DDIR"/"$EAPARAMS".dat
 
+# Guard each variant output, including concurrent submissions.
+if [[ -n $VARIANT ]]; then
+    [[ ! -e "$OSUBDIR/$EAPARAMS.root" && ! -e "$OSUBDIR/$EAPARAMS.log" ]] || { echo "Error: output already exists: $OSUBDIR/$EAPARAMS"; exit 1; }
+    mkdir "$OSUBDIR/$EAPARAMS.lock" || { echo "Error: output locked: $EAPARAMS"; exit 1; }
+    trap 'rmdir "$OSUBDIR/$EAPARAMS.lock"' EXIT
+    [[ ! -e "$OSUBDIR/$EAPARAMS.root" && ! -e "$OSUBDIR/$EAPARAMS.log" ]] || exit 1
+fi
 # calculate effective areas
 rm -f "$OSUBDIR"/"$OFILE".root
 $EVNDISPSYS/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
+EA_STATUS=$?
+if [[ -n $VARIANT && $EA_STATUS -ne 0 ]]; then
+    echo "Error: makeEffectiveArea failed ($EA_STATUS)."; exit "$EA_STATUS"
+fi
 
 echo "Filling log file into root file"
 inspect_executables >> "$OSUBDIR/$EAPARAMS.log"
 cp -v "$OSUBDIR/$EAPARAMS.log" "$DDIR/$EAPARAMS.log"
 $EVNDISPSYS/bin/logFile effAreaLog "$DDIR"/"$EAPARAMS".root "$DDIR"/"$EAPARAMS".log
-cp -f "$DDIR"/"$EAPARAMS".root "$OSUBDIR"/"$EAPARAMS".root
+if [[ -n $VARIANT ]]; then
+    [[ -s "$DDIR/$EAPARAMS.root" ]] || { echo "Error: missing effective area output"; exit 1; }
+    TEMP_OUTPUT="$OSUBDIR/$EAPARAMS.tmp.$$.root"
+    cp "$DDIR/$EAPARAMS.root" "$TEMP_OUTPUT" || exit 1
+    ln "$TEMP_OUTPUT" "$OSUBDIR/$EAPARAMS.root" || { rm -f "$TEMP_OUTPUT"; exit 1; }
+    rm -f "$TEMP_OUTPUT"
+else
+    cp -f "$DDIR/$EAPARAMS.root" "$OSUBDIR/$EAPARAMS.root"
+fi
 chmod -R g+w "$OSUBDIR"
 chmod g+w "$OSUBDIR"/"$EAPARAMS".root
 rm -f "$OSUBDIR"/"$EAPARAMS".log

@@ -71,6 +71,10 @@ DISPBDT="${10:-0}"
 UUID="${11:-$(date +"%y%m%d")-$(uuidgen)}"
 XGBSTEREOFILESUFFIX="None"
 XGBGAMMAHADRONFILESUFFIX="None"
+# shellcheck source=scripts/helper_scripts/UTILITY.xgb_variant.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.xgb_variant.sh"
+xgb_variant_validate || exit 1
+VARIANT="${XGB_VARIANT:-}"
 
 echo "IRF.generate_effective_area_parts for epoch $EPOCH, atmo $ATM, zenith $ZA, wobble $WOBBLE, noise $NOISE (DISP: $DISPBDT)"
 
@@ -104,8 +108,11 @@ echo "Cuts: $CUTSFILE $CUTS_NAME"
 echo "MC file: $MCFILE"
 echo "Eff area file: $EFFAREAFILE"
 if [[ $CUTS_NAME == *XGB* ]]; then
-  XGBSTEREOFILESUFFIX="xgb_stereo"
+  XGBSTEREOFILESUFFIX="xgb_stereo${VARIANT:+_$VARIANT}"
   XGBGAMMAHADRONFILESUFFIX="None"   # keep until development is finalized
+fi
+if [[ -n $VARIANT && ( $CUTS_NAME != *XGB* || $RECID != 0 ) ]]; then
+    echo "Error: variant effective areas require XGB cuts and RecID 0." >&2; exit 1
 fi
 echo "XGB: $XGBSTEREOFILESUFFIX $XGBGAMMAHADRONFILESUFFIX"
 
@@ -117,6 +124,7 @@ sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|EFFFILE|$EFFAREAFILE|" \
     -e "s|USEDISP|${DISPBDT}|" \
     -e "s|VERSIONIRF|$IRFVERSION|" \
+    -e "s|VVARIANT|$VARIANT|" \
     -e "s|STEREOXGB|$XGBSTEREOFILESUFFIX|" \
     -e "s|GHXGB|$XGBGAMMAHADRONFILESUFFIX|" \
     -e "s|DATAFILE|$MCFILE|" \

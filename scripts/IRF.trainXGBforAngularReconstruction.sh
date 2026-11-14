@@ -61,8 +61,15 @@ if [[ -z "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     echo "Error: IRF production directory not found: $VERITAS_IRFPRODUCTION_DIR"
     exit 1
 fi
+# shellcheck source=scripts/helper_scripts/UTILITY.xgb_variant.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.xgb_variant.sh"
+xgb_variant_validate || exit 1
+VARIANT="${XGB_VARIANT:-}"
+SMEAR_CONFIG="${XGB_SMEARING_CONFIG:-}"
+[[ -z $VARIANT || -f $SMEAR_CONFIG ]] || { echo "Error: missing variant YAML"; exit 1; }
 # output and log directories
 ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TrainXGBStereoAnalysis/${ZA}/"
+[[ -n $VARIANT ]] && ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/$SIMTYPE/${EPOCH}_ATM${ATM}_gamma/TrainXGBStereoAnalysis_variants/${VARIANT}/${ZA}/"
 LOGDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANALYSIS_TYPE}/${SIMTYPE}/${EPOCH}_ATM${ATM}_gamma/submit-trainXGBStereoAnalysis-RECID${RECID}-${UUID}"
 mkdir -p "$ODIR"
 chmod g+w "$ODIR"
@@ -72,6 +79,7 @@ echo "Logs: $LOGDIR"
 
 # prepare list of input files
 MSCWLIST="$ODIR/xgbFiles.list"
+[[ -n $VARIANT ]] && MSCWLIST="$LOGDIR/xgbFiles-${ZA}.list"
 rm -f "${MSCWLIST}"
 touch "${MSCWLIST}"
 
@@ -109,6 +117,8 @@ echo "Processing Zenith = $ZA, Noise = $NOISE, Wobble = $WOBBLE"
 FSCRIPT="$LOGDIR/trainXGBStereoAnalysis.ID${RECID}.${EPOCH}.ATM${ATM}.${ZA}.sh"
 sed -e "s|OUTPUTDIR|$ODIR|" \
     -e "s|MSCWLIST|$MSCWLIST|" \
+    -e "s|VVARIANT|$VARIANT|" \
+    -e "s|SSMEAR_CONFIG|$SMEAR_CONFIG|" \
     -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
     -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
     -e "s|NCORES|$ncore|" "$SUBSCRIPT" > "$FSCRIPT"

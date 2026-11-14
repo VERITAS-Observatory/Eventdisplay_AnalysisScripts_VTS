@@ -66,11 +66,12 @@ fi
 # We need to be in the IRF.production.sh directory so that subscripts are called
 # (we call them ./).
 olddir=$(pwd)
-cd "$(dirname "$0")" || exit
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd) || exit 1
+cd "$SCRIPT_DIR" || exit
 
 # Run init script
 if [ ! -n "$EVNDISP_APPTAINER" ]; then
-    bash "$( cd "$( dirname "$0" )" && pwd )/helper_scripts/UTILITY.script_init.sh" || exit 1
+    bash "$SCRIPT_DIR/helper_scripts/UTILITY.script_init.sh" || exit 1
 fi
 
 # Parse command line arguments
@@ -81,6 +82,21 @@ IRFTYPE="$2"
 [[ "$5" ]] && RECID="$5" || RECID="0"
 [[ "$6" ]] && CUTSLISTFILE="$6" || CUTSLISTFILE=""
 [[ "$7" ]] && SIMDIR="$7" || SIMDIR=""
+
+# Optional experiment settings are passed via environment variables so existing positional
+# production invocations remain valid. Freeze them separately for each epoch and atmosphere.
+# shellcheck source=scripts/helper_scripts/UTILITY.xgb_variant.sh
+source "./helper_scripts/UTILITY.xgb_variant.sh"
+xgb_variant_validate || exit 1
+if [[ -n ${XGB_VARIANT:-} ]]; then
+    case "$IRFTYPE" in
+        TRAINXGBANGRES|ANAXGBANGRES|EFFECTIVEAREAS|COMBINEEFFECTIVEAREAS) ;;
+        *) echo "Error: XGB_VARIANT is supported only for TRAINXGBANGRES, ANAXGBANGRES, EFFECTIVEAREAS and COMBINEEFFECTIVEAREAS." >&2; exit 1 ;;
+    esac
+    if [[ $RECID != 0 ]]; then
+        echo "Error: XGB variants support only RecID 0 (four telescopes)." >&2; exit 1
+    fi
+fi
 
 # uuid for this job batch
 DATE=$(date +"%y%m%d")
@@ -332,6 +348,10 @@ echo "===== Start submission ====="
 # loop over complete parameter space and submit production
 for VX in $EPOCH; do
     for ATM in $ATMOS; do
+       if [[ -n ${XGB_VARIANT:-} ]]; then
+           VARIANT_BASE="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma"
+           xgb_variant_prepare "$VARIANT_BASE" "$IRFTYPE" || exit 1
+       fi
        ######################
        # set lookup table file name
        TABLECOM="table-${EDVERSION}-${AUX}-${SIMTYPE}-ATM${ATM}-${VX}-"
@@ -341,7 +361,7 @@ for VX in $EPOCH; do
             TFIL="${TABLECOM}"
             for ID in $RECID; do
                 echo "combine lookup tables"
-                "$(dirname "$0")/IRF.combine_lookup_table_parts.sh" \
+                "$SCRIPT_DIR/IRF.combine_lookup_table_parts.sh" \
                     "${TFIL}${ANATYPE}" "$VX" "$ATM" \
                     "$ID" "$SIMTYPE" "$ANATYPE"
             done
@@ -354,11 +374,12 @@ for VX in $EPOCH; do
             echo "CUTLIST: ${CUTLIST[*]}"
             for ID in $RECID; do
                 for CUTS in "${CUTLIST[@]}"; do
+                    [[ -n ${XGB_VARIANT:-} && $CUTS != *XGB* ]] && continue
                     echo "combine effective areas $CUTS"
-                   "$(dirname "$0")/IRF.combine_effective_area_parts.sh" \
+                   "$SCRIPT_DIR/IRF.combine_effective_area_parts.sh" \
                        "$CUTS" "$VX" "$ATM" \
                        "$ID" "$SIMTYPE" "$AUX" "$ANATYPE" \
-                       "$DISPBDT"
+                       "$DISPBDT" || exit 1
                 done # cuts
             done
             continue
@@ -368,7 +389,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBANGRES" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB reconstruction reading from $MSCWDIR"
-            "$(dirname "$0")/IRF.dispXGB.sh" "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}"
+            "$SCRIPT_DIR/IRF.dispXGB.sh" "stereo_analysis" "${MSCWDIR}" "${MSCWDIR}" || exit 1
             continue
        fi
        #############################################
@@ -376,7 +397,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBGH" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB classification reading from $MSCWDIR"
-            "$(dirname "$0")/IRF.dispXGB.sh" "classification" "${MSCWDIR}" "${MSCWDIR}"
+            "$SCRIPT_DIR/IRF.dispXGB.sh" "classification" "${MSCWDIR}" "${MSCWDIR}"
             continue
        fi
        #############################################
@@ -392,7 +413,7 @@ for VX in $EPOCH; do
            ODIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/TrainXGBGammaHadron"
            echo "XGB Classification Training"
            echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
-           "$(dirname "$0")/IRF.trainXGBforGammaHadronSeparationTraining.sh" \
+           "$SCRIPT_DIR/IRF.trainXGBforGammaHadronSeparationTraining.sh" \
                "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}" \
                "${UUID}" "${TRAIN_XGB_GH_ZENITH_ANGLES[*]}" "${TRAIN_XGB_GH_NSB_LEVELS[*]}" "${TRAIN_XGB_GH_WOBBLE_OFFSETS[*]}"
            continue
@@ -435,7 +456,7 @@ for VX in $EPOCH; do
                     if [[ $CUTFIL = *"NTel3"* ]]; then
                         sed -i "s/NImages>1/NImages>2/" "$MVADIR"/"$RUNPAR"
                     fi
-                    "$(dirname "$0")/IRF.trainTMVAforGammaHadronSeparation.sh" \
+                    "$SCRIPT_DIR/IRF.trainTMVAforGammaHadronSeparation.sh" \
                                  "${TRAINDIR}" \
                                  "$MVADIR"/"$RUNPAR" \
                                  "${MVADIR}" BDT "${SIMTYPE}" "${VX}" "${ATM}" \
@@ -443,7 +464,7 @@ for VX in $EPOCH; do
                  # Cut optimization
                  elif [[ $IRFTYPE == "OPTIMIZETMVA" ]]; then
                      echo "OPTIMIZE TMVA $C ${BDTDIR}/BackgroundRates/${VX:0:2}"
-                     "$(dirname "$0")/IRF.optimizeTMVAforGammaHadronSeparation.sh" \
+                     "$SCRIPT_DIR/IRF.optimizeTMVAforGammaHadronSeparation.sh" \
                          "${BDTDIR}/BackgroundRates/${VX:0:2}" \
                          "${C/PointSource-/}" \
                          "${SIMTYPE}" "${VX}" "${ATM}"
@@ -461,9 +482,9 @@ for VX in $EPOCH; do
                exit 1
            fi
            for ZAB in "${TRAIN_XGB_ANGRES_BIN_IDS[@]}"; do
-                   "$(dirname "$0")/IRF.trainXGBforAngularReconstruction.sh" \
+                   "$SCRIPT_DIR/IRF.trainXGBforAngularReconstruction.sh" \
                        "$VX" "$ATM" "$ZAB" "${TRAIN_XGB_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_XGB_ANGRES_NSB_LEVELS[*]}" 0 \
-                       "$SIMTYPE" "$ANATYPE" "$UUID"
+                       "$SIMTYPE" "$ANATYPE" "$UUID" || exit 1
            done
            continue
        fi
@@ -487,7 +508,7 @@ for VX in $EPOCH; do
             ######################
             # train MVA for angular resolution
             if [[ $IRFTYPE == "TRAINMVANGRES" ]]; then
-               "$(dirname "$0")/IRF.trainTMVAforAngularReconstruction.sh" \
+               "$SCRIPT_DIR/IRF.trainTMVAforAngularReconstruction.sh" \
                    "$VX" "$ATM" "$ZA" "${TRAIN_MVA_ANGRES_WOBBLE_OFFSETS[*]}" "${TRAIN_MVA_ANGRES_NSB_LEVELS[*]}" 0 \
                    "$SIMTYPE" "$ANATYPE" "$UUID"
                continue
@@ -507,11 +528,11 @@ for VX in $EPOCH; do
                           SIMDIRZA="$SIMDIR/Zd${ZA}/"
                        fi
                        if [[ $IRFTYPE == "EVNDISP" ]]; then
-                           "$(dirname "$0")/IRF.evndisp_MC.sh" \
+                           "$SCRIPT_DIR/IRF.evndisp_MC.sh" \
                                "$SIMDIRZA" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
                                "$SIMTYPE" $ACUTS 1 "$ANATYPE" "$UUID"
                        elif [[ $IRFTYPE == "EVNDISPCOMPRESS" ]]; then
-                           "$(dirname "$0")/IRF.compress_evndisp_MC.sh" \
+                           "$SCRIPT_DIR/IRF.compress_evndisp_MC.sh" \
                                "$SIMDIRZA" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
                                "$SIMTYPE" "$ANATYPE" "$UUID"
                        fi
@@ -519,7 +540,7 @@ for VX in $EPOCH; do
                     # make tables
                     elif [[ $IRFTYPE == "MAKETABLES" ]]; then
                         for ID in $RECID; do
-                           "$(dirname "$0")/IRF.generate_lookup_table_parts.sh" \
+                           "$SCRIPT_DIR/IRF.generate_lookup_table_parts.sh" \
                                "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
                                "$ID" "$SIMTYPE" "$ANATYPE" "$UUID"
                         done #recID
@@ -536,7 +557,7 @@ elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN"
                                 # run mscw and effective area code
                                 EFFAREACUTLIST="$CUTSLISTFILE"
                             fi
-                            "$(dirname "$0")/IRF.mscw_energy_MC.sh" \
+                            "$SCRIPT_DIR/IRF.mscw_energy_MC.sh" \
                                 "$TFILID" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
                                 "$ID" "$SIMTYPE" "$ANATYPE" $DISPBDT "$EFFAREACUTLIST" "$UUID"
 			            done #recID
@@ -547,11 +568,12 @@ elif [[ $IRFTYPE == "ANALYSETABLES" ]] || [[ $IRFTYPE == "ANALYSETABLESXGBTRAIN"
                         echo "CUTLIST: ${CUTLIST[*]}"
                         for ID in ${RECID}; do
                             for CUTS in "${CUTLIST[@]}"; do
+                               [[ -n ${XGB_VARIANT:-} && $CUTS != *XGB* ]] && continue
                                echo "calculate effective areas $CUTS (ID $ID)"
-                               "$(dirname "$0")/IRF.generate_effective_area_parts.sh" \
+                               "$SCRIPT_DIR/IRF.generate_effective_area_parts.sh" \
                                    "$CUTS" "$VX" "$ATM" "$ZA" "$WOBBLE" "$NOISE" \
                                    "$ID" "$SIMTYPE" "$ANATYPE" \
-                                   $DISPBDT "$UUID"
+                                   $DISPBDT "$UUID" || exit 1
                             done # cuts
                         done #recID
                     fi
