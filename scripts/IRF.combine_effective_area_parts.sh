@@ -64,6 +64,14 @@ SIMTYPE=$5
 [[ "$8" ]] && DISPBDT=$8 || DISPBDT=0
 [[ "${9}" ]] && UUID=${9} || UUID=${DATE}-$(uuidgen)
 
+# shellcheck source=scripts/helper_scripts/UTILITY.xgb_variant.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.xgb_variant.sh"
+xgb_variant_validate || exit 1
+VARIANT="${XGB_VARIANT:-}"
+if [[ -n $VARIANT && $RECID != 0 ]]; then
+    echo "Error: variants require RecID 0." >&2; exit 1
+fi
+
 # Generate EA base file name based on cuts file
 CUTS_NAME=$(basename "$CUTSFILE")
 CUTS_NAME=${CUTS_NAME##ANASUM.GammaHadron-}
@@ -75,6 +83,10 @@ if [[ -n "$VERITAS_IRFPRODUCTION_DIR" ]]; then
     if [[ $DISPBDT == "1" ]]; then
         INDIR="${INDIR}_DISP"
     fi
+fi
+[[ -n $VARIANT ]] && INDIR="${INDIR}_${VARIANT}"
+if [[ -n $VARIANT && $CUTS_NAME != *XGB* ]]; then
+    echo "Error: variants require XGB cuts." >&2; exit 1
 fi
 if [[ ! -d $INDIR ]]; then
     echo "Error, could not locate input directory. Locations searched:"
@@ -124,6 +136,8 @@ if [[ $DISPBDT == "1" ]]; then
 fi
 OFILE="effArea-${EDVERSION}-${EANAME}-$SIMTYPE-${CUTS_NAME}-${METH}-${EPOCH}-ATM${ATMOS}-T${T}"
 
+[[ -n $VARIANT ]] && OFILE="${OFILE}-${VARIANT}"
+
 # Job submission script
 SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.effective_area_combine_sub"
 
@@ -131,7 +145,8 @@ SUBSCRIPT="$(dirname "$0")/helper_scripts/IRF.effective_area_combine_sub"
 FSCRIPT="$LOGDIR/COMB-EFFAREA-ID${RECID}-${CUTS_NAME}-ATM${ATMOS}-${EPOCH}-${DISPBDT}-$(date +%s%N)"
 rm -f "$FSCRIPT".sh
 
-sed -e "s|INPUTFILES|$INFILES|" \
+sed -e "s|VVARIANT|$VARIANT|" \
+    -e "s|INPUTFILES|$INFILES|" \
     -e "s|OUTPUTFILE|$OFILE|"   \
     -e "s|OUTPUTDIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
 

@@ -1,10 +1,9 @@
 #!/bin/bash
 # shellcheck disable=SC2086
-# EVNDISPSYS may include an apptainer exec prefix and must split into command words.
 # XGBoost disp stereo and classification analysis on mscw data file
 
-# Don't do set -e.
-# set -e
+# Don't do set -e: the environment is logged after the ML step.
+# The ML exit status is checked explicitly (evndisp_ml_check_apply).
 
 # parameters replaced by parent script using sed
 RUN=RRUN
@@ -31,6 +30,8 @@ echo -e "Output files will be written to:\n ${ODIR}"
 
 # shellcheck source=scripts/helper_scripts/UTILITY.conda_env.sh
 source "${HELPER_SCRIPTS_DIR}/UTILITY.conda_env.sh"
+# shellcheck source=scripts/helper_scripts/UTILITY.xgb_checks.sh
+source "${HELPER_SCRIPTS_DIR}/UTILITY.xgb_checks.sh"
 evndisp_ml_setup_python_cache "$TEMPDIR" "$RUN"
 if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
     evndisp_ml_use_env_prefix "$ENV_PREFIX" "$env_name"
@@ -53,7 +54,7 @@ echo $RUN
 MSCW_FILE="$(getNumberedDirectory $RUN "${VERITAS_PREPROCESSED_DATA_DIR}""${VERITAS_ANALYSIS_TYPE:0:2}"/mscw)/$RUN.mscw.root"
 if [[ ! -e ${MSCW_FILE} ]]; then
     echo "File ${MSCW_FILE} not found. Exiting."
-    exit
+    exit 1
 fi
 if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
     APPTAINER_MOUNT=(
@@ -65,14 +66,21 @@ if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
     )
     echo "APPTAINER MOUNT: ${APPTAINER_MOUNT[*]}"
     APPTAINER_ENV_VALUE="VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_PREPROCESSED_DATA_DIR=${VERITAS_PREPROCESSED_DATA_DIR},ODIR=${ODIR},TMPDIR=${TEMPDIR},PYTHONPYCACHEPREFIX=${PYTHONPYCACHEPREFIX}"
-    EVNDISPSYS="${EVNDISPSYS/--cleanenv/--cleanenv --env ${APPTAINER_ENV_VALUE} ${APPTAINER_MOUNT[*]}}"
-    echo "APPTAINER SYS: $EVNDISPSYS"
     APPTAINER_EXEC=(apptainer exec --no-mount bind-paths --cleanenv)
     APPTAINER_EXEC+=(--env "${APPTAINER_ENV_VALUE}")
     APPTAINER_EXEC+=("${APPTAINER_MOUNT[@]}")
     APPTAINER_EXEC+=("${EVNDISP_APPTAINER}")
 fi
-RUNINFO=$($EVNDISPSYS/bin/printRunParameter "${MSCW_FILE}" updated-runinfo)
+# run info (epoch, atmosphere, zenith angle) from Eventdisplay-ML; no compiled Eventdisplay required
+RUN_INFO_EXEC=(eventdisplay-ml-print-run-info)
+if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
+    RUN_INFO_EXEC=("${APPTAINER_EXEC[@]}" eventdisplay-ml-print-run-info)
+fi
+RUNINFO=$("${RUN_INFO_EXEC[@]}" "${MSCW_FILE}" --updated)
+if [[ -z "$RUNINFO" ]]; then
+    echo "Error: failed to read run information from ${MSCW_FILE}"
+    exit 1
+fi
 echo "RUNINFO $RUNINFO"
 ZA=$(echo "$RUNINFO" | awk '{print $8}')
 EPOCH=$(echo "$RUNINFO" | awk '{print $1}')
@@ -88,7 +96,7 @@ else
 fi
 if [[ ! -d "${DISPDIR}" ]]; then
     echo "Error finding model directory $DISPDIR"
-    exit
+    exit 1
 fi
 OFIL=$(basename "$MSCW_FILE" .root)
 if [[ "${XGB_TYPE}" == "stereo_analysis" ]]; then
@@ -111,7 +119,7 @@ elif [[ "${XGB_TYPE}" == "classification" ]]; then
     OFIL="${ODIR}/${OFIL}.${XGB}_gh"
 else
     echo "Invalid XGB type: ${XGB_TYPE}"
-    exit
+    exit 1
 fi
 echo "DispXGB directory $DISPDIR"
 echo "DispXGB options $XGB"
@@ -124,6 +132,7 @@ if [[ -n "${EVNDISP_APPTAINER:-}" ]]; then
         --input_file "$MSCW_FILE" \
         --model_prefix "$DISPDIR" \
         --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+    ML_STATUS=$?
     {
         echo
         echo "Apptainer image:"
@@ -133,8 +142,11 @@ else
     $ML_EXEC --input_file "$MSCW_FILE" \
         --model_prefix "$DISPDIR" \
         --output_file "$OFIL.root" > "${LOGFILE}" 2>&1
+    ML_STATUS=$?
 fi
 
 if [[ -z "${EVNDISP_APPTAINER:-}" ]]; then
     evndisp_ml_log_environment "${LOGFILE}" "$env_name" "$ENV_SNAPSHOT_DIR" "$ENV_PREFIX"
 fi
+
+evndisp_ml_check_apply "$ML_STATUS" "$OFIL.root" "$LOGFILE" || exit 1

@@ -13,6 +13,7 @@ fi
 EAFILES=INPUTFILES
 OFILE=OUTPUTFILE
 ODIR=OUTPUTDIR
+VARIANT="VVARIANT"
 
 DDIR=$(dirname "$EAFILES" | sort -u)
 OPTODIR="$ODIR"
@@ -42,6 +43,13 @@ inspect_executables()
 }
 
 # combine effective areas (reduced file size with TH2F replaced by arrays)
+if [[ -n $VARIANT ]]; then
+    [[ ! -e "$ODIR/$OFILE.root" && ! -e "$ODIR/$OFILE.log" && ! -e "$ODIR/$OFILE.list" ]] || { echo "Error: combined output exists: $OFILE"; exit 1; }
+    mkdir "$ODIR/$OFILE.lock" || { echo "Error: combined output locked: $OFILE"; exit 1; }
+    trap 'rmdir "$ODIR/$OFILE.lock"' EXIT
+    [[ ! -e "$ODIR/$OFILE.root" && ! -e "$ODIR/$OFILE.log" && ! -e "$ODIR/$OFILE.list" ]] || exit 1
+    compgen -G "$EAFILES" > /dev/null || { echo "Error: no partial effective areas: $EAFILES"; exit 1; }
+fi
 mkdir -p $ODIR
 chmod -R g+w $ODIR
 rm -f "$ODIR"/"$OFILE".list

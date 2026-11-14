@@ -26,6 +26,18 @@ XGB_TYPE=$1
 INPUTDIR=$2
 [[ "$3" ]] && ODIR=$3
 XGB="xgb"
+# shellcheck source=scripts/helper_scripts/UTILITY.xgb_variant.sh
+source "$(dirname "$0")/helper_scripts/UTILITY.xgb_variant.sh"
+xgb_variant_validate || exit 1
+if [[ -n ${XGB_VARIANT:-} && $XGB_TYPE != stereo_analysis ]]; then
+    echo "Error: variants are supported only for stereo analysis." >&2; exit 1
+fi
+VARIANT_SUFFIX="${XGB_VARIANT:-}"
+SMEAR_CONFIG="${XGB_SMEARING_CONFIG:-}"
+MODEL_ROOT="${XGB_MODEL_ROOT:-}"
+if [[ -n $VARIANT_SUFFIX && ! -f $SMEAR_CONFIG ]]; then
+    echo "Error: variant requires a prepared smearing YAML." >&2; exit 1
+fi
 ANALYSIS_TYPE="${VERITAS_ANALYSIS_TYPE:0:2}"
 
 echo "XGB analysis type: $XGB_TYPE"
@@ -85,20 +97,26 @@ do
         -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
         -e "s|CCONDA_ENV_PREFIX|$ENV_PREFIX|" \
         -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
-        -e "s|OODIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
+        -e "s|VVARIANT|$VARIANT_SUFFIX|" \
+        -e "s|SSMEAR_CONFIG|$SMEAR_CONFIG|" \
+        -e "s|MMODEL_ROOT|$MODEL_ROOT|" \
+        -e "s|OODIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh || exit 1
 
-    chmod u+x "$FSCRIPT.sh"
+    chmod u+x "$FSCRIPT.sh" || exit 1
     echo "$FSCRIPT".sh
 
-    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh") || exit 1
     SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size" || exit 1
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
         echo "-------------------------------------------------------------------------------"
         echo
+    else
+        echo "Error: unsupported XGB submission command: $SUBC" >&2
+        exit 1
     fi
 done

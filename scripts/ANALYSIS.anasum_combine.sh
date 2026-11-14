@@ -94,7 +94,8 @@ FSCRIPT="$LOGDIR/anasum_combine-$DATE-$(basename "$OUTFILE")-$(date +%s)"
 echo "Run script written to $FSCRIPT"
 
 # Check that anasum output files exist before combining
-NANASUMFILES=$(find "$DDIR" -maxdepth 1 -name "*.anasum.root" | wc -l)
+# (files are either in $DDIR or in the numbered subdirectories of pre-processing)
+NANASUMFILES=$(find "$DDIR" -maxdepth 2 -name "*.anasum.root" | wc -l)
 if [[ $NANASUMFILES -eq 0 ]]; then
     echo "Error: no .anasum.root files found in $DDIR"
     echo "Run ANALYSIS.anasum_parallel_from_runlist.sh and wait for completion before combining."
