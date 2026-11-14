@@ -100,20 +100,23 @@ do
         -e "s|VVARIANT|$VARIANT_SUFFIX|" \
         -e "s|SSMEAR_CONFIG|$SMEAR_CONFIG|" \
         -e "s|MMODEL_ROOT|$MODEL_ROOT|" \
-        -e "s|OODIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh
+        -e "s|OODIR|$ODIR|" "$SUBSCRIPT".sh > "$FSCRIPT".sh || exit 1
 
-    chmod u+x "$FSCRIPT.sh"
+    chmod u+x "$FSCRIPT.sh" || exit 1
     echo "$FSCRIPT".sh
 
-    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh") || exit 1
     SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *condor* ]]; then
-        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size"
+        "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT.sh" "$h_vmem" "$tmpdir_size" || exit 1
         echo
         echo "-------------------------------------------------------------------------------"
         echo "Job submission using HTCondor - run the following script to submit jobs at once:"
         echo "$EVNDISPSCRIPTS/helper_scripts/submit_scripts_to_htcondor.sh ${LOGDIR} submit"
         echo "-------------------------------------------------------------------------------"
         echo
+    else
+        echo "Error: unsupported XGB submission command: $SUBC" >&2
+        exit 1
     fi
 done

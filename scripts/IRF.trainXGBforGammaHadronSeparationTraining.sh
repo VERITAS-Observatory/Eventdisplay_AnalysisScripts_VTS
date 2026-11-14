@@ -187,19 +187,19 @@ for (( i=0; i < NENE; i++ )); do
 	-e "s|NCORES|$ncore|" \
         -e "s|HHELPER_SCRIPTS_DIR|$HELPER_SCRIPTS_DIR|" \
         -e "s|EENV_SNAPSHOT_DIR|$LOGDIR|" \
-        -e "s|OUTPUTDIR|${ODIR}|" "$SUBSCRIPT" > "$FSCRIPT"
+        -e "s|OUTPUTDIR|${ODIR}|" "$SUBSCRIPT" > "$FSCRIPT" || exit 1
 
-    chmod u+x "$FSCRIPT"
+    chmod u+x "$FSCRIPT" || exit 1
     echo "$FSCRIPT"
 
     # run locally or on cluster
-    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh")
+    SUBC=$("$(dirname "$0")/helper_scripts/UTILITY.readSubmissionCommand.sh") || exit 1
     SUBC=$(eval "echo \"$SUBC\"")
     if [[ $SUBC == *"ERROR"* ]]; then
         echo "$SUBC"
-        exit
+        exit 1
     fi
-    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size"
+    "$(dirname "$0")/helper_scripts/UTILITY.condorSubmission.sh" "$FSCRIPT" "$h_vmem" "$tmpdir_size" || exit 1
     echo
     echo "-------------------------------------------------------------------------------"
     echo "Job submission using HTCondor - run the following script to submit jobs at once:"

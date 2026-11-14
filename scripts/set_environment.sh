@@ -31,7 +31,14 @@ fi
 ########################################################################
 # host system settings
 USERAFSDIR="/afs/ifh.de/group/cta/scratch/$USER"
-PROJECTDIR="/cephfs/users/maierg/VTS/d202610_xgb"
+# Resolve the sourced script independently of the caller's working directory.
+if [[ -n ${ZSH_VERSION:-} ]]; then
+    eval 'ENVIRONMENT_SCRIPT=${(%):-%x}'
+else
+    ENVIRONMENT_SCRIPT=${BASH_SOURCE[0]}
+fi
+ENVIRONMENT_SCRIPTS_DIR=$(cd "$(dirname "$ENVIRONMENT_SCRIPT")" && pwd) || return 1
+PROJECTDIR="${EVNDISP_PROJECT_DIR:-$(cd "$ENVIRONMENT_SCRIPTS_DIR/../.." && pwd)}"
 USERLUSTDIR="/lustre/fs23/group/veritas/users/$USER"
 GROUPLUSTDIR="/lustre/fs23/group/veritas"
 GROUPDATADIR="/lustre/fs24/group/veritas"
@@ -54,7 +61,7 @@ export VERITAS_USER_DATA_DIR=${USERLUSTDIR}
 # user log
 export VERITAS_USER_LOG_DIR=${USERLUSTDIR}/LOGS/VERITAS
 # EVENTDISPLAY script directory (this directory)
-export EVNDISPSCRIPTS="${PROJECTDIR}/Eventdisplay_AnalysisScripts_VTS/scripts"
+export EVNDISPSCRIPTS="$ENVIRONMENT_SCRIPTS_DIR"
 
 ########################################################################
 # software settings

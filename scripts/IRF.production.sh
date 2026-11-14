@@ -397,7 +397,7 @@ for VX in $EPOCH; do
        if [[ $IRFTYPE == "ANAXGBGH" ]]; then
             MSCWDIR="$VERITAS_IRFPRODUCTION_DIR/$EDVERSION/${ANATYPE}/${SIMTYPE}/${VX}_ATM${ATM}_gamma/MSCW_RECID${RECID}_DISP"
             echo "XGB classification reading from $MSCWDIR"
-            "$SCRIPT_DIR/IRF.dispXGB.sh" "classification" "${MSCWDIR}" "${MSCWDIR}"
+            "$SCRIPT_DIR/IRF.dispXGB.sh" "classification" "${MSCWDIR}" "${MSCWDIR}" || exit 1
             continue
        fi
        #############################################
@@ -415,7 +415,7 @@ for VX in $EPOCH; do
            echo "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}"
            "$SCRIPT_DIR/IRF.trainXGBforGammaHadronSeparationTraining.sh" \
                "${BCKDIR}" "${RUNPAR}" "${ODIR}" "${SIMTYPE}" "${VX}" "${ATM}" \
-               "${UUID}" "${TRAIN_XGB_GH_ZENITH_ANGLES[*]}" "${TRAIN_XGB_GH_NSB_LEVELS[*]}" "${TRAIN_XGB_GH_WOBBLE_OFFSETS[*]}"
+               "${UUID}" "${TRAIN_XGB_GH_ZENITH_ANGLES[*]}" "${TRAIN_XGB_GH_NSB_LEVELS[*]}" "${TRAIN_XGB_GH_WOBBLE_OFFSETS[*]}" || exit 1
            continue
        fi
        #############################################

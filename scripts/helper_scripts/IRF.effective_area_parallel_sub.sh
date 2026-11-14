@@ -142,7 +142,7 @@ fi
 rm -f "$OSUBDIR"/"$OFILE".root
 $EVNDISPSYS/bin/makeEffectiveArea "$DDIR"/"$EAPARAMS".dat "$DDIR"/"$EAPARAMS".root &> "$OSUBDIR"/"$EAPARAMS".log
 EA_STATUS=$?
-if [[ -n $VARIANT && $EA_STATUS -ne 0 ]]; then
+if [[ $EA_STATUS -ne 0 ]]; then
     echo "Error: makeEffectiveArea failed ($EA_STATUS)."; exit "$EA_STATUS"
 fi
 
