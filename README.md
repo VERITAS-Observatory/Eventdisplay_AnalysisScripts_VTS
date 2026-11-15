@@ -53,11 +53,41 @@ Set the following environment variables before running the scripts:
 | `$VERITAS_IRFPRODUCTION_DIR` | Path to the IRF production output directory |
 | `$VERITAS_USER_DATA_DIR` | Path to user-specific data output |
 | `$VERITAS_USER_LOG_DIR` | Path to log files |
-| `$EVNDISP_ML_SYS` | Path to the [Eventdisplay-ML](https://github.com/Eventdisplay/Eventdisplay-ML) installation (optional) |
-| `$EVNDISP_ML_ENV` | Name of the conda environment for Eventdisplay-ML (default: `eventdisplay_ml`) |
+| `$EVNDISP_ML_SYS` | Optional Eventdisplay-ML checkout path; conda jobs use the package installed in `$EVNDISP_ML_ENV`. |
+| `$EVNDISP_ML_ENV` | Conda environment for Eventdisplay-ML. The DESY setup selects `eventdisplay_ml_<release>` unless overridden; job scripts otherwise default to `eventdisplay_ml`. |
 | `$EVNDISP_ML_CONDA_EXE` | Optional full path to the `conda` executable used to resolve the Eventdisplay-ML environment in non-interactive shells |
 
 See [`./scripts/set_environment.sh`](./scripts/set_environment.sh) for a template with all variables configured for the DESY computing environment. Submission commands for various batch systems are available in [submissionCommands.dat](./scripts/submissionCommands.dat).
+
+### Eventdisplay-ML environments by release
+
+The DESY setup accepts an optional EventDisplay release and selects its conda
+environment, for example:
+
+```bash
+source scripts/set_environment.sh AP_DISP al9 v491.0
+# Training and non-container XGB jobs use eventdisplay_ml_v491.
+```
+
+The release defaults to `v492.0`. To use another environment, set
+`EVNDISP_ML_ENV` before sourcing the setup. Unset it to restore automatic
+selection. The setup selects an environment; it does not create or install it.
+Create each environment from the matching Eventdisplay-ML checkout's
+`environment.yml`, then install that checkout into it, for example:
+
+```bash
+conda env create -n eventdisplay_ml_v491 -f /path/to/v491/Eventdisplay-ML/environment.yml
+conda run -n eventdisplay_ml_v491 python -m pip install -e /path/to/v491/Eventdisplay-ML
+```
+
+An editable installation requires that checkout to remain accessible on the
+worker nodes. Check the installed source with `conda run -n eventdisplay_ml_v491
+python -m pip show eventdisplay-ml` and record its revision for production.
+
+XGB application jobs in Apptainer use the package in the image. For releases
+other than `v492.0`, set `EVNDISP_APPTAINER_IMAGE` to the matching image before
+sourcing the setup; it can also override the v492 image. Set it to the appropriate
+image when switching releases. Training jobs use the selected conda environment.
 
 ## Analysis Workflow
 
@@ -289,35 +319,3 @@ Open an [issue on GitHub](https://github.com/VERITAS-Observatory/Eventdisplay_An
 ## License
 
 Eventdisplay_AnalysisScripts_VTS is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file.
-
-### XGB stereo IRF variants
-
-Use a variant tag to keep multiple MC smearing experiments separate. For example,
-with an absolute path to a YAML file understood by Eventdisplay-ML:
-
-```bash
-export XGB_VARIANT=smear05
-export XGB_SMEARING_CONFIG=/absolute/path/smear05.yaml
-./scripts/IRF.production.sh CARE_202404 ANAXGBANGRES V6_2023_2024w 61 0
-./scripts/IRF.production.sh CARE_202404 EFFECTIVEAREAS V6_2023_2024w 61 0
-./scripts/IRF.production.sh CARE_202404 COMBINEEFFECTIVEAREAS V6_2023_2024w 61 0
-```
-
-Use XGB cuts for the effective-area stages. The tag may contain letters, digits,
-underscores and hyphens, beginning with a letter or digit. The YAML is copied to
-`XGBVariants/<tag>/` in the epoch production directory, and later use of that tag
-must match its recorded configuration. Sidecars use the suffix
-`xgb_stereo_<tag>`; partial and combined IRFs also include the tag. Existing
-variant outputs are not overwritten. Failed jobs can leave logs or locks that
-must be examined and removed before retrying. Wait for each stage's jobs to
-finish before starting the next.
-
-For an augmented model, run `TRAINXGBANGRES` with its own variant and YAML;
-the models are written to `TrainXGBStereoAnalysis_variants/<tag>/<zenith>/`.
-To use that model in a separate inference variant, set `XGB_MODEL_ROOT` to the
-absolute path of the training variant directory (the directory containing the
-zenith-bin subdirectories) before running `ANAXGBANGRES`. If unset, the standard
-`DispXGBs` models are used. Model and configuration hashes are printed in job
-logs. Variants currently support RecID 0 and the separate XGB and effective-area
-stages; `ANATABLESEFFAREAS` does not support them. Remove these environment
-variables to run without a variant.

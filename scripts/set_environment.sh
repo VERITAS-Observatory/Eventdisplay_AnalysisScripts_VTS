@@ -3,16 +3,24 @@
 #  set directories for Eventdisplay analysis at DESY
 #
 if (( $# < 2 )); then
-   echo "source ./set_environment.sh <analysis type> <processing type>"
+   echo "source ./set_environment.sh <analysis type> <processing type> [release]"
    echo
    echo "Analysis types:  e.g., AP, AP_DISP, TS, NN"
    echo "Processing types: al9, apptainer"
+   echo "Release: e.g. v490.0, v491.0, v492.0 (default: v492.0)"
    return
 fi
 
-export VERITAS_ANALYSIS_TYPE="${1}"
 PROCESS="${2}"
-EVNDISPVERSION="v492.0"
+EVNDISPVERSION="${3:-v492.0}"
+if [[ ! $EVNDISPVERSION =~ ^v[0-9]+\.[0-9]+$ ]]; then
+    echo "Error: release must look like v492.0." >&2
+    return 1
+fi
+if [[ $PROCESS == apptainer* && $EVNDISPVERSION != v492.0 && -z ${EVNDISP_APPTAINER_IMAGE:-} ]]; then
+    echo "Error: set EVNDISP_APPTAINER_IMAGE for release $EVNDISPVERSION." >&2
+    return 1
+fi
 
 # Test for allowed processing types
 allowed_processing_types=("apptainer" "apptainer-dev" "al9")
@@ -28,9 +36,16 @@ if [[ $FOUND_PROCESS == "FALSE" ]]; then
     return
 fi
 
+export VERITAS_ANALYSIS_TYPE="${1}"
+release_series=${EVNDISPVERSION%%.*}
+if [[ -z ${EVNDISP_ML_ENV:-} || ${EVNDISP_ML_ENV} == "${_EVNDISP_AUTO_ML_ENV:-}" ]]; then
+    export EVNDISP_ML_ENV="eventdisplay_ml_${release_series}"
+    _EVNDISP_AUTO_ML_ENV="$EVNDISP_ML_ENV"
+else
+    unset _EVNDISP_AUTO_ML_ENV
+fi
+
 ########################################################################
-# host system settings
-USERAFSDIR="/afs/ifh.de/group/cta/scratch/$USER"
 # Resolve the sourced script independently of the caller's working directory.
 if [[ -n ${ZSH_VERSION:-} ]]; then
     eval 'ENVIRONMENT_SCRIPT=${(%):-%x}'
@@ -65,11 +80,11 @@ export EVNDISPSCRIPTS="$ENVIRONMENT_SCRIPTS_DIR"
 
 ########################################################################
 # software settings
-export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3-v0.8.1
+export V2DL3SYS="${PROJECTDIR}/V2DL3"
 export EVNDISP_ML_SYS="${PROJECTDIR}/Eventdisplay-ML"
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
-    export EVNDISP_APPTAINER="$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPVERSION}-rc8.sif"
+    export EVNDISP_APPTAINER="${EVNDISP_APPTAINER_IMAGE:-$VERITAS_DATA_DIR/shared/APPTAINERS/eventdisplay_v4_${EVNDISPVERSION}-rc8.sif}"
     export EVNDISP_ENV="--env VERITAS_DATA_DIR=${VERITAS_DATA_DIR},VERITAS_EVNDISP_AUX_DIR=${VERITAS_EVNDISP_AUX_DIR},VERITAS_USER_DATA_DIR=${VERITAS_USER_DATA_DIR},VERITAS_USER_LOG_DIR=${VERITAS_USER_LOG_DIR}"
     export EVNDISPSYS="apptainer exec --no-mount bind-paths --cleanenv ${EVNDISP_APPTAINER} /opt/EventDisplay_v4/"
     # Alma Linux 9 (al9) processing
