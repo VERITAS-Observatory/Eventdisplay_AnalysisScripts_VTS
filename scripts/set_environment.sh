@@ -46,8 +46,6 @@ else
 fi
 
 ########################################################################
-# host system settings
-USERAFSDIR="/afs/ifh.de/group/cta/scratch/$USER"
 # Resolve the sourced script independently of the caller's working directory.
 if [[ -n ${ZSH_VERSION:-} ]]; then
     eval 'ENVIRONMENT_SCRIPT=${(%):-%x}'
@@ -82,7 +80,7 @@ export EVNDISPSCRIPTS="$ENVIRONMENT_SCRIPTS_DIR"
 
 ########################################################################
 # software settings
-export V2DL3SYS=${USERAFSDIR}/EVNDISP/EVNDISP-400/GITHUB_Eventdisplay/PreProcessing/V2DL3-v0.8.1
+export V2DL3SYS="${PROJECTDIR}/V2DL3"
 export EVNDISP_ML_SYS="${PROJECTDIR}/Eventdisplay-ML"
 # EVENTDISPLAY using apptainers
 if [[ $PROCESS == "apptainer"* ]]; then
