@@ -29,4 +29,3 @@ zenith-bin subdirectories) before running `ANAXGBANGRES`. If unset, the standard
 logs. Variants currently support RecID 0 and the separate XGB and effective-area
 stages; `ANATABLESEFFAREAS` does not support them. Remove these environment
 variables to run without a variant.
-

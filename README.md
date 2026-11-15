@@ -319,4 +319,3 @@ Open an [issue on GitHub](https://github.com/VERITAS-Observatory/Eventdisplay_An
 ## License
 
 Eventdisplay_AnalysisScripts_VTS is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file.
-
